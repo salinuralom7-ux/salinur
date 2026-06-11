@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { PRODUCTS, REVIEWS, discountPct, formatINR, productTitle } from '../data/products';
+import { REVIEWS, discountPct, formatINR, productTitle } from '../data/products';
 import { GRADES, QUALITY_CHECKS } from '../data/grades';
 import { useStore } from '../store/context';
 import GradeBadge from '../components/GradeBadge';
-import PhoneImage from '../components/PhoneImage';
+import ProductImage from '../components/ProductImage';
 import Stars from '../components/Stars';
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, toggleWishlist, wishlist } = useStore();
+  const { products: PRODUCTS, productsLoading, addToCart, toggleWishlist, wishlist } = useStore();
   const [showChecks, setShowChecks] = useState(false);
   const [showGrade, setShowGrade] = useState(true);
 
@@ -18,7 +18,7 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="container">
-        <p>Product not found.</p>
+        <p>{productsLoading ? 'Loading…' : 'Product not found.'}</p>
         <Link to="/shop" className="btn btn-primary">Back to Shop</Link>
       </div>
     );
@@ -47,12 +47,26 @@ export default function ProductDetail() {
 
       <div className="detail-layout">
         <div className="detail-gallery">
-          <PhoneImage product={product} large />
-          {product.hasVideo && (
-            <div className="video-placeholder">
-              ▶ Dekho Aur Khareedo — 45-sec video of this exact unit
-              <small>(Video player will appear here once unit videos are uploaded)</small>
+          <ProductImage product={product} large />
+          {(product.images?.length ?? 0) > 1 && (
+            <div className="gallery-strip">
+              {product.images!.map((src, i) => (
+                <img key={i} src={src} alt={`Photo ${i + 1}`} />
+              ))}
             </div>
+          )}
+          {product.videoUrl ? (
+            <div className="video-embed">
+              <iframe src={toEmbedUrl(product.videoUrl)} title="Video of this exact unit" allowFullScreen />
+              <small>▶ Dekho Aur Khareedo — video of this exact unit</small>
+            </div>
+          ) : (
+            product.hasVideo && (
+              <div className="video-placeholder">
+                ▶ Dekho Aur Khareedo — 45-sec video of this exact unit
+                <small>(Video player will appear here once unit videos are uploaded)</small>
+              </div>
+            )
           )}
         </div>
 
@@ -203,7 +217,7 @@ export default function ProductDetail() {
           <div className="similar-row">
             {similar.map((p) => (
               <Link key={p.id} to={`/product/${p.id}`} className="similar-card">
-                <PhoneImage product={p} />
+                <ProductImage product={p} />
                 <GradeBadge grade={p.grade} />
                 <span>{productTitle(p)}</span>
                 <strong>{formatINR(p.price)}</strong>
@@ -214,4 +228,9 @@ export default function ProductDetail() {
       )}
     </div>
   );
+}
+
+function toEmbedUrl(url: string): string {
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([\w-]{6,})/);
+  return yt ? `https://www.youtube.com/embed/${yt[1]}` : url;
 }

@@ -3,7 +3,7 @@ import type { Product } from '../types';
 import { discountPct, formatINR, productTitle } from '../data/products';
 import { useStore } from '../store/context';
 import GradeBadge from './GradeBadge';
-import PhoneImage from './PhoneImage';
+import ProductImage from './ProductImage';
 import Stars from './Stars';
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -22,7 +22,7 @@ export default function ProductCard({ product }: { product: Product }) {
       </button>
       <Link to={`/product/${product.id}`} className="product-card-link">
         <div className="product-card-img">
-          <PhoneImage product={product} />
+          <ProductImage product={product} />
           {product.hasVideo && <span className="video-tag">▶ Watch before you buy</span>}
         </div>
         <GradeBadge grade={product.grade} />

@@ -23,7 +23,12 @@ export interface Product {
   repairs?: string;
   hasVideo: boolean;
   specs: Record<string, string>;
+  images?: string[];
+  videoUrl?: string;
+  imei?: string;
 }
+
+export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
 
 export interface GradeInfo {
   grade: Grade;
@@ -81,4 +86,6 @@ export interface Order {
   shippingMethod: 'standard' | 'express';
   paymentMethod: string;
   address: Address;
+  status?: OrderStatus;
+  gradeEAck?: boolean;
 }

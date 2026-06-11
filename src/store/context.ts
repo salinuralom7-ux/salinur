@@ -1,7 +1,11 @@
 import { createContext, useContext } from 'react';
-import type { CartItem, Order } from '../types';
+import type { CartItem, Order, Product } from '../types';
 
 export interface StoreState {
+  products: Product[];
+  productsLoading: boolean;
+  productsError: string;
+  refreshProducts: () => Promise<void>;
   cart: CartItem[];
   wishlist: string[];
   orders: Order[];
@@ -10,7 +14,7 @@ export interface StoreState {
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
   toggleWishlist: (productId: string) => void;
-  placeOrder: (order: Order) => void;
+  placeOrder: (order: Order) => Promise<void>;
   cartCount: number;
 }
 

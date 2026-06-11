@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom';
-import { PRODUCTS } from '../data/products';
 import { useStore } from '../store/context';
 import ProductCard from '../components/ProductCard';
 
 export default function Wishlist() {
-  const { wishlist } = useStore();
-  const products = PRODUCTS.filter((p) => wishlist.includes(p.id));
+  const { wishlist, products: allProducts } = useStore();
+  const products = allProducts.filter((p) => wishlist.includes(p.id));
 
   if (products.length === 0) {
     return (

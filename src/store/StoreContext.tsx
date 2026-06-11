@@ -1,6 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import type { CartItem, Order } from '../types';
-import { PRODUCTS } from '../data/products';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import type { CartItem, Order, Product } from '../types';
+import { fetchProducts, submitOrder } from '../lib/api';
 import { StoreContext } from './context';
 
 function load<T>(key: string, fallback: T): T {
@@ -13,16 +13,37 @@ function load<T>(key: string, fallback: T): T {
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState('');
   const [cart, setCart] = useState<CartItem[]>(() => load('bps_cart', []));
   const [wishlist, setWishlist] = useState<string[]>(() => load('bps_wishlist', []));
   const [orders, setOrders] = useState<Order[]>(() => load('bps_orders', []));
+
+  const refreshProducts = useCallback(
+    () =>
+      fetchProducts()
+        .then((list) => {
+          setProducts(list);
+          setProductsError('');
+        })
+        .catch((e: unknown) => {
+          setProductsError(e instanceof Error ? e.message : 'Could not load products');
+        })
+        .finally(() => setProductsLoading(false)),
+    [],
+  );
+
+  useEffect(() => {
+    void refreshProducts();
+  }, [refreshProducts]);
 
   useEffect(() => localStorage.setItem('bps_cart', JSON.stringify(cart)), [cart]);
   useEffect(() => localStorage.setItem('bps_wishlist', JSON.stringify(wishlist)), [wishlist]);
   useEffect(() => localStorage.setItem('bps_orders', JSON.stringify(orders)), [orders]);
 
   const addToCart = (productId: string, qty = 1) => {
-    const product = PRODUCTS.find((p) => p.id === productId);
+    const product = products.find((p) => p.id === productId);
     if (!product) return;
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === productId);
@@ -36,7 +57,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   const setQty = (productId: string, qty: number) => {
-    const product = PRODUCTS.find((p) => p.id === productId);
+    const product = products.find((p) => p.id === productId);
     const max = product ? product.stock : qty;
     setCart((prev) =>
       qty <= 0
@@ -55,16 +76,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId],
     );
 
-  const placeOrder = (order: Order) => {
+  const placeOrder = async (order: Order) => {
+    await submitOrder(order);
+    // Keep a local copy so the customer sees it in "My Orders" on this device.
     setOrders((prev) => [order, ...prev]);
     setCart([]);
+    void refreshProducts();
   };
 
   const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
 
   return (
     <StoreContext.Provider
-      value={{ cart, wishlist, orders, addToCart, setQty, removeFromCart, clearCart, toggleWishlist, placeOrder, cartCount }}
+      value={{
+        products, productsLoading, productsError, refreshProducts,
+        cart, wishlist, orders,
+        addToCart, setQty, removeFromCart, clearCart, toggleWishlist, placeOrder, cartCount,
+      }}
     >
       {children}
     </StoreContext.Provider>

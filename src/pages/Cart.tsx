@@ -1,12 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { PRODUCTS, formatINR, productTitle } from '../data/products';
+import { formatINR, productTitle } from '../data/products';
 import { GRADES } from '../data/grades';
 import { useStore } from '../store/context';
 import GradeBadge from '../components/GradeBadge';
-import PhoneImage from '../components/PhoneImage';
+import ProductImage from '../components/ProductImage';
 
 export default function Cart() {
-  const { cart, setQty, removeFromCart, toggleWishlist } = useStore();
+  const { products: PRODUCTS, cart, setQty, removeFromCart, toggleWishlist } = useStore();
   const navigate = useNavigate();
 
   const lines = cart
@@ -33,7 +33,7 @@ export default function Cart() {
           {lines.map(({ item, product }) => (
             <div key={product.id} className="cart-item">
               <Link to={`/product/${product.id}`}>
-                <PhoneImage product={product} />
+                <ProductImage product={product} />
               </Link>
               <div className="cart-item-info">
                 <GradeBadge grade={product.grade} />

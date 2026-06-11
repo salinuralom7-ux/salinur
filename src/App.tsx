@@ -9,6 +9,8 @@ import Checkout from './pages/Checkout';
 import OrderConfirmation from './pages/OrderConfirmation';
 import Orders from './pages/Orders';
 import Wishlist from './pages/Wishlist';
+import Admin from './pages/admin/Admin';
+import Legal from './pages/Legal';
 
 export default function App() {
   const { cartCount, wishlist } = useStore();
@@ -59,6 +61,9 @@ export default function App() {
           <Route path="/order-confirmed/:id" element={<OrderConfirmation />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/legal" element={<Legal />} />
+          <Route path="/legal/:page" element={<Legal />} />
         </Routes>
       </main>
 
@@ -73,6 +78,13 @@ export default function App() {
             <span>✅ Warranty on Every Grade</span>
             <span>✅ 15-Day Money-Back</span>
             <span>✅ Watch Before You Buy</span>
+          </div>
+          <div className="footer-links">
+            <Link to="/legal/terms">Terms &amp; Conditions</Link>
+            <Link to="/legal/returns">Returns &amp; Refunds</Link>
+            <Link to="/legal/privacy">Privacy Policy</Link>
+            <Link to="/legal/contact">Contact &amp; Grievance Officer</Link>
+            <Link to="/admin">Store Admin</Link>
           </div>
         </div>
       </footer>

@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
 import { GRADE_LIST } from '../data/grades';
-import { PRODUCTS } from '../data/products';
+import { useStore } from '../store/context';
 import ProductCard from '../components/ProductCard';
 
 export default function Home() {
-  const featured = [...PRODUCTS]
+  const { products } = useStore();
+  const featured = [...products]
     .filter((p) => p.category !== 'accessory' && p.stock > 0)
     .sort((a, b) => b.rating - a.rating)
     .slice(0, 4);

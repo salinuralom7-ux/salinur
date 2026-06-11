@@ -1,15 +1,16 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { PRODUCTS, productTitle } from '../data/products';
+import { productTitle } from '../data/products';
 import { GRADE_LIST } from '../data/grades';
 import type { Grade } from '../types';
+import { useStore } from '../store/context';
 import ProductCard from '../components/ProductCard';
 
 type SortKey = 'newest' | 'price-asc' | 'price-desc' | 'rating' | 'popular';
 
-const BRANDS = [...new Set(PRODUCTS.map((p) => p.brand))].sort();
-
 export default function Shop() {
+  const { products: PRODUCTS, productsLoading } = useStore();
+  const BRANDS = useMemo(() => [...new Set(PRODUCTS.map((p) => p.brand))].sort(), [PRODUCTS]);
   const [params, setParams] = useSearchParams();
   const query = (params.get('q') ?? '').toLowerCase();
   const gradeParam = params.get('grade') as Grade | null;
@@ -17,7 +18,7 @@ export default function Shop() {
 
   const [grades, setGrades] = useState<Grade[]>(gradeParam ? [gradeParam] : []);
   const [brands, setBrands] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState(50000);
+  const [maxPrice, setMaxPrice] = useState(150000);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>('popular');
 
@@ -45,7 +46,7 @@ export default function Shop() {
       case 'newest': break; // listing order = newest first
     }
     return list;
-  }, [query, categoryParam, grades, brands, maxPrice, inStockOnly, sort]);
+  }, [PRODUCTS, query, categoryParam, grades, brands, maxPrice, inStockOnly, sort]);
 
   return (
     <div className="container shop-layout">
@@ -81,8 +82,8 @@ export default function Shop() {
           <input
             type="range"
             min={500}
-            max={50000}
-            step={500}
+            max={150000}
+            step={1000}
             value={maxPrice}
             onChange={(e) => setMaxPrice(Number(e.target.value))}
           />
@@ -130,7 +131,9 @@ export default function Shop() {
             <option value="rating">Best Rating</option>
           </select>
         </div>
-        {results.length === 0 ? (
+        {productsLoading ? (
+          <p className="muted">Loading products…</p>
+        ) : results.length === 0 ? (
           <p className="muted">No products match your filters. Try removing some filters or searching for a different model.</p>
         ) : (
           <div className="product-grid">

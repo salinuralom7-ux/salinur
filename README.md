@@ -2,7 +2,9 @@
 
 An online marketplace for refurbished smartphones — built for Budget Phone Store, Bongaigaon, Assam. Customers buy quality refurbished phones at 40–65% below retail price with transparent grading, warranty assurance, and a 15-day money-back guarantee.
 
-This is the **Phase 1 MVP** web app: full storefront with the 5-grade system, search & filtering, product detail pages with quality-check transparency, cart, promo codes, and a complete checkout flow.
+Full storefront **plus a Supabase backend and store admin panel**: the owner adds phones (with photo uploads and an auto-fill spec catalog of popular models), and customer orders arrive in the admin dashboard in real time. Native Android/iOS projects (Capacitor) are included for Play Store / App Store packaging.
+
+**👉 Start here: [LAUNCH_GUIDE.md](./LAUNCH_GUIDE.md)** — step-by-step instructions for connecting Supabase, deploying the site, publishing to the app stores, payments, and the legal checklist.
 
 ## The 5-Grade System
 
@@ -25,8 +27,14 @@ Grade E orders require an explicit "I understand this phone needs repair" confir
 - **Checkout** — 4-step flow (address → shipping → payment → review), promo codes (`WELCOME50`, `FIRST500`, `GRAD20`), EMI gating above ₹10,000, Grade E acknowledgment, COD/UPI/card/net-banking options
 - **Orders & warranties** — order history with per-device warranty cards and live expiry status
 - **Wishlist** — persisted locally, synced across pages
+- **Store Admin** (`/#/admin`) — add/edit/remove listings with photo uploads and a built-in spec catalog (~30 popular iPhone/Android models auto-fill processor, display, camera, battery specs); orders dashboard with status workflow (pending → confirmed → shipped → delivered); Supabase connection settings
+- **Legal pages** — Terms, Privacy (DPDP Act 2023), Returns & Refunds, Grievance Officer contact per the Consumer Protection (E-Commerce) Rules 2020
 
-Cart, wishlist and orders persist in the browser via `localStorage` (no backend needed for the MVP).
+## Backend
+
+**Connected mode:** products, orders and product photos live in Supabase (PostgreSQL + Storage) with row-level security — anyone can browse and place orders; only the admin account can manage listings and read orders. The complete schema is one file: `supabase/migrations/001_init.sql`. The first registered account automatically becomes admin.
+
+**Demo mode:** until Supabase is connected (Admin → Settings), everything works locally in the browser so the owner can explore safely.
 
 ## Run it
 

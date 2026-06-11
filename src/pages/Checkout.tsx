@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PRODUCTS, PROMO_CODES, formatINR, productTitle } from '../data/products';
+import { PROMO_CODES, formatINR, productTitle } from '../data/products';
 import { GRADES } from '../data/grades';
 import { newOrderId, useStore } from '../store/context';
 import type { Address, Order } from '../types';
@@ -16,7 +16,7 @@ const PAYMENT_METHODS = [
 ];
 
 export default function Checkout() {
-  const { cart, placeOrder } = useStore();
+  const { products: PRODUCTS, cart, placeOrder } = useStore();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
 
@@ -27,6 +27,8 @@ export default function Checkout() {
   const [promo, setPromo] = useState<string | null>(null);
   const [promoError, setPromoError] = useState('');
   const [gradeEAck, setGradeEAck] = useState(false);
+  const [placing, setPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState('');
 
   const lines = cart
     .map((item) => ({ item, product: PRODUCTS.find((p) => p.id === item.productId)! }))
@@ -97,9 +99,17 @@ export default function Checkout() {
       shippingMethod: shipping,
       paymentMethod: PAYMENT_METHODS.find((m) => m.id === payment)?.label ?? payment,
       address,
+      status: 'pending',
+      gradeEAck,
     };
-    placeOrder(order);
-    navigate(`/order-confirmed/${order.id}`);
+    setPlacing(true);
+    setPlaceError('');
+    placeOrder(order)
+      .then(() => navigate(`/order-confirmed/${order.id}`))
+      .catch((e) => {
+        setPlaceError(e instanceof Error ? e.message : 'Order failed — please try again.');
+        setPlacing(false);
+      });
   };
 
   return (
@@ -221,12 +231,13 @@ export default function Checkout() {
                 <button className="btn btn-outline" onClick={() => setStep(2)}>Back</button>
                 <button
                   className="btn btn-buy btn-lg"
-                  disabled={hasGradeE && !gradeEAck}
+                  disabled={(hasGradeE && !gradeEAck) || placing}
                   onClick={confirmOrder}
                 >
-                  Place Order — {formatINR(total)}
+                  {placing ? 'Placing order…' : `Place Order — ${formatINR(total)}`}
                 </button>
               </div>
+              {placeError && <p className="promo-err">{placeError}</p>}
             </div>
           )}
         </div>

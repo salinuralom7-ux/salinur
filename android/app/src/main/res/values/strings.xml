@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Budget Phone Store</string>
+    <string name="title_activity_main">Budget Phone Store</string>
+    <string name="package_name">in.budgetphonestore.app</string>
+    <string name="custom_url_scheme">in.budgetphonestore.app</string>
+</resources>
