@@ -344,6 +344,65 @@ export const DEVICE_CATALOG: DeviceSpec[] = [
     },
   },
 
+  // ---------------- Google Pixel ----------------
+  {
+    brand: 'Google', model: 'Pixel 8', category: 'android', releaseYear: 2023, launchMrp: 75999,
+    storageOptions: ['128GB', '256GB'], ramOptions: ['8GB'],
+    colors: ['Obsidian', 'Hazel', 'Rose'],
+    specs: {
+      Processor: 'Google Tensor G3', Display: '6.2" Actua OLED, 120Hz',
+      'Rear Camera': '50MP + 12MP dual (OIS)', 'Front Camera': '10.5MP',
+      Battery: '4575 mAh', Charging: '27W wired, wireless', OS: 'Android 14 (7 years of updates)',
+      Network: '5G (India bands supported)', SIM: 'Nano SIM + eSIM',
+    },
+  },
+  {
+    brand: 'Google', model: 'Pixel 7a', category: 'android', releaseYear: 2023, launchMrp: 43999,
+    storageOptions: ['128GB'], ramOptions: ['8GB'],
+    colors: ['Charcoal', 'Snow', 'Sea', 'Coral'],
+    specs: {
+      Processor: 'Google Tensor G2', Display: '6.1" OLED, 90Hz',
+      'Rear Camera': '64MP + 13MP dual (OIS)', 'Front Camera': '13MP',
+      Battery: '4385 mAh', Charging: '18W wired, wireless', OS: 'Android 13 (upgradable)',
+      Network: '5G (India bands supported)', SIM: 'Nano SIM + eSIM',
+    },
+  },
+  {
+    brand: 'Google', model: 'Pixel 7', category: 'android', releaseYear: 2022, launchMrp: 59999,
+    storageOptions: ['128GB', '256GB'], ramOptions: ['8GB'],
+    colors: ['Obsidian', 'Snow', 'Lemongrass'],
+    specs: {
+      Processor: 'Google Tensor G2', Display: '6.3" OLED, 90Hz',
+      'Rear Camera': '50MP + 12MP dual (OIS)', 'Front Camera': '10.8MP',
+      Battery: '4355 mAh', Charging: '21W wired, wireless', OS: 'Android 13 (upgradable)',
+      Network: '5G (India bands supported)', SIM: 'Nano SIM + eSIM',
+    },
+  },
+
+  // ---------------- Nothing ----------------
+  {
+    brand: 'Nothing', model: 'Phone (2)', category: 'android', releaseYear: 2023, launchMrp: 44999,
+    storageOptions: ['128GB', '256GB', '512GB'], ramOptions: ['8GB', '12GB'],
+    colors: ['White', 'Dark Grey'],
+    specs: {
+      Processor: 'Snapdragon 8+ Gen 1', Display: '6.7" LTPO OLED, 120Hz',
+      'Rear Camera': '50MP + 50MP dual (OIS)', 'Front Camera': '32MP',
+      Battery: '4700 mAh', Charging: '45W wired, 15W wireless', OS: 'Android 13 (Nothing OS 2)',
+      Network: '5G (India bands supported)', SIM: 'Dual nano SIM',
+    },
+  },
+  {
+    brand: 'Nothing', model: 'Phone (1)', category: 'android', releaseYear: 2022, launchMrp: 32999,
+    storageOptions: ['128GB', '256GB'], ramOptions: ['8GB', '12GB'],
+    colors: ['White', 'Black'],
+    specs: {
+      Processor: 'Snapdragon 778G+', Display: '6.55" OLED, 120Hz',
+      'Rear Camera': '50MP + 50MP dual (OIS)', 'Front Camera': '16MP',
+      Battery: '4500 mAh', Charging: '33W wired, 15W wireless', OS: 'Android 12 (Nothing OS)',
+      Network: '5G (India bands supported)', SIM: 'Dual nano SIM',
+    },
+  },
+
   // ---------------- Motorola ----------------
   {
     brand: 'Motorola', model: 'Moto G84 5G', category: 'android', releaseYear: 2023, launchMrp: 19999,

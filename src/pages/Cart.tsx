@@ -73,7 +73,7 @@ export default function Cart() {
           <div className="summary-row"><span>Shipping</span><span>Calculated at checkout</span></div>
           <div className="summary-row total"><span>Total</span><span>{formatINR(subtotal)}</span></div>
           <p className="muted">Promo codes can be applied at checkout. Estimated delivery: 5–7 days (standard).</p>
-          <button className="btn btn-buy btn-block btn-lg" onClick={() => navigate('/checkout')}>
+          <button className="btn btn-cart btn-block btn-lg" onClick={() => navigate('/checkout')}>
             Proceed to Checkout
           </button>
         </aside>

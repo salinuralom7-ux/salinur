@@ -102,7 +102,7 @@ export default function ProductDetail() {
           </div>
 
           <div className="detail-actions">
-            <button className="btn btn-primary btn-lg" disabled={out} onClick={() => addToCart(product.id)}>
+            <button className="btn btn-cart btn-lg" disabled={out} onClick={() => addToCart(product.id)}>
               Add to Cart
             </button>
             <button className="btn btn-buy btn-lg" disabled={out} onClick={buyNow}>

@@ -6,10 +6,20 @@ import AdminSettings from './AdminSettings';
 
 type Tab = 'products' | 'orders' | 'settings';
 
+const PIN_HASH_KEY = 'bps_admin_pin_hash';
+const PIN_UNLOCKED_KEY = 'bps_admin_unlocked';
+
+async function hashPin(pin: string): Promise<string> {
+  const data = new TextEncoder().encode('bps-pin:' + pin);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 export default function Admin() {
   const [tab, setTab] = useState<Tab>('products');
   const [session, setSession] = useState<AdminSession | null>(null);
   const [checking, setChecking] = useState(true);
+  const [pinUnlocked, setPinUnlocked] = useState(() => sessionStorage.getItem(PIN_UNLOCKED_KEY) === '1');
   const demo = inDemoMode();
 
   useEffect(() => {
@@ -19,6 +29,15 @@ export default function Admin() {
   }, []);
 
   if (checking) return <div className="container empty-state"><p className="muted">Loading…</p></div>;
+
+  // Demo mode: gate the panel behind the owner's PIN.
+  if (demo && !pinUnlocked) {
+    return (
+      <div className="container">
+        <PinGate onUnlocked={() => { sessionStorage.setItem(PIN_UNLOCKED_KEY, '1'); setPinUnlocked(true); }} />
+      </div>
+    );
+  }
 
   // Connected to Supabase but not signed in as admin → show login.
   if (!demo && (!session || !session.isAdmin)) {
@@ -105,6 +124,69 @@ function AdminLogin({ onSignedIn }: { onSignedIn: (s: AdminSession) => void }) {
           </button>{' '}
           <button type="button" className="link-btn" onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}>
             {mode === 'signin' ? 'First time? Create the admin account' : 'Already registered? Sign in'}
+          </button>
+        </div>
+        {error && <p className="promo-err span2">{error}</p>}
+      </form>
+    </div>
+  );
+}
+
+function PinGate({ onUnlocked }: { onUnlocked: () => void }) {
+  const hasPin = !!localStorage.getItem(PIN_HASH_KEY);
+  const [pin, setPin] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      if (!hasPin) {
+        if (!/^\d{6}$/.test(pin)) throw new Error('PIN must be exactly 6 digits');
+        if (pin !== confirm) throw new Error('PINs do not match');
+        localStorage.setItem(PIN_HASH_KEY, await hashPin(pin));
+        onUnlocked();
+      } else {
+        const stored = localStorage.getItem(PIN_HASH_KEY);
+        if ((await hashPin(pin)) !== stored) throw new Error('Wrong PIN');
+        onUnlocked();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="card admin-login">
+      <h2>🔒 {hasPin ? 'Store Admin is locked' : 'Protect the Store Admin'}</h2>
+      <p className="muted">
+        {hasPin
+          ? 'Enter your 6-digit owner PIN to open the admin panel.'
+          : 'Set a 6-digit PIN so only you can open the admin panel on this device. Once you connect Supabase, the panel is protected by your email + password login instead.'}
+      </p>
+      <form onSubmit={submit} className="form-grid">
+        <label className="span2">{hasPin ? 'Owner PIN' : 'Choose a 6-digit PIN'}
+          <input
+            type="password" inputMode="numeric" maxLength={6} autoFocus
+            value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+          />
+        </label>
+        {!hasPin && (
+          <label className="span2">Repeat the PIN
+            <input
+              type="password" inputMode="numeric" maxLength={6}
+              value={confirm} onChange={(e) => setConfirm(e.target.value.replace(/\D/g, ''))}
+            />
+          </label>
+        )}
+        <div className="span2">
+          <button className="btn btn-primary btn-lg" type="submit" disabled={busy || pin.length !== 6}>
+            {hasPin ? 'Unlock' : 'Set PIN & Open Admin'}
           </button>
         </div>
         {error && <p className="promo-err span2">{error}</p>}

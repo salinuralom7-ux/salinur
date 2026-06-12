@@ -12,6 +12,17 @@ import Wishlist from './pages/Wishlist';
 import Admin from './pages/admin/Admin';
 import Legal from './pages/Legal';
 
+const CATEGORY_LINKS = [
+  { label: 'All', to: '/shop' },
+  { label: "🔥 Today's Deals", to: '/shop?deals=1' },
+  { label: 'iPhone', to: '/shop?brand=Apple' },
+  { label: 'Samsung', to: '/shop?brand=Samsung' },
+  { label: 'Pixel', to: '/shop?brand=Google' },
+  { label: 'Nothing', to: '/shop?brand=Nothing' },
+  { label: 'Other Androids', to: '/shop?brand=other' },
+  { label: 'Accessories', to: '/shop?category=accessory' },
+];
+
 export default function App() {
   const { cartCount, wishlist } = useStore();
   const [query, setQuery] = useState('');
@@ -27,28 +38,34 @@ export default function App() {
       <header className="header">
         <div className="container header-inner">
           <Link to="/" className="logo">
-            📱 Budget Phone Store
-            <span className="logo-sub">Bongaigaon, Assam</span>
+            <span className="logo-mark">📱 Budget<span className="logo-accent">Phone</span>Store</span>
+            <span className="logo-sub">Bongaigaon · Refurbished &amp; Certified</span>
           </Link>
           <form className="search" onSubmit={submitSearch} role="search">
             <input
               type="search"
-              placeholder='Search "iPhone 12 64GB black"…'
+              placeholder="Search phones, brands, accessories…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search products"
             />
-            <button type="submit" className="btn btn-primary">Search</button>
+            <button type="submit" className="search-btn" aria-label="Search">🔍</button>
           </form>
           <nav className="nav">
-            <NavLink to="/shop">Shop</NavLink>
-            <NavLink to="/orders">My Orders</NavLink>
-            <NavLink to="/wishlist">Wishlist {wishlist.length > 0 && <span className="pill">{wishlist.length}</span>}</NavLink>
+            <NavLink to="/orders"><small>Returns</small><strong>&amp; Orders</strong></NavLink>
+            <NavLink to="/wishlist"><small>Your</small><strong>Wishlist {wishlist.length > 0 && <span className="pill">{wishlist.length}</span>}</strong></NavLink>
             <NavLink to="/cart" className="cart-link">
-              🛒 Cart {cartCount > 0 && <span className="pill">{cartCount}</span>}
+              🛒 <strong>Cart</strong> {cartCount > 0 && <span className="pill">{cartCount}</span>}
             </NavLink>
           </nav>
         </div>
+        <nav className="header-cats">
+          <div className="container header-cats-inner">
+            {CATEGORY_LINKS.map((c) => (
+              <Link key={c.label} to={c.to}>{c.label}</Link>
+            ))}
+          </div>
+        </nav>
       </header>
 
       <main className="main">
@@ -84,7 +101,7 @@ export default function App() {
             <Link to="/legal/returns">Returns &amp; Refunds</Link>
             <Link to="/legal/privacy">Privacy Policy</Link>
             <Link to="/legal/contact">Contact &amp; Grievance Officer</Link>
-            <Link to="/admin">Store Admin</Link>
+            <Link to="/admin">Store Owner Login</Link>
           </div>
         </div>
       </footer>

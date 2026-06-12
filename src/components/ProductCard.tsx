@@ -38,7 +38,7 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
         {out && <div className="stock-out">Out of stock</div>}
       </Link>
-      <button className="btn btn-primary btn-block" disabled={out} onClick={() => addToCart(product.id)}>
+      <button className="btn btn-cart btn-block" disabled={out} onClick={() => addToCart(product.id)}>
         {out ? 'Out of Stock' : 'Add to Cart'}
       </button>
     </div>
