@@ -1,0 +1,30 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "chats": {
+      "$conversationId": {
+        // conversationId = "<vendorUid>_<customerUid>" — only the two parties.
+        ".read": "auth != null && ($conversationId.beginsWith(auth.uid + '_') || $conversationId.endsWith('_' + auth.uid))",
+        "$messageId": {
+          ".write": "auth != null && !data.exists() && newData.child('senderId').val() == auth.uid && ($conversationId.beginsWith(auth.uid + '_') || $conversationId.endsWith('_' + auth.uid))",
+          ".validate": "newData.hasChildren(['senderId','ts','type']) && newData.child('text').val().length <= 4000"
+        }
+      }
+    },
+    "typing": {
+      "$conversationId": {
+        ".read": "auth != null && ($conversationId.beginsWith(auth.uid + '_') || $conversationId.endsWith('_' + auth.uid))",
+        "$uid": {
+          ".write": "auth != null && auth.uid == $uid"
+        }
+      }
+    },
+    "presence": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    }
+  }
+}

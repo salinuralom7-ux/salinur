@@ -1,0 +1,42 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Vendor portfolio: public read, owner writes, images ≤ 5 MB
+    match /vendors/{vendorId}/portfolio/{file} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == vendorId
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*|video/mp4');
+    }
+
+    // KYC documents: owner upload only, NEVER publicly readable
+    match /vendors/{vendorId}/verification/{file} {
+      allow read: if false; // admin reviews via Admin SDK
+      allow write: if request.auth != null && request.auth.uid == vendorId
+        && request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Chat images: participants only (conversationId = vendorUid_customerUid)
+    match /chat/{conversationId}/{file} {
+      allow read, write: if request.auth != null
+        && (conversationId.matches(request.auth.uid + '_.*')
+         || conversationId.matches('.*_' + request.auth.uid))
+        && request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Review photos: public read, uploader writes
+    match /reviews/{uid}/{file} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Invoices/contracts: server-generated only
+    match /bookings/{bookingId}/{file} {
+      allow read: if request.auth != null; // tighten via custom claims if needed
+      allow write: if false;
+    }
+  }
+}
