@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShaadiSetu — Wedding Marketplace Prototype</title>
+<style>
+  :root {
+    --maroon: #7c2d5d; --maroon-dark: #5e2147; --gold: #d4a017; --gold-light: #f3d27a;
+    --bg: #faf6f2; --surface: #fff; --text: #2b1a24; --muted: #8a7480;
+    --border: #ecdfe6; --ok: #1b873f; --danger: #c0392b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: #efe7e0; color: var(--text); }
+
+  .topbar { background: var(--maroon); color: #fff; padding: 12px 16px; text-align: center; }
+  .topbar h1 { margin: 0; font-size: 1.15rem; }
+  .topbar p { margin: 4px 0 0; font-size: .75rem; opacity: .85; }
+
+  .switcher { display: flex; justify-content: center; gap: 10px; padding: 14px; }
+  .switcher button {
+    border: 2px solid var(--maroon); background: #fff; color: var(--maroon);
+    font-weight: 800; font-size: .95rem; padding: 10px 22px; border-radius: 999px; cursor: pointer;
+  }
+  .switcher button.active { background: var(--maroon); color: #fff; }
+
+  .phone {
+    width: 400px; max-width: 96vw; height: 740px; max-height: 86vh; margin: 0 auto 30px;
+    background: var(--bg); border: 10px solid #2b2330; border-radius: 36px;
+    overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 18px 50px rgba(43,26,36,.35);
+  }
+  .app-head { background: var(--maroon); color: #fff; padding: 14px 16px 10px; }
+  .app-head h2 { margin: 0; font-size: 1.05rem; display: flex; justify-content: space-between; align-items: center; }
+  .app-head .role-tag { font-size: .62rem; background: var(--gold); color: #3d2c00; border-radius: 999px; padding: 2px 8px; font-weight: 800; letter-spacing: .5px; }
+  .screen { flex: 1; overflow-y: auto; padding: 14px; }
+  .tabs { display: flex; background: #fff; border-top: 1px solid var(--border); }
+  .tabs button { flex: 1; border: none; background: none; padding: 10px 4px 12px; font-size: .72rem; font-weight: 700; color: var(--muted); cursor: pointer; }
+  .tabs button.active { color: var(--maroon); }
+  .tabs .ico { display: block; font-size: 1.15rem; margin-bottom: 2px; }
+  .badge-dot { display: inline-block; background: var(--danger); color: #fff; font-size: .62rem; border-radius: 999px; padding: 0 5px; margin-left: 3px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .muted { color: var(--muted); font-size: .8rem; }
+  h3 { margin: 0 0 8px; font-size: 1rem; }
+  .btn { border: none; border-radius: 999px; padding: 10px 18px; font-weight: 800; font-size: .85rem; cursor: pointer; }
+  .btn-gold { background: var(--gold); color: #3d2c00; }
+  .btn-gold:hover { background: #c19112; }
+  .btn-maroon { background: var(--maroon); color: #fff; }
+  .btn-line { background: #fff; color: var(--maroon); border: 2px solid var(--maroon); }
+  .btn-block { display: block; width: 100%; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 4px; }
+  .cat { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 4px; text-align: center; font-size: .68rem; font-weight: 700; cursor: pointer; }
+  .cat .ico { font-size: 1.4rem; display: block; margin-bottom: 3px; }
+  .cat.active { border-color: var(--maroon); background: #fbeef5; }
+
+  .vendor-row { display: flex; gap: 10px; align-items: center; cursor: pointer; }
+  .avatar { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #fff; flex-shrink: 0; }
+  .vendor-row .info { flex: 1; }
+  .vendor-row .name { font-weight: 800; font-size: .92rem; }
+  .stars { color: var(--gold); font-size: .8rem; }
+  .price-from { font-weight: 800; color: var(--maroon); font-size: .85rem; }
+  .tier { font-size: .6rem; font-weight: 800; border-radius: 999px; padding: 2px 7px; vertical-align: middle; }
+  .tier.gold { background: var(--gold-light); color: #6b5200; }
+  .tier.platinum { background: #e2e6ee; color: #3d4a63; }
+
+  .portfolio { display: flex; gap: 6px; overflow-x: auto; margin: 10px 0; }
+  .pf { width: 84px; height: 84px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #fff; }
+  .package { display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; margin-bottom: 7px; font-size: .85rem; }
+
+  .field { margin-bottom: 10px; }
+  .field label { display: block; font-size: .75rem; font-weight: 700; margin-bottom: 4px; }
+  .field input, .field select, .field textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--border); border-radius: 10px; font-size: .9rem; font-family: inherit; background: #fff; }
+
+  .status { font-size: .65rem; font-weight: 800; border-radius: 999px; padding: 3px 9px; }
+  .st-open { background: #fdf2d4; color: #7a5a00; }
+  .st-quoted { background: #e3edfb; color: #1d4f91; }
+  .st-confirmed { background: #dcf3e3; color: var(--ok); }
+  .st-declined { background: #fde3de; color: var(--danger); }
+
+  .chat-box { display: flex; flex-direction: column; gap: 6px; }
+  .bubble { max-width: 78%; padding: 8px 12px; border-radius: 14px; font-size: .85rem; line-height: 1.4; }
+  .bubble.me { align-self: flex-end; background: var(--maroon); color: #fff; border-bottom-right-radius: 4px; }
+  .bubble.them { align-self: flex-start; background: #fff; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .chat-input { display: flex; gap: 6px; margin-top: 10px; }
+  .chat-input input { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: 999px; }
+
+  .back { background: none; border: none; color: var(--gold-light); font-size: .8rem; font-weight: 700; cursor: pointer; padding: 0; }
+  .pay-sheet { background: #fff; border: 2px solid var(--maroon); border-radius: 16px; padding: 16px; }
+  .pay-row { display: flex; justify-content: space-between; font-size: .85rem; margin-bottom: 6px; }
+  .pay-row.total { font-weight: 800; border-top: 1px solid var(--border); padding-top: 8px; font-size: .95rem; }
+  .note { background: #fbeef5; border: 1px solid #ecc7da; border-radius: 10px; padding: 9px 12px; font-size: .75rem; margin-bottom: 10px; }
+  .empty { text-align: center; padding: 40px 10px; color: var(--muted); font-size: .85rem; }
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 26px; background: #2b1a24; color: #fff; padding: 11px 20px; border-radius: 999px; font-size: .85rem; font-weight: 600; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 99; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>💍 ShaadiSetu — Wedding Vendor Marketplace</h1>
+  <p>Clickable prototype · both apps share the same data — act as customer, then switch to the vendor side</p>
+</div>
+<div class="switcher">
+  <button id="swCustomer" class="active" onclick="setRole('customer')">👰 Customer App</button>
+  <button id="swVendor" onclick="setRole('vendor')">📦 Vendor App</button>
+</div>
+<div class="phone">
+  <div class="app-head"><h2><span id="appTitle">ShaadiSetu</span><span class="role-tag" id="roleTag">CUSTOMER</span></h2></div>
+  <div class="screen" id="screen"></div>
+  <div class="tabs" id="tabs"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------- seed data ---------------- */
+const CATS = [
+  { id: 'photography', label: 'Photography', ico: '📷' },
+  { id: 'catering', label: 'Catering', ico: '🍛' },
+  { id: 'decor', label: 'Decor', ico: '🌸' },
+  { id: 'makeup', label: 'Makeup', ico: '💄' },
+  { id: 'venue', label: 'Venue', ico: '🏛️' },
+  { id: 'music', label: 'Music & DJ', ico: '🥁' },
+];
+const VENDORS = [
+  { id: 'v1', name: 'Arjun Photography', cat: 'photography', city: 'Bongaigaon', rating: 4.8, reviews: 42, from: 25000, tier: 'gold', color: '#7c2d5d', ico: '📷',
+    bio: 'Candid wedding photography & cinematic films. 8 years, 200+ weddings across Lower Assam.',
+    packages: [['Basic — 1 day photo', 25000], ['Standard — photo + video', 45000], ['Premium — 2 days, drone, album', 75000]] },
+  { id: 'v2', name: 'Kamrup Caterers', cat: 'catering', city: 'Bongaigaon', rating: 4.6, reviews: 31, from: 350, tier: 'platinum', color: '#9a6a14', ico: '🍛',
+    bio: 'Authentic Assamese + pan-Indian menus. 100–2000 guests. Live counters available.',
+    packages: [['Assamese thali — per plate', 350], ['Multi-cuisine — per plate', 550], ['Premium + live counters — per plate', 850]] },
+  { id: 'v3', name: 'Roselight Decor', cat: 'decor', city: 'Guwahati', rating: 4.7, reviews: 26, from: 40000, tier: 'gold', color: '#9c3b54', ico: '🌸',
+    bio: 'Stage, mandap & full-venue floral decor. Traditional and modern themes.',
+    packages: [['Stage + mandap', 40000], ['Full venue', 90000], ['Premium destination set-up', 180000]] },
+  { id: 'v4', name: 'Priyanka Makeovers', cat: 'makeup', city: 'Bongaigaon', rating: 4.9, reviews: 58, from: 8000, tier: 'free', color: '#b54a7e', ico: '💄',
+    bio: 'Bridal HD & airbrush makeup. Trials available. Travel across Northeast.',
+    packages: [['Bridal makeup', 8000], ['Bride + 2 family', 14000], ['Full family package', 25000]] },
+  { id: 'v5', name: 'Brahmaputra Banquets', cat: 'venue', city: 'Bongaigaon', rating: 4.5, reviews: 19, from: 60000, tier: 'free', color: '#3f5e78', ico: '🏛️',
+    bio: 'AC banquet hall, 500 capacity, parking for 100 cars, in-house generator.',
+    packages: [['Hall only — 1 day', 60000], ['Hall + basic decor', 95000], ['Hall + decor + rooms', 140000]] },
+  { id: 'v6', name: 'DJ Axom Beats', cat: 'music', city: 'Guwahati', rating: 4.4, reviews: 22, from: 15000, tier: 'free', color: '#5b3d8f', ico: '🥁',
+    bio: 'Bihu + Bollywood + EDM. Full sound & light rig, dhol players on request.',
+    packages: [['DJ night — 4 hrs', 15000], ['DJ + lights + LED wall', 28000], ['Full sangeet production', 50000]] },
+];
+const inr = n => '₹' + n.toLocaleString('en-IN');
+const COMMISSION = 0.15;
+
+/* ---------------- shared state (both "apps") ---------------- */
+const load = (k, f) => { try { return JSON.parse(localStorage.getItem(k)) ?? f; } catch { return f; } };
+let quotes = load('ss_quotes', []);
+let messages = load('ss_msgs', {});
+const persist = () => { localStorage.setItem('ss_quotes', JSON.stringify(quotes)); localStorage.setItem('ss_msgs', JSON.stringify(messages)); };
+
+/* ---------------- app state ---------------- */
+let role = 'customer';
+let tab = 'home';
+let view = null; // {type:'vendor'|'quote'|'chat'|'pay', id}
+let activeCat = null;
+
+function setRole(r) {
+  role = r; view = null;
+  tab = r === 'customer' ? 'home' : 'leads';
+  document.getElementById('swCustomer').classList.toggle('active', r === 'customer');
+  document.getElementById('swVendor').classList.toggle('active', r === 'vendor');
+  document.getElementById('roleTag').textContent = r.toUpperCase();
+  document.getElementById('appTitle').textContent = r === 'customer' ? 'ShaadiSetu' : 'ShaadiSetu Partner';
+  render();
+}
+function setTab(t) { tab = t; view = null; render(); }
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2600);
+}
+const vendorById = id => VENDORS.find(v => v.id === id);
+const stars = r => '★'.repeat(Math.round(r)) + '☆'.repeat(5 - Math.round(r));
+const tierTag = t => t === 'free' ? '' : `<span class="tier ${t}">${t.toUpperCase()}</span>`;
+
+/* ---------------- render ---------------- */
+function render() {
+  renderTabs();
+  const s = document.getElementById('screen');
+  if (view?.type === 'vendor') return s.innerHTML = vendorProfile(vendorById(view.id));
+  if (view?.type === 'request') return s.innerHTML = requestForm(vendorById(view.id));
+  if (view?.type === 'chat') return s.innerHTML = chatScreen(view.id);
+  if (view?.type === 'pay') return s.innerHTML = payScreen(view.id);
+  if (role === 'customer') {
+    s.innerHTML = tab === 'home' ? customerHome() : tab === 'requests' ? customerRequests() : customerBookings();
+  } else {
+    s.innerHTML = tab === 'leads' ? vendorLeads() : tab === 'bookings' ? vendorBookings() : vendorProfileOwn();
+  }
+  s.scrollTop = 0;
+}
+function renderTabs() {
+  const newLeads = quotes.filter(q => q.status === 'open').length;
+  const defs = role === 'customer'
+    ? [['home', '🏠', 'Home'], ['requests', '📨', 'My Requests'], ['bookings', '✅', 'Bookings']]
+    : [['leads', '📨', 'Leads' + (newLeads ? `<span class="badge-dot">${newLeads}</span>` : '')], ['bookings', '📅', 'Bookings'], ['profile', '👤', 'Profile']];
+  document.getElementById('tabs').innerHTML = defs.map(([id, ico, label]) =>
+    `<button class="${tab === id && !view ? 'active' : ''}" onclick="setTab('${id}')"><span class="ico">${ico}</span>${label}</button>`).join('');
+}
+
+/* ---------------- customer screens ---------------- */
+function customerHome() {
+  const list = VENDORS.filter(v => !activeCat || v.cat === activeCat);
+  return `
+    <div class="note">💍 Priya &amp; Rohit · Wedding on 15 Nov 2026 · Bongaigaon · 300 guests</div>
+    <h3>Find your vendors</h3>
+    <div class="cat-grid">
+      ${CATS.map(c => `<div class="cat ${activeCat === c.id ? 'active' : ''}" onclick="activeCat=activeCat==='${c.id}'?null:'${c.id}';render()"><span class="ico">${c.ico}</span>${c.label}</div>`).join('')}
+    </div>
+    ${list.map(v => `
+      <div class="card vendor-row" onclick="view={type:'vendor',id:'${v.id}'};render()">
+        <div class="avatar" style="background:${v.color}">${v.ico}</div>
+        <div class="info">
+          <div class="name">${v.name} ${tierTag(v.tier)}</div>
+          <div class="stars">${stars(v.rating)} <span class="muted">${v.rating} (${v.reviews})</span></div>
+          <div class="muted">📍 ${v.city}</div>
+        </div>
+        <div class="price-from">from<br>${inr(v.from)}</div>
+      </div>`).join('')}`;
+}
+function vendorProfile(v) {
+  return `
+    <button class="btn btn-line" onclick="view=null;render()" style="margin-bottom:10px">← Back</button>
+    <div class="card">
+      <div class="vendor-row">
+        <div class="avatar" style="background:${v.color}">${v.ico}</div>
+        <div class="info">
+          <div class="name">${v.name} ${tierTag(v.tier)}</div>
+          <div class="stars">${stars(v.rating)} <span class="muted">${v.rating} · ${v.reviews} verified reviews</span></div>
+          <div class="muted">📍 ${v.city} · replies in ~2 hrs</div>
+        </div>
+      </div>
+      <div class="portfolio">${[1,2,3,4,5].map(i => `<div class="pf" style="background:${v.color}${i % 2 ? 'cc' : '99'}">${v.ico}</div>`).join('')}</div>
+      <p class="muted">${v.bio}</p>
+      <h3>Packages</h3>
+      ${v.packages.map(p => `<div class="package"><span>${p[0]}</span><strong>${inr(p[1])}</strong></div>`).join('')}
+      <button class="btn btn-gold btn-block" onclick="view={type:'request',id:'${v.id}'};render()">Request a Quote</button>
+    </div>
+    <div class="card">
+      <h3>Recent review</h3>
+      <div class="stars">★★★★★ <span class="muted">· verified booking</span></div>
+      <p class="muted" style="margin:6px 0 0">"Booked for our wedding in Abhayapuri — absolutely professional, photos came in 2 weeks."</p>
+    </div>`;
+}
+function requestForm(v) {
+  return `
+    <button class="btn btn-line" onclick="view={type:'vendor',id:'${v.id}'};render()" style="margin-bottom:10px">← Back</button>
+    <div class="card">
+      <h3>Request a quote — ${v.name}</h3>
+      <div class="field"><label>Event date</label><input type="date" id="qDate" value="2026-11-15"></div>
+      <div class="field"><label>Event city</label><input id="qCity" value="Bongaigaon"></div>
+      <div class="field"><label>What do you need?</label><textarea id="qReq" rows="3">Wedding day coverage, 300 guests, traditional Assamese ceremony</textarea></div>
+      <button class="btn btn-maroon btn-block" onclick="submitQuote('${v.id}')">Send Request</button>
+      <p class="muted" style="text-align:center;margin:8px 0 0">The vendor gets an instant notification and replies with a price.</p>
+    </div>`;
+}
+function submitQuote(vendorId) {
+  const q = {
+    id: 'q' + Date.now(), vendorId, customer: 'Priya & Rohit',
+    date: document.getElementById('qDate').value,
+    city: document.getElementById('qCity').value,
+    req: document.getElementById('qReq').value,
+    status: 'open', price: null, note: null, paid: false,
+  };
+  quotes.unshift(q); messages[q.id] = []; persist();
+  view = null; tab = 'requests'; render();
+  toast('📨 Request sent! Vendor notified instantly.');
+}
+function customerRequests() {
+  if (!quotes.length) return `<div class="empty">No requests yet.<br>Find a vendor on Home and ask for a quote.</div>`;
+  return '<h3>My quote requests</h3>' + quotes.map(q => {
+    const v = vendorById(q.vendorId);
+    return `<div class="card">
+      <div class="vendor-row" style="cursor:default">
+        <div class="avatar" style="background:${v.color}">${v.ico}</div>
+        <div class="info">
+          <div class="name">${v.name}</div>
+          <div class="muted">${q.date} · ${q.city}</div>
+        </div>
+        <span class="status st-${q.status}">${q.status.toUpperCase()}</span>
+      </div>
+      ${q.status === 'quoted' ? `
+        <div class="pay-sheet" style="margin-top:10px">
+          <div class="pay-row"><span>Vendor's quote</span><strong>${inr(q.price)}</strong></div>
+          ${q.note ? `<p class="muted" style="margin:4px 0 8px">"${q.note}"</p>` : ''}
+          <button class="btn btn-gold btn-block" onclick="view={type:'pay',id:'${q.id}'};render()">Accept &amp; Pay</button>
+        </div>` : ''}
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn btn-line" onclick="view={type:'chat',id:'${q.id}'};render()">💬 Chat</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function payScreen(qid) {
+  const q = quotes.find(x => x.id === qid); const v = vendorById(q.vendorId);
+  return `
+    <button class="btn btn-line" onclick="view=null;tab='requests';render()" style="margin-bottom:10px">← Back</button>
+    <div class="card pay-sheet">
+      <h3>🔒 Razorpay Checkout <span class="muted" style="font-weight:400">(simulated)</span></h3>
+      <div class="pay-row"><span>${v.name} — ${CATS.find(c => c.id === v.cat).label}</span><span>${inr(q.price)}</span></div>
+      <div class="pay-row"><span>Booking protection</span><span>Included</span></div>
+      <div class="pay-row total"><span>Pay now</span><span>${inr(q.price)}</span></div>
+      <div class="field" style="margin-top:10px"><label>UPI ID</label><input value="priya@oksbi"></div>
+      <button class="btn btn-maroon btn-block" onclick="payNow('${q.id}')">Pay ${inr(q.price)}</button>
+      <p class="muted" style="margin:8px 0 0;text-align:center">In the real app this opens actual Razorpay. Payment is confirmed by the server, never by the app.</p>
+    </div>`;
+}
+function payNow(qid) {
+  const q = quotes.find(x => x.id === qid);
+  q.status = 'confirmed'; q.paid = true; persist();
+  view = null; tab = 'bookings'; render();
+  toast('✅ Payment captured — booking confirmed! Vendor notified.');
+}
+function customerBookings() {
+  const booked = quotes.filter(q => q.status === 'confirmed');
+  if (!booked.length) return `<div class="empty">No confirmed bookings yet.<br>Accept a vendor's quote to book them.</div>`;
+  return '<h3>Confirmed bookings</h3>' + booked.map(q => {
+    const v = vendorById(q.vendorId);
+    return `<div class="card">
+      <div class="vendor-row" style="cursor:default">
+        <div class="avatar" style="background:${v.color}">${v.ico}</div>
+        <div class="info">
+          <div class="name">${v.name}</div>
+          <div class="muted">${q.date} · ${inr(q.price)} paid</div>
+        </div>
+        <span class="status st-confirmed">CONFIRMED</span>
+      </div>
+      <p class="muted" style="margin:8px 0 0">🛡️ Booking protected · invoice sent by email · reminder 1 day before the event.</p>
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- vendor screens ---------------- */
+function vendorLeads() {
+  const mine = quotes.filter(q => q.status === 'open' || q.status === 'quoted');
+  if (!mine.length) return `<div class="empty">No leads right now.<br><br>Tip: switch to the Customer App above and send a quote request — it appears here instantly.</div>`;
+  return '<h3>Incoming leads</h3>' + mine.map(q => {
+    const v = vendorById(q.vendorId);
+    return `<div class="card">
+      <div class="vendor-row" style="cursor:default">
+        <div class="avatar" style="background:${v.color}">${v.ico}</div>
+        <div class="info">
+          <div class="name">${q.customer} → ${v.name}</div>
+          <div class="muted">${q.date} · ${q.city}</div>
+        </div>
+        <span class="status st-${q.status}">${q.status === 'open' ? 'NEW' : 'QUOTED'}</span>
+      </div>
+      <p class="muted" style="margin:8px 0">"${q.req}"</p>
+      ${q.status === 'open' ? `
+        <div class="field"><label>Your price (₹)</label><input type="number" id="price_${q.id}" placeholder="e.g. 45000"></div>
+        <div class="field"><label>Note to customer</label><input id="note_${q.id}" placeholder="What's included"></div>
+        <button class="btn btn-gold btn-block" onclick="sendQuote('${q.id}')">Send Quote</button>`
+      : `<div class="pay-row"><span>You quoted</span><strong>${inr(q.price)}</strong></div><p class="muted">Waiting for the customer to accept…</p>`}
+      <div style="margin-top:8px"><button class="btn btn-line" onclick="view={type:'chat',id:'${q.id}'};render()">💬 Chat</button></div>
+    </div>`;
+  }).join('');
+}
+function sendQuote(qid) {
+  const q = quotes.find(x => x.id === qid);
+  const price = Number(document.getElementById('price_' + qid).value);
+  if (!price || price < 100) return toast('Enter a valid price first');
+  q.price = price; q.note = document.getElementById('note_' + qid).value; q.status = 'quoted'; persist();
+  render(); toast('💸 Quote sent — customer notified!');
+}
+function vendorBookings() {
+  const booked = quotes.filter(q => q.status === 'confirmed');
+  if (!booked.length) return `<div class="empty">No confirmed bookings yet.</div>`;
+  return '<h3>Confirmed bookings</h3>' + booked.map(q => {
+    const v = vendorById(q.vendorId);
+    const commission = Math.round(q.price * COMMISSION);
+    return `<div class="card">
+      <div class="vendor-row" style="cursor:default">
+        <div class="avatar" style="background:${v.color}">${v.ico}</div>
+        <div class="info">
+          <div class="name">${q.customer}</div>
+          <div class="muted">${q.date} · ${q.city}</div>
+        </div>
+        <span class="status st-confirmed">PAID</span>
+      </div>
+      <div class="pay-sheet" style="margin-top:10px">
+        <div class="pay-row"><span>Customer paid</span><span>${inr(q.price)}</span></div>
+        <div class="pay-row"><span>Platform fee (15%)</span><span>− ${inr(commission)}</span></div>
+        <div class="pay-row total"><span>Your payout</span><span>${inr(q.price - commission)}</span></div>
+      </div>
+      <p class="muted" style="margin:8px 0 0">Payout T+2 days after the event via bank transfer.</p>
+    </div>`;
+  }).join('');
+}
+function vendorProfileOwn() {
+  const v = VENDORS[0];
+  return `<h3>My vendor profile</h3>
+    <div class="card">
+      <div class="vendor-row" style="cursor:default">
+        <div class="avatar" style="background:${v.color}">${v.ico}</div>
+        <div class="info">
+          <div class="name">${v.name} ${tierTag(v.tier)}</div>
+          <div class="stars">${stars(v.rating)} <span class="muted">${v.rating} (${v.reviews} reviews)</span></div>
+        </div>
+      </div>
+      <div class="pay-sheet" style="margin-top:10px">
+        <div class="pay-row"><span>Subscription</span><strong>GOLD — ₹500/month</strong></div>
+        <div class="pay-row"><span>Response time</span><span>~2 hrs</span></div>
+        <div class="pay-row"><span>Acceptance rate</span><span>95%</span></div>
+      </div>
+      <button class="btn btn-line btn-block" style="margin-top:10px" onclick="toast('Profile editing — in the full app')">Edit profile &amp; packages</button>
+      <button class="btn btn-gold btn-block" style="margin-top:8px" onclick="toast('Upgrade flow — in the full app')">Upgrade to PLATINUM</button>
+    </div>
+    <div class="card"><h3>This month</h3>
+      <div class="pay-row"><span>Leads received</span><strong>${quotes.length}</strong></div>
+      <div class="pay-row"><span>Bookings won</span><strong>${quotes.filter(q => q.status === 'confirmed').length}</strong></div>
+      <div class="pay-row"><span>Earnings</span><strong>${inr(quotes.filter(q => q.status === 'confirmed').reduce((s, q) => s + Math.round(q.price * (1 - COMMISSION)), 0))}</strong></div>
+    </div>`;
+}
+
+/* ---------------- chat (shared thread) ---------------- */
+function chatScreen(qid) {
+  const q = quotes.find(x => x.id === qid); const v = vendorById(q.vendorId);
+  const thread = messages[qid] || [];
+  const other = role === 'customer' ? v.name : q.customer;
+  return `
+    <button class="btn btn-line" onclick="view=null;render()" style="margin-bottom:10px">← Back</button>
+    <div class="card">
+      <h3>💬 ${other}</h3>
+      <div class="chat-box">
+        ${thread.length ? thread.map(m => `<div class="bubble ${m.from === role ? 'me' : 'them'}">${m.text}</div>`).join('') : '<p class="muted">Say hello — messages appear on both apps instantly.</p>'}
+      </div>
+      <div class="chat-input">
+        <input id="chatText" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendMsg('${qid}')">
+        <button class="btn btn-maroon" onclick="sendMsg('${qid}')">➤</button>
+      </div>
+    </div>`;
+}
+function sendMsg(qid) {
+  const el = document.getElementById('chatText');
+  const text = el.value.trim(); if (!text) return;
+  (messages[qid] = messages[qid] || []).push({ from: role, text }); persist();
+  render(); view = { type: 'chat', id: qid }; render();
+}
+
+setRole('customer');
+</script>
+</body>
+</html>
