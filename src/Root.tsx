@@ -10,7 +10,7 @@ export default function Root() {
     return (
       <div className="boot">
         <div className="boot-spinner" />
-        <p>Loading Budget Phone Store…</p>
+        <p>Loading Phone Factory…</p>
       </div>
     );
   }

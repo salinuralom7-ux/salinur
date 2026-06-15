@@ -18,7 +18,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>(() => load('bps_cart', []));
   const [wishlist, setWishlist] = useState<string[]>(() => load('bps_wishlist', []));
   const [orders, setOrders] = useState<Order[]>(() => load('bps_orders', []));
-  const [branchId, setBranchId] = useState<string | null>(() => load<string | null>('bps_branch', null));
+  const [storedBranchId, setStoredBranchId] = useState<string | null>(() => load<string | null>('bps_branch', null));
+
+  // A stored branch that no longer exists (e.g. after branches change) is
+  // treated as "not chosen", so the picker reopens instead of showing an
+  // empty catalog. Derived rather than reset-in-effect to avoid extra renders.
+  const branchKnown =
+    storedBranchId === 'all' || (branches.length > 0 && branches.some((b) => b.id === storedBranchId));
+  const branchId = storedBranchId && branchKnown ? storedBranchId : null;
 
   useEffect(() => localStorage.setItem('bps_cart', JSON.stringify(cart)), [cart]);
   useEffect(() => localStorage.setItem('bps_wishlist', JSON.stringify(wishlist)), [wishlist]);
@@ -27,7 +34,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (branchId) localStorage.setItem('bps_branch', JSON.stringify(branchId));
   }, [branchId]);
 
-  const setBranch = (id: string) => setBranchId(id);
+  const setBranch = (id: string) => setStoredBranchId(id);
   const branch = getBranch(branches, branchId) ?? null;
 
   const addToCart = (productId: string, qty = 1) => {

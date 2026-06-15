@@ -4,6 +4,7 @@ import { useStore } from './store/context';
 import { useData } from './store/dataContext';
 import { isAllBranches, whatsappLink } from './data/branches';
 import BranchPicker from './components/BranchPicker';
+import logoUrl from './assets/logo.svg';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetail from './pages/ProductDetail';
@@ -34,9 +35,8 @@ export default function App() {
     <div className="app">
       <header className="header">
         <div className="container header-inner">
-          <Link to="/" className="logo">
-            📱 Budget Phone Store
-            <span className="logo-sub">Refurbished phones · Assam</span>
+          <Link to="/" className="logo" aria-label="Phone Factory — home">
+            <img src={logoUrl} alt="Phone Factory" className="logo-img" />
           </Link>
           <button className="branch-chip" onClick={() => setPickerOpen(true)} aria-label="Change branch">
             📍 <span className="branch-chip-label">{branchLabel}</span>
@@ -81,7 +81,7 @@ export default function App() {
       <footer className="footer">
         <div className="container footer-inner">
           <div>
-            <strong>Budget Phone Store</strong> — Bongaigaon · Guwahati · Barpeta Road
+            <strong>Phone Factory</strong> — Assam · Kokrajhar · Bongaigaon
             <p>Refurbished phones with honest grading, real warranties and 15-day money-back guarantee.</p>
             <p><Link to="/branches">Find a store near you →</Link></p>
           </div>

@@ -1,6 +1,6 @@
-# Budget Phone Store 📱
+# Phone Factory 📱
 
-An online marketplace for refurbished smartphones — built for Budget Phone Store, a multi-branch shop in Assam (Bongaigaon · Guwahati · Barpeta Road). Customers pick their nearest branch, then buy quality refurbished phones at 40–65% below retail price with transparent grading, warranty assurance, and a 15-day money-back guarantee.
+An online marketplace for refurbished smartphones — built for **Phone Factory**, a multi-branch shop in Assam (Phone Factory Assam · Kokrajhar · Bongaigaon). Customers pick their nearest branch, then buy quality refurbished phones at 40–65% below retail price with transparent grading, warranty assurance, and a 15-day money-back guarantee.
 
 This is the **Phase 1 MVP** web app: full storefront with branch selection, the 5-grade system, search & filtering, product detail pages with quality-check transparency, cart, promo codes, WhatsApp enquiry/reserve, and a complete checkout flow.
 
@@ -25,9 +25,9 @@ The store runs across multiple branches, and the site is branch-aware end to end
 - **Stores page** (`/branches`) — a store locator with each branch's address, hours, landmark, call button, directions link and a direct WhatsApp line.
 - **WhatsApp enquiry/reserve** — a floating WhatsApp button site-wide, plus per-product "Reserve on WhatsApp" (in stock) and "Enquire on WhatsApp" (out of stock) actions that open a pre-filled chat to the active branch.
 
-**Configure branches** in [`src/data/branches.ts`](src/data/branches.ts): edit the `BRANCHES` array with each branch's name, address, hours, `phone` (tel-dialable, keep `+91…`), `whatsapp` (digits only, e.g. `919876500001`) and a Google Maps `mapUrl`. The numbers shipped are **placeholders** — replace them before going live.
+**Configure branches** in [`server/data/branches.ts`](server/data/branches.ts): edit the `BRANCH_SEED` array with each branch's name, address, hours, `phone` (tel-dialable, keep `+91…`), `whatsapp` (digits only, e.g. `919876500001`) and a Google Maps `mapUrl`, then re-seed (`npm run seed`). The phone numbers and street addresses shipped are **placeholders** — replace them before going live.
 
-**Per-branch inventory** is, by default, split deterministically from each product's total `stock` so the demo has realistic branch-by-branch availability. To set real numbers, add a `branchStock` map to any product in `src/data/products.ts`, e.g. `branchStock: { bongaigaon: 2, guwahati: 1, barpeta: 0 }`.
+**Per-branch inventory** is, by default, split deterministically from each product's total `stock` so the demo has realistic branch-by-branch availability. To set real numbers, add a `branchStock` map to any product in `src/data/products.ts`, e.g. `branchStock: { assam: 2, kokrajhar: 1, bongaigaon: 0 }`.
 
 ## What's included (Phase 1)
 

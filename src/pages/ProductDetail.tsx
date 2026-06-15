@@ -207,7 +207,7 @@ export default function ProductDetail() {
 
       <section className="detail-section">
         <button className="expander" onClick={() => setShowChecks(!showChecks)}>
-          {showChecks ? '▾' : '▸'} 32-Point Quality Check — inspected at Budget Phone Store{branch ? `, ${branch.city}` : ''}
+          {showChecks ? '▾' : '▸'} 32-Point Quality Check — inspected at Phone Factory{branch ? `, ${branch.city}` : ''}
         </button>
         {showChecks && (
           <div className="expander-body check-grid">

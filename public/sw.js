@@ -1,8 +1,8 @@
-/* Budget Phone Store service worker.
+/* Phone Factory service worker.
  * - App shell + static assets: cache-first (fast, offline-capable).
  * - API (/api/*): network-first, falling back to the last cached response.
  */
-const CACHE = 'bps-v1';
+const CACHE = 'pf-v1';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg'];
 
 self.addEventListener('install', (event) => {

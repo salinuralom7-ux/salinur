@@ -81,7 +81,7 @@ export default function Home() {
           </div>
           <div>
             <h3>🏠 Local Trust</h3>
-            <p>Three branches across Assam — Bongaigaon, Guwahati and Barpeta Road. Visit us in person, or order online with original invoice and IMEI verification. <Link to="/branches">Find your store →</Link></p>
+            <p>Three Phone Factory branches across Assam — Phone Factory Assam, Kokrajhar and Bongaigaon. Visit us in person, or order online with original invoice and IMEI verification. <Link to="/branches">Find your store →</Link></p>
           </div>
         </div>
       </section>

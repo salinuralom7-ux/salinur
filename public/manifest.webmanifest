@@ -1,6 +1,6 @@
 {
-  "name": "Budget Phone Store",
-  "short_name": "BPS",
+  "name": "Phone Factory",
+  "short_name": "Phone Factory",
   "description": "Refurbished phones across Assam — honest 5-grade system, per-branch stock, warranty on every grade and 15-day money-back guarantee.",
   "start_url": "./",
   "scope": "./",

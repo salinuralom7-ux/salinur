@@ -28,5 +28,5 @@ export function useStore(): StoreState {
 }
 
 export function newOrderId(): string {
-  return 'BPS' + Date.now().toString(36).toUpperCase();
+  return 'PF' + Date.now().toString(36).toUpperCase();
 }

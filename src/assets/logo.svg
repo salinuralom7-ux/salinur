@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="470" height="110" viewBox="0 0 470 110" role="img" aria-label="Phone Factory">
+  <defs>
+    <linearGradient id="pfbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#1e3a8a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- icon mark (the 512 mark scaled down) -->
+  <g transform="translate(8,11) scale(0.172)">
+    <rect width="512" height="512" rx="112" fill="url(#pfbg)"/>
+    <rect x="156" y="86" width="200" height="340" rx="40" fill="#ffffff"/>
+    <rect x="176" y="120" width="160" height="272" rx="18" fill="#0f172a"/>
+    <rect x="236" y="104" width="40" height="7" rx="3.5" fill="#cbd5e1"/>
+    <circle cx="256" cy="409" r="9" fill="#cbd5e1"/>
+    <path d="M196 252 L226 220 L226 252 Z" fill="#f97316"/>
+    <path d="M226 252 L256 220 L256 252 Z" fill="#fb923c"/>
+    <path d="M256 252 L286 220 L286 252 Z" fill="#f97316"/>
+    <path d="M286 252 L316 220 L316 252 Z" fill="#fb923c"/>
+    <rect x="196" y="252" width="120" height="108" fill="#f97316"/>
+    <rect x="296" y="186" width="20" height="40" rx="3" fill="#fb923c"/>
+    <circle cx="306" cy="174" r="7" fill="#ffffff" opacity="0.85"/>
+    <rect x="210" y="276" width="22" height="22" rx="3" fill="#0f172a"/>
+    <rect x="246" y="276" width="22" height="22" rx="3" fill="#0f172a"/>
+    <rect x="282" y="276" width="22" height="22" rx="3" fill="#0f172a"/>
+    <rect x="244" y="320" width="24" height="40" rx="3" fill="#0f172a"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="116" y="58" font-family="'Segoe UI', system-ui, Arial, sans-serif" font-size="42" font-weight="800" letter-spacing="-0.5">
+    <tspan fill="#0f172a">Phone</tspan><tspan fill="#1d4ed8"> Factory</tspan>
+  </text>
+  <text x="118" y="84" font-family="'Segoe UI', system-ui, Arial, sans-serif" font-size="13.5" font-weight="700" letter-spacing="3" fill="#64748b">REFURBISHED PHONES · ASSAM</text>
+</svg>

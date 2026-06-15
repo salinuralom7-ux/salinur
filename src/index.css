@@ -59,6 +59,7 @@ h2 { font-size: 1.3rem; }
   line-height: 1.2;
 }
 .logo:hover { text-decoration: none; }
+.logo-img { height: 44px; width: auto; display: block; }
 .logo-sub { font-size: 0.7rem; font-weight: 500; color: var(--muted); }
 .search { display: flex; gap: 8px; flex: 1; min-width: 220px; }
 .search input {
