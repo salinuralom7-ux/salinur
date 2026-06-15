@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { PRODUCTS, PROMO_CODES, formatINR, productTitle } from '../data/products';
+import { PROMO_CODES, formatINR, productTitle } from '../data/products';
 import { GRADES } from '../data/grades';
 import { newOrderId, useStore } from '../store/context';
+import { useData } from '../store/dataContext';
 import type { Address, Order } from '../types';
 
 const STEPS = ['Address', 'Shipping', 'Payment', 'Review'] as const;
@@ -17,6 +18,7 @@ const PAYMENT_METHODS = [
 
 export default function Checkout() {
   const { cart, placeOrder } = useStore();
+  const { products } = useData();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
 
@@ -29,7 +31,7 @@ export default function Checkout() {
   const [gradeEAck, setGradeEAck] = useState(false);
 
   const lines = cart
-    .map((item) => ({ item, product: PRODUCTS.find((p) => p.id === item.productId)! }))
+    .map((item) => ({ item, product: products.find((p) => p.id === item.productId)! }))
     .filter((l) => l.product);
 
   if (lines.length === 0) {

@@ -40,25 +40,53 @@ The store runs across multiple branches, and the site is branch-aware end to end
 - **Orders & warranties** — order history with per-device warranty cards and live expiry status
 - **Wishlist** — persisted locally, synced across pages
 
-Cart, wishlist and orders persist in the browser via `localStorage` (no backend needed for the MVP).
+The phone catalog and branches are served by the backend API (see [Architecture](#architecture-full-stack)); cart, wishlist and orders persist in the browser via `localStorage`.
+
+## Architecture (full stack)
+
+This is a full-stack app, not a static site:
+
+- **Backend** — a Node + Express API (`server/`) backed by SQLite (`better-sqlite3`). It owns the catalog (phones + reviews) and the branches, and computes per-branch stock. The database is seeded from `src/data/products.ts` (phones) and `server/data/branches.ts` (stores).
+- **Frontend** — React 19 + TypeScript (Vite). On startup it fetches branches and the catalog from the API (`src/store/DataContext.tsx`); the rest of the app reads from that context. Cart, wishlist and orders stay on the device in `localStorage`.
+- **Installable PWA** — a web manifest, app icon and service worker (`public/`) make it installable on a phone ("Add to Home Screen") and keep the shell + last-seen catalog available offline.
+
+### API
+
+| Method & path | Returns |
+|---|---|
+| `GET /api/health` | liveness check |
+| `GET /api/branches` | all branches |
+| `GET /api/products` | full catalog, each with `branchStock` |
+| `GET /api/products/:id` | a single product |
+| `GET /api/products/:id/reviews` | reviews for a product |
+
+In production the Express server also serves the built frontend, so the whole app runs from one origin on one port.
 
 ## Run it
 
 ```bash
 npm install
-npm run dev      # local development at http://localhost:5173
-npm run build    # production build into dist/
-npm run preview  # serve the production build
+
+# Development (two processes): API on :3001 + Vite (with /api proxy) on :5173
+npm run dev
+
+# Or run pieces individually:
+npm run server   # Express API + static server on :3001 (tsx watch)
+npm run seed     # (re)seed the SQLite database from the seed data
+
+# Production:
+npm run build    # type-check + build the frontend into dist/
+npm start        # Express serves dist/ + the API on :3001  →  open http://localhost:3001
 ```
 
-The build uses a relative base path and hash routing, so the `dist/` folder deploys as-is to GitHub Pages, Netlify, Vercel or any static host.
+The SQLite file (`server/data.sqlite`) is created and seeded automatically on first server start, and is git-ignored. Set `PORT` to change the server port and `DB_PATH` to relocate the database.
 
 ## Tech
 
-Vite + React 19 + TypeScript, React Router (hash routing), no UI framework — hand-rolled responsive CSS. Product catalog is seed data in `src/data/products.ts` and branches are in `src/data/branches.ts`; edit those files to add or update listings and stores.
+Vite + React 19 + TypeScript on the frontend (React Router hash routing, hand-rolled responsive CSS, installable PWA); Express 5 + better-sqlite3 on the backend. Catalog seed data lives in `src/data/products.ts`, store/branch seed data in `server/data/branches.ts`. Per-branch stock is split deterministically from each phone's total `stock`, or set explicitly via a product `branchStock` map.
 
 ## Next phases (per product roadmap)
 
 - **Phase 2:** real product photos & unit videos, live reviews, warranty claim flow, Razorpay payment integration (needs merchant keys)
-- **Phase 3:** backend with real inventory, user accounts (phone OTP), trade-in program, Assamese language support
+- **Phase 3:** server-side orders & user accounts (phone OTP), admin inventory dashboard, trade-in program, Assamese language support
 - **Phase 4:** B2B/bulk portal, analytics dashboard, referral program

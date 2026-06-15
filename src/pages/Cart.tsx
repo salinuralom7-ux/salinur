@@ -1,16 +1,18 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { PRODUCTS, formatINR, productTitle } from '../data/products';
+import { formatINR, productTitle } from '../data/products';
 import { GRADES } from '../data/grades';
 import { useStore } from '../store/context';
+import { useData } from '../store/dataContext';
 import GradeBadge from '../components/GradeBadge';
 import PhoneImage from '../components/PhoneImage';
 
 export default function Cart() {
   const { cart, setQty, removeFromCart, toggleWishlist } = useStore();
+  const { products } = useData();
   const navigate = useNavigate();
 
   const lines = cart
-    .map((item) => ({ item, product: PRODUCTS.find((p) => p.id === item.productId)! }))
+    .map((item) => ({ item, product: products.find((p) => p.id === item.productId)! }))
     .filter((l) => l.product);
 
   const subtotal = lines.reduce((sum, l) => sum + l.product.price * l.item.qty, 0);

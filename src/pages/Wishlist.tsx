@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom';
-import { PRODUCTS } from '../data/products';
 import { useStore } from '../store/context';
+import { useData } from '../store/dataContext';
 import ProductCard from '../components/ProductCard';
 
 export default function Wishlist() {
   const { wishlist } = useStore();
-  const products = PRODUCTS.filter((p) => wishlist.includes(p.id));
+  const { products } = useData();
+  const wished = products.filter((p) => wishlist.includes(p.id));
 
-  if (products.length === 0) {
+  if (wished.length === 0) {
     return (
       <div className="container empty-state">
         <h1>Your wishlist is empty</h1>
@@ -21,7 +22,7 @@ export default function Wishlist() {
     <div className="container">
       <h1>Wishlist</h1>
       <div className="product-grid">
-        {products.map((p) => (
+        {wished.map((p) => (
           <ProductCard key={p.id} product={p} />
         ))}
       </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { CartItem, Order } from '../types';
-import { PRODUCTS } from '../data/products';
 import { getBranch, stockAt } from '../data/branches';
+import { useData } from './dataContext';
 import { StoreContext } from './context';
 
 function load<T>(key: string, fallback: T): T {
@@ -14,6 +14,7 @@ function load<T>(key: string, fallback: T): T {
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
+  const { products, branches } = useData();
   const [cart, setCart] = useState<CartItem[]>(() => load('bps_cart', []));
   const [wishlist, setWishlist] = useState<string[]>(() => load('bps_wishlist', []));
   const [orders, setOrders] = useState<Order[]>(() => load('bps_orders', []));
@@ -27,10 +28,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [branchId]);
 
   const setBranch = (id: string) => setBranchId(id);
-  const branch = getBranch(branchId) ?? null;
+  const branch = getBranch(branches, branchId) ?? null;
 
   const addToCart = (productId: string, qty = 1) => {
-    const product = PRODUCTS.find((p) => p.id === productId);
+    const product = products.find((p) => p.id === productId);
     if (!product) return;
     const max = stockAt(product, branchId);
     setCart((prev) => {
@@ -45,7 +46,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   };
 
   const setQty = (productId: string, qty: number) => {
-    const product = PRODUCTS.find((p) => p.id === productId);
+    const product = products.find((p) => p.id === productId);
     const max = product ? stockAt(product, branchId) : qty;
     setCart((prev) =>
       qty <= 0

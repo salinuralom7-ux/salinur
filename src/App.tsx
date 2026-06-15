@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 import { useStore } from './store/context';
-import { BRANCHES, isAllBranches, whatsappLink } from './data/branches';
+import { useData } from './store/dataContext';
+import { isAllBranches, whatsappLink } from './data/branches';
 import BranchPicker from './components/BranchPicker';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
@@ -15,6 +16,7 @@ import Branches from './pages/Branches';
 
 export default function App() {
   const { cartCount, wishlist, branchId, branch } = useStore();
+  const { branches } = useData();
   const [query, setQuery] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
   const navigate = useNavigate();
@@ -26,7 +28,7 @@ export default function App() {
 
   const branchLabel = branch ? branch.city : isAllBranches(branchId) ? 'All branches' : 'Choose store';
   // Floating WhatsApp uses the active branch, or the main branch as a fallback.
-  const waBranch = branch ?? BRANCHES[0];
+  const waBranch = branch ?? branches[0];
 
   return (
     <div className="app">
@@ -92,15 +94,17 @@ export default function App() {
         </div>
       </footer>
 
-      <a
-        className="whatsapp-fab"
-        href={whatsappLink(waBranch, `Hi ${waBranch.name}, I have a question about a refurbished phone.`)}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Chat on WhatsApp"
-      >
-        💬
-      </a>
+      {waBranch && (
+        <a
+          className="whatsapp-fab"
+          href={whatsappLink(waBranch, `Hi ${waBranch.name}, I have a question about a refurbished phone.`)}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Chat on WhatsApp"
+        >
+          💬
+        </a>
+      )}
 
       <BranchPicker open={pickerOpen || branchId === null} onClose={() => setPickerOpen(false)} />
     </div>

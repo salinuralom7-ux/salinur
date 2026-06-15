@@ -1,0 +1,25 @@
+{
+  "name": "Budget Phone Store",
+  "short_name": "BPS",
+  "description": "Refurbished phones across Assam — honest 5-grade system, per-branch stock, warranty on every grade and 15-day money-back guarantee.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6fb",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

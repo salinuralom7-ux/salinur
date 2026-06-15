@@ -1,18 +1,19 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { PRODUCTS, productTitle } from '../data/products';
+import { productTitle } from '../data/products';
 import { stockAt } from '../data/branches';
 import { useStore } from '../store/context';
+import { useData } from '../store/dataContext';
 import { GRADE_LIST } from '../data/grades';
 import type { Grade } from '../types';
 import ProductCard from '../components/ProductCard';
 
 type SortKey = 'newest' | 'price-asc' | 'price-desc' | 'rating' | 'popular';
 
-const BRANDS = [...new Set(PRODUCTS.map((p) => p.brand))].sort();
-
 export default function Shop() {
   const { branchId, branch } = useStore();
+  const { products } = useData();
+  const BRANDS = useMemo(() => [...new Set(products.map((p) => p.brand))].sort(), [products]);
   const [params, setParams] = useSearchParams();
   const query = (params.get('q') ?? '').toLowerCase();
   const gradeParam = params.get('grade') as Grade | null;
@@ -28,7 +29,7 @@ export default function Shop() {
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
   const results = useMemo(() => {
-    let list = PRODUCTS.filter((p) => {
+    let list = products.filter((p) => {
       if (categoryParam && p.category !== categoryParam) return false;
       if (grades.length > 0 && !grades.includes(p.grade)) return false;
       if (brands.length > 0 && !brands.includes(p.brand)) return false;
@@ -48,7 +49,7 @@ export default function Shop() {
       case 'newest': break; // listing order = newest first
     }
     return list;
-  }, [query, categoryParam, grades, brands, maxPrice, inStockOnly, sort, branchId]);
+  }, [products, query, categoryParam, grades, brands, maxPrice, inStockOnly, sort, branchId]);
 
   return (
     <div className="container shop-layout">

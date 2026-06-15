@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { PRODUCTS, REVIEWS, discountPct, formatINR, productTitle } from '../data/products';
-import { BRANCHES, branchDistribution, stockAt, whatsappLink } from '../data/branches';
+import { discountPct, formatINR, productTitle } from '../data/products';
+import { stockAt, whatsappLink } from '../data/branches';
 import { GRADES, QUALITY_CHECKS } from '../data/grades';
+import { api } from '../lib/api';
+import type { Review } from '../types';
 import { useStore } from '../store/context';
+import { useData } from '../store/dataContext';
 import GradeBadge from '../components/GradeBadge';
 import PhoneImage from '../components/PhoneImage';
 import Stars from '../components/Stars';
@@ -12,10 +15,20 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, toggleWishlist, wishlist, branchId, branch } = useStore();
+  const { products, branches, productById } = useData();
   const [showChecks, setShowChecks] = useState(false);
   const [showGrade, setShowGrade] = useState(true);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
-  const product = PRODUCTS.find((p) => p.id === id);
+  useEffect(() => {
+    let active = true;
+    if (id) api.reviews(id).then((r) => active && setReviews(r)).catch(() => active && setReviews([]));
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  const product = productById(id);
   if (!product) {
     return (
       <div className="container">
@@ -26,16 +39,15 @@ export default function ProductDetail() {
   }
 
   const grade = GRADES[product.grade];
-  const reviews = REVIEWS.filter((r) => r.productId === product.id);
-  const similar = PRODUCTS.filter(
+  const similar = products.filter(
     (p) => p.id !== product.id && p.category === product.category && stockAt(p, branchId) > 0,
   ).slice(0, 3);
-  const gradeUp = PRODUCTS.find(
+  const gradeUp = products.find(
     (p) => p.model === product.model && p.grade < product.grade && stockAt(p, branchId) > 0,
   );
   const stock = stockAt(product, branchId);
   const out = stock === 0;
-  const distribution = branchDistribution(product);
+  const distribution = product.branchStock ?? {};
 
   const buyNow = () => {
     addToCart(product.id);
@@ -83,7 +95,7 @@ export default function ProductDetail() {
           <div className="branch-availability">
             <h4>📍 Availability by branch</h4>
             <ul>
-              {BRANCHES.map((b) => {
+              {branches.map((b) => {
                 const n = distribution[b.id] ?? 0;
                 return (
                   <li key={b.id} className={branchId === b.id ? 'active' : ''}>

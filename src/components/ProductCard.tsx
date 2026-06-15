@@ -3,16 +3,18 @@ import type { Product } from '../types';
 import { discountPct, formatINR, productTitle } from '../data/products';
 import { otherBranchesWithStock, stockAt, whatsappLink } from '../data/branches';
 import { useStore } from '../store/context';
+import { useData } from '../store/dataContext';
 import GradeBadge from './GradeBadge';
 import PhoneImage from './PhoneImage';
 import Stars from './Stars';
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addToCart, toggleWishlist, wishlist, branchId, branch } = useStore();
+  const { branches } = useData();
   const wished = wishlist.includes(product.id);
   const stock = stockAt(product, branchId);
   const out = stock === 0;
-  const elsewhere = out ? otherBranchesWithStock(product, branchId) : [];
+  const elsewhere = out ? otherBranchesWithStock(branches, product, branchId) : [];
 
   return (
     <div className="product-card">

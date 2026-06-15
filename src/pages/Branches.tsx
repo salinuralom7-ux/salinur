@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { BRANCHES, telLink, whatsappLink } from '../data/branches';
+import { telLink, whatsappLink } from '../data/branches';
 import { useStore } from '../store/context';
+import { useData } from '../store/dataContext';
 
 export default function Branches() {
   const { branchId, setBranch } = useStore();
+  const { branches } = useData();
   const navigate = useNavigate();
 
   const shopBranch = (id: string) => {
@@ -20,7 +22,7 @@ export default function Branches() {
       </p>
 
       <div className="branch-grid">
-        {BRANCHES.map((b) => (
+        {branches.map((b) => (
           <div key={b.id} className={`branch-card ${branchId === b.id ? 'active' : ''}`}>
             <div className="branch-card-head">
               <h3>{b.city}</h3>

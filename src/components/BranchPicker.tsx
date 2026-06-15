@@ -1,8 +1,10 @@
-import { BRANCHES, ALL_BRANCHES } from '../data/branches';
+import { ALL_BRANCHES } from '../data/branches';
 import { useStore } from '../store/context';
+import { useData } from '../store/dataContext';
 
 export default function BranchPicker({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { branchId, setBranch } = useStore();
+  const { branches } = useData();
   if (!open) return null;
 
   const dismissable = branchId !== null;
@@ -35,7 +37,7 @@ export default function BranchPicker({ open, onClose }: { open: boolean; onClose
         </p>
 
         <div className="branch-options">
-          {BRANCHES.map((b) => (
+          {branches.map((b) => (
             <button
               key={b.id}
               className={`branch-option ${branchId === b.id ? 'selected' : ''}`}

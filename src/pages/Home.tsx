@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom';
 import { GRADE_LIST } from '../data/grades';
-import { PRODUCTS } from '../data/products';
 import { stockAt } from '../data/branches';
 import { useStore } from '../store/context';
+import { useData } from '../store/dataContext';
 import ProductCard from '../components/ProductCard';
 
 export default function Home() {
   const { branchId, branch } = useStore();
-  const featured = [...PRODUCTS]
+  const { products } = useData();
+  const featured = [...products]
     .filter((p) => p.category !== 'accessory' && stockAt(p, branchId) > 0)
     .sort((a, b) => b.rating - a.rating)
     .slice(0, 4);

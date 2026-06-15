@@ -1,16 +1,16 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { HashRouter } from 'react-router-dom';
-import { StoreProvider } from './store/StoreContext';
-import App from './App';
+import { DataProvider } from './store/DataContext';
+import Root from './Root';
+import { registerSW } from './pwa';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <HashRouter>
-      <StoreProvider>
-        <App />
-      </StoreProvider>
-    </HashRouter>
+    <DataProvider>
+      <Root />
+    </DataProvider>
   </StrictMode>,
 );
+
+registerSW();
