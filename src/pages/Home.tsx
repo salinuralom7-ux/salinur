@@ -1,11 +1,14 @@
 import { Link } from 'react-router-dom';
 import { GRADE_LIST } from '../data/grades';
 import { PRODUCTS } from '../data/products';
+import { stockAt } from '../data/branches';
+import { useStore } from '../store/context';
 import ProductCard from '../components/ProductCard';
 
 export default function Home() {
+  const { branchId, branch } = useStore();
   const featured = [...PRODUCTS]
-    .filter((p) => p.category !== 'accessory' && p.stock > 0)
+    .filter((p) => p.category !== 'accessory' && stockAt(p, branchId) > 0)
     .sort((a, b) => b.rating - a.rating)
     .slice(0, 4);
 
@@ -46,7 +49,13 @@ export default function Home() {
       </section>
 
       <section>
-        <h2>Featured Deals</h2>
+        <h2>Featured Deals{branch ? ` at ${branch.city}` : ''}</h2>
+        <p className="muted">
+          {branch
+            ? `In-stock picks at our ${branch.city} branch. `
+            : 'Top picks pooled across all our branches. '}
+          <Link to="/branches">See all stores →</Link>
+        </p>
         <div className="product-grid">
           {featured.map((p) => (
             <ProductCard key={p.id} product={p} />
@@ -71,7 +80,7 @@ export default function Home() {
           </div>
           <div>
             <h3>🏠 Local Trust</h3>
-            <p>We're Bongaigaon's own Budget Phone Store. Visit us in person, or order online with original invoice and IMEI verification.</p>
+            <p>Three branches across Assam — Bongaigaon, Guwahati and Barpeta Road. Visit us in person, or order online with original invoice and IMEI verification. <Link to="/branches">Find your store →</Link></p>
           </div>
         </div>
       </section>

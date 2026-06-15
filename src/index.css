@@ -449,6 +449,134 @@ section { margin-bottom: 40px; }
 .footer strong { color: #fff; }
 .footer-badges { display: flex; flex-direction: column; gap: 6px; }
 
+/* ---------- WhatsApp ---------- */
+.btn-whatsapp { background: #25d366; color: #04391f; }
+.btn-whatsapp:hover:not(:disabled) { background: #1ebe5b; }
+a.btn-whatsapp { color: #04391f; }
+.whatsapp-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25d366;
+  color: #fff;
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.45);
+  z-index: 60;
+}
+.whatsapp-fab:hover { text-decoration: none; transform: translateY(-2px); }
+
+/* ---------- Branch chip (header) ---------- */
+.branch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff4ff;
+  border: 1px solid #c7d7fe;
+  color: var(--primary-dark);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.branch-chip:hover { background: #e0eaff; }
+.branch-chip-change { color: var(--primary); font-weight: 600; font-size: 0.75rem; text-decoration: underline; }
+
+/* ---------- Branch picker modal ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+}
+.modal {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 24px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: var(--shadow);
+}
+.branch-modal-head { display: flex; align-items: center; justify-content: space-between; }
+.branch-modal-head h2 { margin: 0; }
+.modal-close { background: none; border: none; font-size: 1.6rem; line-height: 1; cursor: pointer; color: var(--muted); }
+.branch-options { display: grid; gap: 10px; margin: 16px 0; }
+.branch-option {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: 2px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+}
+.branch-option:hover { border-color: var(--primary); background: #f8faff; }
+.branch-option.selected { border-color: var(--primary); background: #eff4ff; }
+.branch-option-city { font-weight: 800; font-size: 1rem; }
+.branch-option-area { color: var(--primary-dark); font-size: 0.85rem; font-weight: 600; }
+.branch-option-hours { color: var(--muted); font-size: 0.8rem; }
+
+/* ---------- Branch banner & availability ---------- */
+.branch-banner {
+  background: #eff4ff;
+  border: 1px solid #c7d7fe;
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  font-size: 0.88rem;
+  margin-bottom: 14px;
+}
+.stock-elsewhere { color: var(--primary-dark); font-weight: 600; }
+.branch-availability {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin: 14px 0;
+}
+.branch-availability h4 { margin: 0 0 8px; font-size: 0.9rem; }
+.branch-availability ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.branch-availability li { display: flex; justify-content: space-between; font-size: 0.9rem; }
+.branch-availability li.active { font-weight: 700; }
+.ba-stock { color: var(--ok); font-weight: 600; }
+.ba-stock.zero { color: var(--muted); }
+
+/* ---------- Stores page ---------- */
+.branch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+.branch-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.branch-card.active { border-color: var(--primary); border-width: 2px; }
+.branch-card-head { display: flex; align-items: center; gap: 10px; }
+.branch-card-head h3 { margin: 0; }
+.branch-tag { background: var(--primary); color: #fff; border-radius: 999px; font-size: 0.7rem; font-weight: 700; padding: 2px 9px; }
+.branch-area { color: var(--primary-dark); font-weight: 600; margin: 4px 0; }
+.branch-address { margin: 6px 0; }
+.branch-hours { font-size: 0.88rem; margin: 6px 0 12px; }
+.branch-actions { display: grid; gap: 10px; }
+.branch-contact-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.branch-contact-row .btn { flex: 1; padding: 8px 10px; font-size: 0.85rem; }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .shop-layout, .detail-layout, .cart-layout, .checkout-layout { grid-template-columns: 1fr; }

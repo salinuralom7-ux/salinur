@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { PRODUCTS, productTitle } from '../data/products';
+import { stockAt } from '../data/branches';
+import { useStore } from '../store/context';
 import { GRADE_LIST } from '../data/grades';
 import type { Grade } from '../types';
 import ProductCard from '../components/ProductCard';
@@ -10,6 +12,7 @@ type SortKey = 'newest' | 'price-asc' | 'price-desc' | 'rating' | 'popular';
 const BRANDS = [...new Set(PRODUCTS.map((p) => p.brand))].sort();
 
 export default function Shop() {
+  const { branchId, branch } = useStore();
   const [params, setParams] = useSearchParams();
   const query = (params.get('q') ?? '').toLowerCase();
   const gradeParam = params.get('grade') as Grade | null;
@@ -30,7 +33,7 @@ export default function Shop() {
       if (grades.length > 0 && !grades.includes(p.grade)) return false;
       if (brands.length > 0 && !brands.includes(p.brand)) return false;
       if (p.price > maxPrice) return false;
-      if (inStockOnly && p.stock === 0) return false;
+      if (inStockOnly && stockAt(p, branchId) === 0) return false;
       if (query) {
         const haystack = `${productTitle(p)} ${p.brand} ${p.model} ${p.storage ?? ''} ${p.color} grade ${p.grade}`.toLowerCase();
         if (!query.split(/\s+/).every((term) => haystack.includes(term))) return false;
@@ -45,7 +48,7 @@ export default function Shop() {
       case 'newest': break; // listing order = newest first
     }
     return list;
-  }, [query, categoryParam, grades, brands, maxPrice, inStockOnly, sort]);
+  }, [query, categoryParam, grades, brands, maxPrice, inStockOnly, sort, branchId]);
 
   return (
     <div className="container shop-layout">
@@ -117,6 +120,10 @@ export default function Shop() {
       </aside>
 
       <section className="shop-results">
+        <div className="branch-banner">
+          📍 Showing stock at <strong>{branch ? branch.city : 'all branches'}</strong>.{' '}
+          <Link to="/branches">Change branch</Link>
+        </div>
         <div className="shop-toolbar">
           <span>
             {results.length} result{results.length !== 1 && 's'}

@@ -1,15 +1,18 @@
 import { Link } from 'react-router-dom';
 import type { Product } from '../types';
 import { discountPct, formatINR, productTitle } from '../data/products';
+import { otherBranchesWithStock, stockAt, whatsappLink } from '../data/branches';
 import { useStore } from '../store/context';
 import GradeBadge from './GradeBadge';
 import PhoneImage from './PhoneImage';
 import Stars from './Stars';
 
 export default function ProductCard({ product }: { product: Product }) {
-  const { addToCart, toggleWishlist, wishlist } = useStore();
+  const { addToCart, toggleWishlist, wishlist, branchId, branch } = useStore();
   const wished = wishlist.includes(product.id);
-  const out = product.stock === 0;
+  const stock = stockAt(product, branchId);
+  const out = stock === 0;
+  const elsewhere = out ? otherBranchesWithStock(product, branchId) : [];
 
   return (
     <div className="product-card">
@@ -33,14 +36,32 @@ export default function ProductCard({ product }: { product: Product }) {
           <span className="mrp">{formatINR(product.mrp)}</span>
           <span className="discount">{discountPct(product)}% off</span>
         </div>
-        {product.stock > 0 && product.stock <= 3 && (
-          <div className="stock-warn">Only {product.stock} left in stock</div>
+        {stock > 0 && stock <= 3 && (
+          <div className="stock-warn">Only {stock} left{branch ? ` at ${branch.city}` : ''}</div>
         )}
-        {out && <div className="stock-out">Out of stock</div>}
+        {out && (
+          <div className="stock-out">
+            Out of stock{branch ? ` at ${branch.city}` : ''}
+            {elsewhere.length > 0 && (
+              <span className="stock-elsewhere"> · available at {elsewhere.map((b) => b.city).join(', ')}</span>
+            )}
+          </div>
+        )}
       </Link>
-      <button className="btn btn-primary btn-block" disabled={out} onClick={() => addToCart(product.id)}>
-        {out ? 'Out of Stock' : 'Add to Cart'}
-      </button>
+      {out && branch ? (
+        <a
+          className="btn btn-whatsapp btn-block"
+          href={whatsappLink(branch, `Hi ${branch.name}, do you have the ${productTitle(product)} (Grade ${product.grade}) in stock?`)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          💬 Enquire on WhatsApp
+        </a>
+      ) : (
+        <button className="btn btn-primary btn-block" disabled={out} onClick={() => addToCart(product.id)}>
+          {out ? 'Out of Stock' : 'Add to Cart'}
+        </button>
+      )}
     </div>
   );
 }

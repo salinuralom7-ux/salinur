@@ -2,6 +2,22 @@ export type Grade = 'A' | 'B' | 'C' | 'D' | 'E';
 
 export type Category = 'iphone' | 'android' | 'accessory';
 
+export interface Branch {
+  id: string;
+  name: string;
+  city: string;
+  area: string;
+  address: string;
+  /** Tel-dialable number, e.g. +919876500001 */
+  phone: string;
+  /** Digits only for wa.me links, e.g. 919876500001 */
+  whatsapp: string;
+  hours: string;
+  /** Google Maps directions link */
+  mapUrl: string;
+  landmark?: string;
+}
+
 export interface Product {
   id: string;
   brand: string;
@@ -15,7 +31,13 @@ export interface Product {
   mrp: number;
   price: number;
   batteryHealth?: number;
+  /** Total stock across all branches. */
   stock: number;
+  /**
+   * Optional explicit stock per branch id. When omitted, the total `stock`
+   * is split across branches deterministically (see stockAt in data/branches).
+   */
+  branchStock?: Record<string, number>;
   rating: number;
   reviewCount: number;
   accessories: string[];

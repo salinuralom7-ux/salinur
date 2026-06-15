@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { CartItem, Order } from '../types';
 import { PRODUCTS } from '../data/products';
+import { getBranch, stockAt } from '../data/branches';
 import { StoreContext } from './context';
 
 function load<T>(key: string, fallback: T): T {
@@ -16,28 +17,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>(() => load('bps_cart', []));
   const [wishlist, setWishlist] = useState<string[]>(() => load('bps_wishlist', []));
   const [orders, setOrders] = useState<Order[]>(() => load('bps_orders', []));
+  const [branchId, setBranchId] = useState<string | null>(() => load<string | null>('bps_branch', null));
 
   useEffect(() => localStorage.setItem('bps_cart', JSON.stringify(cart)), [cart]);
   useEffect(() => localStorage.setItem('bps_wishlist', JSON.stringify(wishlist)), [wishlist]);
   useEffect(() => localStorage.setItem('bps_orders', JSON.stringify(orders)), [orders]);
+  useEffect(() => {
+    if (branchId) localStorage.setItem('bps_branch', JSON.stringify(branchId));
+  }, [branchId]);
+
+  const setBranch = (id: string) => setBranchId(id);
+  const branch = getBranch(branchId) ?? null;
 
   const addToCart = (productId: string, qty = 1) => {
     const product = PRODUCTS.find((p) => p.id === productId);
     if (!product) return;
+    const max = stockAt(product, branchId);
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === productId);
       if (existing) {
         return prev.map((i) =>
-          i.productId === productId ? { ...i, qty: Math.min(i.qty + qty, product.stock) } : i,
+          i.productId === productId ? { ...i, qty: Math.min(i.qty + qty, max) } : i,
         );
       }
-      return [...prev, { productId, qty: Math.min(qty, product.stock) }];
+      return [...prev, { productId, qty: Math.min(qty, max) }];
     });
   };
 
   const setQty = (productId: string, qty: number) => {
     const product = PRODUCTS.find((p) => p.id === productId);
-    const max = product ? product.stock : qty;
+    const max = product ? stockAt(product, branchId) : qty;
     setCart((prev) =>
       qty <= 0
         ? prev.filter((i) => i.productId !== productId)
@@ -64,7 +73,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   return (
     <StoreContext.Provider
-      value={{ cart, wishlist, orders, addToCart, setQty, removeFromCart, clearCart, toggleWishlist, placeOrder, cartCount }}
+      value={{ cart, wishlist, orders, branchId, branch, setBranch, addToCart, setQty, removeFromCart, clearCart, toggleWishlist, placeOrder, cartCount }}
     >
       {children}
     </StoreContext.Provider>

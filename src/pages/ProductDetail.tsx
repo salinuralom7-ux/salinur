@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { PRODUCTS, REVIEWS, discountPct, formatINR, productTitle } from '../data/products';
+import { BRANCHES, branchDistribution, stockAt, whatsappLink } from '../data/branches';
 import { GRADES, QUALITY_CHECKS } from '../data/grades';
 import { useStore } from '../store/context';
 import GradeBadge from '../components/GradeBadge';
@@ -10,7 +11,7 @@ import Stars from '../components/Stars';
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, toggleWishlist, wishlist } = useStore();
+  const { addToCart, toggleWishlist, wishlist, branchId, branch } = useStore();
   const [showChecks, setShowChecks] = useState(false);
   const [showGrade, setShowGrade] = useState(true);
 
@@ -27,12 +28,14 @@ export default function ProductDetail() {
   const grade = GRADES[product.grade];
   const reviews = REVIEWS.filter((r) => r.productId === product.id);
   const similar = PRODUCTS.filter(
-    (p) => p.id !== product.id && p.category === product.category && p.stock > 0,
+    (p) => p.id !== product.id && p.category === product.category && stockAt(p, branchId) > 0,
   ).slice(0, 3);
   const gradeUp = PRODUCTS.find(
-    (p) => p.model === product.model && p.grade < product.grade && p.stock > 0,
+    (p) => p.model === product.model && p.grade < product.grade && stockAt(p, branchId) > 0,
   );
-  const out = product.stock === 0;
+  const stock = stockAt(product, branchId);
+  const out = stock === 0;
+  const distribution = branchDistribution(product);
 
   const buyNow = () => {
     addToCart(product.id);
@@ -68,10 +71,31 @@ export default function ProductDetail() {
             <div className="savings">You save {formatINR(product.mrp - product.price)}</div>
           </div>
 
-          {product.stock > 0 && product.stock <= 3 && (
-            <div className="stock-warn">Only {product.stock} left in stock</div>
+          {stock > 0 && stock <= 3 && (
+            <div className="stock-warn">Only {stock} left{branch ? ` at ${branch.city}` : ''}</div>
           )}
-          {out && <div className="stock-out">Out of stock — add to wishlist to get notified</div>}
+          {out && (
+            <div className="stock-out">
+              Out of stock{branch ? ` at ${branch.city}` : ''} — check availability at other branches below
+            </div>
+          )}
+
+          <div className="branch-availability">
+            <h4>📍 Availability by branch</h4>
+            <ul>
+              {BRANCHES.map((b) => {
+                const n = distribution[b.id] ?? 0;
+                return (
+                  <li key={b.id} className={branchId === b.id ? 'active' : ''}>
+                    <span className="ba-city">{b.city}</span>
+                    <span className={`ba-stock ${n === 0 ? 'zero' : ''}`}>
+                      {n === 0 ? 'Out of stock' : n <= 3 ? `${n} in stock` : 'In stock'}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
 
           {product.grade === 'E' && (
             <div className="grade-e-alert">
@@ -98,6 +122,22 @@ export default function ProductDetail() {
               {wishlist.includes(product.id) ? '♥ Wishlisted' : '♡ Wishlist'}
             </button>
           </div>
+
+          {branch && (
+            <a
+              className="btn btn-whatsapp btn-lg btn-block"
+              href={whatsappLink(
+                branch,
+                out
+                  ? `Hi ${branch.name}, is the ${productTitle(product)} (Grade ${product.grade}) available, or coming back in stock?`
+                  : `Hi ${branch.name}, I'd like to reserve the ${productTitle(product)} (Grade ${product.grade}) at ${formatINR(product.price)}.`,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              💬 {out ? 'Enquire on WhatsApp' : `Reserve at ${branch.city} on WhatsApp`}
+            </a>
+          )}
 
           {gradeUp && (
             <div className="grade-up">
@@ -155,7 +195,7 @@ export default function ProductDetail() {
 
       <section className="detail-section">
         <button className="expander" onClick={() => setShowChecks(!showChecks)}>
-          {showChecks ? '▾' : '▸'} 32-Point Quality Check — inspected at Budget Phone Store, Bongaigaon
+          {showChecks ? '▾' : '▸'} 32-Point Quality Check — inspected at Budget Phone Store{branch ? `, ${branch.city}` : ''}
         </button>
         {showChecks && (
           <div className="expander-body check-grid">
