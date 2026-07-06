@@ -283,6 +283,7 @@ input[type=range]{width:100%;accent-color:var(--accent);height:6px;cursor:pointe
     <b>🔓 Owner mode — you can add &amp; delete cars</b>
     <button class="btn btn-primary" onclick="openAddCar()">＋ Add Car</button>
     <button class="btn btn-ghost" onclick="exitOwner()">Exit</button>
+    <span id="demoNote" style="display:none;color:var(--muted);font-size:.82rem">⚠️ Demo mode — cars save on this device only. Connect Supabase to publish for everyone (see setup guide).</span>
   </div>
 </div>
 
@@ -422,7 +423,7 @@ input[type=range]{width:100%;accent-color:var(--accent);height:6px;cursor:pointe
       <div class="field full"><label>Description</label><textarea id="f_desc" rows="3" placeholder="Condition, service history, new tyres, etc."></textarea></div>
     </div>
     <div style="margin-top:18px;display:flex;gap:12px">
-      <button class="btn btn-primary btn-block" onclick="saveCar()" style="padding:14px">✅ Add this Car</button>
+      <button class="btn btn-primary btn-block" id="saveCarBtn" onclick="saveCar()" style="padding:14px">✅ Add this Car</button>
     </div>
   </div>
 </div>
@@ -432,12 +433,55 @@ input[type=range]{width:100%;accent-color:var(--accent);height:6px;cursor:pointe
 <script>
 /* ================================================================
    BUDGET CARS — app logic
-   Owner PIN below. Change it to anything you like.
+
+   ▼▼▼ SUPABASE SETUP (makes cars visible to ALL visitors) ▼▼▼
+   1. Create a free project at https://supabase.com
+   2. Run docs/supabase-setup.sql in the SQL Editor (sets owner PIN too)
+   3. Paste your Project URL and anon public key below.
+   Until then the site runs in demo mode (cars save on this device only).
 ================================================================ */
-const OWNER_PIN   = "7086";
+const SUPABASE_URL      = "";   // e.g. "https://abcdxyz.supabase.co"
+const SUPABASE_ANON_KEY = "";   // Settings → API → anon public key
+
+const DEMO_PIN    = "7086";                   // PIN for demo mode only (real PIN lives in Supabase)
 const PHONE       = "917086269537";           // WhatsApp number (with country code)
 const PHONE_SHOW  = "70862 69537";
 const STORE_KEY   = "budgetcars_inventory_v1";
+const SB_ON       = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+/* ---------- Supabase REST helper (no SDK needed) ---------- */
+async function sb(path, opts = {}){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
+    ...opts,
+    headers: {
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+      "Content-Type": "application/json",
+      ...(opts.headers || {})
+    }
+  });
+  if(!res.ok){
+    const body = await res.text();
+    let msg = body;
+    try{ msg = JSON.parse(body).message || body; }catch(e){}
+    throw new Error(msg || ("HTTP " + res.status));
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+function hueFrom(str){
+  let h = 0;
+  for(let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
+  return h;
+}
+function fromRow(r){
+  return {
+    id: r.id, name: r.name, brand: r.brand, year: r.year, price: r.price,
+    km: r.km, fuel: r.fuel, trans: r.trans, owners: r.owners, color: r.color,
+    ins: r.ins, loc: r.loc, desc: r.description,
+    photo: r.photo || carArt(hueFrom(r.name || ""), r.name || "Car")
+  };
+}
 
 /* ---------- placeholder photo (SVG, no internet needed) ---------- */
 function carArt(hue, name){
@@ -475,16 +519,32 @@ const SEED = [
 /* ---------- state ---------- */
 let cars = [];
 let ownerMode = false;
+let ownerPin = null;
 let bookingCar = null;
 
-function load(){
+async function load(){
+  if(SB_ON){
+    try{
+      const rows = await sb("cars?select=*&order=created_at.desc");
+      cars = rows.map(fromRow);
+    }catch(e){
+      console.error("Supabase load failed:", e);
+      cars = [];
+      toast("⚠️ Could not load cars — check your internet connection");
+    }
+    renderCars();
+    return;
+  }
+  /* demo mode — this browser only */
   try{
     const raw = localStorage.getItem(STORE_KEY);
     cars = raw ? JSON.parse(raw) : SEED.slice();
   }catch(e){ cars = SEED.slice(); }
   if(!localStorage.getItem(STORE_KEY)) save();
+  renderCars();
 }
 function save(){
+  if(SB_ON) return; /* Supabase mode persists per-operation */
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(cars)); }
   catch(e){ toast("⚠️ Storage full — try a smaller photo"); }
 }
@@ -606,14 +666,23 @@ Please confirm my booking. Thank you!`;
 }
 
 /* ---------- owner mode ---------- */
-function ownerLogin(){
+async function ownerLogin(){
   if(ownerMode){ exitOwner(); return; }
   const pin = prompt("Enter owner PIN:");
   if(pin === null) return;
-  if(pin === OWNER_PIN){
+  let ok = false;
+  if(SB_ON){
+    try{ ok = await sb("rpc/check_pin", {method:"POST", body:JSON.stringify({p_pin:pin})}) === true; }
+    catch(e){ console.error(e); toast("⚠️ Could not verify PIN — check your connection"); return; }
+  }else{
+    ok = (pin === DEMO_PIN);
+  }
+  if(ok){
     ownerMode = true;
+    ownerPin = pin;
     document.getElementById("ownerBar").classList.add("on");
     document.getElementById("ownerBtn").textContent = "🔓 Owner ✓";
+    document.getElementById("demoNote").style.display = SB_ON ? "none" : "inline";
     renderCars();
     toast("Owner mode ON — you can add & delete cars");
   }else{
@@ -622,13 +691,19 @@ function ownerLogin(){
 }
 function exitOwner(){
   ownerMode = false;
+  ownerPin = null;
   document.getElementById("ownerBar").classList.remove("on");
   document.getElementById("ownerBtn").textContent = "🔐 Owner";
   renderCars();
 }
-function deleteCar(id){
+async function deleteCar(id){
   const c = cars.find(x=>x.id===id); if(!c) return;
   if(!confirm("Delete \""+c.name+"\" from the website?")) return;
+  if(SB_ON){
+    try{
+      await sb("rpc/delete_car", {method:"POST", body:JSON.stringify({p_pin:ownerPin, p_id:id})});
+    }catch(e){ console.error(e); toast("⚠️ Delete failed: " + e.message); return; }
+  }
   cars = cars.filter(x=>x.id!==id);
   save(); renderCars();
   toast("🗑️ Car deleted");
@@ -665,25 +740,39 @@ function handlePhoto(input){
   };
   reader.readAsDataURL(file);
 }
-function saveCar(){
+async function saveCar(){
   const g = id => document.getElementById(id).value.trim();
   const name = g("f_name"), brand = g("f_brand"), year = +g("f_year"), price = +g("f_price"), km = g("f_km");
   if(!name || !brand || !year || !price || km===""){ toast("Please fill all fields marked *"); return; }
-  const car = {
-    id: "c" + Date.now(),
+  const details = {
     name, brand, year, price,
     km: +km,
-    fuel:  g("f_fuel")  || document.getElementById("f_fuel").value,
+    fuel:  document.getElementById("f_fuel").value,
     trans: document.getElementById("f_trans").value,
     owners:document.getElementById("f_owners").value,
     color: g("f_color"),
     ins:   document.getElementById("f_ins").value,
     loc:   g("f_loc"),
-    desc:  g("f_desc"),
-    photo: pendingPhoto || carArt(Math.floor(Math.random()*360), name)
+    desc:  g("f_desc")
   };
-  cars.unshift(car);
-  save(); renderCars();
+  if(SB_ON){
+    const btn = document.getElementById("saveCarBtn");
+    btn.disabled = true; btn.textContent = "⏳ Saving…";
+    try{
+      const row = { ...details, description: details.desc, photo: pendingPhoto };
+      delete row.desc;
+      await sb("rpc/add_car", {method:"POST", body:JSON.stringify({p_pin:ownerPin, p_car:row})});
+      await load();
+    }catch(e){
+      console.error(e); toast("⚠️ Could not save: " + e.message);
+      btn.disabled = false; btn.textContent = "✅ Add this Car";
+      return;
+    }
+    btn.disabled = false; btn.textContent = "✅ Add this Car";
+  }else{
+    cars.unshift({ id: "c" + Date.now(), ...details, photo: pendingPhoto || carArt(hueFrom(name), name) });
+    save(); renderCars();
+  }
   closeModal("addOverlay");
   toast("✅ \""+name+"\" added to the website!");
 }
@@ -693,8 +782,9 @@ document.getElementById("year").textContent = new Date().getFullYear();
 document.addEventListener("keydown", e => {
   if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>o.classList.remove("open"));
 });
+document.getElementById("carGrid").innerHTML =
+  '<div class="empty" style="grid-column:1/-1"><div class="big">⏳</div><b>Loading cars…</b></div>';
 load();
-renderCars();
 </script>
 </body>
 </html>
