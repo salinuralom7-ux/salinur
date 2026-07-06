@@ -1,0 +1,100 @@
+name: Supabase Setup
+# One-time provisioning workflow. It creates the Budget Cars Supabase project,
+# sets up the database, and commits the connection details into docs/index.html.
+# This file is removed again once setup has succeeded.
+
+on:
+  workflow_dispatch:
+    inputs:
+      supabase_token:
+        description: Supabase personal access token
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Provision Supabase project
+        env:
+          SB_TOKEN: ${{ inputs.supabase_token }}
+        run: |
+          set -euo pipefail
+          echo "::add-mask::$SB_TOKEN"
+          api=https://api.supabase.com/v1
+          hdr=(-H "Authorization: Bearer $SB_TOKEN" -H "Content-Type: application/json")
+
+          orgs=$(curl -fsS "${hdr[@]}" $api/organizations)
+          org_id=$(echo "$orgs" | jq -r '.[0].id')
+          echo "Organization: $(echo "$orgs" | jq -r '.[0].name') ($org_id)"
+
+          ref=$(curl -fsS "${hdr[@]}" $api/projects | jq -r '[.[] | select(.name=="budget-cars")][0].id // empty')
+          if [ -z "$ref" ]; then
+            db_pass="$(openssl rand -hex 20)aA1"
+            body=$(jq -n --arg o "$org_id" --arg p "$db_pass" \
+              '{name:"budget-cars", organization_id:$o, db_pass:$p, region:"ap-south-1"}')
+            create=$(curl -fsS "${hdr[@]}" -X POST $api/projects -d "$body")
+            ref=$(echo "$create" | jq -r '.id')
+            echo "Created project: $ref (region ap-south-1, Mumbai)"
+          else
+            echo "Reusing existing project: $ref"
+          fi
+
+          echo "Waiting for project to come online..."
+          status=""
+          for i in $(seq 1 60); do
+            status=$(curl -fsS "${hdr[@]}" $api/projects/$ref | jq -r '.status')
+            echo "  status: $status"
+            [ "$status" = "ACTIVE_HEALTHY" ] && break
+            sleep 10
+          done
+          [ "$status" = "ACTIVE_HEALTHY" ] || { echo "Project did not become healthy in time"; exit 1; }
+
+          echo "Running database setup SQL..."
+          jq -Rs '{query:.}' docs/supabase-setup.sql > /tmp/q.json
+          ok=""
+          for i in 1 2 3 4; do
+            if curl -fsS "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/q.json > /tmp/sql-out.json 2>/tmp/sql-err.txt; then
+              ok=1; break
+            fi
+            echo "  SQL attempt $i failed, retrying in 15s..."; cat /tmp/sql-err.txt; sleep 15
+          done
+          [ -n "$ok" ] || { echo "SQL setup failed"; exit 1; }
+
+          count=$(curl -fsS "${hdr[@]}" -X POST $api/projects/$ref/database/query \
+            -d '{"query":"select count(*)::int as n from public.cars"}' | jq -r '.[0].n')
+          echo "Cars in database: $count"
+
+          keys=$(curl -fsS "${hdr[@]}" "$api/projects/$ref/api-keys?reveal=true")
+          anon=$(echo "$keys" | jq -r '[.[] | select(.name=="anon")][0].api_key // empty')
+          if [ -z "$anon" ]; then
+            anon=$(echo "$keys" | jq -r '[.[] | select(.type=="publishable")][0].api_key // empty')
+          fi
+          [ -n "$anon" ] || { echo "Could not obtain anon/publishable key"; echo "$keys" | jq 'map({name,type})'; exit 1; }
+
+          url="https://$ref.supabase.co"
+          echo "Smoke-testing public REST endpoint..."
+          visible=$(curl -fsS "$url/rest/v1/cars?select=id" -H "apikey: $anon" -H "Authorization: Bearer $anon" | jq 'length')
+          echo "REST OK — cars visible to public: $visible"
+
+          echo "Writing connection details into docs/index.html..."
+          sed -i "s|const SUPABASE_URL      = \"\"|const SUPABASE_URL      = \"$url\"|" docs/index.html
+          sed -i "s|const SUPABASE_ANON_KEY = \"\"|const SUPABASE_ANON_KEY = \"$anon\"|" docs/index.html
+          grep -q "$ref.supabase.co" docs/index.html || { echo "URL substitution failed"; exit 1; }
+          grep -qF "$anon" docs/index.html || { echo "Key substitution failed"; exit 1; }
+
+      - name: Commit connected site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes to commit (already connected)"
+          else
+            git add docs/index.html
+            git commit -m "Connect Budget Cars website to Supabase"
+            git push
+          fi
