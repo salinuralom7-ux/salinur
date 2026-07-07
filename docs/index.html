@@ -8,22 +8,25 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚗%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ================= BUDGET CARS — porcelain & racing green ================= */
+/* ================================================================
+   BUDGET CARS — night showroom
+   near-black racing green · champagne gold · ivory · film grain
+================================================================ */
 :root{
-  --bg:#F7F5F1;            /* warm porcelain */
-  --surface:#FFFFFF;
-  --ink:#17211C;           /* green-black ink */
-  --muted:#68716C;
-  --line:rgba(23,33,28,.09);
-  --green:#0F5B3D;         /* racing green */
-  --green-soft:#EAF2ED;
-  --gold:#C9A45C;
-  --gold-soft:#F6EFE2;
-  --danger:#C24545;
-  --radius:16px;
-  --shadow:0 10px 30px rgba(23,33,28,.08);
+  --bg:#0B100D;
+  --bg2:#0E1410;
+  --surface:#131A15;
+  --surface2:#182019;
+  --ivory:#F4F1E8;
+  --muted:#98A29A;
+  --line:rgba(244,241,232,.09);
+  --gold:#D5B36B;
+  --gold-deep:#B89450;
+  --green:#2E7D5B;
+  --danger:#D06C6C;
+  --radius:18px;
   --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
   --font-body:'Manrope', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
@@ -31,317 +34,373 @@
 html{scroll-behavior:smooth}
 body{
   font-family:var(--font-body);
-  background:var(--bg);
-  color:var(--ink);
+  background:
+    radial-gradient(900px 480px at 78% -8%, rgba(213,179,107,.07), transparent 60%),
+    radial-gradient(760px 420px at 8% 30%, rgba(46,125,91,.08), transparent 60%),
+    var(--bg);
+  color:var(--ivory);
   line-height:1.55;
   min-height:100vh;
+  overflow-x:hidden;
+}
+/* film grain */
+body::after{
+  content:"";position:fixed;inset:-50%;z-index:1;pointer-events:none;opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer}
-input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ink)}
-.container{max-width:1100px;margin:0 auto;padding:0 18px}
+input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ivory)}
+.container{max-width:1120px;margin:0 auto;padding:0 20px;position:relative;z-index:2}
+
+/* ---------- type helpers ---------- */
+.eyebrow{
+  font-size:.68rem;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);
+}
+.display{
+  font-family:var(--font-display);font-weight:600;letter-spacing:-.01em;text-wrap:balance;
+}
+.display em{font-style:italic;color:var(--gold);font-weight:500}
 
 /* ---------- buttons ---------- */
 .btn{
-  border:none;border-radius:999px;padding:11px 20px;font-weight:700;font-size:.92rem;
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+  border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:.9rem;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.02em;
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
 }
 .btn:active{transform:scale(.97)}
-.btn:focus-visible{outline:3px solid rgba(15,91,61,.35);outline-offset:2px}
-.btn-green{background:var(--green);color:#fff;box-shadow:0 6px 16px rgba(15,91,61,.25)}
-.btn-green:hover{background:#0C4A32;box-shadow:0 8px 20px rgba(15,91,61,.32)}
-.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
-.btn-ghost:hover{border-color:rgba(23,33,28,.3)}
-.btn-gold{background:var(--gold);color:#241B08}
-.btn-gold:hover{background:#B8934C}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.btn-gold{background:var(--gold);color:#1A1408}
+.btn-gold:hover{background:#E3C67F;box-shadow:0 8px 26px rgba(213,179,107,.25)}
+.btn-line{background:transparent;color:var(--ivory);border:1px solid rgba(244,241,232,.22)}
+.btn-line:hover{border-color:var(--gold);color:var(--gold)}
+.btn-green{background:var(--green);color:#EAF5EF}
+.btn-green:hover{background:#37936B}
 .btn-block{width:100%}
 
 /* ---------- header ---------- */
 header{
   position:sticky;top:0;z-index:60;
-  background:rgba(247,245,241,.85);backdrop-filter:blur(12px);
+  background:rgba(11,16,13,.72);backdrop-filter:blur(14px);
   border-bottom:1px solid var(--line);
 }
-.nav{display:flex;align-items:center;justify-content:space-between;padding:13px 0}
-.logo{display:flex;align-items:baseline;gap:2px;font-family:var(--font-display);font-weight:700;font-size:1.35rem;letter-spacing:.2px}
-.logo em{font-style:normal;color:var(--green)}
-.logo .dot{color:var(--gold);font-size:1.5rem;line-height:0}
-.nav-right{display:flex;align-items:center;gap:14px}
-.nav-right a{font-size:.9rem;font-weight:600;color:var(--muted)}
-.nav-right a:hover{color:var(--ink)}
-#ownerBtn{padding:9px 16px;font-size:.85rem}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:15px 0}
+.logo{font-family:var(--font-display);font-weight:600;font-size:1.3rem;letter-spacing:.01em}
+.logo i{font-style:italic;color:var(--gold)}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-right a{font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.nav-right a:hover{color:var(--ivory)}
+#ownerBtn{padding:9px 18px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
 
-/* ---------- hero : the drive-in ---------- */
-.hero{
-  position:relative;overflow:hidden;
-  background:linear-gradient(180deg,#EFEEE8 0%, var(--bg) 100%);
-  border-bottom:1px solid var(--line);
-}
-.hero-inner{max-width:1100px;margin:0 auto;padding:34px 18px 0;text-align:center}
+/* ---------- hero : night drive-in ---------- */
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero-inner{max-width:1120px;margin:0 auto;padding:58px 20px 0;text-align:center;position:relative;z-index:2}
+.hero .eyebrow{opacity:0;animation:riseIn .9s ease .55s forwards}
 .hero h1{
-  font-family:var(--font-display);font-weight:700;
-  font-size:clamp(1.7rem,5vw,2.7rem);letter-spacing:-.3px;text-wrap:balance;
-  opacity:0;animation:riseIn .8s ease .9s forwards;
+  font-size:clamp(2.6rem,9vw,5rem);line-height:1.02;margin-top:14px;
+  opacity:0;animation:riseIn .9s ease .75s forwards;
 }
-.hero h1 em{font-style:normal;color:var(--green)}
 .hero p{
-  color:var(--muted);font-size:clamp(.92rem,2.5vw,1.05rem);margin-top:6px;
-  opacity:0;animation:riseIn .8s ease 1.15s forwards;
+  color:var(--muted);font-size:clamp(.92rem,2.6vw,1.05rem);margin-top:14px;
+  opacity:0;animation:riseIn .9s ease .95s forwards;
 }
-@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.stage{position:relative;height:150px;margin-top:6px}
+@keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.stage{position:relative;height:170px;margin-top:10px}
 .road{
-  position:absolute;left:0;right:0;bottom:22px;height:2px;
-  background:linear-gradient(90deg,transparent, rgba(23,33,28,.22) 12%, rgba(23,33,28,.22) 88%, transparent);
+  position:absolute;left:0;right:0;bottom:24px;height:1px;
+  background:linear-gradient(90deg,transparent, rgba(244,241,232,.25) 15%, rgba(244,241,232,.25) 85%, transparent);
 }
 .car-wrap{
-  position:absolute;bottom:14px;left:50%;width:min(400px,78vw);
+  position:absolute;bottom:16px;left:50%;width:min(430px,82vw);
   transform:translateX(-50%);
-  animation:driveIn 2.1s cubic-bezier(.22,.9,.3,1) forwards;
+  animation:driveIn 2.2s cubic-bezier(.22,.9,.3,1) forwards;
 }
 @keyframes driveIn{
   0%{transform:translateX(-120vw)}
-  86%{transform:translateX(calc(-50% + 10px))}
+  86%{transform:translateX(calc(-50% + 12px))}
   100%{transform:translateX(-50%)}
 }
 .car-shadow{
-  position:absolute;bottom:-6px;left:9%;width:82%;height:14px;border-radius:50%;
-  background:radial-gradient(ellipse at center, rgba(23,33,28,.22), transparent 70%);
+  position:absolute;bottom:-7px;left:8%;width:84%;height:16px;border-radius:50%;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.55), transparent 70%);
 }
-.wheel{animation:spin 2.1s cubic-bezier(.22,.9,.3,1) forwards;transform-origin:center;transform-box:fill-box}
-@keyframes spin{from{transform:rotate(-900deg)}to{transform:rotate(0deg)}}
+/* headlight beam switches on after the car parks */
+.beam{
+  position:absolute;right:-46%;bottom:2px;width:52%;height:78px;
+  background:linear-gradient(90deg, rgba(244,236,205,.32), rgba(244,236,205,.05) 70%, transparent);
+  clip-path:polygon(0 42%, 100% 0, 100% 100%, 0 62%);
+  opacity:0;animation:lightsOn .6s ease 2.25s forwards;
+  filter:blur(2px);
+}
+@keyframes lightsOn{from{opacity:0}to{opacity:1}}
+.wheel{animation:spin 2.2s cubic-bezier(.22,.9,.3,1) forwards;transform-origin:center;transform-box:fill-box}
+@keyframes spin{from{transform:rotate(-940deg)}to{transform:rotate(0deg)}}
+.headlamp{opacity:0;animation:lightsOn .4s ease 2.2s forwards}
+/* gold ticker */
+.ticker{
+  border-top:1px solid var(--line);margin-top:0;position:relative;z-index:2;
+  overflow:hidden;background:rgba(213,179,107,.05);
+}
+.ticker-track{
+  display:flex;gap:0;width:max-content;
+  animation:tick 26s linear infinite;
+}
+.ticker span{
+  flex:0 0 auto;padding:11px 0;font-size:.68rem;font-weight:800;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--gold);white-space:nowrap;
+}
+.ticker b{color:rgba(213,179,107,.45);padding:0 18px;font-weight:400}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion: reduce){
   .car-wrap{animation:none;transform:translateX(-50%)}
   .wheel{animation:none}
-  .hero h1,.hero p{animation:none;opacity:1}
+  .beam,.headlamp{animation:none;opacity:1}
+  .hero .eyebrow,.hero h1,.hero p{animation:none;opacity:1}
+  .ticker-track{animation:none}
+  .reveal{opacity:1 !important;transform:none !important}
 }
+
+/* ---------- scroll reveal ---------- */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease, transform .7s ease}
+.reveal.in{opacity:1;transform:none}
 
 /* ---------- toolbar ---------- */
-.toolbar{
-  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
-  padding:20px 0 6px;
-}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:30px 0 4px}
 .toolbar .search{
-  flex:1;min-width:170px;display:flex;align-items:center;gap:8px;
-  background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:10px 16px;
+  flex:1;min-width:170px;display:flex;align-items:center;gap:10px;
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:11px 18px;
 }
 .toolbar .search input{border:none;outline:none;background:transparent;width:100%;font-size:.95rem}
+.toolbar .search input::placeholder{color:var(--muted)}
 .toolbar select{
-  background:var(--surface);border:1.5px solid var(--line);border-radius:999px;
-  padding:10px 14px;font-size:.88rem;font-weight:600;outline:none;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;
+  padding:11px 15px;font-size:.85rem;font-weight:700;outline:none;color:var(--ivory);
 }
-.count-note{color:var(--muted);font-size:.82rem;font-weight:600;padding:6px 0 0;width:100%}
+.toolbar select option{background:var(--bg2)}
+.count-note{color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.04em;padding:8px 0 0;width:100%}
 
 /* ---------- cars grid ---------- */
-.section{padding:10px 0 40px}
-.grid{
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;
-  margin-top:14px;
-}
-@media(max-width:680px){
-  .grid{grid-template-columns:repeat(2,1fr);gap:11px}
-}
+.section{padding:6px 0 44px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px;margin-top:16px}
+@media(max-width:680px){.grid{grid-template-columns:repeat(2,1fr);gap:12px}}
 .card{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   overflow:hidden;display:flex;flex-direction:column;position:relative;
-  transition:transform .18s ease, box-shadow .18s ease;
+  transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
 }
-.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-.card .photo{aspect-ratio:4/3;background:#EDEBE5;position:relative;overflow:hidden;cursor:pointer}
-.card .photo img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
-.card:hover .photo img{transform:scale(1.05)}
+.card:hover{transform:translateY(-4px);border-color:rgba(213,179,107,.4);box-shadow:0 18px 44px rgba(0,0,0,.45)}
+.card .photo{aspect-ratio:4/3;background:var(--surface2);position:relative;overflow:hidden;cursor:pointer}
+.card .photo::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg, rgba(11,16,13,.0) 55%, rgba(11,16,13,.5));
+}
+.card .photo img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
+.card:hover .photo img{transform:scale(1.06)}
 .badge{
-  position:absolute;top:9px;left:9px;background:rgba(255,255,255,.92);
-  color:var(--green);padding:3px 10px;border-radius:999px;
-  font-size:.68rem;font-weight:800;letter-spacing:.3px;
+  position:absolute;top:10px;left:10px;z-index:2;
+  background:rgba(11,16,13,.72);backdrop-filter:blur(4px);
+  color:var(--gold);padding:4px 11px;border-radius:999px;border:1px solid rgba(213,179,107,.3);
+  font-size:.64rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
 }
 .del-btn{
-  position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:none;
-  background:var(--danger);color:#fff;font-size:.9rem;font-weight:800;line-height:1;
-  display:grid;place-items:center;box-shadow:0 3px 10px rgba(0,0,0,.25);z-index:5;
+  position:absolute;top:9px;right:9px;width:30px;height:30px;border-radius:50%;border:none;
+  background:var(--danger);color:#1A0D0D;font-size:.9rem;font-weight:800;line-height:1;
+  display:grid;place-items:center;z-index:5;
 }
-.card .body{padding:12px 13px 13px;display:flex;flex-direction:column;gap:6px;flex:1;cursor:pointer}
+.card .body{padding:14px 15px 15px;display:flex;flex-direction:column;gap:6px;flex:1;cursor:pointer}
 .card h3{
-  font-size:.98rem;font-weight:800;line-height:1.3;
+  font-size:1rem;font-weight:800;line-height:1.3;
   display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
 }
-.meta{color:var(--muted);font-size:.76rem;font-weight:600}
+.meta{color:var(--muted);font-size:.74rem;font-weight:600;letter-spacing:.03em}
 .price{
-  font-family:var(--font-display);font-weight:700;font-size:1.18rem;color:var(--green);
-  font-variant-numeric:tabular-nums;margin-top:2px;
+  font-family:var(--font-display);font-weight:600;font-size:1.25rem;color:var(--gold);
+  font-variant-numeric:tabular-nums;margin-top:3px;
 }
 .card .book{
-  margin-top:auto;padding:10px;font-size:.85rem;border-radius:12px;
+  margin-top:auto;padding:10px;font-size:.82rem;border-radius:12px;
+  background:transparent;color:var(--gold);border:1px solid rgba(213,179,107,.45);
 }
+.card .book:hover{background:var(--gold);color:#1A1408}
 @media(max-width:680px){
-  .card .body{padding:10px 11px 11px}
+  .card .body{padding:11px 12px 12px}
   .card h3{font-size:.88rem}
-  .price{font-size:1.05rem}
+  .price{font-size:1.08rem}
 }
 .empty{
-  grid-column:1/-1;text-align:center;padding:56px 18px;color:var(--muted);
-  background:var(--surface);border:1.5px dashed var(--line);border-radius:var(--radius);
+  grid-column:1/-1;text-align:center;padding:60px 18px;color:var(--muted);
+  background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);
 }
 .empty .big{font-size:2.3rem;margin-bottom:8px}
 
 /* ---------- interstitials ---------- */
-.strip{grid-column:1/-1;margin:6px 0}
-.strip-brands{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-  padding:16px 16px 14px;
-}
-.strip-brands .label{
-  font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
-  margin-bottom:10px;
-}
-.brand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.strip{grid-column:1/-1;margin:10px 0}
+.strip-brands{padding:6px 0 2px}
+.strip-brands .eyebrow{display:block;margin-bottom:12px}
+.brand-row{display:flex;gap:9px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
 .brand-row::-webkit-scrollbar{display:none}
 .brand-chip{
-  flex:0 0 auto;border:1.5px solid var(--line);background:var(--bg);
-  border-radius:999px;padding:8px 16px;font-size:.84rem;font-weight:700;color:var(--ink);
-  transition:all .15s ease;
+  flex:0 0 auto;border:1px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:9px 18px;font-size:.82rem;font-weight:700;color:var(--ivory);
+  transition:all .18s ease;letter-spacing:.02em;
 }
-.brand-chip:hover{border-color:var(--green)}
-.brand-chip.on{background:var(--green);border-color:var(--green);color:#fff}
+.brand-chip:hover{border-color:var(--gold);color:var(--gold)}
+.brand-chip.on{background:var(--gold);border-color:var(--gold);color:#1A1408}
 .strip-why{
-  background:var(--green);border-radius:var(--radius);padding:24px 20px;color:#fff;
+  background:var(--surface);border:1px solid var(--line);border-radius:22px;
+  padding:34px 26px;
 }
-.strip-why h2{
-  font-family:var(--font-display);font-weight:700;font-size:clamp(1.25rem,3.4vw,1.6rem);
-  margin-bottom:16px;text-wrap:balance;
+.strip-why .eyebrow{display:block;margin-bottom:8px}
+.strip-why h2{font-size:clamp(1.5rem,4.5vw,2.2rem);margin-bottom:22px}
+.why-list{display:grid;gap:0}
+.why{
+  display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:baseline;
+  padding:16px 0;border-top:1px solid var(--line);
 }
-.strip-why h2 em{font-style:normal;color:var(--gold)}
-.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
-.why{display:flex;gap:11px;align-items:flex-start}
-.why .ico{
-  flex:0 0 auto;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:1.05rem;
-  background:rgba(255,255,255,.13);
+.why .num{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:1.15rem;color:var(--gold);min-width:38px;
 }
-.why b{display:block;font-size:.92rem;margin-bottom:2px}
-.why span{font-size:.8rem;opacity:.82;line-height:1.45;display:block}
+.why b{display:block;font-size:1rem;margin-bottom:3px;letter-spacing:.01em}
+.why span{font-size:.85rem;color:var(--muted);line-height:1.55;display:block}
+@media(min-width:760px){
+  .why-list{grid-template-columns:1fr 1fr;column-gap:34px}
+}
 .strip-promo{
-  background:var(--gold-soft);border:1px solid rgba(201,164,92,.4);border-radius:var(--radius);
-  padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  background:linear-gradient(100deg, rgba(213,179,107,.16), rgba(213,179,107,.05));
+  border:1px solid rgba(213,179,107,.3);border-radius:22px;
+  padding:24px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
 }
-.strip-promo .txt b{font-family:var(--font-display);font-size:1.05rem;display:block}
+.strip-promo .txt b{font-family:var(--font-display);font-weight:600;font-size:1.25rem;display:block;letter-spacing:.01em}
+.strip-promo .txt b i{font-style:italic;color:var(--gold)}
 .strip-promo .txt span{color:var(--muted);font-size:.84rem}
-.strip-promo .btn{padding:9px 18px;font-size:.85rem}
+.strip-promo .btn{padding:11px 20px;font-size:.82rem}
 
 /* ---------- contact ---------- */
 .contact{
-  background:var(--surface);border:1px solid var(--line);border-radius:20px;
-  padding:34px 22px;text-align:center;margin:12px 0 30px;
+  border:1px solid var(--line);border-radius:24px;text-align:center;margin:16px 0 34px;
+  padding:44px 22px;position:relative;overflow:hidden;background:var(--surface);
 }
-.contact h2{font-family:var(--font-display);font-weight:700;font-size:clamp(1.3rem,3.5vw,1.7rem);text-wrap:balance}
-.contact p{color:var(--muted);font-size:.92rem;max-width:460px;margin:8px auto 20px}
+.contact::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(420px 200px at 50% 0%, rgba(213,179,107,.1), transparent 70%);
+}
+.contact>*{position:relative}
+.contact .eyebrow{display:block;margin-bottom:10px}
+.contact h2{font-size:clamp(1.5rem,4.5vw,2.2rem)}
+.contact p{color:var(--muted);font-size:.9rem;max-width:440px;margin:10px auto 24px}
 .contact-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .upi-note{
-  margin-top:16px;display:inline-flex;align-items:center;gap:8px;
-  background:var(--green-soft);border:1px solid rgba(15,91,61,.2);border-radius:999px;
-  padding:8px 16px;font-size:.84rem;font-weight:700;color:var(--green);
+  margin-top:18px;display:inline-flex;align-items:center;gap:8px;
+  border:1px solid rgba(213,179,107,.35);border-radius:999px;
+  padding:8px 18px;font-size:.8rem;font-weight:700;color:var(--gold);letter-spacing:.05em;
 }
-footer{border-top:1px solid var(--line);padding:20px 0 26px;color:var(--muted);font-size:.82rem}
+footer{border-top:1px solid var(--line);padding:22px 0 28px;color:var(--muted);font-size:.8rem}
 footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-footer a{color:var(--green);font-weight:700}
+footer a{color:var(--gold);font-weight:700}
 
 /* ---------- owner bar ---------- */
 .owner-bar{
-  display:none;position:sticky;top:59px;z-index:55;
-  background:var(--gold-soft);border-bottom:1px solid rgba(201,164,92,.45);padding:9px 0;
+  display:none;position:sticky;top:63px;z-index:55;
+  background:rgba(213,179,107,.1);backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(213,179,107,.3);padding:9px 0;
 }
 .owner-bar.on{display:block}
 .owner-bar .container{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.owner-bar b{font-size:.84rem;color:#6d5218}
-.owner-bar .btn{padding:7px 14px;font-size:.8rem}
-.owner-bar #demoNote{color:#6d5218;font-size:.76rem}
+.owner-bar b{font-size:.78rem;color:var(--gold);letter-spacing:.12em;text-transform:uppercase}
+.owner-bar .btn{padding:7px 15px;font-size:.78rem}
+.owner-bar #demoNote{color:var(--gold);font-size:.74rem;opacity:.8}
 
 /* ---------- modals ---------- */
 .overlay{
-  position:fixed;inset:0;background:rgba(23,33,28,.45);backdrop-filter:blur(5px);
-  display:none;align-items:flex-end;justify-content:center;z-index:100;padding:0;
+  position:fixed;inset:0;background:rgba(5,8,6,.7);backdrop-filter:blur(6px);
+  display:none;align-items:flex-end;justify-content:center;z-index:100;
 }
 @media(min-width:560px){.overlay{align-items:center;padding:20px}}
 .overlay.open{display:flex;animation:fadeIn .18s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal{
-  background:var(--surface);border-radius:22px 22px 0 0;
+  background:var(--bg2);border:1px solid var(--line);border-radius:24px 24px 0 0;
   width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
-  padding:24px 22px 28px;position:relative;animation:pop .25s ease;
+  padding:26px 22px 30px;position:relative;animation:pop .26s ease;
 }
-@media(min-width:560px){.modal{border-radius:22px}}
+@media(min-width:560px){.modal{border-radius:24px}}
 .modal.wide{max-width:620px}
-@keyframes pop{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
-.modal h3{font-family:var(--font-display);font-weight:700;font-size:1.3rem}
-.modal .sub{color:var(--muted);font-size:.88rem;margin:2px 0 18px}
+@keyframes pop{from{transform:translateY(26px);opacity:0}to{transform:none;opacity:1}}
+.modal h3{font-family:var(--font-display);font-weight:600;font-size:1.4rem}
+.modal h3 i{font-style:italic;color:var(--gold)}
+.modal .sub{color:var(--muted);font-size:.88rem;margin:3px 0 18px}
 .close-x{
-  position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;
-  background:var(--bg);border:1px solid var(--line);color:var(--muted);
+  position:absolute;top:15px;right:15px;width:34px;height:34px;border-radius:50%;
+  background:var(--surface);border:1px solid var(--line);color:var(--muted);
   font-size:.95rem;display:grid;place-items:center;
 }
-.close-x:hover{color:var(--ink)}
-.field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:5px;font-weight:700}
+.close-x:hover{color:var(--ivory)}
+.field label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
 .field input,.field select,.field textarea{
-  width:100%;background:var(--bg);border:1.5px solid var(--line);
-  border-radius:12px;padding:11px 14px;outline:none;transition:border-color .15s;
+  width:100%;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px;outline:none;transition:border-color .15s;
 }
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field input::placeholder,.field textarea::placeholder{color:rgba(152,162,154,.6)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field select option{background:var(--bg2)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
 .form-grid .full{grid-column:1/-1}
 @media(max-width:520px){.form-grid{grid-template-columns:1fr}}
 
 /* booking amount + UPI */
 .amount-box{
-  background:var(--green-soft);border:1px solid rgba(15,91,61,.18);border-radius:16px;
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
   padding:18px;margin:16px 0 14px;text-align:center;
 }
-.amount-box .lbl{font-size:.78rem;color:var(--green);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.amount-box .lbl{font-size:.68rem;color:var(--muted);font-weight:800;letter-spacing:.22em;text-transform:uppercase}
 .amount-box .val{
-  font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--green);
-  font-variant-numeric:tabular-nums;margin:4px 0 8px;
+  font-family:var(--font-display);font-size:2.1rem;font-weight:600;color:var(--gold);
+  font-variant-numeric:tabular-nums;margin:5px 0 10px;
 }
-input[type=range]{width:100%;accent-color:var(--green);height:6px;cursor:pointer}
-.amount-box .lim{display:flex;justify-content:space-between;color:var(--muted);font-size:.72rem;margin-top:6px;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
+.amount-box .lim{display:flex;justify-content:space-between;color:var(--muted);font-size:.7rem;margin-top:7px;font-weight:600}
 .upi-box{
-  border:1.5px dashed rgba(201,164,92,.7);background:var(--gold-soft);border-radius:14px;
-  padding:14px;margin-bottom:12px;text-align:center;
+  border:1px dashed rgba(213,179,107,.5);border-radius:15px;
+  padding:15px;margin-bottom:13px;text-align:center;background:rgba(213,179,107,.05);
 }
-.upi-box .t{font-size:.8rem;font-weight:700;color:#6d5218;margin-bottom:9px}
+.upi-box .t{font-size:.78rem;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:.03em}
 .upi-id{
-  display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(201,164,92,.5);
-  border-radius:999px;padding:7px 8px 7px 15px;font-weight:800;font-size:.92rem;
+  display:inline-flex;align-items:center;gap:8px;background:var(--surface);
+  border:1px solid rgba(213,179,107,.35);
+  border-radius:999px;padding:7px 8px 7px 16px;font-weight:800;font-size:.92rem;color:var(--ivory);
 }
 .upi-id button{
-  border:none;background:var(--gold);color:#241B08;border-radius:999px;
-  padding:5px 12px;font-size:.75rem;font-weight:800;
+  border:none;background:var(--gold);color:#1A1408;border-radius:999px;
+  padding:5px 13px;font-size:.72rem;font-weight:800;letter-spacing:.05em;
 }
-.pay-btn{margin-top:10px;width:100%;padding:13px;font-size:.95rem}
-.hint{color:var(--muted);font-size:.76rem;text-align:center;margin-top:10px;line-height:1.5}
+.pay-btn{margin-top:11px;width:100%;padding:13px;font-size:.92rem}
+.hint{color:var(--muted);font-size:.74rem;text-align:center;margin-top:11px;line-height:1.55}
 
 /* detail modal */
-.detail-photo{border-radius:14px;overflow:hidden;margin-bottom:16px;max-height:280px}
+.detail-photo{border-radius:15px;overflow:hidden;margin-bottom:16px;max-height:280px}
 .detail-photo img{width:100%;height:100%;object-fit:cover}
-.detail-specs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
-.dspec{background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:9px 13px}
-.dspec span{display:block;font-size:.7rem;color:var(--muted);font-weight:700}
+.detail-specs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}
+.dspec{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:9px 13px}
+.dspec span{display:block;font-size:.62rem;color:var(--muted);font-weight:800;letter-spacing:.12em;text-transform:uppercase}
 .dspec b{font-size:.9rem}
-.detail-price{font-family:var(--font-display);font-size:1.65rem;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums}
+.detail-price{font-family:var(--font-display);font-size:1.75rem;font-weight:600;color:var(--gold);font-variant-numeric:tabular-nums}
 
 /* upload */
 .upload{
   border:2px dashed var(--line);border-radius:13px;padding:16px;text-align:center;color:var(--muted);
-  cursor:pointer;font-size:.88rem;background:var(--bg);
+  cursor:pointer;font-size:.88rem;background:var(--surface);
 }
-.upload:hover{border-color:var(--green);color:var(--ink)}
+.upload:hover{border-color:var(--gold);color:var(--ivory)}
 .upload img{max-height:120px;margin:10px auto 0;border-radius:10px}
 
 /* toast */
 .toast{
   position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
-  background:var(--ink);color:#fff;
-  padding:13px 22px;border-radius:999px;font-weight:600;font-size:.9rem;z-index:200;opacity:0;
-  transition:all .3s ease;box-shadow:var(--shadow);max-width:90vw;text-align:center;
+  background:var(--ivory);color:#141A16;
+  padding:13px 24px;border-radius:999px;font-weight:700;font-size:.88rem;z-index:200;opacity:0;
+  transition:all .3s ease;box-shadow:0 12px 34px rgba(0,0,0,.5);max-width:90vw;text-align:center;
 }
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 </style>
@@ -351,10 +410,10 @@ input[type=range]{width:100%;accent-color:var(--green);height:6px;cursor:pointer
 <!-- ================= HEADER ================= -->
 <header>
   <div class="container nav">
-    <a href="#" class="logo">Budget<span class="dot">·</span><em>Cars</em></a>
+    <a href="#" class="logo">Budget <i>Cars</i></a>
     <nav class="nav-right">
       <a href="#contact">Contact</a>
-      <button class="btn btn-ghost" id="ownerBtn" onclick="ownerLogin()">Owner</button>
+      <button class="btn btn-line" id="ownerBtn" onclick="ownerLogin()">Owner</button>
     </nav>
   </div>
 </header>
@@ -364,45 +423,53 @@ input[type=range]{width:100%;accent-color:var(--green);height:6px;cursor:pointer
   <div class="container">
     <b>Owner mode</b>
     <button class="btn btn-gold" onclick="openAddCar()">＋ Add Car</button>
-    <button class="btn btn-ghost" onclick="exitOwner()">Exit</button>
+    <button class="btn btn-line" onclick="exitOwner()">Exit</button>
     <span id="demoNote" style="display:none">⚠️ Demo mode — cars save on this device only</span>
   </div>
 </div>
 
-<!-- ================= HERO : drive-in ================= -->
+<!-- ================= HERO : night drive-in ================= -->
 <section class="hero">
   <div class="hero-inner">
-    <h1>Welcome to <em>Budget Cars</em></h1>
-    <p>Quality pre-owned cars. Honest prices. Zero drama.</p>
+    <span class="eyebrow">Quality pre-owned · Honest prices</span>
+    <h1 class="display">Welcome to<br>Budget <em>Cars</em></h1>
+    <p>Every car verified. Every price honest. Every drive yours.</p>
   </div>
   <div class="stage">
     <div class="road"></div>
     <div class="car-wrap">
       <div class="car-shadow"></div>
+      <div class="beam"></div>
       <svg viewBox="0 0 520 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <!-- body -->
-        <path d="M28 112 C24 96 34 86 56 82 L120 72 C150 44 205 30 262 30 C320 30 362 42 392 64 L430 76 C462 80 486 90 494 100 C500 107 497 113 484 114 L40 114 C32 114 29 113 28 112 Z" fill="#0F5B3D"/>
+        <path d="M28 112 C24 96 34 86 56 82 L120 72 C150 44 205 30 262 30 C320 30 362 42 392 64 L430 76 C462 80 486 90 494 100 C500 107 497 113 484 114 L40 114 C32 114 29 113 28 112 Z" fill="#152A20"/>
         <!-- glass -->
-        <path d="M160 68 L196 42 C216 35 240 32 262 32 L268 32 L268 68 Z" fill="#BFD5C9"/>
-        <path d="M282 32 C310 33 340 41 364 56 L378 66 L282 66 Z" fill="#BFD5C9"/>
-        <!-- gold detail line -->
-        <path d="M60 92 L470 92" stroke="#C9A45C" stroke-width="3" stroke-linecap="round" opacity=".9"/>
-        <!-- headlight & taillight -->
-        <path d="M486 96 C492 99 495 103 494 107 L478 107 L478 96 Z" fill="#F6EFE2"/>
+        <path d="M160 68 L196 42 C216 35 240 32 262 32 L268 32 L268 68 Z" fill="#22372C"/>
+        <path d="M282 32 C310 33 340 41 364 56 L378 66 L282 66 Z" fill="#22372C"/>
+        <!-- gold trim -->
+        <path d="M60 92 L470 92" stroke="#D5B36B" stroke-width="2.5" stroke-linecap="round" opacity=".85"/>
+        <!-- lamps -->
+        <g class="headlamp">
+          <path d="M486 96 C492 99 495 103 494 107 L476 107 L476 96 Z" fill="#F6ECC9"/>
+          <circle cx="488" cy="101" r="7" fill="#F6ECC9" opacity=".5"/>
+        </g>
         <rect x="28" y="94" width="10" height="8" rx="3" fill="#C24545"/>
         <!-- wheels -->
         <g class="wheel">
-          <circle cx="140" cy="112" r="26" fill="#17211C"/>
-          <circle cx="140" cy="112" r="12" fill="#E8E6E0"/>
-          <path d="M140 102 V122 M130 112 H150 M133 105 L147 119 M147 105 L133 119" stroke="#17211C" stroke-width="2.5"/>
+          <circle cx="140" cy="112" r="26" fill="#060907"/>
+          <circle cx="140" cy="112" r="12" fill="#D5B36B" opacity=".85"/>
+          <path d="M140 102 V122 M130 112 H150 M133 105 L147 119 M147 105 L133 119" stroke="#060907" stroke-width="2.5"/>
         </g>
         <g class="wheel">
-          <circle cx="404" cy="112" r="26" fill="#17211C"/>
-          <circle cx="404" cy="112" r="12" fill="#E8E6E0"/>
-          <path d="M404 102 V122 M394 112 H414 M397 105 L411 119 M411 105 L397 119" stroke="#17211C" stroke-width="2.5"/>
+          <circle cx="404" cy="112" r="26" fill="#060907"/>
+          <circle cx="404" cy="112" r="12" fill="#D5B36B" opacity=".85"/>
+          <path d="M404 102 V122 M394 112 H414 M397 105 L411 119 M411 105 L397 119" stroke="#060907" stroke-width="2.5"/>
         </g>
       </svg>
     </div>
+  </div>
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track" id="tickerTrack"></div>
   </div>
 </section>
 
@@ -425,15 +492,16 @@ input[type=range]{width:100%;accent-color:var(--green);height:6px;cursor:pointer
   <div class="grid" id="carGrid"></div>
 
   <!-- ================= CONTACT ================= -->
-  <div class="contact" id="contact">
-    <h2>Talk to us — we reply fast</h2>
+  <div class="contact reveal" id="contact">
+    <span class="eyebrow">Contact</span>
+    <h2 class="display">Talk to us — <em>we reply fast</em></h2>
     <p>Questions about a car? Want to sell or exchange yours? Call, WhatsApp or DM us on Instagram.</p>
     <div class="contact-links">
-      <a class="btn btn-green" href="tel:+917086269537">📞 70862 69537</a>
-      <a class="btn btn-ghost" href="https://wa.me/917086269537" target="_blank" rel="noopener">WhatsApp</a>
-      <a class="btn btn-ghost" href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">Instagram</a>
+      <a class="btn btn-gold" href="tel:+917086269537">📞 70862 69537</a>
+      <a class="btn btn-line" href="https://wa.me/917086269537" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="btn btn-line" href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">Instagram</a>
     </div>
-    <div class="upi-note">UPI payments: salinuralom@ybl</div>
+    <div class="upi-note">UPI · salinuralom@ybl</div>
   </div>
 </main>
 
@@ -456,7 +524,7 @@ input[type=range]{width:100%;accent-color:var(--green);height:6px;cursor:pointer
 <div class="overlay" id="bookOverlay" onclick="if(event.target===this)closeModal('bookOverlay')">
   <div class="modal">
     <button class="close-x" onclick="closeModal('bookOverlay')" aria-label="Close">✕</button>
-    <h3>Book this car</h3>
+    <h3>Book this <i>car</i></h3>
     <p class="sub" id="bookCarName"></p>
 
     <div class="form-grid">
@@ -486,7 +554,7 @@ input[type=range]{width:100%;accent-color:var(--green);height:6px;cursor:pointer
 <div class="overlay" id="addOverlay" onclick="if(event.target===this)closeModal('addOverlay')">
   <div class="modal wide">
     <button class="close-x" onclick="closeModal('addOverlay')" aria-label="Close">✕</button>
-    <h3>Add a Car</h3>
+    <h3>Add a <i>car</i></h3>
     <p class="sub">Fill every detail — customers see exactly this.</p>
 
     <div class="form-grid">
@@ -514,7 +582,7 @@ input[type=range]{width:100%;accent-color:var(--green);height:6px;cursor:pointer
       <div class="field full"><label>Description</label><textarea id="f_desc" rows="3" placeholder="Condition, service history, new tyres, etc."></textarea></div>
     </div>
     <div style="margin-top:16px">
-      <button class="btn btn-green btn-block" id="saveCarBtn" onclick="saveCar()" style="padding:14px">✅ Add this Car</button>
+      <button class="btn btn-gold btn-block" id="saveCarBtn" onclick="saveCar()" style="padding:14px">✅ Add this Car</button>
     </div>
   </div>
 </div>
@@ -535,6 +603,13 @@ const UPI_ID      = "salinuralom@ybl";        // UPI ID for token payments
 const STORE_KEY   = "budgetcars_inventory_v1";
 const SB_ON       = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 const BRANDS      = ["Maruti Suzuki","Hyundai","Tata","Mahindra","Kia","Toyota","Honda","Renault"];
+
+/* ---------- gold ticker ---------- */
+(function(){
+  const items = ["Budget Cars","Verified & inspected","Honest prices","Book from ₹10,000","Pay by any UPI app","Guwahati, Assam"];
+  const half = items.map(t=>`<span>${t}<b>✦</b></span>`).join("");
+  document.getElementById("tickerTrack").innerHTML = half + half;
+})();
 
 /* ---------- Supabase REST helper (no SDK needed) ---------- */
 async function sb(path, opts = {}){
@@ -570,21 +645,23 @@ function fromRow(r){
   };
 }
 
-/* ---------- placeholder photo (SVG, no internet needed) ---------- */
+/* ---------- placeholder photo (night-studio look) ---------- */
 function carArt(hue, name){
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
-  <rect width="640" height="480" fill="hsl(${hue},18%,90%)"/>
-  <circle cx="560" cy="70" r="120" fill="hsl(${hue},30%,80%)" opacity="0.5"/>
+  <rect width="640" height="480" fill="#141B16"/>
+  <ellipse cx="320" cy="130" rx="290" ry="160" fill="hsl(${hue},30%,26%)" opacity="0.28"/>
+  <ellipse cx="320" cy="345" rx="240" ry="26" fill="#000" opacity="0.5"/>
   <g transform="translate(120,190)">
     <path d="M20 120 Q30 78 90 66 L130 30 Q150 14 185 14 L280 14 Q310 14 330 36 L360 66 Q400 74 400 105 L400 130 L20 130 Z"
-      fill="hsl(${hue},32%,42%)"/>
-    <path d="M140 34 L185 34 L185 62 L118 62 Z" fill="hsl(${hue},22%,84%)"/>
-    <path d="M200 34 L272 34 Q290 34 302 48 L314 62 L200 62 Z" fill="hsl(${hue},22%,84%)"/>
-    <circle cx="105" cy="130" r="34" fill="#2A332E"/><circle cx="105" cy="130" r="15" fill="#E8E6E0"/>
-    <circle cx="320" cy="130" r="34" fill="#2A332E"/><circle cx="320" cy="130" r="15" fill="#E8E6E0"/>
+      fill="hsl(${hue},34%,48%)"/>
+    <path d="M140 34 L185 34 L185 62 L118 62 Z" fill="hsl(${hue},20%,20%)"/>
+    <path d="M200 34 L272 34 Q290 34 302 48 L314 62 L200 62 Z" fill="hsl(${hue},20%,20%)"/>
+    <path d="M30 92 L392 92" stroke="#D5B36B" stroke-width="2.5" opacity="0.7"/>
+    <circle cx="105" cy="130" r="34" fill="#060907"/><circle cx="105" cy="130" r="14" fill="#D5B36B" opacity="0.8"/>
+    <circle cx="320" cy="130" r="34" fill="#060907"/><circle cx="320" cy="130" r="14" fill="#D5B36B" opacity="0.8"/>
   </g>
-  <text x="320" y="420" text-anchor="middle" font-family="Georgia,serif" font-size="26" font-weight="700"
-    fill="rgba(42,51,46,.5)">${name}</text>
+  <text x="320" y="428" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="26"
+    fill="rgba(244,241,232,.55)">${name}</text>
 </svg>`;
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
@@ -643,6 +720,19 @@ function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"
 function closeModal(id){ document.getElementById(id).classList.remove("open"); }
 function openModal(id){ document.getElementById(id).classList.add("open"); }
 
+/* ---------- scroll reveal ---------- */
+const revealer = ("IntersectionObserver" in window)
+  ? new IntersectionObserver(entries => {
+      entries.forEach(en => { if(en.isIntersecting){ en.target.classList.add("in"); revealer.unobserve(en.target); } });
+    }, {threshold:.12})
+  : null;
+function watchReveals(root){
+  (root || document).querySelectorAll(".reveal:not(.in)").forEach((el,i)=>{
+    el.style.transitionDelay = Math.min(i % 6 * 60, 300) + "ms";
+    if(revealer) revealer.observe(el); else el.classList.add("in");
+  });
+}
+
 /* ---------- interstitial strips ---------- */
 function stripBrands(){
   const chips = ['<button class="brand-chip'+(brandFilter===""?" on":"")+'" onclick="setBrand(\'\')">All brands</button>']
@@ -650,26 +740,27 @@ function stripBrands(){
       const short = b === "Maruti Suzuki" ? "Maruti" : b;
       return '<button class="brand-chip'+(brandFilter===b?" on":"")+'" onclick="setBrand(\''+b+'\')">'+short+'</button>';
     }));
-  return `<div class="strip strip-brands">
-    <div class="label">Shop by brand</div>
+  return `<div class="strip strip-brands reveal">
+    <span class="eyebrow">Shop by brand</span>
     <div class="brand-row">${chips.join("")}</div>
   </div>`;
 }
 function stripWhy(){
-  return `<div class="strip strip-why">
-    <h2>Why choose <em>Budget Cars</em>?</h2>
-    <div class="why-grid">
-      <div class="why"><div class="ico">🛡️</div><div><b>Inspected &amp; verified</b><span>Engine, papers, insurance and service history — checked before it reaches you.</span></div></div>
-      <div class="why"><div class="ico">🏷️</div><div><b>Honest pricing</b><span>The price you see is the price you pay. No hidden charges, ever.</span></div></div>
-      <div class="why"><div class="ico">📲</div><div><b>Book from ₹10,000</b><span>Reserve any car with a small token — pay in seconds with any UPI app.</span></div></div>
-      <div class="why"><div class="ico">🤝</div><div><b>With you till the keys</b><span>RC transfer, insurance and paperwork — we handle it all for you.</span></div></div>
+  return `<div class="strip strip-why reveal">
+    <span class="eyebrow">The Budget Cars promise</span>
+    <h2 class="display">Why buy from <em>us?</em></h2>
+    <div class="why-list">
+      <div class="why"><span class="num">01</span><div><b>Inspected &amp; verified</b><span>Engine, papers, insurance and service history — checked before a car ever reaches you.</span></div></div>
+      <div class="why"><span class="num">02</span><div><b>Honest pricing</b><span>The price you see is the price you pay. No hidden charges, ever.</span></div></div>
+      <div class="why"><span class="num">03</span><div><b>Book from ₹10,000</b><span>Reserve any car with a small token — pay in seconds with any UPI app.</span></div></div>
+      <div class="why"><span class="num">04</span><div><b>With you till the keys</b><span>RC transfer, insurance and paperwork — we handle it all for you.</span></div></div>
     </div>
   </div>`;
 }
 function stripPromo(){
-  return `<div class="strip strip-promo">
-    <div class="txt"><b>Sell or exchange your old car</b><span>Best price in town, instant evaluation. Talk to Budget Cars today.</span></div>
-    <a class="btn btn-green" href="https://wa.me/${PHONE}?text=${encodeURIComponent("Hi Budget Cars! I want to sell/exchange my car.")}" target="_blank" rel="noopener">WhatsApp us</a>
+  return `<div class="strip strip-promo reveal">
+    <div class="txt"><b>Sell or exchange <i>your old car</i></b><span>Best price in town, instant evaluation. Talk to Budget Cars today.</span></div>
+    <a class="btn btn-gold" href="https://wa.me/${PHONE}?text=${encodeURIComponent("Hi Budget Cars! I want to sell/exchange my car.")}" target="_blank" rel="noopener">WhatsApp us</a>
   </div>`;
 }
 function setBrand(b){
@@ -680,7 +771,7 @@ function setBrand(b){
 
 /* ---------- render ---------- */
 function cardHTML(c){
-  return `<div class="card">
+  return `<div class="card reveal">
     <div class="photo" onclick="openDetail('${c.id}')">
       <img src="${c.photo}" alt="${esc(c.name)}" loading="lazy">
       <span class="badge">${esc(c.fuel)} · ${c.year}</span>
@@ -690,7 +781,7 @@ function cardHTML(c){
       <h3>${esc(c.name)}</h3>
       <div class="meta">${c.year} · ${Number(c.km).toLocaleString("en-IN")} km · ${esc(c.trans)}</div>
       <div class="price">${fmt(c.price)}</div>
-      <button class="btn btn-green book" onclick="event.stopPropagation();openBooking('${c.id}')">Book now</button>
+      <button class="btn book" onclick="event.stopPropagation();openBooking('${c.id}')">Book now</button>
     </div>
   </div>`;
 }
@@ -726,11 +817,12 @@ function renderCars(){
         stripIdx++;
       }
     }
-    /* always show brand picker + why-us at least once */
     if(stripIdx < 1) html += stripBrands();
     if(stripIdx < 2) html += stripWhy();
   }
-  document.getElementById("carGrid").innerHTML = html;
+  const grid = document.getElementById("carGrid");
+  grid.innerHTML = html;
+  watchReveals(grid);
 }
 
 /* ---------- detail ---------- */
@@ -752,7 +844,7 @@ function openDetail(id){
       <div class="dspec"><span>Registration</span><b>${esc(c.loc||"—")}</b></div>
     </div>
     ${c.desc ? `<p style="color:var(--muted);font-size:.9rem;margin-bottom:16px">${esc(c.desc)}</p>` : ""}
-    <button class="btn btn-green btn-block" style="padding:14px" onclick="closeModal('detailOverlay');openBooking('${c.id}')">Book this car</button>`;
+    <button class="btn btn-gold btn-block" style="padding:14px" onclick="closeModal('detailOverlay');openBooking('${c.id}')">Book this car</button>`;
   openModal("detailOverlay");
 }
 
@@ -927,6 +1019,7 @@ document.addEventListener("keydown", e => {
 });
 document.getElementById("carGrid").innerHTML =
   '<div class="empty"><div class="big">⏳</div><b>Loading cars…</b></div>';
+watchReveals(document);
 load();
 </script>
 </body>
