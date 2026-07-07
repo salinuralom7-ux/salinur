@@ -536,7 +536,8 @@ footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:
     <div class="panel wide">
 
       <div class="field">
-        <label>Your skills — choose 1 to 3</label>
+        <label>Your skills — choose 1 to 3 (<span id="skillCount">0</span>/3 selected)</label>
+        <input type="text" id="skillSearch" placeholder="🔍 Search skills… e.g. mechanic, doctor, cook" oninput="renderSkillChips(collectSkills())" style="margin-bottom:10px">
         <div class="skill-chips" id="skillChips"></div>
         <div id="skillDetails"></div>
       </div>
@@ -634,7 +635,18 @@ footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:
 const SUPABASE_URL      = "https://mpufunsitqtdkqlibxof.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdWZ1bnNpdHF0ZGtxbGlieG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTAyNTksImV4cCI6MjA5ODkyNjI1OX0.iyYX1EFJwrdPWxXLTCHHm8cdmuO-roPIjjX4T-SU53E";
 
-const SKILLS = ["Tutor","Mechanic","Driver","Cook","Maid","Gardener","Electrician","Plumber","Carpenter","Painter","AC Repair","Babysitter","Beautician","Tailor","Cleaner","Photographer"];
+const SKILLS = [
+  /* vehicles */ "Driver","Car Mechanic","Bike Mechanic","Car Cleaner","Tractor Driver","Tyre Repair",
+  /* education & training */ "Tutor","Music Teacher","Dance Teacher","Computer Teacher","Yoga Trainer","Fitness Trainer","Swimming Coach",
+  /* home services */ "Cook","Maid","Cleaner","Laundry & Ironing","Gardener","Babysitter","Caretaker","Pest Control","House Shifting Helper",
+  /* trades & repair */ "Electrician","Plumber","Carpenter","Painter","Mason","Welder","AC Repair","Fridge Repair","Washing Machine Repair","TV Repair","Mobile Repair","Computer Repair","CCTV Installer","Solar Technician","Water Pump Repair",
+  /* health */ "Doctor","Nurse","Physiotherapist","Massage Therapist",
+  /* beauty & fashion */ "Beautician","Barber","Makeup Artist","Mehendi Artist","Tailor","Cobbler",
+  /* events */ "Photographer","Videographer","DJ & Sound","Caterer","Decorator","Event Helper","Priest",
+  /* professional & digital */ "Web Developer","Graphic Designer","Video Editor","Social Media Manager","Data Entry / Typist","Accountant","Lawyer","Interior Designer",
+  /* work & field */ "Security Guard","Delivery Helper","Construction Labourer","Farm Worker","Pet Care"
+];
+const POPULAR = ["Tutor","Driver","Car Mechanic","Cook","Maid","Electrician","Plumber","Beautician","AC Repair","Carpenter","Doctor","Photographer"];
 const UNITS  = ["per hour","per day","per week","per month","per job"];
 const WSTORE = "kaamsetu_workers_v1";
 const SSTORE = "kaamsetu_session_v1";
@@ -765,7 +777,7 @@ function demoSeed(){
     skills, available:true, rating_sum:rs, rating_count:rc
   });
   return [
-    mk("Rahim Ali","Guwahati","Six Mile",[{skill:"Mechanic",price:500,unit:"per hour",exp:"6 years"},{skill:"Driver",price:900,unit:"per day",exp:"8 years"}], .01,.008, 47,10),
+    mk("Rahim Ali","Guwahati","Six Mile",[{skill:"Car Mechanic",price:500,unit:"per hour",exp:"6 years"},{skill:"Driver",price:900,unit:"per day",exp:"8 years"}], .01,.008, 47,10),
     mk("Priya Das","Guwahati","Zoo Road",[{skill:"Tutor",price:5000,unit:"per month",exp:"4 years"}], -.008,.012, 44,9),
     mk("Sunita Devi","Guwahati","Beltola",[{skill:"Cook",price:6000,unit:"per month",exp:"10 years"},{skill:"Maid",price:4000,unit:"per month",exp:"10 years"}], .015,-.01, 38,8),
     mk("Manoj Deka","Guwahati","Ganeshguri",[{skill:"Electrician",price:400,unit:"per job",exp:"7 years"},{skill:"AC Repair",price:600,unit:"per job",exp:"5 years"}], -.012,-.006, 33,7),
@@ -854,11 +866,17 @@ function initRegister(){
   renderLocBtn();
 }
 function renderSkillChips(existing){
-  $("skillChips").innerHTML = SKILLS.map(s=>{
+  const q = ($("skillSearch").value || "").trim().toLowerCase();
+  const pool = SKILLS.filter(s => !q || s.toLowerCase().includes(q));
+  const shown = [...new Set([...selectedSkills, ...pool])];
+  $("skillCount").textContent = selectedSkills.length;
+  $("skillChips").innerHTML = shown.map(s=>{
     const on = selectedSkills.includes(s);
     const dis = !on && selectedSkills.length >= 3;
-    return `<button class="skill-chip${on?" on":""}" ${dis?"disabled":""} onclick="toggleSkill('${s}')">${s}</button>`;
-  }).join("");
+    return `<button class="skill-chip${on?" on":""}" ${dis?"disabled":""} onclick="toggleSkill('${esc(s).replace(/'/g,"\\'")}')">${esc(s)}</button>`;
+  }).join("")
+  + (q && !pool.length ? `<span class="note" style="margin:4px 6px 0">No match — add it yourself:</span>` : "")
+  + `<button class="skill-chip" style="border-style:dashed" ${selectedSkills.length>=3?"disabled":""} onclick="addCustomSkill()">➕ Other skill</button>`;
   $("skillDetails").innerHTML = selectedSkills.map(s=>{
     const ex = (existing||[]).find(x=>x.skill===s) || {};
     return `<div class="skill-detail" data-skill="${s}">
@@ -876,6 +894,21 @@ function toggleSkill(s){
   if(selectedSkills.includes(s)) selectedSkills = selectedSkills.filter(x=>x!==s);
   else if(selectedSkills.length < 3) selectedSkills.push(s);
   renderSkillChips(existing);
+}
+function addCustomSkill(){
+  if(selectedSkills.length >= 3){ toast("You already have 3 skills — remove one first"); return; }
+  let s = prompt("Type your skill (e.g. Drone Pilot):");
+  if(!s) return;
+  s = s.trim().replace(/\s+/g," ").slice(0, 30);
+  s = s.charAt(0).toUpperCase() + s.slice(1);
+  if(!s){ return; }
+  const match = SKILLS.find(x => x.toLowerCase() === s.toLowerCase());
+  if(match) s = match;
+  if(selectedSkills.includes(s)){ toast("You already added that skill"); return; }
+  const existing = collectSkills();
+  selectedSkills.push(s);
+  renderSkillChips(existing);
+  toast("✅ \"" + s + "\" added — set your price below");
 }
 function collectSkills(){
   return [...document.querySelectorAll(".skill-detail")].map(d=>({
@@ -982,9 +1015,7 @@ async function toggleAvailable(v){
 
 /* ---------- hire ---------- */
 async function initHire(){
-  $("hireChips").innerHTML =
-    `<button class="skill-chip${hireSkill===""?" on":""}" onclick="setHireSkill('')">All skills</button>` +
-    SKILLS.map(s=>`<button class="skill-chip${hireSkill===s?" on":""}" onclick="setHireSkill('${s}')">${s}</button>`).join("");
+  initHireChipsOnly();
   refreshLocNote();
   if(!myLoc) requestMyLocation(false);
   try{ workers = await api.list(); }catch(e){ console.error(e); workers = []; toast("⚠️ Could not load workers — check your connection"); }
@@ -992,9 +1023,11 @@ async function initHire(){
 }
 function setHireSkill(s){ hireSkill = s; initHireChipsOnly(); renderWorkers(); }
 function initHireChipsOnly(){
+  const chipSet = [...new Set([...(hireSkill ? [hireSkill] : []), ...POPULAR])];
   $("hireChips").innerHTML =
     `<button class="skill-chip${hireSkill===""?" on":""}" onclick="setHireSkill('')">All skills</button>` +
-    SKILLS.map(s=>`<button class="skill-chip${hireSkill===s?" on":""}" onclick="setHireSkill('${s}')">${s}</button>`).join("");
+    chipSet.map(k=>`<button class="skill-chip${hireSkill===k?" on":""}" onclick="setHireSkill('${k.replace(/'/g,"\\'")}')">${k}</button>`).join("") +
+    `<button class="skill-chip" style="border-style:dashed" onclick="$('hireSearch').focus()">🔍 60+ more — search</button>`;
 }
 function refreshLocNote(){
   $("locNote").innerHTML = myLoc
@@ -1119,11 +1152,11 @@ Please reply to confirm. Thank you!`;
 
 /* ---------- landing extras ---------- */
 (function(){
-  const items = SKILLS.concat(["No commission","Set your own price","Nearest first"]);
+  const items = POPULAR.concat(["60+ skills","No commission","Set your own price","Nearest first"]);
   const half = items.map(t=>`<span>${t}<b>✦</b></span>`).join("");
   $("skillTicker").innerHTML = half + half;
-  $("popChips").innerHTML = ["Tutor","Mechanic","Driver","Cook","Maid","Electrician","Plumber","Gardener","Babysitter","Beautician"]
-    .map(s=>`<button class="pop-chip" onclick="goSkill('${s}')">${s}</button>`).join("");
+  $("popChips").innerHTML = POPULAR
+    .map(s=>`<button class="pop-chip" onclick="goSkill('${s.replace(/'/g,"\\'")}')">${s}</button>`).join("");
 })();
 function goSkill(s){ hireSkill = s; go("hire"); }
 const revealer = ("IntersectionObserver" in window)
