@@ -139,6 +139,29 @@ header{
 @keyframes greet{
   0%{opacity:0} 14%{opacity:1} 28%{opacity:0} 42%{opacity:1} 56%{opacity:0} 75%{opacity:1} 100%{opacity:1}
 }
+/* the owner greets visitors in front of the car */
+.host{
+  position:absolute;z-index:4;bottom:8px;left:calc(50% + min(158px,26vw));
+  transform:translateX(-50%);text-align:center;
+  opacity:0;animation:hostIn .75s cubic-bezier(.3,1.45,.45,1) 1.8s forwards;
+}
+.host img{
+  width:min(106px,23vw);height:min(106px,23vw);border-radius:50%;
+  border:2.5px solid var(--gold);
+  box-shadow:0 0 0 6px rgba(213,179,107,.14), 0 16px 34px rgba(0,0,0,.55);
+  animation:float 4.5s ease-in-out 2.8s infinite;
+}
+.host span{
+  display:inline-block;margin-top:7px;font-size:.58rem;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gold);
+  background:rgba(11,16,13,.78);border:1px solid rgba(213,179,107,.35);
+  border-radius:999px;padding:4px 11px;backdrop-filter:blur(4px);white-space:nowrap;
+}
+@keyframes hostIn{
+  from{opacity:0;transform:translateX(-50%) translateY(26px) scale(.5)}
+  to{opacity:1;transform:translateX(-50%)}
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 /* gold ticker */
 .ticker{
   border-top:1px solid var(--line);margin-top:0;position:relative;z-index:2;
@@ -157,6 +180,8 @@ header{
 @media (prefers-reduced-motion: reduce){
   .car-wrap{animation:none;transform:translateX(-50%)}
   .beam,.lamp-glow{animation:none;opacity:1}
+  .host{animation:none;opacity:1}
+  .host img{animation:none}
   .hero .eyebrow,.hero h1,.hero p{animation:none;opacity:1}
   .ticker-track{animation:none}
   .reveal{opacity:1 !important;transform:none !important}
@@ -452,6 +477,10 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
       <img class="defender" src="defender.png" alt="Land Rover Defender arriving at Budget Cars">
       <div class="lamp-glow"></div>
       <div class="beam"></div>
+    </div>
+    <div class="host">
+      <img src="owner.png" alt="Salinur — Budget Cars">
+      <span>Salinur · Budget Cars</span>
     </div>
   </div>
   <div class="ticker" aria-hidden="true">
