@@ -3,263 +3,347 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Budget Cars — Quality Second-Hand Cars</title>
-<meta name="description" content="Budget Cars — quality pre-owned cars at honest prices. Browse, book and drive home your dream car.">
+<title>Budget Cars — Quality Pre-Owned Cars</title>
+<meta name="description" content="Budget Cars — quality pre-owned cars at honest prices. Browse, book with UPI, and drive home happy.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚗%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ============ BUDGET CARS ============ */
+/* ================= BUDGET CARS — porcelain & racing green ================= */
 :root{
-  --bg:#0b0f17;
-  --bg2:#111726;
-  --card:#161e30;
-  --card2:#1c2540;
-  --line:rgba(255,255,255,.08);
-  --text:#eef2f9;
-  --muted:#93a0b8;
-  --accent:#ffb020;
-  --accent2:#ff8a3d;
-  --green:#2ecc8f;
-  --red:#ff5d6c;
-  --radius:18px;
-  --shadow:0 18px 50px rgba(0,0,0,.45);
+  --bg:#F7F5F1;            /* warm porcelain */
+  --surface:#FFFFFF;
+  --ink:#17211C;           /* green-black ink */
+  --muted:#68716C;
+  --line:rgba(23,33,28,.09);
+  --green:#0F5B3D;         /* racing green */
+  --green-soft:#EAF2ED;
+  --gold:#C9A45C;
+  --gold-soft:#F6EFE2;
+  --danger:#C24545;
+  --radius:16px;
+  --shadow:0 10px 30px rgba(23,33,28,.08);
+  --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body:'Manrope', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
-  background:
-    radial-gradient(1100px 500px at 85% -10%, rgba(255,176,32,.10), transparent 60%),
-    radial-gradient(900px 500px at -10% 20%, rgba(255,138,61,.07), transparent 55%),
-    var(--bg);
-  color:var(--text);
-  min-height:100vh;
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--ink);
   line-height:1.55;
+  min-height:100vh;
 }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer}
-input,select,textarea{font-family:inherit;font-size:1rem}
-.container{max-width:1180px;margin:0 auto;padding:0 20px}
+input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ink)}
+.container{max-width:1100px;margin:0 auto;padding:0 18px}
 
-/* ---------- Header ---------- */
-header{
-  position:sticky;top:0;z-index:60;
-  backdrop-filter:blur(14px);
-  background:rgba(11,15,23,.78);
-  border-bottom:1px solid var(--line);
-}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:14px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.28rem;letter-spacing:.3px}
-.logo .mark{
-  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:1.25rem;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  box-shadow:0 6px 18px rgba(255,150,40,.35);
-}
-.logo span b{color:var(--accent)}
-.nav-links{display:flex;gap:22px;align-items:center;font-size:.95rem;color:var(--muted)}
-.nav-links a:hover{color:var(--text)}
+/* ---------- buttons ---------- */
 .btn{
-  border:none;border-radius:12px;padding:11px 20px;font-weight:700;font-size:.95rem;
-  transition:transform .15s ease, box-shadow .15s ease, background .15s;
-  display:inline-flex;align-items:center;gap:8px;
+  border:none;border-radius:999px;padding:11px 20px;font-weight:700;font-size:.92rem;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
 .btn:active{transform:scale(.97)}
-.btn-primary{
-  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1205;
-  box-shadow:0 8px 22px rgba(255,150,40,.30);
-}
-.btn-primary:hover{box-shadow:0 10px 28px rgba(255,150,40,.45);transform:translateY(-1px)}
-.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,.25)}
-.btn-danger{background:rgba(255,93,108,.14);color:var(--red);border:1px solid rgba(255,93,108,.35)}
-.btn-danger:hover{background:rgba(255,93,108,.25)}
-.btn-green{background:rgba(46,204,143,.15);color:var(--green);border:1px solid rgba(46,204,143,.4)}
-.btn-green:hover{background:rgba(46,204,143,.25)}
-.btn-block{width:100%;justify-content:center}
+.btn:focus-visible{outline:3px solid rgba(15,91,61,.35);outline-offset:2px}
+.btn-green{background:var(--green);color:#fff;box-shadow:0 6px 16px rgba(15,91,61,.25)}
+.btn-green:hover{background:#0C4A32;box-shadow:0 8px 20px rgba(15,91,61,.32)}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn-ghost:hover{border-color:rgba(23,33,28,.3)}
+.btn-gold{background:var(--gold);color:#241B08}
+.btn-gold:hover{background:#B8934C}
+.btn-block{width:100%}
 
-/* ---------- Hero ---------- */
-.hero{padding:72px 0 40px;text-align:center;position:relative}
-.hero .kicker{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(255,176,32,.12);color:var(--accent);
-  border:1px solid rgba(255,176,32,.3);
-  padding:7px 16px;border-radius:999px;font-size:.85rem;font-weight:600;margin-bottom:22px;
+/* ---------- header ---------- */
+header{
+  position:sticky;top:0;z-index:60;
+  background:rgba(247,245,241,.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
 }
-.hero h1{font-size:clamp(2.1rem,5.5vw,3.6rem);font-weight:900;line-height:1.12;letter-spacing:-.5px}
-.hero h1 .grad{
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-}
-.hero p{color:var(--muted);max-width:620px;margin:18px auto 30px;font-size:1.08rem}
-.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-.stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:44px}
-.stat{
-  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:18px 30px;min-width:150px;
-}
-.stat b{font-size:1.5rem;color:var(--accent);display:block}
-.stat span{color:var(--muted);font-size:.85rem}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:13px 0}
+.logo{display:flex;align-items:baseline;gap:2px;font-family:var(--font-display);font-weight:700;font-size:1.35rem;letter-spacing:.2px}
+.logo em{font-style:normal;color:var(--green)}
+.logo .dot{color:var(--gold);font-size:1.5rem;line-height:0}
+.nav-right{display:flex;align-items:center;gap:14px}
+.nav-right a{font-size:.9rem;font-weight:600;color:var(--muted)}
+.nav-right a:hover{color:var(--ink)}
+#ownerBtn{padding:9px 16px;font-size:.85rem}
 
-/* ---------- Toolbar ---------- */
-.section{padding:56px 0}
-.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:26px}
-.section-head h2{font-size:1.8rem;font-weight:800}
-.section-head h2 em{font-style:normal;color:var(--accent)}
-.section-head p{color:var(--muted);font-size:.95rem}
-.toolbar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
-.toolbar .field{flex:1;min-width:180px}
-.field input,.field select,.field textarea{
-  width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);
-  border-radius:12px;padding:12px 15px;outline:none;transition:border-color .15s;
+/* ---------- hero : the drive-in ---------- */
+.hero{
+  position:relative;overflow:hidden;
+  background:linear-gradient(180deg,#EFEEE8 0%, var(--bg) 100%);
+  border-bottom:1px solid var(--line);
 }
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
-.field select option{background:var(--bg2)}
-.field label{display:block;font-size:.82rem;color:var(--muted);margin-bottom:6px;font-weight:600}
+.hero-inner{max-width:1100px;margin:0 auto;padding:34px 18px 0;text-align:center}
+.hero h1{
+  font-family:var(--font-display);font-weight:700;
+  font-size:clamp(1.7rem,5vw,2.7rem);letter-spacing:-.3px;text-wrap:balance;
+  opacity:0;animation:riseIn .8s ease .9s forwards;
+}
+.hero h1 em{font-style:normal;color:var(--green)}
+.hero p{
+  color:var(--muted);font-size:clamp(.92rem,2.5vw,1.05rem);margin-top:6px;
+  opacity:0;animation:riseIn .8s ease 1.15s forwards;
+}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.stage{position:relative;height:150px;margin-top:6px}
+.road{
+  position:absolute;left:0;right:0;bottom:22px;height:2px;
+  background:linear-gradient(90deg,transparent, rgba(23,33,28,.22) 12%, rgba(23,33,28,.22) 88%, transparent);
+}
+.car-wrap{
+  position:absolute;bottom:14px;left:50%;width:min(400px,78vw);
+  transform:translateX(-50%);
+  animation:driveIn 2.1s cubic-bezier(.22,.9,.3,1) forwards;
+}
+@keyframes driveIn{
+  0%{transform:translateX(-120vw)}
+  86%{transform:translateX(calc(-50% + 10px))}
+  100%{transform:translateX(-50%)}
+}
+.car-shadow{
+  position:absolute;bottom:-6px;left:9%;width:82%;height:14px;border-radius:50%;
+  background:radial-gradient(ellipse at center, rgba(23,33,28,.22), transparent 70%);
+}
+.wheel{animation:spin 2.1s cubic-bezier(.22,.9,.3,1) forwards;transform-origin:center;transform-box:fill-box}
+@keyframes spin{from{transform:rotate(-900deg)}to{transform:rotate(0deg)}}
+@media (prefers-reduced-motion: reduce){
+  .car-wrap{animation:none;transform:translateX(-50%)}
+  .wheel{animation:none}
+  .hero h1,.hero p{animation:none;opacity:1}
+}
 
-/* ---------- Cars grid ---------- */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:22px}
+/* ---------- toolbar ---------- */
+.toolbar{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+  padding:20px 0 6px;
+}
+.toolbar .search{
+  flex:1;min-width:170px;display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:10px 16px;
+}
+.toolbar .search input{border:none;outline:none;background:transparent;width:100%;font-size:.95rem}
+.toolbar select{
+  background:var(--surface);border:1.5px solid var(--line);border-radius:999px;
+  padding:10px 14px;font-size:.88rem;font-weight:600;outline:none;color:var(--ink);
+}
+.count-note{color:var(--muted);font-size:.82rem;font-weight:600;padding:6px 0 0;width:100%}
+
+/* ---------- cars grid ---------- */
+.section{padding:10px 0 40px}
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;
+  margin-top:14px;
+}
+@media(max-width:680px){
+  .grid{grid-template-columns:repeat(2,1fr);gap:11px}
+}
 .card{
-  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   overflow:hidden;display:flex;flex-direction:column;position:relative;
-  transition:transform .2s ease, box-shadow .2s ease, border-color .2s;
+  transition:transform .18s ease, box-shadow .18s ease;
 }
-.card:hover{transform:translateY(-5px);box-shadow:var(--shadow);border-color:rgba(255,176,32,.35)}
-.card .photo{height:190px;background:var(--card2);position:relative;overflow:hidden;cursor:pointer}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.card .photo{aspect-ratio:4/3;background:#EDEBE5;position:relative;overflow:hidden;cursor:pointer}
 .card .photo img{width:100%;height:100%;object-fit:cover;transition:transform .35s ease}
-.card:hover .photo img{transform:scale(1.06)}
+.card:hover .photo img{transform:scale(1.05)}
 .badge{
-  position:absolute;top:12px;left:12px;background:rgba(10,14,22,.8);backdrop-filter:blur(6px);
-  color:var(--accent);border:1px solid rgba(255,176,32,.4);
-  padding:4px 12px;border-radius:999px;font-size:.75rem;font-weight:700;
+  position:absolute;top:9px;left:9px;background:rgba(255,255,255,.92);
+  color:var(--green);padding:3px 10px;border-radius:999px;
+  font-size:.68rem;font-weight:800;letter-spacing:.3px;
 }
 .del-btn{
-  position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:10px;border:none;
-  background:rgba(255,93,108,.9);color:#fff;font-size:1.05rem;font-weight:800;line-height:1;
-  display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.4);z-index:5;
+  position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:none;
+  background:var(--danger);color:#fff;font-size:.9rem;font-weight:800;line-height:1;
+  display:grid;place-items:center;box-shadow:0 3px 10px rgba(0,0,0,.25);z-index:5;
 }
-.del-btn:hover{background:var(--red)}
-.card .body{padding:18px;display:flex;flex-direction:column;gap:12px;flex:1}
-.card h3{font-size:1.12rem;font-weight:800}
-.specs{display:flex;flex-wrap:wrap;gap:7px}
-.chip{
-  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);
-  font-size:.74rem;padding:4px 10px;border-radius:999px;font-weight:600;
+.card .body{padding:12px 13px 13px;display:flex;flex-direction:column;gap:6px;flex:1;cursor:pointer}
+.card h3{
+  font-size:.98rem;font-weight:800;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
 }
-.price-row{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
-.price{font-size:1.3rem;font-weight:900;color:var(--accent)}
-.price small{font-size:.72rem;color:var(--muted);font-weight:600;display:block;letter-spacing:.4px}
-.card-actions{display:flex;gap:10px}
-.card-actions .btn{flex:1;justify-content:center;padding:11px 8px;font-size:.9rem}
+.meta{color:var(--muted);font-size:.76rem;font-weight:600}
+.price{
+  font-family:var(--font-display);font-weight:700;font-size:1.18rem;color:var(--green);
+  font-variant-numeric:tabular-nums;margin-top:2px;
+}
+.card .book{
+  margin-top:auto;padding:10px;font-size:.85rem;border-radius:12px;
+}
+@media(max-width:680px){
+  .card .body{padding:10px 11px 11px}
+  .card h3{font-size:.88rem}
+  .price{font-size:1.05rem}
+}
 .empty{
-  text-align:center;padding:70px 20px;color:var(--muted);
-  background:var(--card);border:1px dashed var(--line);border-radius:var(--radius);
+  grid-column:1/-1;text-align:center;padding:56px 18px;color:var(--muted);
+  background:var(--surface);border:1.5px dashed var(--line);border-radius:var(--radius);
 }
-.empty .big{font-size:2.6rem;margin-bottom:10px}
+.empty .big{font-size:2.3rem;margin-bottom:8px}
 
-/* ---------- Why us ---------- */
-.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
-.feature{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
-.feature .ico{
-  width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;
-  background:rgba(255,176,32,.12);border:1px solid rgba(255,176,32,.3);margin-bottom:16px;
+/* ---------- interstitials ---------- */
+.strip{grid-column:1/-1;margin:6px 0}
+.strip-brands{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 16px 14px;
 }
-.feature h3{font-size:1.08rem;margin-bottom:8px}
-.feature p{color:var(--muted);font-size:.92rem}
+.strip-brands .label{
+  font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:10px;
+}
+.brand-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.brand-row::-webkit-scrollbar{display:none}
+.brand-chip{
+  flex:0 0 auto;border:1.5px solid var(--line);background:var(--bg);
+  border-radius:999px;padding:8px 16px;font-size:.84rem;font-weight:700;color:var(--ink);
+  transition:all .15s ease;
+}
+.brand-chip:hover{border-color:var(--green)}
+.brand-chip.on{background:var(--green);border-color:var(--green);color:#fff}
+.strip-why{
+  background:var(--green);border-radius:var(--radius);padding:24px 20px;color:#fff;
+}
+.strip-why h2{
+  font-family:var(--font-display);font-weight:700;font-size:clamp(1.25rem,3.4vw,1.6rem);
+  margin-bottom:16px;text-wrap:balance;
+}
+.strip-why h2 em{font-style:normal;color:var(--gold)}
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.why{display:flex;gap:11px;align-items:flex-start}
+.why .ico{
+  flex:0 0 auto;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:1.05rem;
+  background:rgba(255,255,255,.13);
+}
+.why b{display:block;font-size:.92rem;margin-bottom:2px}
+.why span{font-size:.8rem;opacity:.82;line-height:1.45;display:block}
+.strip-promo{
+  background:var(--gold-soft);border:1px solid rgba(201,164,92,.4);border-radius:var(--radius);
+  padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+}
+.strip-promo .txt b{font-family:var(--font-display);font-size:1.05rem;display:block}
+.strip-promo .txt span{color:var(--muted);font-size:.84rem}
+.strip-promo .btn{padding:9px 18px;font-size:.85rem}
 
-/* ---------- Contact ---------- */
-.contact-wrap{
-  background:linear-gradient(135deg,rgba(255,176,32,.10),rgba(255,138,61,.06));
-  border:1px solid rgba(255,176,32,.25);border-radius:24px;padding:46px 30px;text-align:center;
+/* ---------- contact ---------- */
+.contact{
+  background:var(--surface);border:1px solid var(--line);border-radius:20px;
+  padding:34px 22px;text-align:center;margin:12px 0 30px;
 }
-.contact-wrap h2{font-size:1.9rem;font-weight:900;margin-bottom:10px}
-.contact-wrap p{color:var(--muted);max-width:520px;margin:0 auto 28px}
-.contact-links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-.contact-links .btn{padding:14px 26px;font-size:1rem}
-.btn-insta{
-  background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;
-  box-shadow:0 8px 22px rgba(220,39,67,.35);
+.contact h2{font-family:var(--font-display);font-weight:700;font-size:clamp(1.3rem,3.5vw,1.7rem);text-wrap:balance}
+.contact p{color:var(--muted);font-size:.92rem;max-width:460px;margin:8px auto 20px}
+.contact-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.upi-note{
+  margin-top:16px;display:inline-flex;align-items:center;gap:8px;
+  background:var(--green-soft);border:1px solid rgba(15,91,61,.2);border-radius:999px;
+  padding:8px 16px;font-size:.84rem;font-weight:700;color:var(--green);
 }
-.btn-insta:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(220,39,67,.5)}
-.btn-wa{background:#25d366;color:#06331a;box-shadow:0 8px 22px rgba(37,211,102,.3)}
-.btn-wa:hover{transform:translateY(-1px)}
-footer{border-top:1px solid var(--line);padding:26px 0;margin-top:60px}
-footer .container{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:.88rem}
+footer{border-top:1px solid var(--line);padding:20px 0 26px;color:var(--muted);font-size:.82rem}
+footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+footer a{color:var(--green);font-weight:700}
 
-/* ---------- Modals ---------- */
+/* ---------- owner bar ---------- */
+.owner-bar{
+  display:none;position:sticky;top:59px;z-index:55;
+  background:var(--gold-soft);border-bottom:1px solid rgba(201,164,92,.45);padding:9px 0;
+}
+.owner-bar.on{display:block}
+.owner-bar .container{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.owner-bar b{font-size:.84rem;color:#6d5218}
+.owner-bar .btn{padding:7px 14px;font-size:.8rem}
+.owner-bar #demoNote{color:#6d5218;font-size:.76rem}
+
+/* ---------- modals ---------- */
 .overlay{
-  position:fixed;inset:0;background:rgba(5,8,14,.75);backdrop-filter:blur(6px);
-  display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
+  position:fixed;inset:0;background:rgba(23,33,28,.45);backdrop-filter:blur(5px);
+  display:none;align-items:flex-end;justify-content:center;z-index:100;padding:0;
 }
+@media(min-width:560px){.overlay{align-items:center;padding:20px}}
 .overlay.open{display:flex;animation:fadeIn .18s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal{
-  background:var(--bg2);border:1px solid var(--line);border-radius:22px;
+  background:var(--surface);border-radius:22px 22px 0 0;
   width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
-  padding:28px;position:relative;animation:pop .22s ease;box-shadow:var(--shadow);
+  padding:24px 22px 28px;position:relative;animation:pop .25s ease;
 }
-.modal.wide{max-width:640px}
-@keyframes pop{from{transform:translateY(16px) scale(.97);opacity:0}to{transform:none;opacity:1}}
-.modal h3{font-size:1.35rem;font-weight:800;margin-bottom:4px}
-.modal .sub{color:var(--muted);font-size:.9rem;margin-bottom:20px}
+@media(min-width:560px){.modal{border-radius:22px}}
+.modal.wide{max-width:620px}
+@keyframes pop{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.modal h3{font-family:var(--font-display);font-weight:700;font-size:1.3rem}
+.modal .sub{color:var(--muted);font-size:.88rem;margin:2px 0 18px}
 .close-x{
-  position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:10px;
-  background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);
-  font-size:1rem;display:grid;place-items:center;
+  position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;
+  background:var(--bg);border:1px solid var(--line);color:var(--muted);
+  font-size:.95rem;display:grid;place-items:center;
 }
-.close-x:hover{color:var(--text);background:rgba(255,255,255,.12)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.close-x:hover{color:var(--ink)}
+.field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:5px;font-weight:700}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg);border:1.5px solid var(--line);
+  border-radius:12px;padding:11px 14px;outline:none;transition:border-color .15s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-grid .full{grid-column:1/-1}
 @media(max-width:520px){.form-grid{grid-template-columns:1fr}}
 
-/* Booking amount slider */
+/* booking amount + UPI */
 .amount-box{
-  background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0;
+  background:var(--green-soft);border:1px solid rgba(15,91,61,.18);border-radius:16px;
+  padding:18px;margin:16px 0 14px;text-align:center;
 }
-.amount-box .val{font-size:2rem;font-weight:900;color:var(--accent);text-align:center;margin-bottom:6px}
-.amount-box .lim{display:flex;justify-content:space-between;color:var(--muted);font-size:.78rem;margin-top:8px}
-input[type=range]{width:100%;accent-color:var(--accent);height:6px;cursor:pointer}
+.amount-box .lbl{font-size:.78rem;color:var(--green);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.amount-box .val{
+  font-family:var(--font-display);font-size:2rem;font-weight:700;color:var(--green);
+  font-variant-numeric:tabular-nums;margin:4px 0 8px;
+}
+input[type=range]{width:100%;accent-color:var(--green);height:6px;cursor:pointer}
+.amount-box .lim{display:flex;justify-content:space-between;color:var(--muted);font-size:.72rem;margin-top:6px;font-weight:600}
+.upi-box{
+  border:1.5px dashed rgba(201,164,92,.7);background:var(--gold-soft);border-radius:14px;
+  padding:14px;margin-bottom:12px;text-align:center;
+}
+.upi-box .t{font-size:.8rem;font-weight:700;color:#6d5218;margin-bottom:9px}
+.upi-id{
+  display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(201,164,92,.5);
+  border-radius:999px;padding:7px 8px 7px 15px;font-weight:800;font-size:.92rem;
+}
+.upi-id button{
+  border:none;background:var(--gold);color:#241B08;border-radius:999px;
+  padding:5px 12px;font-size:.75rem;font-weight:800;
+}
+.pay-btn{margin-top:10px;width:100%;padding:13px;font-size:.95rem}
+.hint{color:var(--muted);font-size:.76rem;text-align:center;margin-top:10px;line-height:1.5}
 
-/* Detail modal */
-.detail-photo{border-radius:16px;overflow:hidden;margin-bottom:18px;max-height:300px}
+/* detail modal */
+.detail-photo{border-radius:14px;overflow:hidden;margin-bottom:16px;max-height:280px}
 .detail-photo img{width:100%;height:100%;object-fit:cover}
-.detail-specs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
-.dspec{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
-.dspec span{display:block;font-size:.74rem;color:var(--muted);font-weight:600}
-.dspec b{font-size:.95rem}
+.detail-specs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.dspec{background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:9px 13px}
+.dspec span{display:block;font-size:.7rem;color:var(--muted);font-weight:700}
+.dspec b{font-size:.9rem}
+.detail-price{font-family:var(--font-display);font-size:1.65rem;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums}
 
-/* photo upload */
+/* upload */
 .upload{
-  border:2px dashed var(--line);border-radius:14px;padding:18px;text-align:center;color:var(--muted);
-  cursor:pointer;transition:border-color .15s;font-size:.9rem;
+  border:2px dashed var(--line);border-radius:13px;padding:16px;text-align:center;color:var(--muted);
+  cursor:pointer;font-size:.88rem;background:var(--bg);
 }
-.upload:hover{border-color:var(--accent);color:var(--text)}
-.upload img{max-height:130px;margin:10px auto 0;border-radius:10px}
+.upload:hover{border-color:var(--green);color:var(--ink)}
+.upload img{max-height:120px;margin:10px auto 0;border-radius:10px}
 
 /* toast */
 .toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
-  background:var(--card2);border:1px solid rgba(46,204,143,.5);color:var(--text);
-  padding:14px 24px;border-radius:14px;font-weight:600;z-index:200;opacity:0;
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:#fff;
+  padding:13px 22px;border-radius:999px;font-weight:600;font-size:.9rem;z-index:200;opacity:0;
   transition:all .3s ease;box-shadow:var(--shadow);max-width:90vw;text-align:center;
 }
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-
-/* owner bar */
-.owner-bar{
-  display:none;position:sticky;top:69px;z-index:55;
-  background:rgba(255,176,32,.12);backdrop-filter:blur(10px);
-  border-bottom:1px solid rgba(255,176,32,.3);padding:10px 0;
-}
-.owner-bar.on{display:block}
-.owner-bar .container{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.owner-bar b{color:var(--accent);font-size:.9rem}
-.owner-bar .btn{padding:8px 16px;font-size:.85rem}
-
-@media(max-width:640px){
-  .nav-links a.hide-m{display:none}
-  .hero{padding:48px 0 30px}
-  .stat{padding:14px 20px;min-width:120px}
-}
 </style>
 </head>
 <body>
@@ -267,102 +351,103 @@ input[type=range]{width:100%;accent-color:var(--accent);height:6px;cursor:pointe
 <!-- ================= HEADER ================= -->
 <header>
   <div class="container nav">
-    <a href="#" class="logo"><span class="mark">🚗</span><span>Budget <b>Cars</b></span></a>
-    <nav class="nav-links">
-      <a href="#cars" class="hide-m">Cars</a>
-      <a href="#why" class="hide-m">Why Us</a>
-      <a href="#contact" class="hide-m">Contact</a>
-      <button class="btn btn-ghost" id="ownerBtn" onclick="ownerLogin()">🔐 Owner</button>
+    <a href="#" class="logo">Budget<span class="dot">·</span><em>Cars</em></a>
+    <nav class="nav-right">
+      <a href="#contact">Contact</a>
+      <button class="btn btn-ghost" id="ownerBtn" onclick="ownerLogin()">Owner</button>
     </nav>
   </div>
 </header>
 
-<!-- owner mode bar -->
+<!-- owner bar -->
 <div class="owner-bar" id="ownerBar">
   <div class="container">
-    <b>🔓 Owner mode — you can add &amp; delete cars</b>
-    <button class="btn btn-primary" onclick="openAddCar()">＋ Add Car</button>
+    <b>Owner mode</b>
+    <button class="btn btn-gold" onclick="openAddCar()">＋ Add Car</button>
     <button class="btn btn-ghost" onclick="exitOwner()">Exit</button>
-    <span id="demoNote" style="display:none;color:var(--muted);font-size:.82rem">⚠️ Demo mode — cars save on this device only. Connect Supabase to publish for everyone (see setup guide).</span>
+    <span id="demoNote" style="display:none">⚠️ Demo mode — cars save on this device only</span>
   </div>
 </div>
 
-<!-- ================= HERO ================= -->
-<section class="hero container">
-  <span class="kicker">✨ Trusted second-hand car dealer</span>
-  <h1>Quality Pre-Owned Cars,<br><span class="grad">Honest Budget Prices</span></h1>
-  <p>Every car is inspected, verified and priced fairly. Browse our collection, book the one you love with a token amount, and drive home happy.</p>
-  <div class="hero-cta">
-    <a href="#cars" class="btn btn-primary">🔍 Browse Cars</a>
-    <a href="tel:+917086269537" class="btn btn-ghost">📞 Call 70862 69537</a>
+<!-- ================= HERO : drive-in ================= -->
+<section class="hero">
+  <div class="hero-inner">
+    <h1>Welcome to <em>Budget Cars</em></h1>
+    <p>Quality pre-owned cars. Honest prices. Zero drama.</p>
   </div>
-  <div class="stats">
-    <div class="stat"><b id="statCars">0</b><span>Cars available</span></div>
-    <div class="stat"><b>100%</b><span>Verified papers</span></div>
-    <div class="stat"><b>₹10k</b><span>Token booking from</span></div>
+  <div class="stage">
+    <div class="road"></div>
+    <div class="car-wrap">
+      <div class="car-shadow"></div>
+      <svg viewBox="0 0 520 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- body -->
+        <path d="M28 112 C24 96 34 86 56 82 L120 72 C150 44 205 30 262 30 C320 30 362 42 392 64 L430 76 C462 80 486 90 494 100 C500 107 497 113 484 114 L40 114 C32 114 29 113 28 112 Z" fill="#0F5B3D"/>
+        <!-- glass -->
+        <path d="M160 68 L196 42 C216 35 240 32 262 32 L268 32 L268 68 Z" fill="#BFD5C9"/>
+        <path d="M282 32 C310 33 340 41 364 56 L378 66 L282 66 Z" fill="#BFD5C9"/>
+        <!-- gold detail line -->
+        <path d="M60 92 L470 92" stroke="#C9A45C" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+        <!-- headlight & taillight -->
+        <path d="M486 96 C492 99 495 103 494 107 L478 107 L478 96 Z" fill="#F6EFE2"/>
+        <rect x="28" y="94" width="10" height="8" rx="3" fill="#C24545"/>
+        <!-- wheels -->
+        <g class="wheel">
+          <circle cx="140" cy="112" r="26" fill="#17211C"/>
+          <circle cx="140" cy="112" r="12" fill="#E8E6E0"/>
+          <path d="M140 102 V122 M130 112 H150 M133 105 L147 119 M147 105 L133 119" stroke="#17211C" stroke-width="2.5"/>
+        </g>
+        <g class="wheel">
+          <circle cx="404" cy="112" r="26" fill="#17211C"/>
+          <circle cx="404" cy="112" r="12" fill="#E8E6E0"/>
+          <path d="M404 102 V122 M394 112 H414 M397 105 L411 119 M411 105 L397 119" stroke="#17211C" stroke-width="2.5"/>
+        </g>
+      </svg>
+    </div>
   </div>
 </section>
 
 <!-- ================= CARS ================= -->
-<section class="section container" id="cars">
-  <div class="section-head">
-    <div>
-      <h2>Available <em>Cars</em></h2>
-      <p>Tap a car for full details, or book it instantly.</p>
-    </div>
-  </div>
-
+<main class="section container" id="cars">
   <div class="toolbar">
-    <div class="field" style="flex:2"><input type="text" id="searchBox" placeholder="🔍 Search by name, brand, model…" oninput="renderCars()"></div>
-    <div class="field"><select id="fuelFilter" onchange="renderCars()">
-      <option value="">All fuel types</option>
+    <div class="search">🔍<input type="text" id="searchBox" placeholder="Search car, brand…" oninput="renderCars()"></div>
+    <select id="fuelFilter" onchange="renderCars()">
+      <option value="">Fuel: all</option>
       <option>Petrol</option><option>Diesel</option><option>CNG</option><option>Electric</option><option>Hybrid</option>
-    </select></div>
-    <div class="field"><select id="sortBy" onchange="renderCars()">
+    </select>
+    <select id="sortBy" onchange="renderCars()">
       <option value="new">Newest first</option>
       <option value="low">Price: low → high</option>
       <option value="high">Price: high → low</option>
-    </select></div>
+    </select>
+    <div class="count-note" id="countNote"></div>
   </div>
 
   <div class="grid" id="carGrid"></div>
-</section>
 
-<!-- ================= WHY US ================= -->
-<section class="section container" id="why">
-  <div class="section-head"><div><h2>Why <em>Budget Cars</em>?</h2></div></div>
-  <div class="features">
-    <div class="feature"><div class="ico">🛡️</div><h3>Verified &amp; Inspected</h3><p>Every car goes through a full check — engine, papers, insurance and service history.</p></div>
-    <div class="feature"><div class="ico">💰</div><h3>Honest Pricing</h3><p>No hidden charges, no games. The price you see is a fair market price.</p></div>
-    <div class="feature"><div class="ico">⚡</div><h3>Easy Token Booking</h3><p>Reserve any car with a token amount you choose — from ₹10,000 to ₹1,00,000.</p></div>
-    <div class="feature"><div class="ico">🤝</div><h3>Full Support</h3><p>We help with RC transfer, insurance and everything till the car is yours.</p></div>
-  </div>
-</section>
-
-<!-- ================= CONTACT ================= -->
-<section class="section container" id="contact">
-  <div class="contact-wrap">
-    <h2>📍 Visit or Contact Us</h2>
-    <p>Have a question about any car? Want to sell your car to us? Call, WhatsApp or DM us on Instagram — we reply fast!</p>
+  <!-- ================= CONTACT ================= -->
+  <div class="contact" id="contact">
+    <h2>Talk to us — we reply fast</h2>
+    <p>Questions about a car? Want to sell or exchange yours? Call, WhatsApp or DM us on Instagram.</p>
     <div class="contact-links">
-      <a class="btn btn-primary" href="tel:+917086269537">📞 70862 69537</a>
-      <a class="btn btn-wa" href="https://wa.me/917086269537" target="_blank" rel="noopener">💬 WhatsApp</a>
-      <a class="btn btn-insta" href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">📷 @budgetcars.insta</a>
+      <a class="btn btn-green" href="tel:+917086269537">📞 70862 69537</a>
+      <a class="btn btn-ghost" href="https://wa.me/917086269537" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="btn btn-ghost" href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">Instagram</a>
     </div>
+    <div class="upi-note">UPI payments: salinuralom@ybl</div>
   </div>
-</section>
+</main>
 
 <footer>
   <div class="container">
-    <span>© <span id="year"></span> Budget Cars · Quality second-hand cars</span>
-    <span>📞 <a href="tel:+917086269537" style="color:var(--accent)">70862 69537</a> · 📷 <a href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener" style="color:var(--accent)">@budgetcars.insta</a></span>
+    <span>© <span id="year"></span> Budget Cars</span>
+    <span><a href="tel:+917086269537">70862 69537</a> · <a href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">@budgetcars.insta</a></span>
   </div>
 </footer>
 
 <!-- ================= DETAIL MODAL ================= -->
 <div class="overlay" id="detailOverlay" onclick="if(event.target===this)closeModal('detailOverlay')">
   <div class="modal wide">
-    <button class="close-x" onclick="closeModal('detailOverlay')">✕</button>
+    <button class="close-x" onclick="closeModal('detailOverlay')" aria-label="Close">✕</button>
     <div id="detailContent"></div>
   </div>
 </div>
@@ -370,8 +455,8 @@ input[type=range]{width:100%;accent-color:var(--accent);height:6px;cursor:pointe
 <!-- ================= BOOKING MODAL ================= -->
 <div class="overlay" id="bookOverlay" onclick="if(event.target===this)closeModal('bookOverlay')">
   <div class="modal">
-    <button class="close-x" onclick="closeModal('bookOverlay')">✕</button>
-    <h3>📝 Book this car</h3>
+    <button class="close-x" onclick="closeModal('bookOverlay')" aria-label="Close">✕</button>
+    <h3>Book this car</h3>
     <p class="sub" id="bookCarName"></p>
 
     <div class="form-grid">
@@ -380,22 +465,28 @@ input[type=range]{width:100%;accent-color:var(--accent);height:6px;cursor:pointe
     </div>
 
     <div class="amount-box">
-      <label style="display:block;text-align:center;color:var(--muted);font-size:.85rem;font-weight:600;margin-bottom:8px">Choose your token booking amount</label>
+      <div class="lbl">Token booking amount</div>
       <div class="val" id="amountVal">₹10,000</div>
       <input type="range" id="amountSlider" min="10000" max="100000" step="5000" value="10000" oninput="updateAmount()">
       <div class="lim"><span>Min ₹10,000</span><span>Max ₹1,00,000</span></div>
     </div>
 
-    <button class="btn btn-wa btn-block" onclick="confirmBooking()" style="padding:15px">💬 Confirm Booking on WhatsApp</button>
-    <p style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:12px">Your booking details will be sent to us on WhatsApp. We'll confirm within a few hours.</p>
+    <div class="upi-box">
+      <div class="t">Pay your token by UPI — any app (PhonePe, GPay, Paytm…)</div>
+      <span class="upi-id">salinuralom@ybl <button onclick="copyUpi()">Copy</button></span>
+      <a class="btn btn-gold pay-btn" id="upiPayBtn" href="#">📲 Pay <span id="payAmt">₹10,000</span> by UPI</a>
+    </div>
+
+    <button class="btn btn-green btn-block" onclick="confirmBooking()" style="padding:14px">Confirm booking on WhatsApp</button>
+    <p class="hint">Tap Pay to open your UPI app, then Confirm — your booking details reach us on WhatsApp and we reply within a few hours.</p>
   </div>
 </div>
 
 <!-- ================= ADD CAR MODAL ================= -->
 <div class="overlay" id="addOverlay" onclick="if(event.target===this)closeModal('addOverlay')">
   <div class="modal wide">
-    <button class="close-x" onclick="closeModal('addOverlay')">✕</button>
-    <h3>＋ Add a Car</h3>
+    <button class="close-x" onclick="closeModal('addOverlay')" aria-label="Close">✕</button>
+    <h3>Add a Car</h3>
     <p class="sub">Fill every detail — customers see exactly this.</p>
 
     <div class="form-grid">
@@ -403,7 +494,7 @@ input[type=range]{width:100%;accent-color:var(--accent);height:6px;cursor:pointe
         <label>Car photo</label>
         <div class="upload" onclick="document.getElementById('photoInput').click()">
           <span id="uploadText">📸 Tap to upload a photo of the car</span>
-          <img id="photoPreview" style="display:none">
+          <img id="photoPreview" style="display:none" alt="">
         </div>
         <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)">
       </div>
@@ -422,8 +513,8 @@ input[type=range]{width:100%;accent-color:var(--accent);height:6px;cursor:pointe
       <div class="field"><label>Registration / Location</label><input id="f_loc" placeholder="e.g. AS-01, Guwahati"></div>
       <div class="field full"><label>Description</label><textarea id="f_desc" rows="3" placeholder="Condition, service history, new tyres, etc."></textarea></div>
     </div>
-    <div style="margin-top:18px;display:flex;gap:12px">
-      <button class="btn btn-primary btn-block" id="saveCarBtn" onclick="saveCar()" style="padding:14px">✅ Add this Car</button>
+    <div style="margin-top:16px">
+      <button class="btn btn-green btn-block" id="saveCarBtn" onclick="saveCar()" style="padding:14px">✅ Add this Car</button>
     </div>
   </div>
 </div>
@@ -433,21 +524,17 @@ input[type=range]{width:100%;accent-color:var(--accent);height:6px;cursor:pointe
 <script>
 /* ================================================================
    BUDGET CARS — app logic
-
-   ▼▼▼ SUPABASE SETUP (makes cars visible to ALL visitors) ▼▼▼
-   1. Create a free project at https://supabase.com
-   2. Run docs/supabase-setup.sql in the SQL Editor (sets owner PIN too)
-   3. Paste your Project URL and anon public key below.
-   Until then the site runs in demo mode (cars save on this device only).
+   Supabase connection below (shared inventory for all visitors).
 ================================================================ */
-const SUPABASE_URL      = "https://mpufunsitqtdkqlibxof.supabase.co";   // e.g. "https://abcdxyz.supabase.co"
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdWZ1bnNpdHF0ZGtxbGlieG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTAyNTksImV4cCI6MjA5ODkyNjI1OX0.iyYX1EFJwrdPWxXLTCHHm8cdmuO-roPIjjX4T-SU53E";   // Settings → API → anon public key
+const SUPABASE_URL      = "https://mpufunsitqtdkqlibxof.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdWZ1bnNpdHF0ZGtxbGlieG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTAyNTksImV4cCI6MjA5ODkyNjI1OX0.iyYX1EFJwrdPWxXLTCHHm8cdmuO-roPIjjX4T-SU53E";
 
 const DEMO_PIN    = "7086";                   // PIN for demo mode only (real PIN lives in Supabase)
 const PHONE       = "917086269537";           // WhatsApp number (with country code)
-const PHONE_SHOW  = "70862 69537";
+const UPI_ID      = "salinuralom@ybl";        // UPI ID for token payments
 const STORE_KEY   = "budgetcars_inventory_v1";
 const SB_ON       = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+const BRANDS      = ["Maruti Suzuki","Hyundai","Tata","Mahindra","Kia","Toyota","Honda","Renault"];
 
 /* ---------- Supabase REST helper (no SDK needed) ---------- */
 async function sb(path, opts = {}){
@@ -485,35 +572,31 @@ function fromRow(r){
 
 /* ---------- placeholder photo (SVG, no internet needed) ---------- */
 function carArt(hue, name){
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400">
-  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-    <stop offset="0" stop-color="hsl(${hue},60%,22%)"/><stop offset="1" stop-color="hsl(${hue+40},55%,12%)"/>
-  </linearGradient></defs>
-  <rect width="640" height="400" fill="url(#g)"/>
-  <circle cx="560" cy="60" r="130" fill="hsl(${hue},70%,50%)" opacity="0.12"/>
-  <circle cx="80" cy="340" r="100" fill="hsl(${hue+40},70%,55%)" opacity="0.10"/>
-  <g transform="translate(120,150)">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
+  <rect width="640" height="480" fill="hsl(${hue},18%,90%)"/>
+  <circle cx="560" cy="70" r="120" fill="hsl(${hue},30%,80%)" opacity="0.5"/>
+  <g transform="translate(120,190)">
     <path d="M20 120 Q30 78 90 66 L130 30 Q150 14 185 14 L280 14 Q310 14 330 36 L360 66 Q400 74 400 105 L400 130 L20 130 Z"
-      fill="hsl(${hue},65%,55%)"/>
-    <path d="M140 34 L185 34 L185 62 L118 62 Z" fill="hsl(${hue},40%,15%)"/>
-    <path d="M200 34 L272 34 Q290 34 302 48 L314 62 L200 62 Z" fill="hsl(${hue},40%,15%)"/>
-    <circle cx="105" cy="130" r="34" fill="#141a26"/><circle cx="105" cy="130" r="16" fill="#3a4356"/>
-    <circle cx="320" cy="130" r="34" fill="#141a26"/><circle cx="320" cy="130" r="16" fill="#3a4356"/>
+      fill="hsl(${hue},32%,42%)"/>
+    <path d="M140 34 L185 34 L185 62 L118 62 Z" fill="hsl(${hue},22%,84%)"/>
+    <path d="M200 34 L272 34 Q290 34 302 48 L314 62 L200 62 Z" fill="hsl(${hue},22%,84%)"/>
+    <circle cx="105" cy="130" r="34" fill="#2A332E"/><circle cx="105" cy="130" r="15" fill="#E8E6E0"/>
+    <circle cx="320" cy="130" r="34" fill="#2A332E"/><circle cx="320" cy="130" r="15" fill="#E8E6E0"/>
   </g>
-  <text x="320" y="360" text-anchor="middle" font-family="Segoe UI,Arial" font-size="26" font-weight="700"
-    fill="rgba(255,255,255,0.55)">${name}</text>
+  <text x="320" y="420" text-anchor="middle" font-family="Georgia,serif" font-size="26" font-weight="700"
+    fill="rgba(42,51,46,.5)">${name}</text>
 </svg>`;
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
 }
 
-/* ---------- sample cars (shown on first visit; owner can delete) ---------- */
+/* ---------- sample cars (demo mode only) ---------- */
 const SEED = [
-  {id:"s1", name:"Maruti Swift VXI",        brand:"Maruti Suzuki", year:2019, price:465000, km:38000,  fuel:"Petrol", trans:"Manual",    owners:"1st Owner", color:"Pearl White",  ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"Single owner, full service history at authorised centre. New tyres fitted recently. Non-accidental, scratchless condition.", photo:carArt(210,"Maruti Swift VXI")},
-  {id:"s2", name:"Hyundai i20 Sportz",      brand:"Hyundai",       year:2018, price:520000, km:45000,  fuel:"Petrol", trans:"Manual",    owners:"1st Owner", color:"Fiery Red",    ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"Top variant with touchscreen, rear camera and alloy wheels. Well maintained family car.", photo:carArt(0,"Hyundai i20 Sportz")},
-  {id:"s3", name:"Honda City ZX",           brand:"Honda",         year:2017, price:610000, km:52000,  fuel:"Petrol", trans:"Automatic", owners:"2nd Owner", color:"Golden Brown", ins:"Valid — Third Party",   loc:"AS-05, Nagaon",   desc:"Smooth CVT automatic, sunroof, leather seats. Highway driven, engine in excellent condition.", photo:carArt(35,"Honda City ZX")},
-  {id:"s4", name:"Tata Nexon XZ+",          brand:"Tata",          year:2021, price:780000, km:24000,  fuel:"Diesel", trans:"Manual",    owners:"1st Owner", color:"Foliage Green",ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"5-star safety rated SUV. Under warranty, single owner, showroom condition.", photo:carArt(140,"Tata Nexon XZ+")},
-  {id:"s5", name:"Mahindra XUV300 W8",      brand:"Mahindra",      year:2020, price:720000, km:31000,  fuel:"Diesel", trans:"Manual",    owners:"1st Owner", color:"Aqua Marine",  ins:"Valid — Comprehensive", loc:"AS-02, Silchar",  desc:"Loaded W8 variant — sunroof, dual airbags, cruise control. Meticulously maintained.", photo:carArt(185,"Mahindra XUV300 W8")},
-  {id:"s6", name:"Maruti WagonR LXI CNG",   brand:"Maruti Suzuki", year:2020, price:395000, km:41000,  fuel:"CNG",    trans:"Manual",    owners:"1st Owner", color:"Silky Silver", ins:"Valid — Third Party",   loc:"AS-01, Guwahati", desc:"Company-fitted CNG, super economical — perfect city car. All papers clear.", photo:carArt(265,"Maruti WagonR CNG")}
+  {id:"s1", name:"Maruti Swift VXI",      brand:"Maruti Suzuki", year:2019, price:465000, km:38000, fuel:"Petrol", trans:"Manual",    owners:"1st Owner", color:"Pearl White",   ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"Single owner, full service history. New tyres fitted recently.", photo:carArt(210,"Maruti Swift VXI")},
+  {id:"s2", name:"Hyundai i20 Sportz",    brand:"Hyundai",       year:2018, price:520000, km:45000, fuel:"Petrol", trans:"Manual",    owners:"1st Owner", color:"Fiery Red",     ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"Top variant with touchscreen and rear camera.", photo:carArt(0,"Hyundai i20 Sportz")},
+  {id:"s3", name:"Honda City ZX",         brand:"Honda",         year:2017, price:610000, km:52000, fuel:"Petrol", trans:"Automatic", owners:"2nd Owner", color:"Golden Brown",  ins:"Valid — Third Party",   loc:"AS-05, Nagaon",   desc:"Smooth CVT automatic, sunroof, leather seats.", photo:carArt(35,"Honda City ZX")},
+  {id:"s4", name:"Tata Nexon XZ+",        brand:"Tata",          year:2021, price:780000, km:24000, fuel:"Diesel", trans:"Manual",    owners:"1st Owner", color:"Foliage Green", ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"5-star safety rated SUV, showroom condition.", photo:carArt(140,"Tata Nexon XZ+")},
+  {id:"s5", name:"Mahindra XUV300 W8",    brand:"Mahindra",      year:2020, price:720000, km:31000, fuel:"Diesel", trans:"Manual",    owners:"1st Owner", color:"Aqua Marine",   ins:"Valid — Comprehensive", loc:"AS-02, Silchar",  desc:"Loaded W8 variant — sunroof, cruise control.", photo:carArt(185,"Mahindra XUV300 W8")},
+  {id:"s6", name:"Maruti WagonR LXI CNG", brand:"Maruti Suzuki", year:2020, price:395000, km:41000, fuel:"CNG",    trans:"Manual",    owners:"1st Owner", color:"Silky Silver",  ins:"Valid — Third Party",   loc:"AS-01, Guwahati", desc:"Company-fitted CNG, super economical city car.", photo:carArt(265,"Maruti WagonR CNG")}
 ];
 
 /* ---------- state ---------- */
@@ -521,6 +604,7 @@ let cars = [];
 let ownerMode = false;
 let ownerPin = null;
 let bookingCar = null;
+let brandFilter = "";
 
 async function load(){
   if(SB_ON){
@@ -535,7 +619,6 @@ async function load(){
     renderCars();
     return;
   }
-  /* demo mode — this browser only */
   try{
     const raw = localStorage.getItem(STORE_KEY);
     cars = raw ? JSON.parse(raw) : SEED.slice();
@@ -544,7 +627,7 @@ async function load(){
   renderCars();
 }
 function save(){
-  if(SB_ON) return; /* Supabase mode persists per-operation */
+  if(SB_ON) return;
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(cars)); }
   catch(e){ toast("⚠️ Storage full — try a smaller photo"); }
 }
@@ -560,7 +643,57 @@ function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"
 function closeModal(id){ document.getElementById(id).classList.remove("open"); }
 function openModal(id){ document.getElementById(id).classList.add("open"); }
 
+/* ---------- interstitial strips ---------- */
+function stripBrands(){
+  const chips = ['<button class="brand-chip'+(brandFilter===""?" on":"")+'" onclick="setBrand(\'\')">All brands</button>']
+    .concat(BRANDS.map(b=>{
+      const short = b === "Maruti Suzuki" ? "Maruti" : b;
+      return '<button class="brand-chip'+(brandFilter===b?" on":"")+'" onclick="setBrand(\''+b+'\')">'+short+'</button>';
+    }));
+  return `<div class="strip strip-brands">
+    <div class="label">Shop by brand</div>
+    <div class="brand-row">${chips.join("")}</div>
+  </div>`;
+}
+function stripWhy(){
+  return `<div class="strip strip-why">
+    <h2>Why choose <em>Budget Cars</em>?</h2>
+    <div class="why-grid">
+      <div class="why"><div class="ico">🛡️</div><div><b>Inspected &amp; verified</b><span>Engine, papers, insurance and service history — checked before it reaches you.</span></div></div>
+      <div class="why"><div class="ico">🏷️</div><div><b>Honest pricing</b><span>The price you see is the price you pay. No hidden charges, ever.</span></div></div>
+      <div class="why"><div class="ico">📲</div><div><b>Book from ₹10,000</b><span>Reserve any car with a small token — pay in seconds with any UPI app.</span></div></div>
+      <div class="why"><div class="ico">🤝</div><div><b>With you till the keys</b><span>RC transfer, insurance and paperwork — we handle it all for you.</span></div></div>
+    </div>
+  </div>`;
+}
+function stripPromo(){
+  return `<div class="strip strip-promo">
+    <div class="txt"><b>Sell or exchange your old car</b><span>Best price in town, instant evaluation. Talk to Budget Cars today.</span></div>
+    <a class="btn btn-green" href="https://wa.me/${PHONE}?text=${encodeURIComponent("Hi Budget Cars! I want to sell/exchange my car.")}" target="_blank" rel="noopener">WhatsApp us</a>
+  </div>`;
+}
+function setBrand(b){
+  brandFilter = b;
+  renderCars();
+  document.getElementById("cars").scrollIntoView({behavior:"smooth"});
+}
+
 /* ---------- render ---------- */
+function cardHTML(c){
+  return `<div class="card">
+    <div class="photo" onclick="openDetail('${c.id}')">
+      <img src="${c.photo}" alt="${esc(c.name)}" loading="lazy">
+      <span class="badge">${esc(c.fuel)} · ${c.year}</span>
+      ${ownerMode ? `<button class="del-btn" title="Delete car" onclick="event.stopPropagation();deleteCar('${c.id}')">✕</button>` : ``}
+    </div>
+    <div class="body" onclick="openDetail('${c.id}')">
+      <h3>${esc(c.name)}</h3>
+      <div class="meta">${c.year} · ${Number(c.km).toLocaleString("en-IN")} km · ${esc(c.trans)}</div>
+      <div class="price">${fmt(c.price)}</div>
+      <button class="btn btn-green book" onclick="event.stopPropagation();openBooking('${c.id}')">Book now</button>
+    </div>
+  </div>`;
+}
 function renderCars(){
   const q    = document.getElementById("searchBox").value.trim().toLowerCase();
   const fuel = document.getElementById("fuelFilter").value;
@@ -568,44 +701,36 @@ function renderCars(){
 
   let list = cars.filter(c =>
     (!q || (c.name+" "+c.brand+" "+(c.loc||"")).toLowerCase().includes(q)) &&
-    (!fuel || c.fuel === fuel)
+    (!fuel || c.fuel === fuel) &&
+    (!brandFilter || (c.brand||"").toLowerCase().includes(brandFilter.split(" ")[0].toLowerCase()))
   );
   if(sort==="low")  list.sort((a,b)=>a.price-b.price);
   if(sort==="high") list.sort((a,b)=>b.price-a.price);
   if(sort==="new")  list.sort((a,b)=>b.year-a.year);
 
-  document.getElementById("statCars").textContent = cars.length;
+  document.getElementById("countNote").textContent =
+    list.length + (list.length===1 ? " car" : " cars") + (brandFilter ? " · " + brandFilter : "") + " · tap a car for details";
 
-  const grid = document.getElementById("carGrid");
+  /* chunks of 6, interleaved with brand picker / why-us / promo strips */
+  const strips = [stripBrands, stripWhy, stripPromo];
+  let html = "";
   if(!list.length){
-    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
-      <div class="big">🚙</div><b>No cars found</b><br>Try a different search, or check back soon — new cars arrive every week!</div>`;
-    return;
+    html = `<div class="empty"><div class="big">🚙</div><b>No cars found</b><br>Try a different search or brand — new cars arrive every week!</div>`;
+    html += stripBrands() + stripWhy();
+  }else{
+    let stripIdx = 0;
+    for(let i = 0; i < list.length; i += 6){
+      html += list.slice(i, i+6).map(cardHTML).join("");
+      if(i + 6 < list.length || stripIdx < 2){
+        html += strips[stripIdx % strips.length]();
+        stripIdx++;
+      }
+    }
+    /* always show brand picker + why-us at least once */
+    if(stripIdx < 1) html += stripBrands();
+    if(stripIdx < 2) html += stripWhy();
   }
-  grid.innerHTML = list.map(c => `
-    <div class="card">
-      <div class="photo" onclick="openDetail('${c.id}')">
-        <img src="${c.photo}" alt="${esc(c.name)}" loading="lazy">
-        <span class="badge">${esc(c.fuel)} · ${c.year}</span>
-        ${ownerMode ? `<button class="del-btn" title="Delete car" onclick="event.stopPropagation();deleteCar('${c.id}')">✕</button>` : ``}
-      </div>
-      <div class="body">
-        <h3>${esc(c.name)}</h3>
-        <div class="specs">
-          <span class="chip">📅 ${c.year}</span>
-          <span class="chip">🛣️ ${Number(c.km).toLocaleString("en-IN")} km</span>
-          <span class="chip">⚙️ ${esc(c.trans)}</span>
-          <span class="chip">👤 ${esc(c.owners)}</span>
-        </div>
-        <div class="price-row">
-          <div class="price"><small>PRICE</small>${fmt(c.price)}</div>
-        </div>
-        <div class="card-actions">
-          <button class="btn btn-ghost" onclick="openDetail('${c.id}')">Details</button>
-          <button class="btn btn-primary" onclick="openBooking('${c.id}')">Book Now</button>
-        </div>
-      </div>
-    </div>`).join("");
+  document.getElementById("carGrid").innerHTML = html;
 }
 
 /* ---------- detail ---------- */
@@ -614,8 +739,8 @@ function openDetail(id){
   document.getElementById("detailContent").innerHTML = `
     <div class="detail-photo"><img src="${c.photo}" alt="${esc(c.name)}"></div>
     <h3>${esc(c.name)}</h3>
-    <p class="sub">${esc(c.brand)} · ${esc(c.loc||"")}</p>
-    <div class="price" style="font-size:1.7rem">${fmt(c.price)}</div>
+    <p class="sub">${esc(c.brand)}${c.loc ? " · " + esc(c.loc) : ""}</p>
+    <div class="detail-price">${fmt(c.price)}</div>
     <div class="detail-specs">
       <div class="dspec"><span>Year</span><b>${c.year}</b></div>
       <div class="dspec"><span>KM driven</span><b>${Number(c.km).toLocaleString("en-IN")} km</b></div>
@@ -626,12 +751,12 @@ function openDetail(id){
       <div class="dspec"><span>Insurance</span><b>${esc(c.ins||"—")}</b></div>
       <div class="dspec"><span>Registration</span><b>${esc(c.loc||"—")}</b></div>
     </div>
-    ${c.desc ? `<p style="color:var(--muted);font-size:.93rem;margin-bottom:18px">${esc(c.desc)}</p>` : ""}
-    <button class="btn btn-primary btn-block" style="padding:14px" onclick="closeModal('detailOverlay');openBooking('${c.id}')">📝 Book this Car</button>`;
+    ${c.desc ? `<p style="color:var(--muted);font-size:.9rem;margin-bottom:16px">${esc(c.desc)}</p>` : ""}
+    <button class="btn btn-green btn-block" style="padding:14px" onclick="closeModal('detailOverlay');openBooking('${c.id}')">Book this car</button>`;
   openModal("detailOverlay");
 }
 
-/* ---------- booking ---------- */
+/* ---------- booking + UPI ---------- */
 function openBooking(id){
   bookingCar = cars.find(x=>x.id===id); if(!bookingCar) return;
   document.getElementById("bookCarName").textContent =
@@ -641,7 +766,25 @@ function openBooking(id){
   openModal("bookOverlay");
 }
 function updateAmount(){
-  document.getElementById("amountVal").textContent = fmt(document.getElementById("amountSlider").value);
+  const amt = document.getElementById("amountSlider").value;
+  document.getElementById("amountVal").textContent = fmt(amt);
+  document.getElementById("payAmt").textContent = fmt(amt);
+  const note = "Token booking" + (bookingCar ? " " + bookingCar.name : "") ;
+  document.getElementById("upiPayBtn").href =
+    "upi://pay?pa=" + encodeURIComponent(UPI_ID) +
+    "&pn=" + encodeURIComponent("Budget Cars") +
+    "&am=" + amt + "&cu=INR&tn=" + encodeURIComponent(note.slice(0,40));
+}
+function copyUpi(){
+  const done = () => toast("UPI ID copied: " + UPI_ID);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(UPI_ID).then(done, done);
+  }else{
+    const ta = document.createElement("textarea");
+    ta.value = UPI_ID; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); }catch(e){}
+    document.body.removeChild(ta); done();
+  }
 }
 function confirmBooking(){
   const name  = document.getElementById("bookName").value.trim();
@@ -655,6 +798,7 @@ function confirmBooking(){
 *Car:* ${bookingCar.name} (${bookingCar.year})
 *Price:* ${fmt(bookingCar.price)}
 *Token amount:* ${fmt(amt)}
+*UPI for payment:* ${UPI_ID}
 
 *Customer:* ${name}
 *Phone:* ${phone}
@@ -681,7 +825,7 @@ async function ownerLogin(){
     ownerMode = true;
     ownerPin = pin;
     document.getElementById("ownerBar").classList.add("on");
-    document.getElementById("ownerBtn").textContent = "🔓 Owner ✓";
+    document.getElementById("ownerBtn").textContent = "Owner ✓";
     document.getElementById("demoNote").style.display = SB_ON ? "none" : "inline";
     renderCars();
     toast("Owner mode ON — you can add & delete cars");
@@ -693,7 +837,7 @@ function exitOwner(){
   ownerMode = false;
   ownerPin = null;
   document.getElementById("ownerBar").classList.remove("on");
-  document.getElementById("ownerBtn").textContent = "🔐 Owner";
+  document.getElementById("ownerBtn").textContent = "Owner";
   renderCars();
 }
 async function deleteCar(id){
@@ -724,7 +868,6 @@ function handlePhoto(input){
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
-      /* resize to keep localStorage small */
       const MAX = 900;
       const scale = Math.min(1, MAX / img.width);
       const cv = document.createElement("canvas");
@@ -783,7 +926,7 @@ document.addEventListener("keydown", e => {
   if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>o.classList.remove("open"));
 });
 document.getElementById("carGrid").innerHTML =
-  '<div class="empty" style="grid-column:1/-1"><div class="big">⏳</div><b>Loading cars…</b></div>';
+  '<div class="empty"><div class="big">⏳</div><b>Loading cars…</b></div>';
 load();
 </script>
 </body>
