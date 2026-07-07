@@ -106,39 +106,39 @@ header{
   opacity:0;animation:riseIn .9s ease .95s forwards;
 }
 @keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-.stage{position:relative;height:170px;margin-top:10px}
+.stage{position:relative;height:190px;margin-top:8px}
 .road{
-  position:absolute;left:0;right:0;bottom:24px;height:1px;
+  position:absolute;left:0;right:0;bottom:26px;height:1px;
   background:linear-gradient(90deg,transparent, rgba(244,241,232,.25) 15%, rgba(244,241,232,.25) 85%, transparent);
 }
 .car-wrap{
-  position:absolute;bottom:16px;left:50%;width:min(430px,82vw);
+  position:absolute;bottom:12px;left:50%;width:min(470px,86vw);
   transform:translateX(-50%);
-  animation:driveIn 2.2s cubic-bezier(.22,.9,.3,1) forwards;
+  animation:driveIn 1.35s cubic-bezier(.22,.9,.3,1) forwards;
 }
 @keyframes driveIn{
-  0%{transform:translateX(-120vw)}
-  86%{transform:translateX(calc(-50% + 12px))}
+  0%{transform:translateX(-130vw)}
+  84%{transform:translateX(calc(-50% + 14px))}
   100%{transform:translateX(-50%)}
 }
-.car-shadow{
-  position:absolute;bottom:-7px;left:8%;width:84%;height:16px;border-radius:50%;
-  background:radial-gradient(ellipse at center, rgba(0,0,0,.55), transparent 70%);
-}
+.defender{width:100%;display:block;filter:drop-shadow(0 16px 20px rgba(0,0,0,.45))}
 /* headlights flash twice to greet, then stay on */
 .beam{
-  position:absolute;right:-44%;bottom:6px;width:50%;height:64px;
+  position:absolute;right:-40%;top:52%;width:46%;height:60px;
   background:linear-gradient(90deg, rgba(244,236,205,.34), rgba(244,236,205,.05) 70%, transparent);
-  clip-path:polygon(0 48%, 100% 0, 100% 100%, 0 68%);
-  opacity:0;animation:greet 1.1s ease 2.25s forwards;
+  clip-path:polygon(0 22%, 100% 0, 100% 100%, 0 46%);
+  opacity:0;animation:greet 1.15s ease 1.45s forwards;
   filter:blur(2px);
+}
+.lamp-glow{
+  position:absolute;right:1%;top:55%;width:28px;height:16px;border-radius:50%;
+  background:radial-gradient(closest-side, rgba(246,236,201,.95), rgba(246,236,201,0));
+  filter:blur(1.5px);
+  opacity:0;animation:greet 1.15s ease 1.45s forwards;
 }
 @keyframes greet{
   0%{opacity:0} 14%{opacity:1} 28%{opacity:0} 42%{opacity:1} 56%{opacity:0} 75%{opacity:1} 100%{opacity:1}
 }
-.wheel{animation:spin 2.2s cubic-bezier(.22,.9,.3,1) forwards;transform-origin:center;transform-box:fill-box}
-@keyframes spin{from{transform:rotate(-940deg)}to{transform:rotate(0deg)}}
-.headlamp{opacity:0;animation:greet 1.1s ease 2.25s forwards}
 /* gold ticker */
 .ticker{
   border-top:1px solid var(--line);margin-top:0;position:relative;z-index:2;
@@ -156,8 +156,7 @@ header{
 @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion: reduce){
   .car-wrap{animation:none;transform:translateX(-50%)}
-  .wheel{animation:none}
-  .beam,.headlamp{animation:none;opacity:1}
+  .beam,.lamp-glow{animation:none;opacity:1}
   .hero .eyebrow,.hero h1,.hero p{animation:none;opacity:1}
   .ticker-track{animation:none}
   .reveal{opacity:1 !important;transform:none !important}
@@ -445,52 +444,14 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
   <div class="hero-inner">
     <span class="eyebrow">Quality pre-owned · Honest prices</span>
     <h1 class="display">Welcome to<br>Budget <em>Cars</em></h1>
-    <p>Every car verified. Every price honest. Every drive yours.</p>
+    <p>Getting your dream car made easy — with Budget Cars.</p>
   </div>
   <div class="stage">
     <div class="road"></div>
     <div class="car-wrap">
-      <div class="car-shadow"></div>
+      <img class="defender" src="defender.png" alt="Land Rover Defender arriving at Budget Cars">
+      <div class="lamp-glow"></div>
       <div class="beam"></div>
-      <svg viewBox="0 0 560 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <!-- supercar body: low nose right, teardrop cabin, rear haunch + ducktail left -->
-        <path d="M36 108
-                 C30 98 36 90 54 86
-                 C56 74 64 64 88 58
-                 L98 56
-                 C120 34 152 26 190 26
-                 C238 26 272 36 306 54
-                 C356 64 424 74 474 82
-                 C508 88 528 94 534 100
-                 C538 105 534 109 522 110
-                 L48 110
-                 C40 110 38 109 36 108 Z" fill="#152A20"/>
-        <!-- ducktail spoiler -->
-        <path d="M54 56 L104 50 L106 58 L58 62 Z" fill="#0E1F17"/>
-        <!-- teardrop glass -->
-        <path d="M118 56 C136 37 162 31 192 31 C230 31 258 40 288 54 L296 58 L124 58 Z" fill="#22372C"/>
-        <!-- side intake -->
-        <path d="M306 76 L346 71 L346 90 L312 92 Z" fill="#0E1F17"/>
-        <!-- gold trim -->
-        <path d="M64 96 L508 96" stroke="#D5B36B" stroke-width="2.5" stroke-linecap="round" opacity=".85"/>
-        <!-- lamps -->
-        <g class="headlamp">
-          <path d="M524 96 C530 99 533 102 532 106 L508 106 L510 95 Z" fill="#F6ECC9"/>
-          <circle cx="524" cy="100" r="7" fill="#F6ECC9" opacity=".5"/>
-        </g>
-        <rect x="36" y="90" width="12" height="7" rx="3" fill="#C24545"/>
-        <!-- wheels -->
-        <g class="wheel">
-          <circle cx="152" cy="112" r="27" fill="#060907"/>
-          <circle cx="152" cy="112" r="13" fill="#D5B36B" opacity=".85"/>
-          <path d="M152 101 V123 M141 112 H163 M144 104 L160 120 M160 104 L144 120" stroke="#060907" stroke-width="2.5"/>
-        </g>
-        <g class="wheel">
-          <circle cx="430" cy="112" r="27" fill="#060907"/>
-          <circle cx="430" cy="112" r="13" fill="#D5B36B" opacity=".85"/>
-          <path d="M430 101 V123 M419 112 H441 M422 104 L438 120 M438 104 L422 120" stroke="#060907" stroke-width="2.5"/>
-        </g>
-      </svg>
     </div>
   </div>
   <div class="ticker" aria-hidden="true">
