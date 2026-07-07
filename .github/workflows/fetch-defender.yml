@@ -1,0 +1,67 @@
+name: Fetch HQ Defender image
+# One-time helper: downloads the high-quality Defender image, removes its
+# background, and commits it as docs/defender.png. Removed after use.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and process image
+        run: |
+          set -euo pipefail
+          pip install --quiet opencv-python-headless numpy
+          curl -fsSL -o /tmp/defender-src.png \
+            "https://images.91wheels.com/assets/c_images/gallery/landrover/defender/landrover-defender-0-1773131194.png?w=1920&q=90" \
+            || curl -fsSL -o /tmp/defender-src.png \
+            "https://images.91wheels.com/assets/c_images/gallery/landrover/defender/landrover-defender-0-1773131194.png?w=850&q=40"
+          python3 - <<'PY'
+          import cv2, numpy as np
+          src = cv2.imread('/tmp/defender-src.png', cv2.IMREAD_UNCHANGED)
+          print('downloaded:', src.shape)
+          has_alpha = src.ndim == 3 and src.shape[2] == 4 and (src[:,:,3] < 250).any()
+          if has_alpha:
+              print('image already transparent')
+              rgba = src
+          else:
+              bgr = src[:,:,:3] if src.ndim == 3 else cv2.cvtColor(src, cv2.COLOR_GRAY2BGR)
+              h, w = bgr.shape[:2]
+              mask = np.zeros((h, w), np.uint8)
+              rect = (int(w*0.02), int(h*0.05), int(w*0.96), int(h*0.92))
+              b, f = np.zeros((1,65), np.float64), np.zeros((1,65), np.float64)
+              cv2.grabCut(bgr, mask, rect, b, f, 8, cv2.GC_INIT_WITH_RECT)
+              m = np.where((mask==2)|(mask==0), 0, 1).astype('uint8')
+              n, lab, stats, _ = cv2.connectedComponentsWithStats(m, 8)
+              if n > 1:
+                  m = (lab == 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])).astype('uint8')
+              m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, np.ones((7,7), np.uint8))
+              alpha = cv2.GaussianBlur(m*255, (5,5), 0)
+              rgba = cv2.cvtColor(bgr, cv2.COLOR_BGR2BGRA)
+              rgba[:,:,3] = alpha
+          # trim transparent border
+          ys, xs = np.where(rgba[:,:,3] > 10)
+          pad = 6
+          h, w = rgba.shape[:2]
+          rgba = rgba[max(ys.min()-pad,0):min(ys.max()+pad,h), max(xs.min()-pad,0):min(xs.max()+pad,w)]
+          # resize to 1200px wide for crisp retina display
+          scale = 1200 / rgba.shape[1]
+          if scale < 1:
+              rgba = cv2.resize(rgba, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+          elif scale > 1:
+              rgba = cv2.resize(rgba, None, fx=scale, fy=scale, interpolation=cv2.INTER_LANCZOS4)
+          cv2.imwrite('docs/defender.png', rgba, [cv2.IMWRITE_PNG_COMPRESSION, 9])
+          print('final:', rgba.shape)
+          PY
+      - name: Commit image
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/defender.png
+          git commit -m "Add high-quality Defender image for hero"
+          git push
