@@ -106,13 +106,13 @@ header{
   opacity:0;animation:riseIn .9s ease .95s forwards;
 }
 @keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-.stage{position:relative;height:190px;margin-top:8px}
+.stage{position:relative;height:calc(min(340px,68vw)*0.67 + 52px);margin-top:8px}
 .road{
   position:absolute;left:0;right:0;bottom:26px;height:1px;
   background:linear-gradient(90deg,transparent, rgba(244,241,232,.25) 15%, rgba(244,241,232,.25) 85%, transparent);
 }
 .car-wrap{
-  position:absolute;bottom:12px;left:50%;width:min(470px,86vw);
+  position:absolute;bottom:14px;left:50%;width:min(340px,68vw);
   transform:translateX(-50%);
   animation:driveIn 1.35s cubic-bezier(.22,.9,.3,1) forwards;
 }
@@ -121,24 +121,53 @@ header{
   84%{transform:translateX(calc(-50% + 14px))}
   100%{transform:translateX(-50%)}
 }
-.defender{width:100%;display:block;filter:drop-shadow(0 16px 20px rgba(0,0,0,.45))}
+.defender{width:100%;display:block;filter:drop-shadow(0 20px 24px rgba(0,0,0,.5))}
 /* headlights flash twice to greet, then stay on */
 .beam{
-  position:absolute;right:-40%;top:52%;width:46%;height:60px;
-  background:linear-gradient(90deg, rgba(244,236,205,.34), rgba(244,236,205,.05) 70%, transparent);
-  clip-path:polygon(0 22%, 100% 0, 100% 100%, 0 46%);
+  position:absolute;right:-42%;top:42%;width:48%;height:72px;
+  background:linear-gradient(90deg, rgba(244,236,205,.32), rgba(244,236,205,.05) 70%, transparent);
+  clip-path:polygon(0 26%, 100% 0, 100% 100%, 0 52%);
   opacity:0;animation:greet 1.15s ease 1.45s forwards;
   filter:blur(2px);
 }
 .lamp-glow{
-  position:absolute;right:1%;top:55%;width:28px;height:16px;border-radius:50%;
+  position:absolute;right:5%;top:45%;width:27px;height:16px;border-radius:50%;
   background:radial-gradient(closest-side, rgba(246,236,201,.95), rgba(246,236,201,0));
+  filter:blur(1.5px);
+  opacity:0;animation:greet 1.15s ease 1.45s forwards;
+}
+.lamp-glow2{
+  position:absolute;right:41%;top:47%;width:22px;height:13px;border-radius:50%;
+  background:radial-gradient(closest-side, rgba(246,236,201,.85), rgba(246,236,201,0));
   filter:blur(1.5px);
   opacity:0;animation:greet 1.15s ease 1.45s forwards;
 }
 @keyframes greet{
   0%{opacity:0} 14%{opacity:1} 28%{opacity:0} 42%{opacity:1} 56%{opacity:0} 75%{opacity:1} 100%{opacity:1}
 }
+/* the owner greets visitors in front of the car */
+.host{
+  position:absolute;z-index:4;bottom:8px;left:calc(50% + min(158px,26vw));
+  transform:translateX(-50%);text-align:center;
+  opacity:0;animation:hostIn .75s cubic-bezier(.3,1.45,.45,1) 1.8s forwards;
+}
+.host img{
+  width:min(106px,23vw);height:min(106px,23vw);border-radius:50%;
+  border:2.5px solid var(--gold);
+  box-shadow:0 0 0 6px rgba(213,179,107,.14), 0 16px 34px rgba(0,0,0,.55);
+  animation:float 4.5s ease-in-out 2.8s infinite;
+}
+.host span{
+  display:inline-block;margin-top:7px;font-size:.58rem;font-weight:800;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--gold);
+  background:rgba(11,16,13,.78);border:1px solid rgba(213,179,107,.35);
+  border-radius:999px;padding:4px 11px;backdrop-filter:blur(4px);white-space:nowrap;
+}
+@keyframes hostIn{
+  from{opacity:0;transform:translateX(-50%) translateY(26px) scale(.5)}
+  to{opacity:1;transform:translateX(-50%)}
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 /* gold ticker */
 .ticker{
   border-top:1px solid var(--line);margin-top:0;position:relative;z-index:2;
@@ -156,7 +185,9 @@ header{
 @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion: reduce){
   .car-wrap{animation:none;transform:translateX(-50%)}
-  .beam,.lamp-glow{animation:none;opacity:1}
+  .beam,.lamp-glow,.lamp-glow2{animation:none;opacity:1}
+  .host{animation:none;opacity:1}
+  .host img{animation:none}
   .hero .eyebrow,.hero h1,.hero p{animation:none;opacity:1}
   .ticker-track{animation:none}
   .reveal{opacity:1 !important;transform:none !important}
@@ -451,7 +482,12 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
     <div class="car-wrap">
       <img class="defender" src="defender.png" alt="Land Rover Defender arriving at Budget Cars">
       <div class="lamp-glow"></div>
+      <div class="lamp-glow2"></div>
       <div class="beam"></div>
+    </div>
+    <div class="host">
+      <img src="owner.png" alt="Salinur — Budget Cars">
+      <span>Salinur · Budget Cars</span>
     </div>
   </div>
   <div class="ticker" aria-hidden="true">
