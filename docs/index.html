@@ -145,29 +145,6 @@ header{
 @keyframes greet{
   0%{opacity:0} 14%{opacity:1} 28%{opacity:0} 42%{opacity:1} 56%{opacity:0} 75%{opacity:1} 100%{opacity:1}
 }
-/* the owner greets visitors in front of the car */
-.host{
-  position:absolute;z-index:4;bottom:8px;left:calc(50% + min(158px,26vw));
-  transform:translateX(-50%);text-align:center;
-  opacity:0;animation:hostIn .75s cubic-bezier(.3,1.45,.45,1) 1.8s forwards;
-}
-.host img{
-  width:min(106px,23vw);height:min(106px,23vw);border-radius:50%;
-  border:2.5px solid var(--gold);
-  box-shadow:0 0 0 6px rgba(213,179,107,.14), 0 16px 34px rgba(0,0,0,.55);
-  animation:float 4.5s ease-in-out 2.8s infinite;
-}
-.host span{
-  display:inline-block;margin-top:7px;font-size:.58rem;font-weight:800;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--gold);
-  background:rgba(11,16,13,.78);border:1px solid rgba(213,179,107,.35);
-  border-radius:999px;padding:4px 11px;backdrop-filter:blur(4px);white-space:nowrap;
-}
-@keyframes hostIn{
-  from{opacity:0;transform:translateX(-50%) translateY(26px) scale(.5)}
-  to{opacity:1;transform:translateX(-50%)}
-}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 /* gold ticker */
 .ticker{
   border-top:1px solid var(--line);margin-top:0;position:relative;z-index:2;
@@ -186,8 +163,6 @@ header{
 @media (prefers-reduced-motion: reduce){
   .car-wrap{animation:none;transform:translateX(-50%)}
   .beam,.lamp-glow,.lamp-glow2{animation:none;opacity:1}
-  .host{animation:none;opacity:1}
-  .host img{animation:none}
   .hero .eyebrow,.hero h1,.hero p{animation:none;opacity:1}
   .ticker-track{animation:none}
   .reveal{opacity:1 !important;transform:none !important}
@@ -240,6 +215,12 @@ header{
   background:var(--danger);color:#1A0D0D;font-size:.9rem;font-weight:800;line-height:1;
   display:grid;place-items:center;z-index:5;
 }
+.edit-btn{
+  position:absolute;top:9px;right:46px;width:30px;height:30px;border-radius:50%;border:none;
+  background:var(--gold);color:#1A1408;font-size:.85rem;font-weight:800;line-height:1;
+  display:grid;place-items:center;z-index:5;
+}
+.edit-btn:hover{background:#E3C67F}
 .card .body{padding:14px 15px 15px;display:flex;flex-direction:column;gap:6px;flex:1;cursor:pointer}
 .card h3{
   font-size:1rem;font-weight:800;line-height:1.3;
@@ -429,13 +410,32 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
 .dspec b{font-size:.9rem}
 .detail-price{font-family:var(--font-display);font-size:1.75rem;font-weight:600;color:var(--gold);font-variant-numeric:tabular-nums}
 
-/* upload */
-.upload{
-  border:2px dashed var(--line);border-radius:13px;padding:16px;text-align:center;color:var(--muted);
-  cursor:pointer;font-size:.88rem;background:var(--surface);
+/* photo upload slots */
+.photo-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:520px){.photo-slots{grid-template-columns:repeat(2,1fr)}}
+.slot{
+  aspect-ratio:4/3;border:2px dashed var(--line);border-radius:12px;
+  display:grid;place-items:center;color:var(--muted);cursor:pointer;
+  position:relative;overflow:hidden;background:var(--surface);
+  font-size:.72rem;font-weight:700;text-align:center;transition:border-color .15s;
 }
-.upload:hover{border-color:var(--gold);color:var(--ivory)}
-.upload img{max-height:120px;margin:10px auto 0;border-radius:10px}
+.slot:hover{border-color:var(--gold);color:var(--ivory)}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slot-x{
+  position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;border:none;
+  background:rgba(11,16,13,.85);color:#fff;font-size:.68rem;font-weight:800;z-index:2;
+  display:grid;place-items:center;
+}
+.slot-x:hover{background:var(--danger)}
+
+/* detail gallery */
+.gal-thumbs{display:flex;gap:8px;margin:-6px 0 16px}
+.gal-thumbs img{
+  width:66px;height:50px;object-fit:cover;border-radius:9px;cursor:pointer;
+  border:2px solid transparent;opacity:.65;transition:all .15s;
+}
+.gal-thumbs img.on{border-color:var(--gold);opacity:1}
+.gal-thumbs img:hover{opacity:1}
 
 /* toast */
 .toast{
@@ -484,10 +484,6 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
       <div class="lamp-glow"></div>
       <div class="lamp-glow2"></div>
       <div class="beam"></div>
-    </div>
-    <div class="host">
-      <img src="owner.png" alt="Salinur — Budget Cars">
-      <span>Salinur · Budget Cars</span>
     </div>
   </div>
   <div class="ticker" aria-hidden="true">
@@ -581,15 +577,17 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
 <div class="overlay" id="addOverlay" onclick="if(event.target===this)closeModal('addOverlay')">
   <div class="modal wide">
     <button class="close-x" onclick="closeModal('addOverlay')" aria-label="Close">✕</button>
-    <h3>Add a <i>car</i></h3>
-    <p class="sub">Fill every detail — customers see exactly this.</p>
+    <h3 id="addTitle">Add a <i>car</i></h3>
+    <p class="sub" id="addSub">Fill every detail — customers see exactly this.</p>
 
     <div class="form-grid">
       <div class="field full">
-        <label>Car photo</label>
-        <div class="upload" onclick="document.getElementById('photoInput').click()">
-          <span id="uploadText">📸 Tap to upload a photo of the car</span>
-          <img id="photoPreview" style="display:none" alt="">
+        <label>Car photos — up to 4 (the first is the main photo)</label>
+        <div class="photo-slots">
+          <div class="slot" id="slot0" onclick="pickPhoto(0)"></div>
+          <div class="slot" id="slot1" onclick="pickPhoto(1)"></div>
+          <div class="slot" id="slot2" onclick="pickPhoto(2)"></div>
+          <div class="slot" id="slot3" onclick="pickPhoto(3)"></div>
         </div>
         <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)">
       </div>
@@ -663,12 +661,29 @@ function hueFrom(str){
   for(let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
   return h;
 }
+/* photos are stored in one text field: a single image, or a JSON array of up to 4 */
+function parsePhotos(p){
+  if(!p) return [];
+  if(typeof p === "string" && p.charAt(0) === "["){
+    try{ const a = JSON.parse(p); return Array.isArray(a) ? a.filter(Boolean).slice(0,4) : []; }
+    catch(e){ return []; }
+  }
+  return [p];
+}
+function packPhotos(arr){
+  const a = (arr||[]).filter(Boolean).slice(0,4);
+  if(!a.length) return null;
+  return a.length === 1 ? a[0] : JSON.stringify(a);
+}
+function gallery(c){
+  return (c.photos && c.photos.length) ? c.photos : [carArt(hueFrom(c.name||""), c.name||"Car")];
+}
 function fromRow(r){
   return {
     id: r.id, name: r.name, brand: r.brand, year: r.year, price: r.price,
     km: r.km, fuel: r.fuel, trans: r.trans, owners: r.owners, color: r.color,
     ins: r.ins, loc: r.loc, desc: r.description,
-    photo: r.photo || carArt(hueFrom(r.name || ""), r.name || "Car")
+    photos: parsePhotos(r.photo)
   };
 }
 
@@ -727,6 +742,7 @@ async function load(){
     const raw = localStorage.getItem(STORE_KEY);
     cars = raw ? JSON.parse(raw) : SEED.slice();
   }catch(e){ cars = SEED.slice(); }
+  cars = cars.map(c => c.photos ? c : {...c, photos: parsePhotos(c.photo)});
   if(!localStorage.getItem(STORE_KEY)) save();
   renderCars();
 }
@@ -800,9 +816,10 @@ function setBrand(b){
 function cardHTML(c){
   return `<div class="card reveal">
     <div class="photo" onclick="openDetail('${c.id}')">
-      <img src="${c.photo}" alt="${esc(c.name)}" loading="lazy">
+      <img src="${gallery(c)[0]}" alt="${esc(c.name)}" loading="lazy">
       <span class="badge">${esc(c.fuel)} · ${c.year}</span>
-      ${ownerMode ? `<button class="del-btn" title="Delete car" onclick="event.stopPropagation();deleteCar('${c.id}')">✕</button>` : ``}
+      ${ownerMode ? `<button class="edit-btn" title="Edit car" onclick="event.stopPropagation();openEditCar('${c.id}')">✎</button>
+      <button class="del-btn" title="Delete car" onclick="event.stopPropagation();deleteCar('${c.id}')">✕</button>` : ``}
     </div>
     <div class="body" onclick="openDetail('${c.id}')">
       <h3>${esc(c.name)}</h3>
@@ -856,10 +873,22 @@ function renderCars(){
 }
 
 /* ---------- detail ---------- */
+function swapPhoto(i){
+  const g = window._detailGallery || [];
+  if(!g[i]) return;
+  document.getElementById("detailMainPhoto").src = g[i];
+  document.querySelectorAll(".gal-thumbs img").forEach((t,j)=>t.classList.toggle("on", j===i));
+}
 function openDetail(id){
   const c = cars.find(x=>x.id===id); if(!c) return;
+  const g = gallery(c);
+  window._detailGallery = g;
+  const thumbs = g.length > 1
+    ? `<div class="gal-thumbs">` + g.map((p,i)=>`<img src="${p}" class="${i===0?"on":""}" onclick="swapPhoto(${i})" alt="photo ${i+1}">`).join("") + `</div>`
+    : ``;
   document.getElementById("detailContent").innerHTML = `
-    <div class="detail-photo"><img src="${c.photo}" alt="${esc(c.name)}"></div>
+    <div class="detail-photo"><img id="detailMainPhoto" src="${g[0]}" alt="${esc(c.name)}"></div>
+    ${thumbs}
     <h3>${esc(c.name)}</h3>
     <p class="sub">${esc(c.brand)}${c.loc ? " · " + esc(c.loc) : ""}</p>
     <div class="detail-price">${fmt(c.price)}</div>
@@ -989,14 +1018,28 @@ async function deleteCar(id){
   toast("🗑️ Car deleted");
 }
 
-/* ---------- add car ---------- */
-let pendingPhoto = null;
-function openAddCar(){
-  ["f_name","f_brand","f_year","f_price","f_km","f_color","f_loc","f_desc"].forEach(i=>document.getElementById(i).value="");
-  pendingPhoto = null;
-  document.getElementById("photoPreview").style.display = "none";
-  document.getElementById("uploadText").textContent = "📸 Tap to upload a photo of the car";
-  openModal("addOverlay");
+/* ---------- add / edit car ---------- */
+let pendingPhotos = [null, null, null, null];
+let photoSlotIdx = 0;
+let editingId = null;
+
+function refreshSlots(){
+  for(let i = 0; i < 4; i++){
+    const el = document.getElementById("slot" + i);
+    el.innerHTML = pendingPhotos[i]
+      ? `<img src="${pendingPhotos[i]}" alt=""><button class="slot-x" onclick="event.stopPropagation();removePhoto(${i})">✕</button>`
+      : `<span>＋ Photo ${i+1}</span>`;
+  }
+}
+function pickPhoto(i){
+  photoSlotIdx = i;
+  const inp = document.getElementById("photoInput");
+  inp.value = "";
+  inp.click();
+}
+function removePhoto(i){
+  pendingPhotos[i] = null;
+  refreshSlots();
 }
 function handlePhoto(input){
   const file = input.files && input.files[0]; if(!file) return;
@@ -1010,14 +1053,46 @@ function handlePhoto(input){
       cv.width = Math.round(img.width*scale);
       cv.height = Math.round(img.height*scale);
       cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
-      pendingPhoto = cv.toDataURL("image/jpeg", .82);
-      const prev = document.getElementById("photoPreview");
-      prev.src = pendingPhoto; prev.style.display = "block";
-      document.getElementById("uploadText").textContent = "📸 Photo added — tap to change";
+      pendingPhotos[photoSlotIdx] = cv.toDataURL("image/jpeg", .82);
+      refreshSlots();
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
+}
+function setAddModalMode(){
+  document.getElementById("addTitle").innerHTML = editingId ? 'Edit this <i>car</i>' : 'Add a <i>car</i>';
+  document.getElementById("addSub").textContent = editingId
+    ? "Change anything — then save. Customers see the update instantly."
+    : "Fill every detail — customers see exactly this.";
+  document.getElementById("saveCarBtn").textContent = editingId ? "💾 Save changes" : "✅ Add this Car";
+}
+function openAddCar(){
+  editingId = null;
+  ["f_name","f_brand","f_year","f_price","f_km","f_color","f_loc","f_desc"].forEach(i=>document.getElementById(i).value="");
+  pendingPhotos = [null, null, null, null];
+  refreshSlots(); setAddModalMode();
+  openModal("addOverlay");
+}
+function openEditCar(id){
+  const c = cars.find(x=>x.id===id); if(!c) return;
+  editingId = id;
+  document.getElementById("f_name").value  = c.name || "";
+  document.getElementById("f_brand").value = c.brand || "";
+  document.getElementById("f_year").value  = c.year || "";
+  document.getElementById("f_price").value = c.price || "";
+  document.getElementById("f_km").value    = c.km ?? "";
+  document.getElementById("f_fuel").value  = c.fuel || "Petrol";
+  document.getElementById("f_trans").value = c.trans || "Manual";
+  document.getElementById("f_owners").value= c.owners || "1st Owner";
+  document.getElementById("f_color").value = c.color || "";
+  document.getElementById("f_ins").value   = c.ins || "Valid — Comprehensive";
+  document.getElementById("f_loc").value   = c.loc || "";
+  document.getElementById("f_desc").value  = c.desc || "";
+  pendingPhotos = [null, null, null, null];
+  (c.photos || []).slice(0,4).forEach((p,i)=>pendingPhotos[i]=p);
+  refreshSlots(); setAddModalMode();
+  openModal("addOverlay");
 }
 async function saveCar(){
   const g = id => document.getElementById(id).value.trim();
@@ -1034,26 +1109,42 @@ async function saveCar(){
     loc:   g("f_loc"),
     desc:  g("f_desc")
   };
+  const photos = pendingPhotos.filter(Boolean);
   if(SB_ON){
     const btn = document.getElementById("saveCarBtn");
     btn.disabled = true; btn.textContent = "⏳ Saving…";
     try{
-      const row = { ...details, description: details.desc, photo: pendingPhoto };
+      const row = { ...details, description: details.desc, photo: packPhotos(photos) };
       delete row.desc;
+      /* editing = save the new version first, then remove the old one */
       await sb("rpc/add_car", {method:"POST", body:JSON.stringify({p_pin:ownerPin, p_car:row})});
+      if(editingId){
+        try{
+          await sb("rpc/delete_car", {method:"POST", body:JSON.stringify({p_pin:ownerPin, p_id:editingId})});
+        }catch(e){
+          console.error(e);
+          toast("⚠️ Saved, but the old copy could not be removed — delete it manually");
+        }
+      }
       await load();
     }catch(e){
       console.error(e); toast("⚠️ Could not save: " + e.message);
-      btn.disabled = false; btn.textContent = "✅ Add this Car";
+      btn.disabled = false; setAddModalMode();
       return;
     }
-    btn.disabled = false; btn.textContent = "✅ Add this Car";
+    btn.disabled = false;
   }else{
-    cars.unshift({ id: "c" + Date.now(), ...details, photo: pendingPhoto || carArt(hueFrom(name), name) });
+    if(editingId){
+      const i = cars.findIndex(x=>x.id===editingId);
+      if(i > -1) cars[i] = { ...cars[i], ...details, photos };
+    }else{
+      cars.unshift({ id: "c" + Date.now(), ...details, photos });
+    }
     save(); renderCars();
   }
   closeModal("addOverlay");
-  toast("✅ \""+name+"\" added to the website!");
+  toast(editingId ? "✅ \""+name+"\" updated!" : "✅ \""+name+"\" added to the website!");
+  editingId = null;
 }
 
 /* ---------- init ---------- */
