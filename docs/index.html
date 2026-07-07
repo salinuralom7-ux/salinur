@@ -125,18 +125,20 @@ header{
   position:absolute;bottom:-7px;left:8%;width:84%;height:16px;border-radius:50%;
   background:radial-gradient(ellipse at center, rgba(0,0,0,.55), transparent 70%);
 }
-/* headlight beam switches on after the car parks */
+/* headlights flash twice to greet, then stay on */
 .beam{
-  position:absolute;right:-46%;bottom:2px;width:52%;height:78px;
-  background:linear-gradient(90deg, rgba(244,236,205,.32), rgba(244,236,205,.05) 70%, transparent);
-  clip-path:polygon(0 42%, 100% 0, 100% 100%, 0 62%);
-  opacity:0;animation:lightsOn .6s ease 2.25s forwards;
+  position:absolute;right:-44%;bottom:6px;width:50%;height:64px;
+  background:linear-gradient(90deg, rgba(244,236,205,.34), rgba(244,236,205,.05) 70%, transparent);
+  clip-path:polygon(0 48%, 100% 0, 100% 100%, 0 68%);
+  opacity:0;animation:greet 1.1s ease 2.25s forwards;
   filter:blur(2px);
 }
-@keyframes lightsOn{from{opacity:0}to{opacity:1}}
+@keyframes greet{
+  0%{opacity:0} 14%{opacity:1} 28%{opacity:0} 42%{opacity:1} 56%{opacity:0} 75%{opacity:1} 100%{opacity:1}
+}
 .wheel{animation:spin 2.2s cubic-bezier(.22,.9,.3,1) forwards;transform-origin:center;transform-box:fill-box}
 @keyframes spin{from{transform:rotate(-940deg)}to{transform:rotate(0deg)}}
-.headlamp{opacity:0;animation:lightsOn .4s ease 2.2s forwards}
+.headlamp{opacity:0;animation:greet 1.1s ease 2.25s forwards}
 /* gold ticker */
 .ticker{
   border-top:1px solid var(--line);margin-top:0;position:relative;z-index:2;
@@ -218,8 +220,11 @@ header{
   font-family:var(--font-display);font-weight:600;font-size:1.25rem;color:var(--gold);
   font-variant-numeric:tabular-nums;margin-top:3px;
 }
+.card-actions{display:flex;gap:8px;margin-top:auto;padding-top:4px}
+.card-actions .btn{flex:1;padding:10px 6px;font-size:.8rem;border-radius:12px}
+.card .details-btn{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.card .details-btn:hover{color:var(--ivory);border-color:rgba(244,241,232,.35)}
 .card .book{
-  margin-top:auto;padding:10px;font-size:.82rem;border-radius:12px;
   background:transparent;color:var(--gold);border:1px solid rgba(213,179,107,.45);
 }
 .card .book:hover{background:var(--gold);color:#1A1408}
@@ -227,6 +232,7 @@ header{
   .card .body{padding:11px 12px 12px}
   .card h3{font-size:.88rem}
   .price{font-size:1.08rem}
+  .card-actions .btn{font-size:.74rem;padding:9px 4px}
 }
 .empty{
   grid-column:1/-1;text-align:center;padding:60px 18px;color:var(--muted);
@@ -291,11 +297,6 @@ header{
 .contact h2{font-size:clamp(1.5rem,4.5vw,2.2rem)}
 .contact p{color:var(--muted);font-size:.9rem;max-width:440px;margin:10px auto 24px}
 .contact-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.upi-note{
-  margin-top:18px;display:inline-flex;align-items:center;gap:8px;
-  border:1px solid rgba(213,179,107,.35);border-radius:999px;
-  padding:8px 18px;font-size:.8rem;font-weight:700;color:var(--gold);letter-spacing:.05em;
-}
 footer{border-top:1px solid var(--line);padding:22px 0 28px;color:var(--muted);font-size:.8rem}
 footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 footer a{color:var(--gold);font-weight:700}
@@ -361,6 +362,17 @@ footer a{color:var(--gold);font-weight:700}
 }
 input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
 .amount-box .lim{display:flex;justify-content:space-between;color:var(--muted);font-size:.7rem;margin-top:7px;font-weight:600}
+.pay-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+.pay-opt{
+  border:1px solid var(--line);border-radius:14px;padding:12px 8px;background:var(--surface);
+  font-size:.82rem;font-weight:800;color:var(--muted);
+  display:flex;flex-direction:column;gap:2px;align-items:center;text-align:center;
+  transition:all .15s ease;
+}
+.pay-opt small{font-size:.66rem;font-weight:600;opacity:.75}
+.pay-opt .ic{font-size:1.2rem}
+.pay-opt:hover{border-color:rgba(213,179,107,.5)}
+.pay-opt.on{border-color:var(--gold);color:var(--ivory);background:rgba(213,179,107,.09)}
 .upi-box{
   border:1px dashed rgba(213,179,107,.5);border-radius:15px;
   padding:15px;margin-bottom:13px;text-align:center;background:rgba(213,179,107,.05);
@@ -440,30 +452,43 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
     <div class="car-wrap">
       <div class="car-shadow"></div>
       <div class="beam"></div>
-      <svg viewBox="0 0 520 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <!-- body -->
-        <path d="M28 112 C24 96 34 86 56 82 L120 72 C150 44 205 30 262 30 C320 30 362 42 392 64 L430 76 C462 80 486 90 494 100 C500 107 497 113 484 114 L40 114 C32 114 29 113 28 112 Z" fill="#152A20"/>
-        <!-- glass -->
-        <path d="M160 68 L196 42 C216 35 240 32 262 32 L268 32 L268 68 Z" fill="#22372C"/>
-        <path d="M282 32 C310 33 340 41 364 56 L378 66 L282 66 Z" fill="#22372C"/>
+      <svg viewBox="0 0 560 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- supercar body: low nose right, teardrop cabin, rear haunch + ducktail left -->
+        <path d="M36 108
+                 C30 98 36 90 54 86
+                 C56 74 64 64 88 58
+                 L98 56
+                 C120 34 152 26 190 26
+                 C238 26 272 36 306 54
+                 C356 64 424 74 474 82
+                 C508 88 528 94 534 100
+                 C538 105 534 109 522 110
+                 L48 110
+                 C40 110 38 109 36 108 Z" fill="#152A20"/>
+        <!-- ducktail spoiler -->
+        <path d="M54 56 L104 50 L106 58 L58 62 Z" fill="#0E1F17"/>
+        <!-- teardrop glass -->
+        <path d="M118 56 C136 37 162 31 192 31 C230 31 258 40 288 54 L296 58 L124 58 Z" fill="#22372C"/>
+        <!-- side intake -->
+        <path d="M306 76 L346 71 L346 90 L312 92 Z" fill="#0E1F17"/>
         <!-- gold trim -->
-        <path d="M60 92 L470 92" stroke="#D5B36B" stroke-width="2.5" stroke-linecap="round" opacity=".85"/>
+        <path d="M64 96 L508 96" stroke="#D5B36B" stroke-width="2.5" stroke-linecap="round" opacity=".85"/>
         <!-- lamps -->
         <g class="headlamp">
-          <path d="M486 96 C492 99 495 103 494 107 L476 107 L476 96 Z" fill="#F6ECC9"/>
-          <circle cx="488" cy="101" r="7" fill="#F6ECC9" opacity=".5"/>
+          <path d="M524 96 C530 99 533 102 532 106 L508 106 L510 95 Z" fill="#F6ECC9"/>
+          <circle cx="524" cy="100" r="7" fill="#F6ECC9" opacity=".5"/>
         </g>
-        <rect x="28" y="94" width="10" height="8" rx="3" fill="#C24545"/>
+        <rect x="36" y="90" width="12" height="7" rx="3" fill="#C24545"/>
         <!-- wheels -->
         <g class="wheel">
-          <circle cx="140" cy="112" r="26" fill="#060907"/>
-          <circle cx="140" cy="112" r="12" fill="#D5B36B" opacity=".85"/>
-          <path d="M140 102 V122 M130 112 H150 M133 105 L147 119 M147 105 L133 119" stroke="#060907" stroke-width="2.5"/>
+          <circle cx="152" cy="112" r="27" fill="#060907"/>
+          <circle cx="152" cy="112" r="13" fill="#D5B36B" opacity=".85"/>
+          <path d="M152 101 V123 M141 112 H163 M144 104 L160 120 M160 104 L144 120" stroke="#060907" stroke-width="2.5"/>
         </g>
         <g class="wheel">
-          <circle cx="404" cy="112" r="26" fill="#060907"/>
-          <circle cx="404" cy="112" r="12" fill="#D5B36B" opacity=".85"/>
-          <path d="M404 102 V122 M394 112 H414 M397 105 L411 119 M411 105 L397 119" stroke="#060907" stroke-width="2.5"/>
+          <circle cx="430" cy="112" r="27" fill="#060907"/>
+          <circle cx="430" cy="112" r="13" fill="#D5B36B" opacity=".85"/>
+          <path d="M430 101 V123 M419 112 H441 M422 104 L438 120 M438 104 L422 120" stroke="#060907" stroke-width="2.5"/>
         </g>
       </svg>
     </div>
@@ -501,7 +526,6 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
       <a class="btn btn-line" href="https://wa.me/917086269537" target="_blank" rel="noopener">WhatsApp</a>
       <a class="btn btn-line" href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">Instagram</a>
     </div>
-    <div class="upi-note">UPI · salinuralom@ybl</div>
   </div>
 </main>
 
@@ -539,14 +563,20 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
       <div class="lim"><span>Min ₹10,000</span><span>Max ₹1,00,000</span></div>
     </div>
 
-    <div class="upi-box">
-      <div class="t">Pay your token by UPI — any app (PhonePe, GPay, Paytm…)</div>
+    <div class="field full" style="margin-bottom:10px"><label>How would you like to pay the token?</label></div>
+    <div class="pay-opts">
+      <button class="pay-opt on" id="payOptUpi" onclick="setPayMethod('upi')"><span class="ic">📲</span>Pay now by UPI<small>PhonePe · GPay · Paytm…</small></button>
+      <button class="pay-opt" id="payOptCash" onclick="setPayMethod('cash')"><span class="ic">🏪</span>Visit &amp; pay in cash<small>at our showroom</small></button>
+    </div>
+
+    <div class="upi-box" id="upiBox">
+      <div class="t">Any UPI app works — the amount goes straight to us</div>
       <span class="upi-id">salinuralom@ybl <button onclick="copyUpi()">Copy</button></span>
       <a class="btn btn-gold pay-btn" id="upiPayBtn" href="#">📲 Pay <span id="payAmt">₹10,000</span> by UPI</a>
     </div>
 
     <button class="btn btn-green btn-block" onclick="confirmBooking()" style="padding:14px">Confirm booking on WhatsApp</button>
-    <p class="hint">Tap Pay to open your UPI app, then Confirm — your booking details reach us on WhatsApp and we reply within a few hours.</p>
+    <p class="hint" id="bookHint">Tap Pay to open your UPI app, then Confirm — your booking details reach us on WhatsApp and we reply within a few hours.</p>
   </div>
 </div>
 
@@ -781,7 +811,10 @@ function cardHTML(c){
       <h3>${esc(c.name)}</h3>
       <div class="meta">${c.year} · ${Number(c.km).toLocaleString("en-IN")} km · ${esc(c.trans)}</div>
       <div class="price">${fmt(c.price)}</div>
-      <button class="btn book" onclick="event.stopPropagation();openBooking('${c.id}')">Book now</button>
+      <div class="card-actions">
+        <button class="btn details-btn" onclick="event.stopPropagation();openDetail('${c.id}')">Details</button>
+        <button class="btn book" onclick="event.stopPropagation();openBooking('${c.id}')">Book now</button>
+      </div>
     </div>
   </div>`;
 }
@@ -849,13 +882,24 @@ function openDetail(id){
 }
 
 /* ---------- booking + UPI ---------- */
+let payMethod = "upi";
 function openBooking(id){
   bookingCar = cars.find(x=>x.id===id); if(!bookingCar) return;
   document.getElementById("bookCarName").textContent =
     bookingCar.name + " (" + bookingCar.year + ") — " + fmt(bookingCar.price);
   document.getElementById("amountSlider").value = 10000;
+  setPayMethod("upi");
   updateAmount();
   openModal("bookOverlay");
+}
+function setPayMethod(m){
+  payMethod = m;
+  document.getElementById("payOptUpi").classList.toggle("on", m === "upi");
+  document.getElementById("payOptCash").classList.toggle("on", m === "cash");
+  document.getElementById("upiBox").style.display = m === "upi" ? "block" : "none";
+  document.getElementById("bookHint").textContent = m === "upi"
+    ? "Tap Pay to open your UPI app, then Confirm — your booking details reach us on WhatsApp and we reply within a few hours."
+    : "No payment needed now — confirm your booking and pay the token in cash when you visit us.";
 }
 function updateAmount(){
   const amt = document.getElementById("amountSlider").value;
@@ -884,13 +928,16 @@ function confirmBooking(){
   const amt   = document.getElementById("amountSlider").value;
   if(!name){ toast("Please enter your name"); return; }
   if(!/^\d{10}$/.test(phone)){ toast("Please enter a valid 10-digit phone number"); return; }
+  const payLine = payMethod === "upi"
+    ? `*Payment:* Token by UPI to ${UPI_ID}`
+    : `*Payment:* Will visit the showroom and pay the token in cash`;
   const msg =
 `🚗 *NEW BOOKING — Budget Cars*
 
 *Car:* ${bookingCar.name} (${bookingCar.year})
 *Price:* ${fmt(bookingCar.price)}
 *Token amount:* ${fmt(amt)}
-*UPI for payment:* ${UPI_ID}
+${payLine}
 
 *Customer:* ${name}
 *Phone:* ${phone}
