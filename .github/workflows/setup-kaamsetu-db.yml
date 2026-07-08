@@ -1,8 +1,8 @@
 name: Setup KaamSetu database
-# One-time: creates the KaamSetu tables/functions in the existing Supabase
+# One-time: creates the Nearse tables/functions in the existing Supabase
 # project. Reads the Supabase access token from the repo secret
-# SUPABASE_TOKEN (Settings → Secrets and variables → Actions).
-# Removed after use.
+# SUPABASE_TOKEN. Writes a sanitized status report to
+# .github/kaamsetu-setup-status.txt (never the token). Removed after use.
 
 on:
   workflow_dispatch:
@@ -11,31 +11,64 @@ on:
     paths: [".github/workflows/setup-kaamsetu-db.yml"]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run KaamSetu SQL on Supabase
+      - name: Run Nearse SQL on Supabase
         env:
           SB_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
         run: |
-          set -euo pipefail
-          [ -n "$SB_TOKEN" ] || { echo "SUPABASE_TOKEN secret is not set"; exit 1; }
+          set -uo pipefail
+          R=.github/kaamsetu-setup-status.txt
+          note(){ echo "$1" | tee -a "$R"; }
+          : > "$R"
+          note "run: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          if [ -z "${SB_TOKEN:-}" ]; then
+            note "ERROR: SUPABASE_TOKEN secret is empty or missing (check the secret name spelling)"
+            exit 1
+          fi
+          note "secret: present (${#SB_TOKEN} chars)"
           echo "::add-mask::$SB_TOKEN"
           api=https://api.supabase.com/v1
           hdr=(-H "Authorization: Bearer $SB_TOKEN" -H "Content-Type: application/json")
 
-          ref=$(curl -fsS "${hdr[@]}" $api/projects | jq -r '[.[] | select(.name=="budget-cars")][0].id // empty')
-          [ -n "$ref" ] || { echo "Project budget-cars not found"; exit 1; }
-          echo "Project: $ref"
+          code=$(curl -sS -o /tmp/projects.json -w "%{http_code}" "${hdr[@]}" $api/projects)
+          note "list projects: HTTP $code"
+          if [ "$code" != "200" ]; then
+            note "ERROR: token rejected or API unreachable. Body: $(head -c 300 /tmp/projects.json)"
+            exit 1
+          fi
+          ref=$(jq -r '[.[] | select(.name=="budget-cars")][0].id // empty' /tmp/projects.json)
+          if [ -z "$ref" ]; then
+            note "ERROR: project 'budget-cars' not found. Projects: $(jq -r '[.[].name] | join(", ")' /tmp/projects.json)"
+            exit 1
+          fi
+          note "project: $ref"
 
           jq -Rs '{query:.}' docs/supabase-workers-setup.sql > /tmp/q.json
-          curl -fsS "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/q.json > /dev/null
-          echo "SQL executed"
+          code=$(curl -sS -o /tmp/sql-out.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/q.json)
+          note "run SQL: HTTP $code"
+          if [ "$code" != "200" ] && [ "$code" != "201" ]; then
+            note "ERROR running SQL: $(head -c 500 /tmp/sql-out.json)"
+            exit 1
+          fi
 
-          count=$(curl -fsS "${hdr[@]}" -X POST $api/projects/$ref/database/query \
-            -d '{"query":"select count(*)::int as n from public.workers"}' | jq -r '.[0].n')
-          echo "Workers table ready — rows: $count"
+          code=$(curl -sS -o /tmp/count.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query \
+            -d '{"query":"select count(*)::int as n from public.workers"}')
+          note "verify workers table: HTTP $code — $(head -c 200 /tmp/count.json)"
+          [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
+          note "SUCCESS: Nearse database is live"
+
+      - name: Commit status report
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/kaamsetu-setup-status.txt
+          git commit -m "Nearse DB setup status" || echo "nothing to commit"
+          git push || true
