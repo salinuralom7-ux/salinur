@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [".github/workflows/setup-kaamsetu-db.yml"]
+    paths: [".github/workflows/setup-kaamsetu-db.yml", "docs/supabase-workers-setup.sql"]
 
 permissions:
   contents: write
