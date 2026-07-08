@@ -59,7 +59,7 @@ create policy "public can create bookings"
 -- ---------- functions (PIN verified on the server) ----------
 create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
 returns setof public.workers
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   new_id uuid;
 begin
@@ -89,7 +89,7 @@ $$;
 
 create or replace function public.login_worker(p_phone text, p_pin text)
 returns setof public.workers
-language sql security definer set search_path = public as $$
+language sql security definer set search_path = public, extensions as $$
   select w.* from workers w
   join worker_secrets s on s.worker_id = w.id
   where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
@@ -97,7 +97,7 @@ $$;
 
 create or replace function public.update_worker(p_phone text, p_pin text, p_data jsonb)
 returns setof public.workers
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   wid uuid;
 begin
@@ -124,7 +124,7 @@ $$;
 
 create or replace function public.rate_worker(p_id uuid, p_stars int)
 returns void
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 begin
   if p_stars < 1 or p_stars > 5 then
     raise exception 'Rating must be between 1 and 5';
