@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://salinuralom7-ux.github.io/salinur/sitemap.xml
+Sitemap: https://nearse.in/sitemap.xml
