@@ -1,6 +1,7 @@
-run: 2026-07-08T05:34:19Z
+run: 2026-07-08T05:36:22Z
 secret: present (44 chars)
 list projects: HTTP 200
 project: mpufunsitqtdkqlibxof
-run SQL: HTTP 400
-ERROR running SQL: {"message":"Failed to run sql query: ERROR:  42883: function crypt(text, text) does not exist\nLINE 95:   where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);\n                                                    ^\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.\n"}
+run SQL: HTTP 201
+verify workers table: HTTP 201 — [{"n":0}]
+SUCCESS: Nearse database is live
