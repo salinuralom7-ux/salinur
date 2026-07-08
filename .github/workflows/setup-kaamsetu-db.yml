@@ -6,6 +6,9 @@ name: Setup KaamSetu database
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/setup-kaamsetu-db.yml"]
 
 permissions:
   contents: read
