@@ -420,6 +420,16 @@ footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:
   font-size:.75rem;font-weight:700;color:var(--spark-ink);text-align:center;padding:7px 14px;display:none;
 }
 .demo-note.on{display:block}
+.cars-note{
+  display:none;align-items:center;justify-content:center;gap:4px;
+  background:#14231C;color:#EDE9DC;font-size:.78rem;font-weight:600;
+  text-align:center;padding:8px 12px;
+}
+.cars-note.on{display:flex}
+.cars-note a{color:#D5B36B;font-weight:800;text-decoration:underline}
+.cars-note button{
+  border:none;background:none;color:#EDE9DC;opacity:.6;font-size:.8rem;margin-left:10px;cursor:pointer;
+}
 
 @media (prefers-reduced-motion: reduce){
   .screen.on{animation:none}
@@ -439,6 +449,7 @@ footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:
   </div>
 </header>
 <div class="demo-note" id="demoNote">Demo mode — profiles save on this device only. The owner is connecting the live database.</div>
+<div class="cars-note" id="carsNote">🚗 Looking for <b>&nbsp;Budget Cars&nbsp;</b>? <a href="cars/">It moved here — tap</a><button onclick="dismissCarsNote()" aria-label="Dismiss">✕</button></div>
 
 <!-- ================= LANDING ================= -->
 <section class="screen on" id="scr-home">
@@ -601,7 +612,7 @@ footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:
 <footer>
   <div class="container">
     <span>© <span id="year"></span> Nearse · nearse.in — every skill, near you</span>
-    <span>Made with 💛 in Assam</span>
+    <span><a href="cars/" style="color:var(--cobalt);font-weight:700">Budget Cars ↗</a> · Made with 💛 in Assam</span>
   </div>
 </footer>
 
@@ -1167,6 +1178,15 @@ const revealer = ("IntersectionObserver" in window)
 document.querySelectorAll(".reveal").forEach(el=>{
   if(revealer) revealer.observe(el); else el.classList.add("in");
 });
+
+/* ---------- Budget Cars signpost (for old links) ---------- */
+try{
+  if(!localStorage.getItem("nearse_cars_note_off")) $("carsNote").classList.add("on");
+}catch(e){ $("carsNote").classList.add("on"); }
+function dismissCarsNote(){
+  $("carsNote").classList.remove("on");
+  try{ localStorage.setItem("nearse_cars_note_off","1"); }catch(e){}
+}
 
 /* ---------- init ---------- */
 $("year").textContent = new Date().getFullYear();
