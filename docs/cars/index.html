@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Cars — Quality Pre-Owned Cars</title>
+<meta name="description" content="Budget Cars — quality pre-owned cars at honest prices. Browse, book with UPI, and drive home happy.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚗%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   BUDGET CARS — night showroom
+   near-black racing green · champagne gold · ivory · film grain
+================================================================ */
+:root{
+  --bg:#0B100D;
+  --bg2:#0E1410;
+  --surface:#131A15;
+  --surface2:#182019;
+  --ivory:#F4F1E8;
+  --muted:#98A29A;
+  --line:rgba(244,241,232,.09);
+  --gold:#D5B36B;
+  --gold-deep:#B89450;
+  --green:#2E7D5B;
+  --danger:#D06C6C;
+  --radius:18px;
+  --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body:'Manrope', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  background:
+    radial-gradient(900px 480px at 78% -8%, rgba(213,179,107,.07), transparent 60%),
+    radial-gradient(760px 420px at 8% 30%, rgba(46,125,91,.08), transparent 60%),
+    var(--bg);
+  color:var(--ivory);
+  line-height:1.55;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+/* film grain */
+body::after{
+  content:"";position:fixed;inset:-50%;z-index:1;pointer-events:none;opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ivory)}
+.container{max-width:1120px;margin:0 auto;padding:0 20px;position:relative;z-index:2}
+
+/* ---------- type helpers ---------- */
+.eyebrow{
+  font-size:.68rem;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);
+}
+.display{
+  font-family:var(--font-display);font-weight:600;letter-spacing:-.01em;text-wrap:balance;
+}
+.display em{font-style:italic;color:var(--gold);font-weight:500}
+
+/* ---------- buttons ---------- */
+.btn{
+  border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:.9rem;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.02em;
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.btn-gold{background:var(--gold);color:#1A1408}
+.btn-gold:hover{background:#E3C67F;box-shadow:0 8px 26px rgba(213,179,107,.25)}
+.btn-line{background:transparent;color:var(--ivory);border:1px solid rgba(244,241,232,.22)}
+.btn-line:hover{border-color:var(--gold);color:var(--gold)}
+.btn-green{background:var(--green);color:#EAF5EF}
+.btn-green:hover{background:#37936B}
+.btn-block{width:100%}
+
+/* ---------- header ---------- */
+header{
+  position:sticky;top:0;z-index:60;
+  background:rgba(11,16,13,.72);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:15px 0}
+.logo{font-family:var(--font-display);font-weight:600;font-size:1.3rem;letter-spacing:.01em}
+.logo i{font-style:italic;color:var(--gold)}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-right a{font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.nav-right a:hover{color:var(--ivory)}
+#ownerBtn{padding:9px 18px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+
+/* ---------- hero : night drive-in ---------- */
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero-inner{max-width:1120px;margin:0 auto;padding:58px 20px 0;text-align:center;position:relative;z-index:2}
+.hero .eyebrow{opacity:0;animation:riseIn .9s ease .55s forwards}
+.hero h1{
+  font-size:clamp(2.6rem,9vw,5rem);line-height:1.02;margin-top:14px;
+  opacity:0;animation:riseIn .9s ease .75s forwards;
+}
+.hero p{
+  color:var(--muted);font-size:clamp(.92rem,2.6vw,1.05rem);margin-top:14px;
+  opacity:0;animation:riseIn .9s ease .95s forwards;
+}
+@keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.stage{position:relative;height:calc(min(340px,68vw)*0.67 + 52px);margin-top:8px}
+.road{
+  position:absolute;left:0;right:0;bottom:26px;height:1px;
+  background:linear-gradient(90deg,transparent, rgba(244,241,232,.25) 15%, rgba(244,241,232,.25) 85%, transparent);
+}
+.car-wrap{
+  position:absolute;bottom:14px;left:50%;width:min(340px,68vw);
+  transform:translateX(-50%);
+  animation:driveIn 1.35s cubic-bezier(.22,.9,.3,1) forwards;
+}
+@keyframes driveIn{
+  0%{transform:translateX(-130vw)}
+  84%{transform:translateX(calc(-50% + 14px))}
+  100%{transform:translateX(-50%)}
+}
+.defender{width:100%;display:block;filter:drop-shadow(0 20px 24px rgba(0,0,0,.5))}
+/* headlights flash twice to greet, then stay on */
+.beam{
+  position:absolute;right:-42%;top:42%;width:48%;height:72px;
+  background:linear-gradient(90deg, rgba(244,236,205,.32), rgba(244,236,205,.05) 70%, transparent);
+  clip-path:polygon(0 26%, 100% 0, 100% 100%, 0 52%);
+  opacity:0;animation:greet 1.15s ease 1.45s forwards;
+  filter:blur(2px);
+}
+.lamp-glow{
+  position:absolute;right:5%;top:45%;width:27px;height:16px;border-radius:50%;
+  background:radial-gradient(closest-side, rgba(246,236,201,.95), rgba(246,236,201,0));
+  filter:blur(1.5px);
+  opacity:0;animation:greet 1.15s ease 1.45s forwards;
+}
+.lamp-glow2{
+  position:absolute;right:41%;top:47%;width:22px;height:13px;border-radius:50%;
+  background:radial-gradient(closest-side, rgba(246,236,201,.85), rgba(246,236,201,0));
+  filter:blur(1.5px);
+  opacity:0;animation:greet 1.15s ease 1.45s forwards;
+}
+@keyframes greet{
+  0%{opacity:0} 14%{opacity:1} 28%{opacity:0} 42%{opacity:1} 56%{opacity:0} 75%{opacity:1} 100%{opacity:1}
+}
+/* gold ticker */
+.ticker{
+  border-top:1px solid var(--line);margin-top:0;position:relative;z-index:2;
+  overflow:hidden;background:rgba(213,179,107,.05);
+}
+.ticker-track{
+  display:flex;gap:0;width:max-content;
+  animation:tick 26s linear infinite;
+}
+.ticker span{
+  flex:0 0 auto;padding:11px 0;font-size:.68rem;font-weight:800;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--gold);white-space:nowrap;
+}
+.ticker b{color:rgba(213,179,107,.45);padding:0 18px;font-weight:400}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion: reduce){
+  .car-wrap{animation:none;transform:translateX(-50%)}
+  .beam,.lamp-glow,.lamp-glow2{animation:none;opacity:1}
+  .hero .eyebrow,.hero h1,.hero p{animation:none;opacity:1}
+  .ticker-track{animation:none}
+  .reveal{opacity:1 !important;transform:none !important}
+}
+
+/* ---------- scroll reveal ---------- */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease, transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* ---------- toolbar ---------- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:30px 0 4px}
+.toolbar .search{
+  flex:1;min-width:170px;display:flex;align-items:center;gap:10px;
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:11px 18px;
+}
+.toolbar .search input{border:none;outline:none;background:transparent;width:100%;font-size:.95rem}
+.toolbar .search input::placeholder{color:var(--muted)}
+.toolbar select{
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;
+  padding:11px 15px;font-size:.85rem;font-weight:700;outline:none;color:var(--ivory);
+}
+.toolbar select option{background:var(--bg2)}
+.count-note{color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.04em;padding:8px 0 0;width:100%}
+
+/* ---------- cars grid ---------- */
+.section{padding:6px 0 44px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px;margin-top:16px}
+@media(max-width:680px){.grid{grid-template-columns:repeat(2,1fr);gap:12px}}
+.card{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;display:flex;flex-direction:column;position:relative;
+  transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+.card:hover{transform:translateY(-4px);border-color:rgba(213,179,107,.4);box-shadow:0 18px 44px rgba(0,0,0,.45)}
+.card .photo{aspect-ratio:4/3;background:var(--surface2);position:relative;overflow:hidden;cursor:pointer}
+.card .photo::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg, rgba(11,16,13,.0) 55%, rgba(11,16,13,.5));
+}
+.card .photo img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
+.card:hover .photo img{transform:scale(1.06)}
+.badge{
+  position:absolute;top:10px;left:10px;z-index:2;
+  background:rgba(11,16,13,.72);backdrop-filter:blur(4px);
+  color:var(--gold);padding:4px 11px;border-radius:999px;border:1px solid rgba(213,179,107,.3);
+  font-size:.64rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+}
+.del-btn{
+  position:absolute;top:9px;right:9px;width:30px;height:30px;border-radius:50%;border:none;
+  background:var(--danger);color:#1A0D0D;font-size:.9rem;font-weight:800;line-height:1;
+  display:grid;place-items:center;z-index:5;
+}
+.edit-btn{
+  position:absolute;top:9px;right:46px;width:30px;height:30px;border-radius:50%;border:none;
+  background:var(--gold);color:#1A1408;font-size:.85rem;font-weight:800;line-height:1;
+  display:grid;place-items:center;z-index:5;
+}
+.edit-btn:hover{background:#E3C67F}
+.card .body{padding:14px 15px 15px;display:flex;flex-direction:column;gap:6px;flex:1;cursor:pointer}
+.card h3{
+  font-size:1rem;font-weight:800;line-height:1.3;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
+}
+.meta{color:var(--muted);font-size:.74rem;font-weight:600;letter-spacing:.03em}
+.price{
+  font-family:var(--font-display);font-weight:600;font-size:1.25rem;color:var(--gold);
+  font-variant-numeric:tabular-nums;margin-top:3px;
+}
+.card-actions{display:flex;gap:8px;margin-top:auto;padding-top:4px}
+.card-actions .btn{flex:1;padding:10px 6px;font-size:.8rem;border-radius:12px}
+.card .details-btn{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.card .details-btn:hover{color:var(--ivory);border-color:rgba(244,241,232,.35)}
+.card .book{
+  background:transparent;color:var(--gold);border:1px solid rgba(213,179,107,.45);
+}
+.card .book:hover{background:var(--gold);color:#1A1408}
+@media(max-width:680px){
+  .card .body{padding:11px 12px 12px}
+  .card h3{font-size:.88rem}
+  .price{font-size:1.08rem}
+  .card-actions .btn{font-size:.74rem;padding:9px 4px}
+}
+.empty{
+  grid-column:1/-1;text-align:center;padding:60px 18px;color:var(--muted);
+  background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);
+}
+.empty .big{font-size:2.3rem;margin-bottom:8px}
+
+/* ---------- interstitials ---------- */
+.strip{grid-column:1/-1;margin:10px 0}
+.strip-brands{padding:6px 0 2px}
+.strip-brands .eyebrow{display:block;margin-bottom:12px}
+.brand-row{display:flex;gap:9px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.brand-row::-webkit-scrollbar{display:none}
+.brand-chip{
+  flex:0 0 auto;border:1px solid var(--line);background:var(--surface);
+  border-radius:999px;padding:9px 18px;font-size:.82rem;font-weight:700;color:var(--ivory);
+  transition:all .18s ease;letter-spacing:.02em;
+}
+.brand-chip:hover{border-color:var(--gold);color:var(--gold)}
+.brand-chip.on{background:var(--gold);border-color:var(--gold);color:#1A1408}
+.strip-why{
+  background:var(--surface);border:1px solid var(--line);border-radius:22px;
+  padding:34px 26px;
+}
+.strip-why .eyebrow{display:block;margin-bottom:8px}
+.strip-why h2{font-size:clamp(1.5rem,4.5vw,2.2rem);margin-bottom:22px}
+.why-list{display:grid;gap:0}
+.why{
+  display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:baseline;
+  padding:16px 0;border-top:1px solid var(--line);
+}
+.why .num{
+  font-family:var(--font-display);font-style:italic;font-weight:500;
+  font-size:1.15rem;color:var(--gold);min-width:38px;
+}
+.why b{display:block;font-size:1rem;margin-bottom:3px;letter-spacing:.01em}
+.why span{font-size:.85rem;color:var(--muted);line-height:1.55;display:block}
+@media(min-width:760px){
+  .why-list{grid-template-columns:1fr 1fr;column-gap:34px}
+}
+.strip-promo{
+  background:linear-gradient(100deg, rgba(213,179,107,.16), rgba(213,179,107,.05));
+  border:1px solid rgba(213,179,107,.3);border-radius:22px;
+  padding:24px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+}
+.strip-promo .txt b{font-family:var(--font-display);font-weight:600;font-size:1.25rem;display:block;letter-spacing:.01em}
+.strip-promo .txt b i{font-style:italic;color:var(--gold)}
+.strip-promo .txt span{color:var(--muted);font-size:.84rem}
+.strip-promo .btn{padding:11px 20px;font-size:.82rem}
+
+/* ---------- contact ---------- */
+.contact{
+  border:1px solid var(--line);border-radius:24px;text-align:center;margin:16px 0 34px;
+  padding:44px 22px;position:relative;overflow:hidden;background:var(--surface);
+}
+.contact::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(420px 200px at 50% 0%, rgba(213,179,107,.1), transparent 70%);
+}
+.contact>*{position:relative}
+.contact .eyebrow{display:block;margin-bottom:10px}
+.contact h2{font-size:clamp(1.5rem,4.5vw,2.2rem)}
+.contact p{color:var(--muted);font-size:.9rem;max-width:440px;margin:10px auto 24px}
+.contact-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+footer{border-top:1px solid var(--line);padding:22px 0 28px;color:var(--muted);font-size:.8rem}
+footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+footer a{color:var(--gold);font-weight:700}
+
+/* ---------- owner bar ---------- */
+.owner-bar{
+  display:none;position:sticky;top:63px;z-index:55;
+  background:rgba(213,179,107,.1);backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(213,179,107,.3);padding:9px 0;
+}
+.owner-bar.on{display:block}
+.owner-bar .container{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.owner-bar b{font-size:.78rem;color:var(--gold);letter-spacing:.12em;text-transform:uppercase}
+.owner-bar .btn{padding:7px 15px;font-size:.78rem}
+.owner-bar #demoNote{color:var(--gold);font-size:.74rem;opacity:.8}
+
+/* ---------- modals ---------- */
+.overlay{
+  position:fixed;inset:0;background:rgba(5,8,6,.7);backdrop-filter:blur(6px);
+  display:none;align-items:flex-end;justify-content:center;z-index:100;
+}
+@media(min-width:560px){.overlay{align-items:center;padding:20px}}
+.overlay.open{display:flex;animation:fadeIn .18s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--bg2);border:1px solid var(--line);border-radius:24px 24px 0 0;
+  width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
+  padding:26px 22px 30px;position:relative;animation:pop .26s ease;
+}
+@media(min-width:560px){.modal{border-radius:24px}}
+.modal.wide{max-width:620px}
+@keyframes pop{from{transform:translateY(26px);opacity:0}to{transform:none;opacity:1}}
+.modal h3{font-family:var(--font-display);font-weight:600;font-size:1.4rem}
+.modal h3 i{font-style:italic;color:var(--gold)}
+.modal .sub{color:var(--muted);font-size:.88rem;margin:3px 0 18px}
+.close-x{
+  position:absolute;top:15px;right:15px;width:34px;height:34px;border-radius:50%;
+  background:var(--surface);border:1px solid var(--line);color:var(--muted);
+  font-size:.95rem;display:grid;place-items:center;
+}
+.close-x:hover{color:var(--ivory)}
+.field label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px;outline:none;transition:border-color .15s;
+}
+.field input::placeholder,.field textarea::placeholder{color:rgba(152,162,154,.6)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
+.field select option{background:var(--bg2)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.form-grid .full{grid-column:1/-1}
+@media(max-width:520px){.form-grid{grid-template-columns:1fr}}
+
+/* booking amount + UPI */
+.amount-box{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  padding:18px;margin:16px 0 14px;text-align:center;
+}
+.amount-box .lbl{font-size:.68rem;color:var(--muted);font-weight:800;letter-spacing:.22em;text-transform:uppercase}
+.amount-box .val{
+  font-family:var(--font-display);font-size:2.1rem;font-weight:600;color:var(--gold);
+  font-variant-numeric:tabular-nums;margin:5px 0 10px;
+}
+input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
+.amount-box .lim{display:flex;justify-content:space-between;color:var(--muted);font-size:.7rem;margin-top:7px;font-weight:600}
+.pay-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
+.pay-opt{
+  border:1px solid var(--line);border-radius:14px;padding:12px 8px;background:var(--surface);
+  font-size:.82rem;font-weight:800;color:var(--muted);
+  display:flex;flex-direction:column;gap:2px;align-items:center;text-align:center;
+  transition:all .15s ease;
+}
+.pay-opt small{font-size:.66rem;font-weight:600;opacity:.75}
+.pay-opt .ic{font-size:1.2rem}
+.pay-opt:hover{border-color:rgba(213,179,107,.5)}
+.pay-opt.on{border-color:var(--gold);color:var(--ivory);background:rgba(213,179,107,.09)}
+.upi-box{
+  border:1px dashed rgba(213,179,107,.5);border-radius:15px;
+  padding:15px;margin-bottom:13px;text-align:center;background:rgba(213,179,107,.05);
+}
+.upi-box .t{font-size:.78rem;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:.03em}
+.upi-id{
+  display:inline-flex;align-items:center;gap:8px;background:var(--surface);
+  border:1px solid rgba(213,179,107,.35);
+  border-radius:999px;padding:7px 8px 7px 16px;font-weight:800;font-size:.92rem;color:var(--ivory);
+}
+.upi-id button{
+  border:none;background:var(--gold);color:#1A1408;border-radius:999px;
+  padding:5px 13px;font-size:.72rem;font-weight:800;letter-spacing:.05em;
+}
+.pay-btn{margin-top:11px;width:100%;padding:13px;font-size:.92rem}
+.hint{color:var(--muted);font-size:.74rem;text-align:center;margin-top:11px;line-height:1.55}
+
+/* detail modal */
+.detail-photo{border-radius:15px;overflow:hidden;margin-bottom:16px;max-height:280px}
+.detail-photo img{width:100%;height:100%;object-fit:cover}
+.detail-specs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}
+.dspec{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:9px 13px}
+.dspec span{display:block;font-size:.62rem;color:var(--muted);font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.dspec b{font-size:.9rem}
+.detail-price{font-family:var(--font-display);font-size:1.75rem;font-weight:600;color:var(--gold);font-variant-numeric:tabular-nums}
+
+/* photo upload slots */
+.photo-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media(max-width:520px){.photo-slots{grid-template-columns:repeat(2,1fr)}}
+.slot{
+  aspect-ratio:4/3;border:2px dashed var(--line);border-radius:12px;
+  display:grid;place-items:center;color:var(--muted);cursor:pointer;
+  position:relative;overflow:hidden;background:var(--surface);
+  font-size:.72rem;font-weight:700;text-align:center;transition:border-color .15s;
+}
+.slot:hover{border-color:var(--gold);color:var(--ivory)}
+.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.slot-x{
+  position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;border:none;
+  background:rgba(11,16,13,.85);color:#fff;font-size:.68rem;font-weight:800;z-index:2;
+  display:grid;place-items:center;
+}
+.slot-x:hover{background:var(--danger)}
+
+/* detail gallery */
+.gal-thumbs{display:flex;gap:8px;margin:-6px 0 16px}
+.gal-thumbs img{
+  width:66px;height:50px;object-fit:cover;border-radius:9px;cursor:pointer;
+  border:2px solid transparent;opacity:.65;transition:all .15s;
+}
+.gal-thumbs img.on{border-color:var(--gold);opacity:1}
+.gal-thumbs img:hover{opacity:1}
+
+/* toast */
+.toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--ivory);color:#141A16;
+  padding:13px 24px;border-radius:999px;font-weight:700;font-size:.88rem;z-index:200;opacity:0;
+  transition:all .3s ease;box-shadow:0 12px 34px rgba(0,0,0,.5);max-width:90vw;text-align:center;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header>
+  <div class="container nav">
+    <a href="#" class="logo">Budget <i>Cars</i></a>
+    <nav class="nav-right">
+      <a href="#contact">Contact</a>
+      <button class="btn btn-line" id="ownerBtn" onclick="ownerLogin()">Owner</button>
+    </nav>
+  </div>
+</header>
+
+<!-- owner bar -->
+<div class="owner-bar" id="ownerBar">
+  <div class="container">
+    <b>Owner mode</b>
+    <button class="btn btn-gold" onclick="openAddCar()">＋ Add Car</button>
+    <button class="btn btn-line" onclick="exitOwner()">Exit</button>
+    <span id="demoNote" style="display:none">⚠️ Demo mode — cars save on this device only</span>
+  </div>
+</div>
+
+<!-- ================= HERO : night drive-in ================= -->
+<section class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">Quality pre-owned · Honest prices</span>
+    <h1 class="display">Welcome to<br>Budget <em>Cars</em></h1>
+    <p>Getting your dream car made easy — with Budget Cars.</p>
+  </div>
+  <div class="stage">
+    <div class="road"></div>
+    <div class="car-wrap">
+      <img class="defender" src="defender.png" alt="Land Rover Defender arriving at Budget Cars">
+      <div class="lamp-glow"></div>
+      <div class="lamp-glow2"></div>
+      <div class="beam"></div>
+    </div>
+  </div>
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+</section>
+
+<!-- ================= CARS ================= -->
+<main class="section container" id="cars">
+  <div class="toolbar">
+    <div class="search">🔍<input type="text" id="searchBox" placeholder="Search car, brand…" oninput="renderCars()"></div>
+    <select id="fuelFilter" onchange="renderCars()">
+      <option value="">Fuel: all</option>
+      <option>Petrol</option><option>Diesel</option><option>CNG</option><option>Electric</option><option>Hybrid</option>
+    </select>
+    <select id="sortBy" onchange="renderCars()">
+      <option value="new">Newest first</option>
+      <option value="low">Price: low → high</option>
+      <option value="high">Price: high → low</option>
+    </select>
+    <div class="count-note" id="countNote"></div>
+  </div>
+
+  <div class="grid" id="carGrid"></div>
+
+  <!-- ================= CONTACT ================= -->
+  <div class="contact reveal" id="contact">
+    <span class="eyebrow">Contact</span>
+    <h2 class="display">Talk to us — <em>we reply fast</em></h2>
+    <p>Questions about a car? Want to sell or exchange yours? Call, WhatsApp or DM us on Instagram.</p>
+    <div class="contact-links">
+      <a class="btn btn-gold" href="tel:+917086269537">📞 70862 69537</a>
+      <a class="btn btn-line" href="https://wa.me/917086269537" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="btn btn-line" href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">Instagram</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <span>© <span id="year"></span> Budget Cars</span>
+    <span><a href="tel:+917086269537">70862 69537</a> · <a href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">@budgetcars.insta</a></span>
+  </div>
+</footer>
+
+<!-- ================= DETAIL MODAL ================= -->
+<div class="overlay" id="detailOverlay" onclick="if(event.target===this)closeModal('detailOverlay')">
+  <div class="modal wide">
+    <button class="close-x" onclick="closeModal('detailOverlay')" aria-label="Close">✕</button>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- ================= BOOKING MODAL ================= -->
+<div class="overlay" id="bookOverlay" onclick="if(event.target===this)closeModal('bookOverlay')">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal('bookOverlay')" aria-label="Close">✕</button>
+    <h3>Book this <i>car</i></h3>
+    <p class="sub" id="bookCarName"></p>
+
+    <div class="form-grid">
+      <div class="field full"><label>Your name</label><input type="text" id="bookName" placeholder="e.g. Rahul Sharma"></div>
+      <div class="field full"><label>Your phone number</label><input type="tel" id="bookPhone" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric"></div>
+    </div>
+
+    <div class="amount-box">
+      <div class="lbl">Token booking amount</div>
+      <div class="val" id="amountVal">₹10,000</div>
+      <input type="range" id="amountSlider" min="10000" max="100000" step="5000" value="10000" oninput="updateAmount()">
+      <div class="lim"><span>Min ₹10,000</span><span>Max ₹1,00,000</span></div>
+    </div>
+
+    <div class="field full" style="margin-bottom:10px"><label>How would you like to pay the token?</label></div>
+    <div class="pay-opts">
+      <button class="pay-opt on" id="payOptUpi" onclick="setPayMethod('upi')"><span class="ic">📲</span>Pay now by UPI<small>PhonePe · GPay · Paytm…</small></button>
+      <button class="pay-opt" id="payOptCash" onclick="setPayMethod('cash')"><span class="ic">🏪</span>Visit &amp; pay in cash<small>at our showroom</small></button>
+    </div>
+
+    <div class="upi-box" id="upiBox">
+      <div class="t">Any UPI app works — the amount goes straight to us</div>
+      <span class="upi-id">salinuralom@ybl <button onclick="copyUpi()">Copy</button></span>
+      <a class="btn btn-gold pay-btn" id="upiPayBtn" href="#">📲 Pay <span id="payAmt">₹10,000</span> by UPI</a>
+    </div>
+
+    <button class="btn btn-green btn-block" onclick="confirmBooking()" style="padding:14px">Confirm booking on WhatsApp</button>
+    <p class="hint" id="bookHint">Tap Pay to open your UPI app, then Confirm — your booking details reach us on WhatsApp and we reply within a few hours.</p>
+  </div>
+</div>
+
+<!-- ================= ADD CAR MODAL ================= -->
+<div class="overlay" id="addOverlay" onclick="if(event.target===this)closeModal('addOverlay')">
+  <div class="modal wide">
+    <button class="close-x" onclick="closeModal('addOverlay')" aria-label="Close">✕</button>
+    <h3 id="addTitle">Add a <i>car</i></h3>
+    <p class="sub" id="addSub">Fill every detail — customers see exactly this.</p>
+
+    <div class="form-grid">
+      <div class="field full">
+        <label>Car photos — up to 4 (the first is the main photo)</label>
+        <div class="photo-slots">
+          <div class="slot" id="slot0" onclick="pickPhoto(0)"></div>
+          <div class="slot" id="slot1" onclick="pickPhoto(1)"></div>
+          <div class="slot" id="slot2" onclick="pickPhoto(2)"></div>
+          <div class="slot" id="slot3" onclick="pickPhoto(3)"></div>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)">
+      </div>
+      <div class="field full"><label>Car name / model *</label><input id="f_name" placeholder="e.g. Maruti Swift VXI"></div>
+      <div class="field"><label>Brand *</label><input id="f_brand" placeholder="e.g. Maruti Suzuki"></div>
+      <div class="field"><label>Year *</label><input id="f_year" type="number" placeholder="e.g. 2019" min="1990" max="2030"></div>
+      <div class="field"><label>Price (₹) *</label><input id="f_price" type="number" placeholder="e.g. 450000" min="0"></div>
+      <div class="field"><label>KM driven *</label><input id="f_km" type="number" placeholder="e.g. 42000" min="0"></div>
+      <div class="field"><label>Fuel type</label><select id="f_fuel">
+        <option>Petrol</option><option>Diesel</option><option>CNG</option><option>Electric</option><option>Hybrid</option>
+      </select></div>
+      <div class="field"><label>Transmission</label><select id="f_trans"><option>Manual</option><option>Automatic</option></select></div>
+      <div class="field"><label>No. of owners</label><select id="f_owners"><option>1st Owner</option><option>2nd Owner</option><option>3rd Owner</option><option>4+ Owners</option></select></div>
+      <div class="field"><label>Colour</label><input id="f_color" placeholder="e.g. Pearl White"></div>
+      <div class="field"><label>Insurance</label><select id="f_ins"><option>Valid — Comprehensive</option><option>Valid — Third Party</option><option>Expired</option></select></div>
+      <div class="field"><label>Registration / Location</label><input id="f_loc" placeholder="e.g. AS-01, Guwahati"></div>
+      <div class="field full"><label>Description</label><textarea id="f_desc" rows="3" placeholder="Condition, service history, new tyres, etc."></textarea></div>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn btn-gold btn-block" id="saveCarBtn" onclick="saveCar()" style="padding:14px">✅ Add this Car</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+   BUDGET CARS — app logic
+   Supabase connection below (shared inventory for all visitors).
+================================================================ */
+const SUPABASE_URL      = "https://mpufunsitqtdkqlibxof.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdWZ1bnNpdHF0ZGtxbGlieG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTAyNTksImV4cCI6MjA5ODkyNjI1OX0.iyYX1EFJwrdPWxXLTCHHm8cdmuO-roPIjjX4T-SU53E";
+
+const DEMO_PIN    = "7086";                   // PIN for demo mode only (real PIN lives in Supabase)
+const PHONE       = "917086269537";           // WhatsApp number (with country code)
+const UPI_ID      = "salinuralom@ybl";        // UPI ID for token payments
+const STORE_KEY   = "budgetcars_inventory_v1";
+const SB_ON       = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+const BRANDS      = ["Maruti Suzuki","Hyundai","Tata","Mahindra","Kia","Toyota","Honda","Renault"];
+
+/* ---------- gold ticker ---------- */
+(function(){
+  const items = ["Budget Cars","Verified & inspected","Honest prices","Book from ₹10,000","Pay by any UPI app","Guwahati, Assam"];
+  const half = items.map(t=>`<span>${t}<b>✦</b></span>`).join("");
+  document.getElementById("tickerTrack").innerHTML = half + half;
+})();
+
+/* ---------- Supabase REST helper (no SDK needed) ---------- */
+async function sb(path, opts = {}){
+  const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
+    ...opts,
+    headers: {
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+      "Content-Type": "application/json",
+      ...(opts.headers || {})
+    }
+  });
+  if(!res.ok){
+    const body = await res.text();
+    let msg = body;
+    try{ msg = JSON.parse(body).message || body; }catch(e){}
+    throw new Error(msg || ("HTTP " + res.status));
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+function hueFrom(str){
+  let h = 0;
+  for(let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
+  return h;
+}
+/* photos are stored in one text field: a single image, or a JSON array of up to 4 */
+function parsePhotos(p){
+  if(!p) return [];
+  if(typeof p === "string" && p.charAt(0) === "["){
+    try{ const a = JSON.parse(p); return Array.isArray(a) ? a.filter(Boolean).slice(0,4) : []; }
+    catch(e){ return []; }
+  }
+  return [p];
+}
+function packPhotos(arr){
+  const a = (arr||[]).filter(Boolean).slice(0,4);
+  if(!a.length) return null;
+  return a.length === 1 ? a[0] : JSON.stringify(a);
+}
+function gallery(c){
+  return (c.photos && c.photos.length) ? c.photos : [carArt(hueFrom(c.name||""), c.name||"Car")];
+}
+function fromRow(r){
+  return {
+    id: r.id, name: r.name, brand: r.brand, year: r.year, price: r.price,
+    km: r.km, fuel: r.fuel, trans: r.trans, owners: r.owners, color: r.color,
+    ins: r.ins, loc: r.loc, desc: r.description,
+    photos: parsePhotos(r.photo)
+  };
+}
+
+/* ---------- placeholder photo (night-studio look) ---------- */
+function carArt(hue, name){
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
+  <rect width="640" height="480" fill="#141B16"/>
+  <ellipse cx="320" cy="130" rx="290" ry="160" fill="hsl(${hue},30%,26%)" opacity="0.28"/>
+  <ellipse cx="320" cy="345" rx="240" ry="26" fill="#000" opacity="0.5"/>
+  <g transform="translate(120,190)">
+    <path d="M20 120 Q30 78 90 66 L130 30 Q150 14 185 14 L280 14 Q310 14 330 36 L360 66 Q400 74 400 105 L400 130 L20 130 Z"
+      fill="hsl(${hue},34%,48%)"/>
+    <path d="M140 34 L185 34 L185 62 L118 62 Z" fill="hsl(${hue},20%,20%)"/>
+    <path d="M200 34 L272 34 Q290 34 302 48 L314 62 L200 62 Z" fill="hsl(${hue},20%,20%)"/>
+    <path d="M30 92 L392 92" stroke="#D5B36B" stroke-width="2.5" opacity="0.7"/>
+    <circle cx="105" cy="130" r="34" fill="#060907"/><circle cx="105" cy="130" r="14" fill="#D5B36B" opacity="0.8"/>
+    <circle cx="320" cy="130" r="34" fill="#060907"/><circle cx="320" cy="130" r="14" fill="#D5B36B" opacity="0.8"/>
+  </g>
+  <text x="320" y="428" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="26"
+    fill="rgba(244,241,232,.55)">${name}</text>
+</svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
+
+/* ---------- sample cars (demo mode only) ---------- */
+const SEED = [
+  {id:"s1", name:"Maruti Swift VXI",      brand:"Maruti Suzuki", year:2019, price:465000, km:38000, fuel:"Petrol", trans:"Manual",    owners:"1st Owner", color:"Pearl White",   ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"Single owner, full service history. New tyres fitted recently.", photo:carArt(210,"Maruti Swift VXI")},
+  {id:"s2", name:"Hyundai i20 Sportz",    brand:"Hyundai",       year:2018, price:520000, km:45000, fuel:"Petrol", trans:"Manual",    owners:"1st Owner", color:"Fiery Red",     ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"Top variant with touchscreen and rear camera.", photo:carArt(0,"Hyundai i20 Sportz")},
+  {id:"s3", name:"Honda City ZX",         brand:"Honda",         year:2017, price:610000, km:52000, fuel:"Petrol", trans:"Automatic", owners:"2nd Owner", color:"Golden Brown",  ins:"Valid — Third Party",   loc:"AS-05, Nagaon",   desc:"Smooth CVT automatic, sunroof, leather seats.", photo:carArt(35,"Honda City ZX")},
+  {id:"s4", name:"Tata Nexon XZ+",        brand:"Tata",          year:2021, price:780000, km:24000, fuel:"Diesel", trans:"Manual",    owners:"1st Owner", color:"Foliage Green", ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"5-star safety rated SUV, showroom condition.", photo:carArt(140,"Tata Nexon XZ+")},
+  {id:"s5", name:"Mahindra XUV300 W8",    brand:"Mahindra",      year:2020, price:720000, km:31000, fuel:"Diesel", trans:"Manual",    owners:"1st Owner", color:"Aqua Marine",   ins:"Valid — Comprehensive", loc:"AS-02, Silchar",  desc:"Loaded W8 variant — sunroof, cruise control.", photo:carArt(185,"Mahindra XUV300 W8")},
+  {id:"s6", name:"Maruti WagonR LXI CNG", brand:"Maruti Suzuki", year:2020, price:395000, km:41000, fuel:"CNG",    trans:"Manual",    owners:"1st Owner", color:"Silky Silver",  ins:"Valid — Third Party",   loc:"AS-01, Guwahati", desc:"Company-fitted CNG, super economical city car.", photo:carArt(265,"Maruti WagonR CNG")}
+];
+
+/* ---------- state ---------- */
+let cars = [];
+let ownerMode = false;
+let ownerPin = null;
+let bookingCar = null;
+let brandFilter = "";
+
+async function load(){
+  if(SB_ON){
+    try{
+      const rows = await sb("cars?select=*&order=created_at.desc");
+      cars = rows.map(fromRow);
+    }catch(e){
+      console.error("Supabase load failed:", e);
+      cars = [];
+      toast("⚠️ Could not load cars — check your internet connection");
+    }
+    renderCars();
+    return;
+  }
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    cars = raw ? JSON.parse(raw) : SEED.slice();
+  }catch(e){ cars = SEED.slice(); }
+  cars = cars.map(c => c.photos ? c : {...c, photos: parsePhotos(c.photo)});
+  if(!localStorage.getItem(STORE_KEY)) save();
+  renderCars();
+}
+function save(){
+  if(SB_ON) return;
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(cars)); }
+  catch(e){ toast("⚠️ Storage full — try a smaller photo"); }
+}
+
+/* ---------- helpers ---------- */
+const fmt = n => "₹" + Number(n).toLocaleString("en-IN");
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 3200);
+}
+function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+function openModal(id){ document.getElementById(id).classList.add("open"); }
+
+/* ---------- scroll reveal ---------- */
+const revealer = ("IntersectionObserver" in window)
+  ? new IntersectionObserver(entries => {
+      entries.forEach(en => { if(en.isIntersecting){ en.target.classList.add("in"); revealer.unobserve(en.target); } });
+    }, {threshold:.12})
+  : null;
+function watchReveals(root){
+  (root || document).querySelectorAll(".reveal:not(.in)").forEach((el,i)=>{
+    el.style.transitionDelay = Math.min(i % 6 * 60, 300) + "ms";
+    if(revealer) revealer.observe(el); else el.classList.add("in");
+  });
+}
+
+/* ---------- interstitial strips ---------- */
+function stripBrands(){
+  const chips = ['<button class="brand-chip'+(brandFilter===""?" on":"")+'" onclick="setBrand(\'\')">All brands</button>']
+    .concat(BRANDS.map(b=>{
+      const short = b === "Maruti Suzuki" ? "Maruti" : b;
+      return '<button class="brand-chip'+(brandFilter===b?" on":"")+'" onclick="setBrand(\''+b+'\')">'+short+'</button>';
+    }));
+  return `<div class="strip strip-brands reveal">
+    <span class="eyebrow">Shop by brand</span>
+    <div class="brand-row">${chips.join("")}</div>
+  </div>`;
+}
+function stripWhy(){
+  return `<div class="strip strip-why reveal">
+    <span class="eyebrow">The Budget Cars promise</span>
+    <h2 class="display">Why buy from <em>us?</em></h2>
+    <div class="why-list">
+      <div class="why"><span class="num">01</span><div><b>Inspected &amp; verified</b><span>Engine, papers, insurance and service history — checked before a car ever reaches you.</span></div></div>
+      <div class="why"><span class="num">02</span><div><b>Honest pricing</b><span>The price you see is the price you pay. No hidden charges, ever.</span></div></div>
+      <div class="why"><span class="num">03</span><div><b>Book from ₹10,000</b><span>Reserve any car with a small token — pay in seconds with any UPI app.</span></div></div>
+      <div class="why"><span class="num">04</span><div><b>With you till the keys</b><span>RC transfer, insurance and paperwork — we handle it all for you.</span></div></div>
+    </div>
+  </div>`;
+}
+function stripPromo(){
+  return `<div class="strip strip-promo reveal">
+    <div class="txt"><b>Sell or exchange <i>your old car</i></b><span>Best price in town, instant evaluation. Talk to Budget Cars today.</span></div>
+    <a class="btn btn-gold" href="https://wa.me/${PHONE}?text=${encodeURIComponent("Hi Budget Cars! I want to sell/exchange my car.")}" target="_blank" rel="noopener">WhatsApp us</a>
+  </div>`;
+}
+function setBrand(b){
+  brandFilter = b;
+  renderCars();
+  document.getElementById("cars").scrollIntoView({behavior:"smooth"});
+}
+
+/* ---------- render ---------- */
+function cardHTML(c){
+  return `<div class="card reveal">
+    <div class="photo" onclick="openDetail('${c.id}')">
+      <img src="${gallery(c)[0]}" alt="${esc(c.name)}" loading="lazy">
+      <span class="badge">${esc(c.fuel)} · ${c.year}</span>
+      ${ownerMode ? `<button class="edit-btn" title="Edit car" onclick="event.stopPropagation();openEditCar('${c.id}')">✎</button>
+      <button class="del-btn" title="Delete car" onclick="event.stopPropagation();deleteCar('${c.id}')">✕</button>` : ``}
+    </div>
+    <div class="body" onclick="openDetail('${c.id}')">
+      <h3>${esc(c.name)}</h3>
+      <div class="meta">${c.year} · ${Number(c.km).toLocaleString("en-IN")} km · ${esc(c.trans)}</div>
+      <div class="price">${fmt(c.price)}</div>
+      <div class="card-actions">
+        <button class="btn details-btn" onclick="event.stopPropagation();openDetail('${c.id}')">Details</button>
+        <button class="btn book" onclick="event.stopPropagation();openBooking('${c.id}')">Book now</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderCars(){
+  const q    = document.getElementById("searchBox").value.trim().toLowerCase();
+  const fuel = document.getElementById("fuelFilter").value;
+  const sort = document.getElementById("sortBy").value;
+
+  let list = cars.filter(c =>
+    (!q || (c.name+" "+c.brand+" "+(c.loc||"")).toLowerCase().includes(q)) &&
+    (!fuel || c.fuel === fuel) &&
+    (!brandFilter || (c.brand||"").toLowerCase().includes(brandFilter.split(" ")[0].toLowerCase()))
+  );
+  if(sort==="low")  list.sort((a,b)=>a.price-b.price);
+  if(sort==="high") list.sort((a,b)=>b.price-a.price);
+  if(sort==="new")  list.sort((a,b)=>b.year-a.year);
+
+  document.getElementById("countNote").textContent =
+    list.length + (list.length===1 ? " car" : " cars") + (brandFilter ? " · " + brandFilter : "") + " · tap a car for details";
+
+  /* chunks of 6, interleaved with brand picker / why-us / promo strips */
+  const strips = [stripBrands, stripWhy, stripPromo];
+  let html = "";
+  if(!list.length){
+    html = `<div class="empty"><div class="big">🚙</div><b>No cars found</b><br>Try a different search or brand — new cars arrive every week!</div>`;
+    html += stripBrands() + stripWhy();
+  }else{
+    let stripIdx = 0;
+    for(let i = 0; i < list.length; i += 6){
+      html += list.slice(i, i+6).map(cardHTML).join("");
+      if(i + 6 < list.length || stripIdx < 2){
+        html += strips[stripIdx % strips.length]();
+        stripIdx++;
+      }
+    }
+    if(stripIdx < 1) html += stripBrands();
+    if(stripIdx < 2) html += stripWhy();
+  }
+  const grid = document.getElementById("carGrid");
+  grid.innerHTML = html;
+  watchReveals(grid);
+}
+
+/* ---------- detail ---------- */
+function swapPhoto(i){
+  const g = window._detailGallery || [];
+  if(!g[i]) return;
+  document.getElementById("detailMainPhoto").src = g[i];
+  document.querySelectorAll(".gal-thumbs img").forEach((t,j)=>t.classList.toggle("on", j===i));
+}
+function openDetail(id){
+  const c = cars.find(x=>x.id===id); if(!c) return;
+  const g = gallery(c);
+  window._detailGallery = g;
+  const thumbs = g.length > 1
+    ? `<div class="gal-thumbs">` + g.map((p,i)=>`<img src="${p}" class="${i===0?"on":""}" onclick="swapPhoto(${i})" alt="photo ${i+1}">`).join("") + `</div>`
+    : ``;
+  document.getElementById("detailContent").innerHTML = `
+    <div class="detail-photo"><img id="detailMainPhoto" src="${g[0]}" alt="${esc(c.name)}"></div>
+    ${thumbs}
+    <h3>${esc(c.name)}</h3>
+    <p class="sub">${esc(c.brand)}${c.loc ? " · " + esc(c.loc) : ""}</p>
+    <div class="detail-price">${fmt(c.price)}</div>
+    <div class="detail-specs">
+      <div class="dspec"><span>Year</span><b>${c.year}</b></div>
+      <div class="dspec"><span>KM driven</span><b>${Number(c.km).toLocaleString("en-IN")} km</b></div>
+      <div class="dspec"><span>Fuel</span><b>${esc(c.fuel)}</b></div>
+      <div class="dspec"><span>Transmission</span><b>${esc(c.trans)}</b></div>
+      <div class="dspec"><span>Ownership</span><b>${esc(c.owners)}</b></div>
+      <div class="dspec"><span>Colour</span><b>${esc(c.color||"—")}</b></div>
+      <div class="dspec"><span>Insurance</span><b>${esc(c.ins||"—")}</b></div>
+      <div class="dspec"><span>Registration</span><b>${esc(c.loc||"—")}</b></div>
+    </div>
+    ${c.desc ? `<p style="color:var(--muted);font-size:.9rem;margin-bottom:16px">${esc(c.desc)}</p>` : ""}
+    <button class="btn btn-gold btn-block" style="padding:14px" onclick="closeModal('detailOverlay');openBooking('${c.id}')">Book this car</button>`;
+  openModal("detailOverlay");
+}
+
+/* ---------- booking + UPI ---------- */
+let payMethod = "upi";
+function openBooking(id){
+  bookingCar = cars.find(x=>x.id===id); if(!bookingCar) return;
+  document.getElementById("bookCarName").textContent =
+    bookingCar.name + " (" + bookingCar.year + ") — " + fmt(bookingCar.price);
+  document.getElementById("amountSlider").value = 10000;
+  setPayMethod("upi");
+  updateAmount();
+  openModal("bookOverlay");
+}
+function setPayMethod(m){
+  payMethod = m;
+  document.getElementById("payOptUpi").classList.toggle("on", m === "upi");
+  document.getElementById("payOptCash").classList.toggle("on", m === "cash");
+  document.getElementById("upiBox").style.display = m === "upi" ? "block" : "none";
+  document.getElementById("bookHint").textContent = m === "upi"
+    ? "Tap Pay to open your UPI app, then Confirm — your booking details reach us on WhatsApp and we reply within a few hours."
+    : "No payment needed now — confirm your booking and pay the token in cash when you visit us.";
+}
+function updateAmount(){
+  const amt = document.getElementById("amountSlider").value;
+  document.getElementById("amountVal").textContent = fmt(amt);
+  document.getElementById("payAmt").textContent = fmt(amt);
+  const note = "Token booking" + (bookingCar ? " " + bookingCar.name : "") ;
+  document.getElementById("upiPayBtn").href =
+    "upi://pay?pa=" + encodeURIComponent(UPI_ID) +
+    "&pn=" + encodeURIComponent("Budget Cars") +
+    "&am=" + amt + "&cu=INR&tn=" + encodeURIComponent(note.slice(0,40));
+}
+function copyUpi(){
+  const done = () => toast("UPI ID copied: " + UPI_ID);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(UPI_ID).then(done, done);
+  }else{
+    const ta = document.createElement("textarea");
+    ta.value = UPI_ID; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); }catch(e){}
+    document.body.removeChild(ta); done();
+  }
+}
+function confirmBooking(){
+  const name  = document.getElementById("bookName").value.trim();
+  const phone = document.getElementById("bookPhone").value.trim();
+  const amt   = document.getElementById("amountSlider").value;
+  if(!name){ toast("Please enter your name"); return; }
+  if(!/^\d{10}$/.test(phone)){ toast("Please enter a valid 10-digit phone number"); return; }
+  const payLine = payMethod === "upi"
+    ? `*Payment:* Token by UPI to ${UPI_ID}`
+    : `*Payment:* Will visit the showroom and pay the token in cash`;
+  const msg =
+`🚗 *NEW BOOKING — Budget Cars*
+
+*Car:* ${bookingCar.name} (${bookingCar.year})
+*Price:* ${fmt(bookingCar.price)}
+*Token amount:* ${fmt(amt)}
+${payLine}
+
+*Customer:* ${name}
+*Phone:* ${phone}
+
+Please confirm my booking. Thank you!`;
+  window.open("https://wa.me/"+PHONE+"?text="+encodeURIComponent(msg), "_blank");
+  closeModal("bookOverlay");
+  toast("✅ Booking sent! We'll confirm on WhatsApp shortly.");
+}
+
+/* ---------- owner mode ---------- */
+async function ownerLogin(){
+  if(ownerMode){ exitOwner(); return; }
+  const pin = prompt("Enter owner PIN:");
+  if(pin === null) return;
+  let ok = false;
+  if(SB_ON){
+    try{ ok = await sb("rpc/check_pin", {method:"POST", body:JSON.stringify({p_pin:pin})}) === true; }
+    catch(e){ console.error(e); toast("⚠️ Could not verify PIN — check your connection"); return; }
+  }else{
+    ok = (pin === DEMO_PIN);
+  }
+  if(ok){
+    ownerMode = true;
+    ownerPin = pin;
+    document.getElementById("ownerBar").classList.add("on");
+    document.getElementById("ownerBtn").textContent = "Owner ✓";
+    document.getElementById("demoNote").style.display = SB_ON ? "none" : "inline";
+    renderCars();
+    toast("Owner mode ON — you can add & delete cars");
+  }else{
+    toast("❌ Wrong PIN");
+  }
+}
+function exitOwner(){
+  ownerMode = false;
+  ownerPin = null;
+  document.getElementById("ownerBar").classList.remove("on");
+  document.getElementById("ownerBtn").textContent = "Owner";
+  renderCars();
+}
+async function deleteCar(id){
+  const c = cars.find(x=>x.id===id); if(!c) return;
+  if(!confirm("Delete \""+c.name+"\" from the website?")) return;
+  if(SB_ON){
+    try{
+      await sb("rpc/delete_car", {method:"POST", body:JSON.stringify({p_pin:ownerPin, p_id:id})});
+    }catch(e){ console.error(e); toast("⚠️ Delete failed: " + e.message); return; }
+  }
+  cars = cars.filter(x=>x.id!==id);
+  save(); renderCars();
+  toast("🗑️ Car deleted");
+}
+
+/* ---------- add / edit car ---------- */
+let pendingPhotos = [null, null, null, null];
+let photoSlotIdx = 0;
+let editingId = null;
+
+function refreshSlots(){
+  for(let i = 0; i < 4; i++){
+    const el = document.getElementById("slot" + i);
+    el.innerHTML = pendingPhotos[i]
+      ? `<img src="${pendingPhotos[i]}" alt=""><button class="slot-x" onclick="event.stopPropagation();removePhoto(${i})">✕</button>`
+      : `<span>＋ Photo ${i+1}</span>`;
+  }
+}
+function pickPhoto(i){
+  photoSlotIdx = i;
+  const inp = document.getElementById("photoInput");
+  inp.value = "";
+  inp.click();
+}
+function removePhoto(i){
+  pendingPhotos[i] = null;
+  refreshSlots();
+}
+function handlePhoto(input){
+  const file = input.files && input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 900;
+      const scale = Math.min(1, MAX / img.width);
+      const cv = document.createElement("canvas");
+      cv.width = Math.round(img.width*scale);
+      cv.height = Math.round(img.height*scale);
+      cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+      pendingPhotos[photoSlotIdx] = cv.toDataURL("image/jpeg", .82);
+      refreshSlots();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function setAddModalMode(){
+  document.getElementById("addTitle").innerHTML = editingId ? 'Edit this <i>car</i>' : 'Add a <i>car</i>';
+  document.getElementById("addSub").textContent = editingId
+    ? "Change anything — then save. Customers see the update instantly."
+    : "Fill every detail — customers see exactly this.";
+  document.getElementById("saveCarBtn").textContent = editingId ? "💾 Save changes" : "✅ Add this Car";
+}
+function openAddCar(){
+  editingId = null;
+  ["f_name","f_brand","f_year","f_price","f_km","f_color","f_loc","f_desc"].forEach(i=>document.getElementById(i).value="");
+  pendingPhotos = [null, null, null, null];
+  refreshSlots(); setAddModalMode();
+  openModal("addOverlay");
+}
+function openEditCar(id){
+  const c = cars.find(x=>x.id===id); if(!c) return;
+  editingId = id;
+  document.getElementById("f_name").value  = c.name || "";
+  document.getElementById("f_brand").value = c.brand || "";
+  document.getElementById("f_year").value  = c.year || "";
+  document.getElementById("f_price").value = c.price || "";
+  document.getElementById("f_km").value    = c.km ?? "";
+  document.getElementById("f_fuel").value  = c.fuel || "Petrol";
+  document.getElementById("f_trans").value = c.trans || "Manual";
+  document.getElementById("f_owners").value= c.owners || "1st Owner";
+  document.getElementById("f_color").value = c.color || "";
+  document.getElementById("f_ins").value   = c.ins || "Valid — Comprehensive";
+  document.getElementById("f_loc").value   = c.loc || "";
+  document.getElementById("f_desc").value  = c.desc || "";
+  pendingPhotos = [null, null, null, null];
+  (c.photos || []).slice(0,4).forEach((p,i)=>pendingPhotos[i]=p);
+  refreshSlots(); setAddModalMode();
+  openModal("addOverlay");
+}
+async function saveCar(){
+  const g = id => document.getElementById(id).value.trim();
+  const name = g("f_name"), brand = g("f_brand"), year = +g("f_year"), price = +g("f_price"), km = g("f_km");
+  if(!name || !brand || !year || !price || km===""){ toast("Please fill all fields marked *"); return; }
+  const details = {
+    name, brand, year, price,
+    km: +km,
+    fuel:  document.getElementById("f_fuel").value,
+    trans: document.getElementById("f_trans").value,
+    owners:document.getElementById("f_owners").value,
+    color: g("f_color"),
+    ins:   document.getElementById("f_ins").value,
+    loc:   g("f_loc"),
+    desc:  g("f_desc")
+  };
+  const photos = pendingPhotos.filter(Boolean);
+  if(SB_ON){
+    const btn = document.getElementById("saveCarBtn");
+    btn.disabled = true; btn.textContent = "⏳ Saving…";
+    try{
+      const row = { ...details, description: details.desc, photo: packPhotos(photos) };
+      delete row.desc;
+      /* editing = save the new version first, then remove the old one */
+      await sb("rpc/add_car", {method:"POST", body:JSON.stringify({p_pin:ownerPin, p_car:row})});
+      if(editingId){
+        try{
+          await sb("rpc/delete_car", {method:"POST", body:JSON.stringify({p_pin:ownerPin, p_id:editingId})});
+        }catch(e){
+          console.error(e);
+          toast("⚠️ Saved, but the old copy could not be removed — delete it manually");
+        }
+      }
+      await load();
+    }catch(e){
+      console.error(e); toast("⚠️ Could not save: " + e.message);
+      btn.disabled = false; setAddModalMode();
+      return;
+    }
+    btn.disabled = false;
+  }else{
+    if(editingId){
+      const i = cars.findIndex(x=>x.id===editingId);
+      if(i > -1) cars[i] = { ...cars[i], ...details, photos };
+    }else{
+      cars.unshift({ id: "c" + Date.now(), ...details, photos });
+    }
+    save(); renderCars();
+  }
+  closeModal("addOverlay");
+  toast(editingId ? "✅ \""+name+"\" updated!" : "✅ \""+name+"\" added to the website!");
+  editingId = null;
+}
+
+/* ---------- init ---------- */
+document.getElementById("year").textContent = new Date().getFullYear();
+document.addEventListener("keydown", e => {
+  if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>o.classList.remove("open"));
+});
+document.getElementById("carGrid").innerHTML =
+  '<div class="empty"><div class="big">⏳</div><b>Loading cars…</b></div>';
+watchReveals(document);
+load();
+</script>
+</body>
+</html>

@@ -3,612 +3,624 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Budget Cars — Quality Pre-Owned Cars</title>
-<meta name="description" content="Budget Cars — quality pre-owned cars at honest prices. Browse, book with UPI, and drive home happy.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚗%3C/text%3E%3C/svg%3E">
+<title>Nearse — Book Trusted Local Workers Near You | Tutors, Mechanics, Drivers, Cooks</title>
+<meta name="description" content="Nearse — find and book trusted local workers near you in Assam: tutors, mechanics, drivers, cooks, maids, electricians, plumbers and more. Nearest first, community rated, prices set by the workers. Or register your own skill free and start earning.">
+<meta name="keywords" content="Nearse, nearse.in, local workers near me, book tutor Guwahati, mechanic near me, driver on rent, cook maid Assam, electrician plumber booking, hire workers India, find work near me">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://nearse.in/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Nearse">
+<meta property="og:title" content="Nearse — Every skill, near you">
+<meta property="og:description" content="Book trusted local workers — tutors, mechanics, drivers, cooks and more — nearest first, rated by the community, at prices workers set themselves.">
+<meta property="og:url" content="https://nearse.in/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🤝%3C/text%3E%3C/svg%3E">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Nearse",
+  "alternateName": "nearse.in",
+  "url": "https://nearse.in/",
+  "description": "Two-sided marketplace for local skilled workers in Assam, India — tutors, mechanics, drivers, cooks, electricians and more. Workers register free and set their own prices; customers book the nearest, best-rated workers.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://nearse.in/#search={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Albert+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ================================================================
-   BUDGET CARS — night showroom
-   near-black racing green · champagne gold · ivory · film grain
+   NEARSE — warm paper · cobalt · chartreuse spark
 ================================================================ */
 :root{
-  --bg:#0B100D;
-  --bg2:#0E1410;
-  --surface:#131A15;
-  --surface2:#182019;
-  --ivory:#F4F1E8;
-  --muted:#98A29A;
-  --line:rgba(244,241,232,.09);
-  --gold:#D5B36B;
-  --gold-deep:#B89450;
-  --green:#2E7D5B;
-  --danger:#D06C6C;
+  --bg:#F7F4EE;
+  --surface:#FFFFFF;
+  --ink:#171A21;
+  --muted:#6E7480;
+  --line:rgba(23,26,33,.1);
+  --cobalt:#2447C5;
+  --cobalt-deep:#1B37A0;
+  --spark:#C6F432;
+  --spark-ink:#2A3505;
+  --star:#F4A825;
+  --danger:#CC4B4B;
+  --ok:#1E9E6A;
   --radius:18px;
-  --font-display:'Fraunces', Georgia, 'Times New Roman', serif;
-  --font-body:'Manrope', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --shadow:0 12px 34px rgba(23,26,33,.1);
+  --font-display:'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --font-body:'Albert Sans', 'Segoe UI', system-ui, sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
   font-family:var(--font-body);
   background:
-    radial-gradient(900px 480px at 78% -8%, rgba(213,179,107,.07), transparent 60%),
-    radial-gradient(760px 420px at 8% 30%, rgba(46,125,91,.08), transparent 60%),
+    radial-gradient(700px 380px at 90% -5%, rgba(198,244,50,.16), transparent 60%),
+    radial-gradient(760px 420px at -8% 18%, rgba(36,71,197,.07), transparent 55%),
     var(--bg);
-  color:var(--ivory);
+  color:var(--ink);
   line-height:1.55;
   min-height:100vh;
-  overflow-x:hidden;
-}
-/* film grain */
-body::after{
-  content:"";position:fixed;inset:-50%;z-index:1;pointer-events:none;opacity:.045;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer}
-input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ivory)}
-.container{max-width:1120px;margin:0 auto;padding:0 20px;position:relative;z-index:2}
+input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ink)}
+.container{max-width:1060px;margin:0 auto;padding:0 18px}
 
-/* ---------- type helpers ---------- */
-.eyebrow{
-  font-size:.68rem;font-weight:800;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);
+.eyebrow{font-size:.68rem;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:var(--cobalt)}
+.display{font-family:var(--font-display);font-weight:800;letter-spacing:-.02em;text-wrap:balance;line-height:1.05}
+.display .hl{
+  background:linear-gradient(180deg, transparent 62%, var(--spark) 62%);
+  padding:0 2px;
 }
-.display{
-  font-family:var(--font-display);font-weight:600;letter-spacing:-.01em;text-wrap:balance;
-}
-.display em{font-style:italic;color:var(--gold);font-weight:500}
 
 /* ---------- buttons ---------- */
 .btn{
-  border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:.9rem;
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.02em;
-  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
+  border:none;border-radius:999px;padding:13px 24px;font-weight:700;font-size:.95rem;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .16s ease, box-shadow .16s ease, background .16s ease, color .16s, border-color .16s;
 }
 .btn:active{transform:scale(.97)}
-.btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
-.btn-gold{background:var(--gold);color:#1A1408}
-.btn-gold:hover{background:#E3C67F;box-shadow:0 8px 26px rgba(213,179,107,.25)}
-.btn-line{background:transparent;color:var(--ivory);border:1px solid rgba(244,241,232,.22)}
-.btn-line:hover{border-color:var(--gold);color:var(--gold)}
-.btn-green{background:var(--green);color:#EAF5EF}
-.btn-green:hover{background:#37936B}
+.btn:focus-visible{outline:3px solid rgba(36,71,197,.4);outline-offset:2px}
+.btn-cobalt{background:var(--cobalt);color:#fff;box-shadow:0 8px 22px rgba(36,71,197,.28)}
+.btn-cobalt:hover{background:var(--cobalt-deep);box-shadow:0 10px 26px rgba(36,71,197,.36)}
+.btn-spark{background:var(--spark);color:var(--spark-ink)}
+.btn-spark:hover{background:#D4FA55}
+.btn-line{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn-line:hover{border-color:var(--cobalt);color:var(--cobalt)}
 .btn-block{width:100%}
+.btn-sm{padding:9px 16px;font-size:.85rem}
 
 /* ---------- header ---------- */
 header{
   position:sticky;top:0;z-index:60;
-  background:rgba(11,16,13,.72);backdrop-filter:blur(14px);
+  background:rgba(247,244,238,.85);backdrop-filter:blur(12px);
   border-bottom:1px solid var(--line);
 }
-.nav{display:flex;align-items:center;justify-content:space-between;padding:15px 0}
-.logo{font-family:var(--font-display);font-weight:600;font-size:1.3rem;letter-spacing:.01em}
-.logo i{font-style:italic;color:var(--gold)}
-.nav-right{display:flex;align-items:center;gap:16px}
-.nav-right a{font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.nav-right a:hover{color:var(--ivory)}
-#ownerBtn{padding:9px 18px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+.logo{font-family:var(--font-display);font-weight:800;font-size:1.35rem;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.logo .mark{
+  width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:1rem;
+  background:var(--cobalt);color:#fff;
+}
+.logo em{font-style:normal;color:var(--cobalt)}
+.nav-right{display:flex;gap:10px;align-items:center}
 
-/* ---------- hero : night drive-in ---------- */
-.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
-.hero-inner{max-width:1120px;margin:0 auto;padding:58px 20px 0;text-align:center;position:relative;z-index:2}
-.hero .eyebrow{opacity:0;animation:riseIn .9s ease .55s forwards}
-.hero h1{
-  font-size:clamp(2.6rem,9vw,5rem);line-height:1.02;margin-top:14px;
-  opacity:0;animation:riseIn .9s ease .75s forwards;
+/* ---------- screens ---------- */
+.screen{display:none;padding-bottom:60px}
+.screen.on{display:block;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ---------- landing ---------- */
+.hero{text-align:center;padding:70px 0 42px;position:relative}
+.hero h1{font-size:clamp(2.6rem,9vw,4.6rem);margin-top:16px;position:relative;z-index:2}
+.hero p{color:var(--muted);font-size:clamp(.95rem,2.6vw,1.1rem);margin:16px auto 0;max-width:520px;position:relative;z-index:2}
+.hero .eyebrow{position:relative;z-index:2}
+.cta-row{
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px;position:relative;z-index:2;
 }
-.hero p{
-  color:var(--muted);font-size:clamp(.92rem,2.6vw,1.05rem);margin-top:14px;
-  opacity:0;animation:riseIn .9s ease .95s forwards;
+.btn-xl{
+  padding:18px 32px;font-size:1.08rem;font-weight:800;border-radius:999px;
+  animation:ctaIn .6s cubic-bezier(.3,1.4,.5,1) both;
 }
-@keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-.stage{position:relative;height:calc(min(340px,68vw)*0.67 + 52px);margin-top:8px}
-.road{
-  position:absolute;left:0;right:0;bottom:26px;height:1px;
-  background:linear-gradient(90deg,transparent, rgba(244,241,232,.25) 15%, rgba(244,241,232,.25) 85%, transparent);
+.btn-xl:nth-child(2){animation-delay:.12s}
+@keyframes ctaIn{from{opacity:0;transform:translateY(18px) scale(.92)}to{opacity:1;transform:none}}
+.btn-spark.btn-xl{box-shadow:0 10px 28px rgba(166,214,20,.4)}
+.btn-spark.btn-xl:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(166,214,20,.5)}
+.btn-cobalt.btn-xl:hover{transform:translateY(-2px)}
+/* floating skill bubbles */
+.bubbles{position:absolute;inset:0;pointer-events:none;z-index:1}
+.bub{
+  position:absolute;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;
+  font-size:1.45rem;background:#fff;border:1.5px solid var(--line);box-shadow:0 10px 24px rgba(23,26,33,.08);
+  animation:bob 5.5s ease-in-out infinite;opacity:.95;
 }
-.car-wrap{
-  position:absolute;bottom:14px;left:50%;width:min(340px,68vw);
-  transform:translateX(-50%);
-  animation:driveIn 1.35s cubic-bezier(.22,.9,.3,1) forwards;
+.b1{top:8%;left:6%;animation-delay:0s}
+.b2{top:52%;left:2%;animation-delay:1.2s}
+.b3{top:16%;right:7%;animation-delay:.6s}
+.b4{top:58%;right:3%;animation-delay:1.8s}
+.b5{top:82%;left:14%;animation-delay:.9s;width:48px;height:48px;font-size:1.2rem}
+.b6{top:86%;right:15%;animation-delay:2.2s;width:48px;height:48px;font-size:1.2rem}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-14px) rotate(3deg)}}
+@media(max-width:720px){.b5,.b6{display:none}.bub{width:46px;height:46px;font-size:1.15rem}}
+.trust-row{
+  display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin-top:42px;
+  color:var(--muted);font-size:.82rem;font-weight:600;position:relative;z-index:2;
 }
-@keyframes driveIn{
-  0%{transform:translateX(-130vw)}
-  84%{transform:translateX(calc(-50% + 14px))}
-  100%{transform:translateX(-50%)}
+.trust-row span{display:flex;align-items:center;gap:7px}
+/* skills ticker */
+.ticker{overflow:hidden;background:rgba(36,71,197,.05);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ticker-track{display:flex;width:max-content;animation:tick 30s linear infinite}
+.ticker-track span{
+  flex:0 0 auto;padding:11px 0;font-size:.7rem;font-weight:800;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--cobalt);white-space:nowrap;
 }
-.defender{width:100%;display:block;filter:drop-shadow(0 20px 24px rgba(0,0,0,.5))}
-/* headlights flash twice to greet, then stay on */
-.beam{
-  position:absolute;right:-42%;top:42%;width:48%;height:72px;
-  background:linear-gradient(90deg, rgba(244,236,205,.32), rgba(244,236,205,.05) 70%, transparent);
-  clip-path:polygon(0 26%, 100% 0, 100% 100%, 0 52%);
-  opacity:0;animation:greet 1.15s ease 1.45s forwards;
-  filter:blur(2px);
-}
-.lamp-glow{
-  position:absolute;right:5%;top:45%;width:27px;height:16px;border-radius:50%;
-  background:radial-gradient(closest-side, rgba(246,236,201,.95), rgba(246,236,201,0));
-  filter:blur(1.5px);
-  opacity:0;animation:greet 1.15s ease 1.45s forwards;
-}
-.lamp-glow2{
-  position:absolute;right:41%;top:47%;width:22px;height:13px;border-radius:50%;
-  background:radial-gradient(closest-side, rgba(246,236,201,.85), rgba(246,236,201,0));
-  filter:blur(1.5px);
-  opacity:0;animation:greet 1.15s ease 1.45s forwards;
-}
-@keyframes greet{
-  0%{opacity:0} 14%{opacity:1} 28%{opacity:0} 42%{opacity:1} 56%{opacity:0} 75%{opacity:1} 100%{opacity:1}
-}
-/* gold ticker */
-.ticker{
-  border-top:1px solid var(--line);margin-top:0;position:relative;z-index:2;
-  overflow:hidden;background:rgba(213,179,107,.05);
-}
-.ticker-track{
-  display:flex;gap:0;width:max-content;
-  animation:tick 26s linear infinite;
-}
-.ticker span{
-  flex:0 0 auto;padding:11px 0;font-size:.68rem;font-weight:800;letter-spacing:.3em;
-  text-transform:uppercase;color:var(--gold);white-space:nowrap;
-}
-.ticker b{color:rgba(213,179,107,.45);padding:0 18px;font-weight:400}
+.ticker-track b{color:rgba(36,71,197,.35);padding:0 16px;font-weight:400}
 @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* how it works */
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:44px}
+@media(max-width:720px){.how-grid{grid-template-columns:1fr}}
+.how-card{
+  border-radius:26px;padding:30px 26px;border:1.5px solid var(--line);background:var(--surface);
+  display:flex;flex-direction:column;gap:0;
+}
+.how-card.hire{background:linear-gradient(165deg,#fff 45%, rgba(36,71,197,.07))}
+.how-card.work{background:linear-gradient(165deg,#fff 45%, rgba(198,244,50,.22))}
+.how-card h3{font-size:1.45rem;margin:8px 0 16px}
+.step{display:flex;gap:13px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}
+.step .n{
+  flex:0 0 auto;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  background:var(--ink);color:#fff;font-weight:800;font-size:.85rem;
+}
+.how-card.work .step .n{background:var(--spark);color:var(--spark-ink)}
+.how-card.hire .step .n{background:var(--cobalt)}
+.step b{display:block;font-size:.95rem}
+.step span{display:block;font-size:.82rem;color:var(--muted);line-height:1.5}
+.how-card .btn{margin-top:18px;align-self:flex-start}
+/* popular skills */
+.pop{text-align:center;margin-top:52px}
+.pop h3{font-size:clamp(1.3rem,4vw,1.9rem);margin:8px 0 18px}
+.pop-chips{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;max-width:640px;margin:0 auto}
+.pop-chip{
+  border:1.5px solid var(--line);background:var(--surface);border-radius:999px;
+  padding:11px 20px;font-size:.92rem;font-weight:700;transition:all .16s ease;
+}
+.pop-chip:hover{border-color:var(--cobalt);color:var(--cobalt);transform:translateY(-2px);box-shadow:0 8px 18px rgba(23,26,33,.08)}
+/* cta band */
+.cta-band{
+  margin-top:54px;background:linear-gradient(120deg, var(--cobalt), var(--cobalt-deep));
+  border-radius:28px;padding:38px 32px;color:#fff;
+  display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap;
+}
+.cta-band h3{font-size:clamp(1.4rem,4.5vw,2rem)}
+.cta-band p{opacity:.85;font-size:.92rem;margin-top:6px;max-width:420px}
+/* scroll reveal */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease, transform .7s ease}
+.reveal.in{opacity:1;transform:none}
 @media (prefers-reduced-motion: reduce){
-  .car-wrap{animation:none;transform:translateX(-50%)}
-  .beam,.lamp-glow,.lamp-glow2{animation:none;opacity:1}
-  .hero .eyebrow,.hero h1,.hero p{animation:none;opacity:1}
-  .ticker-track{animation:none}
+  .bub,.ticker-track,.btn-xl{animation:none !important}
   .reveal{opacity:1 !important;transform:none !important}
 }
 
-/* ---------- scroll reveal ---------- */
-.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease, transform .7s ease}
-.reveal.in{opacity:1;transform:none}
+/* ---------- section head ---------- */
+.head{padding:34px 0 6px}
+.head h2{font-size:clamp(1.5rem,5vw,2.2rem)}
+.head p{color:var(--muted);font-size:.92rem;margin-top:6px}
+.back{
+  display:inline-flex;align-items:center;gap:6px;margin-top:22px;
+  color:var(--muted);font-weight:700;font-size:.85rem;background:none;border:none;
+}
+.back:hover{color:var(--cobalt)}
 
-/* ---------- toolbar ---------- */
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:30px 0 4px}
+/* ---------- forms ---------- */
+.panel{
+  background:var(--surface);border:1.5px solid var(--line);border-radius:22px;
+  padding:26px 22px;max-width:560px;margin:18px auto 0;
+}
+.panel.wide{max-width:720px}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:6px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg);border:1.5px solid var(--line);
+  border-radius:13px;padding:12px 15px;outline:none;transition:border-color .15s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--cobalt)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.form-grid .full{grid-column:1/-1}
+@media(max-width:520px){.form-grid{grid-template-columns:1fr}}
+.tabs{display:flex;background:var(--bg);border-radius:999px;padding:5px;margin-bottom:20px;border:1.5px solid var(--line)}
+.tab{
+  flex:1;border:none;background:transparent;border-radius:999px;padding:10px;font-weight:800;font-size:.9rem;color:var(--muted);
+}
+.tab.on{background:var(--cobalt);color:#fff}
+.note{font-size:.78rem;color:var(--muted);line-height:1.5;margin-top:10px}
+
+/* skills picker */
+.skill-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.skill-chip{
+  border:1.5px solid var(--line);background:var(--bg);border-radius:999px;
+  padding:8px 15px;font-size:.85rem;font-weight:700;color:var(--ink);transition:all .15s;
+}
+.skill-chip:hover{border-color:var(--cobalt)}
+.skill-chip.on{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+.skill-chip:disabled{opacity:.4;cursor:not-allowed}
+.skill-detail{
+  background:var(--bg);border:1.5px solid var(--line);border-radius:15px;
+  padding:14px;margin-top:12px;
+}
+.skill-detail h4{font-size:.92rem;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.skill-detail h4 .dot{width:8px;height:8px;border-radius:50%;background:var(--spark)}
+.skill-detail .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+@media(max-width:560px){.skill-detail .row{grid-template-columns:1fr 1fr}}
+.skill-detail input,.skill-detail select{
+  width:100%;background:#fff;border:1.5px solid var(--line);border-radius:11px;padding:10px 12px;font-size:.9rem;outline:none;
+}
+.skill-detail input:focus,.skill-detail select:focus{border-color:var(--cobalt)}
+
+/* selfie */
+.selfie-box{display:flex;align-items:center;gap:16px}
+.selfie-circle{
+  width:96px;height:96px;border-radius:50%;background:var(--bg);border:2px dashed var(--line);
+  display:grid;place-items:center;font-size:1.6rem;overflow:hidden;flex:0 0 auto;cursor:pointer;
+}
+.selfie-circle img{width:100%;height:100%;object-fit:cover}
+.selfie-circle:hover{border-color:var(--cobalt)}
+
+/* location */
+.loc-btn{
+  display:flex;align-items:center;gap:9px;width:100%;
+  background:var(--bg);border:1.5px dashed var(--line);border-radius:13px;
+  padding:13px 15px;font-weight:700;font-size:.9rem;color:var(--muted);
+}
+.loc-btn:hover{border-color:var(--cobalt);color:var(--cobalt)}
+.loc-btn.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:rgba(30,158,106,.06)}
+
+/* ---------- hire: search + worker cards ---------- */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:18px 0 4px}
 .toolbar .search{
-  flex:1;min-width:170px;display:flex;align-items:center;gap:10px;
-  background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:11px 18px;
+  flex:1;min-width:180px;display:flex;align-items:center;gap:9px;
+  background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:11px 17px;
 }
 .toolbar .search input{border:none;outline:none;background:transparent;width:100%;font-size:.95rem}
-.toolbar .search input::placeholder{color:var(--muted)}
-.toolbar select{
-  background:var(--surface);border:1px solid var(--line);border-radius:999px;
-  padding:11px 15px;font-size:.85rem;font-weight:700;outline:none;color:var(--ivory);
+.chips-scroll{display:flex;gap:8px;overflow-x:auto;padding:12px 0 6px;scrollbar-width:none}
+.chips-scroll::-webkit-scrollbar{display:none}
+.loc-note{font-size:.78rem;color:var(--muted);font-weight:600;padding:4px 0 0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.loc-note button{border:none;background:none;color:var(--cobalt);font-weight:800;font-size:.78rem;text-decoration:underline}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:15px;margin-top:16px}
+@media(max-width:640px){.wgrid{grid-template-columns:1fr}}
+.wcard{
+  background:var(--surface);border:1.5px solid var(--line);border-radius:20px;
+  padding:16px;display:flex;gap:14px;cursor:pointer;position:relative;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s;
 }
-.toolbar select option{background:var(--bg2)}
-.count-note{color:var(--muted);font-size:.78rem;font-weight:600;letter-spacing:.04em;padding:8px 0 0;width:100%}
-
-/* ---------- cars grid ---------- */
-.section{padding:6px 0 44px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px;margin-top:16px}
-@media(max-width:680px){.grid{grid-template-columns:repeat(2,1fr);gap:12px}}
-.card{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-  overflow:hidden;display:flex;flex-direction:column;position:relative;
-  transition:transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+.wcard:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--cobalt)}
+.wcard .ava{
+  width:64px;height:64px;border-radius:50%;overflow:hidden;flex:0 0 auto;
+  border:2.5px solid var(--spark);
 }
-.card:hover{transform:translateY(-4px);border-color:rgba(213,179,107,.4);box-shadow:0 18px 44px rgba(0,0,0,.45)}
-.card .photo{aspect-ratio:4/3;background:var(--surface2);position:relative;overflow:hidden;cursor:pointer}
-.card .photo::after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg, rgba(11,16,13,.0) 55%, rgba(11,16,13,.5));
+.wcard .ava img{width:100%;height:100%;object-fit:cover}
+.wcard h3{font-size:1.02rem;font-weight:800;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.wcard .skills-line{color:var(--cobalt);font-size:.8rem;font-weight:800;margin-top:1px}
+.wcard .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.76rem;font-weight:600;margin-top:5px}
+.wcard .price-line{font-weight:800;font-size:.88rem;margin-top:6px}
+.stars{color:var(--star);letter-spacing:1px;font-size:.82rem}
+.stars small{color:var(--muted);font-weight:700;letter-spacing:0}
+.badge-av{
+  position:absolute;top:12px;right:12px;font-size:.62rem;font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;padding:4px 9px;border-radius:999px;
+  background:rgba(30,158,106,.12);color:var(--ok);
 }
-.card .photo img{width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
-.card:hover .photo img{transform:scale(1.06)}
-.badge{
-  position:absolute;top:10px;left:10px;z-index:2;
-  background:rgba(11,16,13,.72);backdrop-filter:blur(4px);
-  color:var(--gold);padding:4px 11px;border-radius:999px;border:1px solid rgba(213,179,107,.3);
-  font-size:.64rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
-}
-.del-btn{
-  position:absolute;top:9px;right:9px;width:30px;height:30px;border-radius:50%;border:none;
-  background:var(--danger);color:#1A0D0D;font-size:.9rem;font-weight:800;line-height:1;
-  display:grid;place-items:center;z-index:5;
-}
-.edit-btn{
-  position:absolute;top:9px;right:46px;width:30px;height:30px;border-radius:50%;border:none;
-  background:var(--gold);color:#1A1408;font-size:.85rem;font-weight:800;line-height:1;
-  display:grid;place-items:center;z-index:5;
-}
-.edit-btn:hover{background:#E3C67F}
-.card .body{padding:14px 15px 15px;display:flex;flex-direction:column;gap:6px;flex:1;cursor:pointer}
-.card h3{
-  font-size:1rem;font-weight:800;line-height:1.3;
-  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
-}
-.meta{color:var(--muted);font-size:.74rem;font-weight:600;letter-spacing:.03em}
-.price{
-  font-family:var(--font-display);font-weight:600;font-size:1.25rem;color:var(--gold);
-  font-variant-numeric:tabular-nums;margin-top:3px;
-}
-.card-actions{display:flex;gap:8px;margin-top:auto;padding-top:4px}
-.card-actions .btn{flex:1;padding:10px 6px;font-size:.8rem;border-radius:12px}
-.card .details-btn{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.card .details-btn:hover{color:var(--ivory);border-color:rgba(244,241,232,.35)}
-.card .book{
-  background:transparent;color:var(--gold);border:1px solid rgba(213,179,107,.45);
-}
-.card .book:hover{background:var(--gold);color:#1A1408}
-@media(max-width:680px){
-  .card .body{padding:11px 12px 12px}
-  .card h3{font-size:.88rem}
-  .price{font-size:1.08rem}
-  .card-actions .btn{font-size:.74rem;padding:9px 4px}
-}
+.badge-av.off{background:rgba(23,26,33,.07);color:var(--muted)}
 .empty{
-  grid-column:1/-1;text-align:center;padding:60px 18px;color:var(--muted);
-  background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius);
+  text-align:center;padding:54px 18px;color:var(--muted);
+  background:var(--surface);border:1.5px dashed var(--line);border-radius:20px;margin-top:16px;
 }
-.empty .big{font-size:2.3rem;margin-bottom:8px}
+.empty .big{font-size:2.2rem;margin-bottom:8px}
 
-/* ---------- interstitials ---------- */
-.strip{grid-column:1/-1;margin:10px 0}
-.strip-brands{padding:6px 0 2px}
-.strip-brands .eyebrow{display:block;margin-bottom:12px}
-.brand-row{display:flex;gap:9px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
-.brand-row::-webkit-scrollbar{display:none}
-.brand-chip{
-  flex:0 0 auto;border:1px solid var(--line);background:var(--surface);
-  border-radius:999px;padding:9px 18px;font-size:.82rem;font-weight:700;color:var(--ivory);
-  transition:all .18s ease;letter-spacing:.02em;
+/* ---------- profile (worker's own) ---------- */
+.me-card{
+  background:var(--surface);border:1.5px solid var(--line);border-radius:22px;
+  padding:24px;max-width:560px;margin:18px auto 0;
 }
-.brand-chip:hover{border-color:var(--gold);color:var(--gold)}
-.brand-chip.on{background:var(--gold);border-color:var(--gold);color:#1A1408}
-.strip-why{
-  background:var(--surface);border:1px solid var(--line);border-radius:22px;
-  padding:34px 26px;
+.me-top{display:flex;gap:16px;align-items:center}
+.me-top .ava{width:76px;height:76px;border-radius:50%;overflow:hidden;border:3px solid var(--spark);flex:0 0 auto}
+.me-top .ava img{width:100%;height:100%;object-fit:cover}
+.me-top h3{font-family:var(--font-display);font-size:1.3rem;font-weight:800}
+.me-top .sub{color:var(--muted);font-size:.85rem}
+.av-toggle{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--bg);border:1.5px solid var(--line);border-radius:15px;padding:14px 16px;margin-top:18px;
 }
-.strip-why .eyebrow{display:block;margin-bottom:8px}
-.strip-why h2{font-size:clamp(1.5rem,4.5vw,2.2rem);margin-bottom:22px}
-.why-list{display:grid;gap:0}
-.why{
-  display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:baseline;
-  padding:16px 0;border-top:1px solid var(--line);
+.av-toggle b{font-size:.95rem}
+.av-toggle span{display:block;font-size:.76rem;color:var(--muted);font-weight:600}
+.switch{position:relative;width:52px;height:30px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0}
+.slider-t{
+  position:absolute;inset:0;border-radius:999px;background:rgba(23,26,33,.15);transition:.2s;cursor:pointer;
 }
-.why .num{
-  font-family:var(--font-display);font-style:italic;font-weight:500;
-  font-size:1.15rem;color:var(--gold);min-width:38px;
+.slider-t::before{
+  content:"";position:absolute;width:24px;height:24px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.2s;
+  box-shadow:0 2px 6px rgba(0,0,0,.25);
 }
-.why b{display:block;font-size:1rem;margin-bottom:3px;letter-spacing:.01em}
-.why span{font-size:.85rem;color:var(--muted);line-height:1.55;display:block}
-@media(min-width:760px){
-  .why-list{grid-template-columns:1fr 1fr;column-gap:34px}
+.switch input:checked + .slider-t{background:var(--ok)}
+.switch input:checked + .slider-t::before{transform:translateX(22px)}
+.me-skills{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+.me-skill{
+  display:flex;justify-content:space-between;gap:10px;align-items:center;
+  background:var(--bg);border:1.5px solid var(--line);border-radius:13px;padding:11px 14px;font-size:.9rem;
 }
-.strip-promo{
-  background:linear-gradient(100deg, rgba(213,179,107,.16), rgba(213,179,107,.05));
-  border:1px solid rgba(213,179,107,.3);border-radius:22px;
-  padding:24px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
-}
-.strip-promo .txt b{font-family:var(--font-display);font-weight:600;font-size:1.25rem;display:block;letter-spacing:.01em}
-.strip-promo .txt b i{font-style:italic;color:var(--gold)}
-.strip-promo .txt span{color:var(--muted);font-size:.84rem}
-.strip-promo .btn{padding:11px 20px;font-size:.82rem}
-
-/* ---------- contact ---------- */
-.contact{
-  border:1px solid var(--line);border-radius:24px;text-align:center;margin:16px 0 34px;
-  padding:44px 22px;position:relative;overflow:hidden;background:var(--surface);
-}
-.contact::before{
-  content:"";position:absolute;inset:0;
-  background:radial-gradient(420px 200px at 50% 0%, rgba(213,179,107,.1), transparent 70%);
-}
-.contact>*{position:relative}
-.contact .eyebrow{display:block;margin-bottom:10px}
-.contact h2{font-size:clamp(1.5rem,4.5vw,2.2rem)}
-.contact p{color:var(--muted);font-size:.9rem;max-width:440px;margin:10px auto 24px}
-.contact-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-footer{border-top:1px solid var(--line);padding:22px 0 28px;color:var(--muted);font-size:.8rem}
-footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-footer a{color:var(--gold);font-weight:700}
-
-/* ---------- owner bar ---------- */
-.owner-bar{
-  display:none;position:sticky;top:63px;z-index:55;
-  background:rgba(213,179,107,.1);backdrop-filter:blur(10px);
-  border-bottom:1px solid rgba(213,179,107,.3);padding:9px 0;
-}
-.owner-bar.on{display:block}
-.owner-bar .container{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.owner-bar b{font-size:.78rem;color:var(--gold);letter-spacing:.12em;text-transform:uppercase}
-.owner-bar .btn{padding:7px 15px;font-size:.78rem}
-.owner-bar #demoNote{color:var(--gold);font-size:.74rem;opacity:.8}
+.me-skill b{font-weight:800}
+.me-skill span{color:var(--muted);font-size:.8rem;font-weight:600}
+.me-skill .p{color:var(--cobalt);font-weight:800;white-space:nowrap}
 
 /* ---------- modals ---------- */
 .overlay{
-  position:fixed;inset:0;background:rgba(5,8,6,.7);backdrop-filter:blur(6px);
+  position:fixed;inset:0;background:rgba(23,26,33,.5);backdrop-filter:blur(5px);
   display:none;align-items:flex-end;justify-content:center;z-index:100;
 }
 @media(min-width:560px){.overlay{align-items:center;padding:20px}}
 .overlay.open{display:flex;animation:fadeIn .18s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal{
-  background:var(--bg2);border:1px solid var(--line);border-radius:24px 24px 0 0;
+  background:#fff;border-radius:24px 24px 0 0;
   width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
   padding:26px 22px 30px;position:relative;animation:pop .26s ease;
 }
 @media(min-width:560px){.modal{border-radius:24px}}
-.modal.wide{max-width:620px}
 @keyframes pop{from{transform:translateY(26px);opacity:0}to{transform:none;opacity:1}}
-.modal h3{font-family:var(--font-display);font-weight:600;font-size:1.4rem}
-.modal h3 i{font-style:italic;color:var(--gold)}
-.modal .sub{color:var(--muted);font-size:.88rem;margin:3px 0 18px}
+.modal h3{font-family:var(--font-display);font-weight:800;font-size:1.35rem;letter-spacing:-.01em}
+.modal .sub{color:var(--muted);font-size:.88rem;margin:3px 0 16px}
 .close-x{
   position:absolute;top:15px;right:15px;width:34px;height:34px;border-radius:50%;
-  background:var(--surface);border:1px solid var(--line);color:var(--muted);
+  background:var(--bg);border:1.5px solid var(--line);color:var(--muted);
   font-size:.95rem;display:grid;place-items:center;
 }
-.close-x:hover{color:var(--ivory)}
-.field label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:6px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
-.field input,.field select,.field textarea{
-  width:100%;background:var(--surface);border:1px solid var(--line);
-  border-radius:12px;padding:12px 14px;outline:none;transition:border-color .15s;
+.close-x:hover{color:var(--ink)}
+.w-detail-top{display:flex;gap:16px;align-items:center;margin-bottom:14px}
+.w-detail-top .ava{width:84px;height:84px;border-radius:50%;overflow:hidden;border:3px solid var(--spark);flex:0 0 auto}
+.w-detail-top .ava img{width:100%;height:100%;object-fit:cover}
+.w-detail-top h3{margin-bottom:2px}
+.price-table{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.price-row2{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:var(--bg);border:1.5px solid var(--line);border-radius:13px;padding:11px 14px;
 }
-.field input::placeholder,.field textarea::placeholder{color:rgba(152,162,154,.6)}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold)}
-.field select option{background:var(--bg2)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.form-grid .full{grid-column:1/-1}
-@media(max-width:520px){.form-grid{grid-template-columns:1fr}}
-
-/* booking amount + UPI */
-.amount-box{
-  background:var(--surface);border:1px solid var(--line);border-radius:16px;
-  padding:18px;margin:16px 0 14px;text-align:center;
+.price-row2 b{font-size:.92rem;font-weight:800}
+.price-row2 span{font-size:.78rem;color:var(--muted);font-weight:600;display:block}
+.price-row2 .p{color:var(--cobalt);font-weight:800;white-space:nowrap;font-size:.95rem}
+.rate-box{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  border:1.5px dashed var(--line);border-radius:13px;padding:11px 14px;margin:4px 0 14px;
 }
-.amount-box .lbl{font-size:.68rem;color:var(--muted);font-weight:800;letter-spacing:.22em;text-transform:uppercase}
-.amount-box .val{
-  font-family:var(--font-display);font-size:2.1rem;font-weight:600;color:var(--gold);
-  font-variant-numeric:tabular-nums;margin:5px 0 10px;
-}
-input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
-.amount-box .lim{display:flex;justify-content:space-between;color:var(--muted);font-size:.7rem;margin-top:7px;font-weight:600}
-.pay-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}
-.pay-opt{
-  border:1px solid var(--line);border-radius:14px;padding:12px 8px;background:var(--surface);
-  font-size:.82rem;font-weight:800;color:var(--muted);
-  display:flex;flex-direction:column;gap:2px;align-items:center;text-align:center;
-  transition:all .15s ease;
-}
-.pay-opt small{font-size:.66rem;font-weight:600;opacity:.75}
-.pay-opt .ic{font-size:1.2rem}
-.pay-opt:hover{border-color:rgba(213,179,107,.5)}
-.pay-opt.on{border-color:var(--gold);color:var(--ivory);background:rgba(213,179,107,.09)}
-.upi-box{
-  border:1px dashed rgba(213,179,107,.5);border-radius:15px;
-  padding:15px;margin-bottom:13px;text-align:center;background:rgba(213,179,107,.05);
-}
-.upi-box .t{font-size:.78rem;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:.03em}
-.upi-id{
-  display:inline-flex;align-items:center;gap:8px;background:var(--surface);
-  border:1px solid rgba(213,179,107,.35);
-  border-radius:999px;padding:7px 8px 7px 16px;font-weight:800;font-size:.92rem;color:var(--ivory);
-}
-.upi-id button{
-  border:none;background:var(--gold);color:#1A1408;border-radius:999px;
-  padding:5px 13px;font-size:.72rem;font-weight:800;letter-spacing:.05em;
-}
-.pay-btn{margin-top:11px;width:100%;padding:13px;font-size:.92rem}
-.hint{color:var(--muted);font-size:.74rem;text-align:center;margin-top:11px;line-height:1.55}
-
-/* detail modal */
-.detail-photo{border-radius:15px;overflow:hidden;margin-bottom:16px;max-height:280px}
-.detail-photo img{width:100%;height:100%;object-fit:cover}
-.detail-specs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}
-.dspec{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:9px 13px}
-.dspec span{display:block;font-size:.62rem;color:var(--muted);font-weight:800;letter-spacing:.12em;text-transform:uppercase}
-.dspec b{font-size:.9rem}
-.detail-price{font-family:var(--font-display);font-size:1.75rem;font-weight:600;color:var(--gold);font-variant-numeric:tabular-nums}
-
-/* photo upload slots */
-.photo-slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-@media(max-width:520px){.photo-slots{grid-template-columns:repeat(2,1fr)}}
-.slot{
-  aspect-ratio:4/3;border:2px dashed var(--line);border-radius:12px;
-  display:grid;place-items:center;color:var(--muted);cursor:pointer;
-  position:relative;overflow:hidden;background:var(--surface);
-  font-size:.72rem;font-weight:700;text-align:center;transition:border-color .15s;
-}
-.slot:hover{border-color:var(--gold);color:var(--ivory)}
-.slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.slot-x{
-  position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;border:none;
-  background:rgba(11,16,13,.85);color:#fff;font-size:.68rem;font-weight:800;z-index:2;
-  display:grid;place-items:center;
-}
-.slot-x:hover{background:var(--danger)}
-
-/* detail gallery */
-.gal-thumbs{display:flex;gap:8px;margin:-6px 0 16px}
-.gal-thumbs img{
-  width:66px;height:50px;object-fit:cover;border-radius:9px;cursor:pointer;
-  border:2px solid transparent;opacity:.65;transition:all .15s;
-}
-.gal-thumbs img.on{border-color:var(--gold);opacity:1}
-.gal-thumbs img:hover{opacity:1}
+.rate-box .t{font-size:.8rem;font-weight:700;color:var(--muted)}
+.rate-stars{display:flex;gap:3px;font-size:1.3rem;cursor:pointer;color:#D8D4CA}
+.rate-stars span:hover,.rate-stars span.lit{color:var(--star)}
 
 /* toast */
 .toast{
   position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);
-  background:var(--ivory);color:#141A16;
+  background:var(--ink);color:#fff;
   padding:13px 24px;border-radius:999px;font-weight:700;font-size:.88rem;z-index:200;opacity:0;
-  transition:all .3s ease;box-shadow:0 12px 34px rgba(0,0,0,.5);max-width:90vw;text-align:center;
+  transition:all .3s ease;box-shadow:var(--shadow);max-width:92vw;text-align:center;
 }
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* footer */
+footer{border-top:1px solid var(--line);padding:22px 0 28px;color:var(--muted);font-size:.8rem;margin-top:40px}
+footer .container{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+.demo-note{
+  background:rgba(198,244,50,.25);border-bottom:1px solid rgba(42,53,5,.15);
+  font-size:.75rem;font-weight:700;color:var(--spark-ink);text-align:center;padding:7px 14px;display:none;
+}
+.demo-note.on{display:block}
+
+@media (prefers-reduced-motion: reduce){
+  .screen.on{animation:none}
+  *{transition:none !important}
+}
 </style>
 </head>
 <body>
 
-<!-- ================= HEADER ================= -->
 <header>
   <div class="container nav">
-    <a href="#" class="logo">Budget <i>Cars</i></a>
+    <a class="logo" href="#" onclick="go('home');return false"><span class="mark">🤝</span>Near<em>se</em></a>
     <nav class="nav-right">
-      <a href="#contact">Contact</a>
-      <button class="btn btn-line" id="ownerBtn" onclick="ownerLogin()">Owner</button>
+      <button class="btn btn-line btn-sm" id="navWork" onclick="go('work')">I want to work</button>
+      <button class="btn btn-cobalt btn-sm" onclick="go('hire')">Find a worker</button>
     </nav>
   </div>
 </header>
+<div class="demo-note" id="demoNote">Demo mode — profiles save on this device only. The owner is connecting the live database.</div>
 
-<!-- owner bar -->
-<div class="owner-bar" id="ownerBar">
-  <div class="container">
-    <b>Owner mode</b>
-    <button class="btn btn-gold" onclick="openAddCar()">＋ Add Car</button>
-    <button class="btn btn-line" onclick="exitOwner()">Exit</button>
-    <span id="demoNote" style="display:none">⚠️ Demo mode — cars save on this device only</span>
-  </div>
-</div>
-
-<!-- ================= HERO : night drive-in ================= -->
-<section class="hero">
-  <div class="hero-inner">
-    <span class="eyebrow">Quality pre-owned · Honest prices</span>
-    <h1 class="display">Welcome to<br>Budget <em>Cars</em></h1>
-    <p>Getting your dream car made easy — with Budget Cars.</p>
-  </div>
-  <div class="stage">
-    <div class="road"></div>
-    <div class="car-wrap">
-      <img class="defender" src="defender.png" alt="Land Rover Defender arriving at Budget Cars">
-      <div class="lamp-glow"></div>
-      <div class="lamp-glow2"></div>
-      <div class="beam"></div>
+<!-- ================= LANDING ================= -->
+<section class="screen on" id="scr-home">
+  <div class="container hero">
+    <div class="bubbles" aria-hidden="true">
+      <span class="bub b1">🧑‍🏫</span><span class="bub b2">🔧</span><span class="bub b3">🚗</span>
+      <span class="bub b4">🍳</span><span class="bub b5">⚡</span><span class="bub b6">🌿</span>
+    </div>
+    <span class="eyebrow">Skilled hands, honest work</span>
+    <h1 class="display">Every skill,<br><span class="hl">near you.</span></h1>
+    <p>Tutors, mechanics, drivers, cooks, electricians and more — trusted local workers at prices they set themselves. Or bring your own skill and start earning.</p>
+    <div class="cta-row">
+      <button class="btn btn-spark btn-xl" id="ctaWork" onclick="go('work')">🛠️ I want to work</button>
+      <button class="btn btn-cobalt btn-xl" id="ctaHire" onclick="go('hire')">🔍 Find a worker</button>
+    </div>
+    <div class="trust-row">
+      <span>📍 Nearest first</span>
+      <span>⭐ Community rated</span>
+      <span>💰 Workers set the price</span>
+      <span>💬 Direct on WhatsApp</span>
     </div>
   </div>
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker-track" id="tickerTrack"></div>
+
+  <div class="ticker" aria-hidden="true"><div class="ticker-track" id="skillTicker"></div></div>
+
+  <div class="container">
+    <div class="how-grid">
+      <div class="how-card hire reveal">
+        <span class="eyebrow">For customers</span>
+        <h3 class="display">Book in three taps</h3>
+        <div class="step"><span class="n">1</span><div><b>Search a skill</b><span>Tutor, mechanic, cook — anything you need.</span></div></div>
+        <div class="step"><span class="n">2</span><div><b>Compare who's nearest &amp; best rated</b><span>Real distances, real community ratings, prices set by the workers themselves.</span></div></div>
+        <div class="step"><span class="n">3</span><div><b>Book on WhatsApp</b><span>Talk directly — no middleman, no commission.</span></div></div>
+        <button class="btn btn-cobalt" onclick="go('hire')">Find a worker →</button>
+      </div>
+      <div class="how-card work reveal">
+        <span class="eyebrow">For workers</span>
+        <h3 class="display">Earning starts today</h3>
+        <div class="step"><span class="n">1</span><div><b>Register free in 2 minutes</b><span>Phone number + a 4-digit PIN. That's your account.</span></div></div>
+        <div class="step"><span class="n">2</span><div><b>Add up to 3 skills &amp; your price</b><span>₹500/hour? ₹5,000/month? You decide what your work is worth.</span></div></div>
+        <div class="step"><span class="n">3</span><div><b>Get booked directly</b><span>Customers nearby find you and message your WhatsApp.</span></div></div>
+        <button class="btn btn-spark" onclick="go('work')">I want to work →</button>
+      </div>
+    </div>
+
+    <div class="pop reveal">
+      <span class="eyebrow">Popular right now</span>
+      <h3 class="display">What do you need done?</h3>
+      <div class="pop-chips" id="popChips"></div>
+    </div>
+
+    <div class="cta-band reveal">
+      <div>
+        <h3 class="display">Your skill deserves <span style="color:var(--spark)">an income.</span></h3>
+        <p>Join Nearse free — no commission, no fees. Just work, on your terms.</p>
+      </div>
+      <button class="btn btn-spark btn-xl" onclick="go('work')">Start earning →</button>
+    </div>
   </div>
 </section>
 
-<!-- ================= CARS ================= -->
-<main class="section container" id="cars">
-  <div class="toolbar">
-    <div class="search">🔍<input type="text" id="searchBox" placeholder="Search car, brand…" oninput="renderCars()"></div>
-    <select id="fuelFilter" onchange="renderCars()">
-      <option value="">Fuel: all</option>
-      <option>Petrol</option><option>Diesel</option><option>CNG</option><option>Electric</option><option>Hybrid</option>
-    </select>
-    <select id="sortBy" onchange="renderCars()">
-      <option value="new">Newest first</option>
-      <option value="low">Price: low → high</option>
-      <option value="high">Price: high → low</option>
-    </select>
-    <div class="count-note" id="countNote"></div>
-  </div>
-
-  <div class="grid" id="carGrid"></div>
-
-  <!-- ================= CONTACT ================= -->
-  <div class="contact reveal" id="contact">
-    <span class="eyebrow">Contact</span>
-    <h2 class="display">Talk to us — <em>we reply fast</em></h2>
-    <p>Questions about a car? Want to sell or exchange yours? Call, WhatsApp or DM us on Instagram.</p>
-    <div class="contact-links">
-      <a class="btn btn-gold" href="tel:+917086269537">📞 70862 69537</a>
-      <a class="btn btn-line" href="https://wa.me/917086269537" target="_blank" rel="noopener">WhatsApp</a>
-      <a class="btn btn-line" href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">Instagram</a>
+<!-- ================= WORK: AUTH ================= -->
+<section class="screen" id="scr-work">
+  <div class="container">
+    <button class="back" onclick="go('home')">← Back</button>
+    <div class="head"><h2 class="display">Earn with <span class="hl">your skill</span></h2>
+      <p>Sign in, or create your free worker account in two minutes.</p></div>
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab on" id="tabIn" onclick="authTab('in')">Sign in</button>
+        <button class="tab" id="tabUp" onclick="authTab('up')">Sign up</button>
+      </div>
+      <div id="authIn">
+        <div class="field"><label>Phone number</label><input type="tel" id="inPhone" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric"></div>
+        <div class="field"><label>PIN</label><input type="password" id="inPin" placeholder="Your 4-digit PIN" maxlength="4" inputmode="numeric"></div>
+        <button class="btn btn-cobalt btn-block" onclick="signIn()">Sign in</button>
+      </div>
+      <div id="authUp" style="display:none">
+        <div class="field"><label>Your full name</label><input type="text" id="upName" placeholder="e.g. Rahim Ali"></div>
+        <div class="field"><label>Phone number (WhatsApp)</label><input type="tel" id="upPhone" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric"></div>
+        <div class="field"><label>Create a 4-digit PIN</label><input type="password" id="upPin" placeholder="e.g. 4321 — remember it!" maxlength="4" inputmode="numeric"></div>
+        <button class="btn btn-cobalt btn-block" onclick="signUp()">Create account →</button>
+        <p class="note">Customers will contact you on this WhatsApp number. Your PIN is your key — don't share it.</p>
+      </div>
     </div>
   </div>
-</main>
+</section>
+
+<!-- ================= WORK: REGISTER / EDIT PROFILE ================= -->
+<section class="screen" id="scr-register">
+  <div class="container">
+    <button class="back" onclick="go(session && session.registered ? 'me' : 'work')">← Back</button>
+    <div class="head"><h2 class="display" id="regTitle">Set up your <span class="hl">worker profile</span></h2>
+      <p>This is what customers see. Make it count!</p></div>
+    <div class="panel wide">
+
+      <div class="field">
+        <label>Your skills — choose 1 to 3 (<span id="skillCount">0</span>/3 selected)</label>
+        <input type="text" id="skillSearch" placeholder="🔍 Search skills… e.g. mechanic, doctor, cook" oninput="renderSkillChips(collectSkills())" style="margin-bottom:10px">
+        <div class="skill-chips" id="skillChips"></div>
+        <div id="skillDetails"></div>
+      </div>
+
+      <div class="field" style="margin-top:20px">
+        <label>Your selfie — customers trust a face</label>
+        <div class="selfie-box">
+          <div class="selfie-circle" id="selfieCircle" onclick="document.getElementById('selfieInput').click()">📷</div>
+          <div>
+            <button class="btn btn-line btn-sm" onclick="document.getElementById('selfieInput').click()">Take / upload selfie</button>
+            <p class="note" style="margin-top:6px">A clear, friendly photo gets more bookings.</p>
+          </div>
+        </div>
+        <input type="file" id="selfieInput" accept="image/*" capture="user" style="display:none" onchange="handleSelfie(this)">
+      </div>
+
+      <div class="form-grid" style="margin-top:6px">
+        <div class="field"><label>City / town</label><input type="text" id="regCity" placeholder="e.g. Guwahati"></div>
+        <div class="field"><label>Area / locality</label><input type="text" id="regArea" placeholder="e.g. Six Mile"></div>
+        <div class="field full"><label>About you (optional)</label><textarea id="regAbout" rows="2" placeholder="e.g. 5 years fixing bikes and cars, polite and punctual."></textarea></div>
+      </div>
+
+      <div class="field">
+        <label>Your location — so nearby customers find you first</label>
+        <button class="loc-btn" id="regLocBtn" onclick="captureLocation()">📍 <span id="regLocText">Tap to use my current location</span></button>
+      </div>
+
+      <button class="btn btn-spark btn-block" id="regSaveBtn" onclick="saveProfile()" style="padding:15px;margin-top:8px">✅ Register me as a worker</button>
+      <p class="note">By registering you agree that your name, selfie, skills, prices, area and WhatsApp number are shown to customers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WORK: MY PROFILE ================= -->
+<section class="screen" id="scr-me">
+  <div class="container">
+    <button class="back" onclick="go('home')">← Home</button>
+    <div class="head"><h2 class="display">My <span class="hl">profile</span></h2>
+      <p>You're live on Nearse. Customers nearby can find and book you.</p></div>
+    <div class="me-card" id="meCard"></div>
+  </div>
+</section>
+
+<!-- ================= HIRE ================= -->
+<section class="screen" id="scr-hire">
+  <div class="container">
+    <button class="back" onclick="go('home')">← Back</button>
+    <div class="head"><h2 class="display">Find the <span class="hl">right worker</span></h2>
+      <p>Nearest and best-rated first — every price set by the worker.</p></div>
+
+    <div class="toolbar">
+      <div class="search">🔍<input type="text" id="hireSearch" placeholder="Search: tutor, mechanic, cook…" oninput="renderWorkers()"></div>
+    </div>
+    <div class="chips-scroll" id="hireChips"></div>
+    <div class="loc-note" id="locNote"></div>
+
+    <div class="wgrid" id="workerGrid"></div>
+  </div>
+</section>
 
 <footer>
   <div class="container">
-    <span>© <span id="year"></span> Budget Cars</span>
-    <span><a href="tel:+917086269537">70862 69537</a> · <a href="https://www.instagram.com/budgetcars.insta?igsh=MXF3dHphbHl6em83aQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">@budgetcars.insta</a></span>
+    <span>© <span id="year"></span> Nearse · nearse.in — every skill, near you</span>
+    <span>Made with 💛 in Assam</span>
   </div>
 </footer>
 
-<!-- ================= DETAIL MODAL ================= -->
-<div class="overlay" id="detailOverlay" onclick="if(event.target===this)closeModal('detailOverlay')">
-  <div class="modal wide">
-    <button class="close-x" onclick="closeModal('detailOverlay')" aria-label="Close">✕</button>
-    <div id="detailContent"></div>
+<!-- ================= WORKER DETAIL / BOOKING ================= -->
+<div class="overlay" id="wOverlay" onclick="if(event.target===this)closeModal('wOverlay')">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal('wOverlay')" aria-label="Close">✕</button>
+    <div id="wDetail"></div>
   </div>
 </div>
-
-<!-- ================= BOOKING MODAL ================= -->
 <div class="overlay" id="bookOverlay" onclick="if(event.target===this)closeModal('bookOverlay')">
   <div class="modal">
     <button class="close-x" onclick="closeModal('bookOverlay')" aria-label="Close">✕</button>
-    <h3>Book this <i>car</i></h3>
-    <p class="sub" id="bookCarName"></p>
-
-    <div class="form-grid">
-      <div class="field full"><label>Your name</label><input type="text" id="bookName" placeholder="e.g. Rahul Sharma"></div>
-      <div class="field full"><label>Your phone number</label><input type="tel" id="bookPhone" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric"></div>
-    </div>
-
-    <div class="amount-box">
-      <div class="lbl">Token booking amount</div>
-      <div class="val" id="amountVal">₹10,000</div>
-      <input type="range" id="amountSlider" min="10000" max="100000" step="5000" value="10000" oninput="updateAmount()">
-      <div class="lim"><span>Min ₹10,000</span><span>Max ₹1,00,000</span></div>
-    </div>
-
-    <div class="field full" style="margin-bottom:10px"><label>How would you like to pay the token?</label></div>
-    <div class="pay-opts">
-      <button class="pay-opt on" id="payOptUpi" onclick="setPayMethod('upi')"><span class="ic">📲</span>Pay now by UPI<small>PhonePe · GPay · Paytm…</small></button>
-      <button class="pay-opt" id="payOptCash" onclick="setPayMethod('cash')"><span class="ic">🏪</span>Visit &amp; pay in cash<small>at our showroom</small></button>
-    </div>
-
-    <div class="upi-box" id="upiBox">
-      <div class="t">Any UPI app works — the amount goes straight to us</div>
-      <span class="upi-id">salinuralom@ybl <button onclick="copyUpi()">Copy</button></span>
-      <a class="btn btn-gold pay-btn" id="upiPayBtn" href="#">📲 Pay <span id="payAmt">₹10,000</span> by UPI</a>
-    </div>
-
-    <button class="btn btn-green btn-block" onclick="confirmBooking()" style="padding:14px">Confirm booking on WhatsApp</button>
-    <p class="hint" id="bookHint">Tap Pay to open your UPI app, then Confirm — your booking details reach us on WhatsApp and we reply within a few hours.</p>
-  </div>
-</div>
-
-<!-- ================= ADD CAR MODAL ================= -->
-<div class="overlay" id="addOverlay" onclick="if(event.target===this)closeModal('addOverlay')">
-  <div class="modal wide">
-    <button class="close-x" onclick="closeModal('addOverlay')" aria-label="Close">✕</button>
-    <h3 id="addTitle">Add a <i>car</i></h3>
-    <p class="sub" id="addSub">Fill every detail — customers see exactly this.</p>
-
-    <div class="form-grid">
-      <div class="field full">
-        <label>Car photos — up to 4 (the first is the main photo)</label>
-        <div class="photo-slots">
-          <div class="slot" id="slot0" onclick="pickPhoto(0)"></div>
-          <div class="slot" id="slot1" onclick="pickPhoto(1)"></div>
-          <div class="slot" id="slot2" onclick="pickPhoto(2)"></div>
-          <div class="slot" id="slot3" onclick="pickPhoto(3)"></div>
-        </div>
-        <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)">
-      </div>
-      <div class="field full"><label>Car name / model *</label><input id="f_name" placeholder="e.g. Maruti Swift VXI"></div>
-      <div class="field"><label>Brand *</label><input id="f_brand" placeholder="e.g. Maruti Suzuki"></div>
-      <div class="field"><label>Year *</label><input id="f_year" type="number" placeholder="e.g. 2019" min="1990" max="2030"></div>
-      <div class="field"><label>Price (₹) *</label><input id="f_price" type="number" placeholder="e.g. 450000" min="0"></div>
-      <div class="field"><label>KM driven *</label><input id="f_km" type="number" placeholder="e.g. 42000" min="0"></div>
-      <div class="field"><label>Fuel type</label><select id="f_fuel">
-        <option>Petrol</option><option>Diesel</option><option>CNG</option><option>Electric</option><option>Hybrid</option>
-      </select></div>
-      <div class="field"><label>Transmission</label><select id="f_trans"><option>Manual</option><option>Automatic</option></select></div>
-      <div class="field"><label>No. of owners</label><select id="f_owners"><option>1st Owner</option><option>2nd Owner</option><option>3rd Owner</option><option>4+ Owners</option></select></div>
-      <div class="field"><label>Colour</label><input id="f_color" placeholder="e.g. Pearl White"></div>
-      <div class="field"><label>Insurance</label><select id="f_ins"><option>Valid — Comprehensive</option><option>Valid — Third Party</option><option>Expired</option></select></div>
-      <div class="field"><label>Registration / Location</label><input id="f_loc" placeholder="e.g. AS-01, Guwahati"></div>
-      <div class="field full"><label>Description</label><textarea id="f_desc" rows="3" placeholder="Condition, service history, new tyres, etc."></textarea></div>
-    </div>
-    <div style="margin-top:16px">
-      <button class="btn btn-gold btn-block" id="saveCarBtn" onclick="saveCar()" style="padding:14px">✅ Add this Car</button>
-    </div>
+    <h3>Book <span id="bookWName"></span></h3>
+    <p class="sub">Send your request — the worker replies on WhatsApp.</p>
+    <div class="field"><label>Your name</label><input type="text" id="bookName" placeholder="e.g. Priya Das"></div>
+    <div class="field"><label>Your phone number</label><input type="tel" id="bookPhone" placeholder="10-digit mobile number" maxlength="10" inputmode="numeric"></div>
+    <div class="field"><label>What do you need? (optional)</label><textarea id="bookNote" rows="2" placeholder="e.g. Need maths tuition for class 8, evenings."></textarea></div>
+    <button class="btn btn-cobalt btn-block" onclick="confirmBooking()" style="padding:14px">💬 Send booking on WhatsApp</button>
   </div>
 </div>
 
@@ -616,27 +628,73 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
 
 <script>
 /* ================================================================
-   BUDGET CARS — app logic
-   Supabase connection below (shared inventory for all visitors).
+   NEARSE — app logic
+   Uses the same Supabase project as Budget Cars. Until the workers
+   tables are created there, the site runs in demo mode automatically.
 ================================================================ */
 const SUPABASE_URL      = "https://mpufunsitqtdkqlibxof.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdWZ1bnNpdHF0ZGtxbGlieG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTAyNTksImV4cCI6MjA5ODkyNjI1OX0.iyYX1EFJwrdPWxXLTCHHm8cdmuO-roPIjjX4T-SU53E";
 
-const DEMO_PIN    = "7086";                   // PIN for demo mode only (real PIN lives in Supabase)
-const PHONE       = "917086269537";           // WhatsApp number (with country code)
-const UPI_ID      = "salinuralom@ybl";        // UPI ID for token payments
-const STORE_KEY   = "budgetcars_inventory_v1";
-const SB_ON       = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
-const BRANDS      = ["Maruti Suzuki","Hyundai","Tata","Mahindra","Kia","Toyota","Honda","Renault"];
+const SKILLS = [
+  /* vehicles */ "Driver","Car Mechanic","Bike Mechanic","Car Cleaner","Tractor Driver","Tyre Repair",
+  /* education & training */ "Tutor","Music Teacher","Dance Teacher","Computer Teacher","Yoga Trainer","Fitness Trainer","Swimming Coach",
+  /* home services */ "Cook","Maid","Cleaner","Laundry & Ironing","Gardener","Babysitter","Caretaker","Pest Control","House Shifting Helper",
+  /* trades & repair */ "Electrician","Plumber","Carpenter","Painter","Mason","Welder","AC Repair","Fridge Repair","Washing Machine Repair","TV Repair","Mobile Repair","Computer Repair","CCTV Installer","Solar Technician","Water Pump Repair",
+  /* health */ "Doctor","Nurse","Physiotherapist","Massage Therapist",
+  /* beauty & fashion */ "Beautician","Barber","Makeup Artist","Mehendi Artist","Tailor","Cobbler",
+  /* events */ "Photographer","Videographer","DJ & Sound","Caterer","Decorator","Event Helper","Priest",
+  /* professional & digital */ "Web Developer","Graphic Designer","Video Editor","Social Media Manager","Data Entry / Typist","Accountant","Lawyer","Interior Designer",
+  /* work & field */ "Security Guard","Delivery Helper","Construction Labourer","Farm Worker","Pet Care"
+];
+const POPULAR = ["Tutor","Driver","Car Mechanic","Cook","Maid","Electrician","Plumber","Beautician","AC Repair","Carpenter","Doctor","Photographer"];
+const UNITS  = ["per hour","per day","per week","per month","per job"];
+const WSTORE = "kaamsetu_workers_v1";
+const SSTORE = "kaamsetu_session_v1";
 
-/* ---------- gold ticker ---------- */
-(function(){
-  const items = ["Budget Cars","Verified & inspected","Honest prices","Book from ₹10,000","Pay by any UPI app","Guwahati, Assam"];
-  const half = items.map(t=>`<span>${t}<b>✦</b></span>`).join("");
-  document.getElementById("tickerTrack").innerHTML = half + half;
-})();
+let LIVE = false;               // becomes true when the workers table exists in Supabase
+let workers = [];
+let session = null;             // {phone, pin, registered, worker:{...}}
+let myLoc = null;               // customer's location {lat,lng}
+let regLoc = null;              // worker's captured location
+let selfieData = null;
+let selectedSkills = [];        // ["Tutor", ...] max 3
+let hireSkill = "";
+let currentWorker = null;
+let pendingStars = 0;
 
-/* ---------- Supabase REST helper (no SDK needed) ---------- */
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const fmt = n => "₹" + Number(n).toLocaleString("en-IN");
+function toast(msg){
+  const t = $("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 3400);
+}
+function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function closeModal(id){ $(id).classList.remove("open"); }
+function openModal(id){ $(id).classList.add("open"); }
+function avatar(w){
+  if(w.selfie) return w.selfie;
+  const hue = [...(w.name||"K")].reduce((a,c)=>(a*31+c.charCodeAt(0))%360, 0);
+  const letter = (w.name||"K").trim().charAt(0).toUpperCase();
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="hsl(${hue},55%,42%)"/><text x="100" y="132" text-anchor="middle" font-family="Arial" font-size="92" font-weight="800" fill="rgba(255,255,255,.92)">${letter}</text></svg>`);
+}
+function stars(w){
+  const n = w.rating_count || 0;
+  if(!n) return `<span class="stars"><small>New ✦ not rated yet</small></span>`;
+  const avg = w.rating_sum / n;
+  const full = Math.round(avg);
+  return `<span class="stars">${"★".repeat(full)}${"☆".repeat(5-full)} <small>${avg.toFixed(1)} (${n})</small></span>`;
+}
+function km(w){
+  if(!myLoc || w.lat == null || w.lng == null) return null;
+  const R = 6371, dLa = (w.lat-myLoc.lat)*Math.PI/180, dLo = (w.lng-myLoc.lng)*Math.PI/180;
+  const a = Math.sin(dLa/2)**2 + Math.cos(myLoc.lat*Math.PI/180)*Math.cos(w.lat*Math.PI/180)*Math.sin(dLo/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+/* ---------- Supabase REST ---------- */
 async function sb(path, opts = {}){
   const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
     ...opts,
@@ -656,506 +714,479 @@ async function sb(path, opts = {}){
   const text = await res.text();
   return text ? JSON.parse(text) : null;
 }
-function hueFrom(str){
-  let h = 0;
-  for(let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) % 360;
-  return h;
-}
-/* photos are stored in one text field: a single image, or a JSON array of up to 4 */
-function parsePhotos(p){
-  if(!p) return [];
-  if(typeof p === "string" && p.charAt(0) === "["){
-    try{ const a = JSON.parse(p); return Array.isArray(a) ? a.filter(Boolean).slice(0,4) : []; }
-    catch(e){ return []; }
-  }
-  return [p];
-}
-function packPhotos(arr){
-  const a = (arr||[]).filter(Boolean).slice(0,4);
-  if(!a.length) return null;
-  return a.length === 1 ? a[0] : JSON.stringify(a);
-}
-function gallery(c){
-  return (c.photos && c.photos.length) ? c.photos : [carArt(hueFrom(c.name||""), c.name||"Car")];
-}
-function fromRow(r){
-  return {
-    id: r.id, name: r.name, brand: r.brand, year: r.year, price: r.price,
-    km: r.km, fuel: r.fuel, trans: r.trans, owners: r.owners, color: r.color,
-    ins: r.ins, loc: r.loc, desc: r.description,
-    photos: parsePhotos(r.photo)
-  };
-}
 
-/* ---------- placeholder photo (night-studio look) ---------- */
-function carArt(hue, name){
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
-  <rect width="640" height="480" fill="#141B16"/>
-  <ellipse cx="320" cy="130" rx="290" ry="160" fill="hsl(${hue},30%,26%)" opacity="0.28"/>
-  <ellipse cx="320" cy="345" rx="240" ry="26" fill="#000" opacity="0.5"/>
-  <g transform="translate(120,190)">
-    <path d="M20 120 Q30 78 90 66 L130 30 Q150 14 185 14 L280 14 Q310 14 330 36 L360 66 Q400 74 400 105 L400 130 L20 130 Z"
-      fill="hsl(${hue},34%,48%)"/>
-    <path d="M140 34 L185 34 L185 62 L118 62 Z" fill="hsl(${hue},20%,20%)"/>
-    <path d="M200 34 L272 34 Q290 34 302 48 L314 62 L200 62 Z" fill="hsl(${hue},20%,20%)"/>
-    <path d="M30 92 L392 92" stroke="#D5B36B" stroke-width="2.5" opacity="0.7"/>
-    <circle cx="105" cy="130" r="34" fill="#060907"/><circle cx="105" cy="130" r="14" fill="#D5B36B" opacity="0.8"/>
-    <circle cx="320" cy="130" r="34" fill="#060907"/><circle cx="320" cy="130" r="14" fill="#D5B36B" opacity="0.8"/>
-  </g>
-  <text x="320" y="428" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="26"
-    fill="rgba(244,241,232,.55)">${name}</text>
-</svg>`;
-  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-}
-
-/* ---------- sample cars (demo mode only) ---------- */
-const SEED = [
-  {id:"s1", name:"Maruti Swift VXI",      brand:"Maruti Suzuki", year:2019, price:465000, km:38000, fuel:"Petrol", trans:"Manual",    owners:"1st Owner", color:"Pearl White",   ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"Single owner, full service history. New tyres fitted recently.", photo:carArt(210,"Maruti Swift VXI")},
-  {id:"s2", name:"Hyundai i20 Sportz",    brand:"Hyundai",       year:2018, price:520000, km:45000, fuel:"Petrol", trans:"Manual",    owners:"1st Owner", color:"Fiery Red",     ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"Top variant with touchscreen and rear camera.", photo:carArt(0,"Hyundai i20 Sportz")},
-  {id:"s3", name:"Honda City ZX",         brand:"Honda",         year:2017, price:610000, km:52000, fuel:"Petrol", trans:"Automatic", owners:"2nd Owner", color:"Golden Brown",  ins:"Valid — Third Party",   loc:"AS-05, Nagaon",   desc:"Smooth CVT automatic, sunroof, leather seats.", photo:carArt(35,"Honda City ZX")},
-  {id:"s4", name:"Tata Nexon XZ+",        brand:"Tata",          year:2021, price:780000, km:24000, fuel:"Diesel", trans:"Manual",    owners:"1st Owner", color:"Foliage Green", ins:"Valid — Comprehensive", loc:"AS-01, Guwahati", desc:"5-star safety rated SUV, showroom condition.", photo:carArt(140,"Tata Nexon XZ+")},
-  {id:"s5", name:"Mahindra XUV300 W8",    brand:"Mahindra",      year:2020, price:720000, km:31000, fuel:"Diesel", trans:"Manual",    owners:"1st Owner", color:"Aqua Marine",   ins:"Valid — Comprehensive", loc:"AS-02, Silchar",  desc:"Loaded W8 variant — sunroof, cruise control.", photo:carArt(185,"Mahindra XUV300 W8")},
-  {id:"s6", name:"Maruti WagonR LXI CNG", brand:"Maruti Suzuki", year:2020, price:395000, km:41000, fuel:"CNG",    trans:"Manual",    owners:"1st Owner", color:"Silky Silver",  ins:"Valid — Third Party",   loc:"AS-01, Guwahati", desc:"Company-fitted CNG, super economical city car.", photo:carArt(265,"Maruti WagonR CNG")}
-];
-
-/* ---------- state ---------- */
-let cars = [];
-let ownerMode = false;
-let ownerPin = null;
-let bookingCar = null;
-let brandFilter = "";
-
-async function load(){
-  if(SB_ON){
-    try{
-      const rows = await sb("cars?select=*&order=created_at.desc");
-      cars = rows.map(fromRow);
-    }catch(e){
-      console.error("Supabase load failed:", e);
-      cars = [];
-      toast("⚠️ Could not load cars — check your internet connection");
+/* ---------- data layer (live ⇄ demo) ---------- */
+const api = {
+  async list(){
+    if(LIVE){
+      const rows = await sb("workers?select=*&order=created_at.desc");
+      return rows.map(r => ({...r, skills: typeof r.skills === "string" ? JSON.parse(r.skills) : (r.skills||[])}));
     }
-    renderCars();
-    return;
+    return demoAll();
+  },
+  async register(phone, pin, data){
+    if(LIVE){
+      const rows = await sb("rpc/register_worker", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin, p_data:data})});
+      return Array.isArray(rows) ? rows[0] : rows;
+    }
+    const all = demoAll();
+    if(all.some(w => w.phone === phone)) throw new Error("This phone number is already registered — please sign in");
+    const w = {id:"w"+Date.now(), created_at:new Date().toISOString(), phone, pin, rating_sum:0, rating_count:0, available:true, ...data};
+    all.unshift(w); demoSave(all); return w;
+  },
+  async login(phone, pin){
+    if(LIVE){
+      const rows = await sb("rpc/login_worker", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})});
+      const r = rows && rows[0];
+      if(!r) throw new Error("Wrong phone number or PIN");
+      return {...r, skills: typeof r.skills === "string" ? JSON.parse(r.skills) : (r.skills||[])};
+    }
+    const w = demoAll().find(x => x.phone === phone && x.pin === pin);
+    if(!w) throw new Error("Wrong phone number or PIN");
+    return w;
+  },
+  async update(phone, pin, data){
+    if(LIVE){
+      const rows = await sb("rpc/update_worker", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin, p_data:data})});
+      return Array.isArray(rows) ? rows[0] : rows;
+    }
+    const all = demoAll();
+    const i = all.findIndex(x => x.phone === phone && x.pin === pin);
+    if(i < 0) throw new Error("Session expired — please sign in again");
+    all[i] = {...all[i], ...data}; demoSave(all); return all[i];
+  },
+  async rate(id, s){
+    if(LIVE) return await sb("rpc/rate_worker", {method:"POST", body:JSON.stringify({p_id:id, p_stars:s})});
+    const all = demoAll();
+    const w = all.find(x => x.id === id); if(!w) return;
+    w.rating_sum = (w.rating_sum||0) + s; w.rating_count = (w.rating_count||0) + 1;
+    demoSave(all);
+  },
+  async book(rec){
+    if(LIVE){ try{ await sb("bookings", {method:"POST", body:JSON.stringify(rec), headers:{Prefer:"return=minimal"}}); }catch(e){ console.error(e); } }
   }
-  try{
-    const raw = localStorage.getItem(STORE_KEY);
-    cars = raw ? JSON.parse(raw) : SEED.slice();
-  }catch(e){ cars = SEED.slice(); }
-  cars = cars.map(c => c.photos ? c : {...c, photos: parsePhotos(c.photo)});
-  if(!localStorage.getItem(STORE_KEY)) save();
-  renderCars();
-}
-function save(){
-  if(SB_ON) return;
-  try{ localStorage.setItem(STORE_KEY, JSON.stringify(cars)); }
-  catch(e){ toast("⚠️ Storage full — try a smaller photo"); }
-}
+};
 
-/* ---------- helpers ---------- */
-const fmt = n => "₹" + Number(n).toLocaleString("en-IN");
-function toast(msg){
-  const t = document.getElementById("toast");
-  t.textContent = msg; t.classList.add("show");
-  clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 3200);
-}
-function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-function closeModal(id){ document.getElementById(id).classList.remove("open"); }
-function openModal(id){ document.getElementById(id).classList.add("open"); }
-
-/* ---------- scroll reveal ---------- */
-const revealer = ("IntersectionObserver" in window)
-  ? new IntersectionObserver(entries => {
-      entries.forEach(en => { if(en.isIntersecting){ en.target.classList.add("in"); revealer.unobserve(en.target); } });
-    }, {threshold:.12})
-  : null;
-function watchReveals(root){
-  (root || document).querySelectorAll(".reveal:not(.in)").forEach((el,i)=>{
-    el.style.transitionDelay = Math.min(i % 6 * 60, 300) + "ms";
-    if(revealer) revealer.observe(el); else el.classList.add("in");
+/* ---------- demo store ---------- */
+function demoSeed(){
+  const base = {lat:26.1445, lng:91.7362}; // Guwahati
+  const mk = (name, city, area, skills, dLat, dLng, rs, rc) => ({
+    id:"d"+name.replace(/\s/g,""), created_at:new Date().toISOString(),
+    name, phone:"7086269537", pin:"0000", city, area, about:"",
+    selfie:null, lat:base.lat+dLat, lng:base.lng+dLng,
+    skills, available:true, rating_sum:rs, rating_count:rc
   });
+  return [
+    mk("Rahim Ali","Guwahati","Six Mile",[{skill:"Car Mechanic",price:500,unit:"per hour",exp:"6 years"},{skill:"Driver",price:900,unit:"per day",exp:"8 years"}], .01,.008, 47,10),
+    mk("Priya Das","Guwahati","Zoo Road",[{skill:"Tutor",price:5000,unit:"per month",exp:"4 years"}], -.008,.012, 44,9),
+    mk("Sunita Devi","Guwahati","Beltola",[{skill:"Cook",price:6000,unit:"per month",exp:"10 years"},{skill:"Maid",price:4000,unit:"per month",exp:"10 years"}], .015,-.01, 38,8),
+    mk("Manoj Deka","Guwahati","Ganeshguri",[{skill:"Electrician",price:400,unit:"per job",exp:"7 years"},{skill:"AC Repair",price:600,unit:"per job",exp:"5 years"}], -.012,-.006, 33,7),
+    mk("Bhaskar Bora","Guwahati","Chandmari",[{skill:"Gardener",price:350,unit:"per day",exp:"3 years"}], .006,.017, 18,4),
+    mk("Rina Begum","Guwahati","Hatigaon",[{skill:"Babysitter",price:4500,unit:"per month",exp:"5 years"},{skill:"Cleaner",price:300,unit:"per day",exp:"6 years"}], .02,.004, 24,5),
+    mk("Dipak Nath","Guwahati","Maligaon",[{skill:"Plumber",price:450,unit:"per job",exp:"9 years"}], -.02,.01, 29,6),
+    mk("Anita Sharma","Guwahati","Uzan Bazar",[{skill:"Beautician",price:800,unit:"per job",exp:"6 years"},{skill:"Tailor",price:250,unit:"per job",exp:"12 years"}], .003,-.018, 40,8),
+    mk("Kamal Hussain","Guwahati","Paltan Bazar",[{skill:"Driver",price:12000,unit:"per month",exp:"11 years"}], -.005,-.012, 35,7),
+    mk("Jyoti Kalita","Guwahati","Dispur",[{skill:"Tutor",price:400,unit:"per hour",exp:"2 years"},{skill:"Photographer",price:2500,unit:"per job",exp:"3 years"}], .011,.002, 9,2)
+  ];
 }
+function demoAll(){
+  try{
+    const raw = localStorage.getItem(WSTORE);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  const s = demoSeed(); demoSave(s); return s;
+}
+function demoSave(all){ try{ localStorage.setItem(WSTORE, JSON.stringify(all)); }catch(e){ toast("⚠️ Storage full — try a smaller selfie"); } }
 
-/* ---------- interstitial strips ---------- */
-function stripBrands(){
-  const chips = ['<button class="brand-chip'+(brandFilter===""?" on":"")+'" onclick="setBrand(\'\')">All brands</button>']
-    .concat(BRANDS.map(b=>{
-      const short = b === "Maruti Suzuki" ? "Maruti" : b;
-      return '<button class="brand-chip'+(brandFilter===b?" on":"")+'" onclick="setBrand(\''+b+'\')">'+short+'</button>';
-    }));
-  return `<div class="strip strip-brands reveal">
-    <span class="eyebrow">Shop by brand</span>
-    <div class="brand-row">${chips.join("")}</div>
-  </div>`;
-}
-function stripWhy(){
-  return `<div class="strip strip-why reveal">
-    <span class="eyebrow">The Budget Cars promise</span>
-    <h2 class="display">Why buy from <em>us?</em></h2>
-    <div class="why-list">
-      <div class="why"><span class="num">01</span><div><b>Inspected &amp; verified</b><span>Engine, papers, insurance and service history — checked before a car ever reaches you.</span></div></div>
-      <div class="why"><span class="num">02</span><div><b>Honest pricing</b><span>The price you see is the price you pay. No hidden charges, ever.</span></div></div>
-      <div class="why"><span class="num">03</span><div><b>Book from ₹10,000</b><span>Reserve any car with a small token — pay in seconds with any UPI app.</span></div></div>
-      <div class="why"><span class="num">04</span><div><b>With you till the keys</b><span>RC transfer, insurance and paperwork — we handle it all for you.</span></div></div>
-    </div>
-  </div>`;
-}
-function stripPromo(){
-  return `<div class="strip strip-promo reveal">
-    <div class="txt"><b>Sell or exchange <i>your old car</i></b><span>Best price in town, instant evaluation. Talk to Budget Cars today.</span></div>
-    <a class="btn btn-gold" href="https://wa.me/${PHONE}?text=${encodeURIComponent("Hi Budget Cars! I want to sell/exchange my car.")}" target="_blank" rel="noopener">WhatsApp us</a>
-  </div>`;
-}
-function setBrand(b){
-  brandFilter = b;
-  renderCars();
-  document.getElementById("cars").scrollIntoView({behavior:"smooth"});
-}
-
-/* ---------- render ---------- */
-function cardHTML(c){
-  return `<div class="card reveal">
-    <div class="photo" onclick="openDetail('${c.id}')">
-      <img src="${gallery(c)[0]}" alt="${esc(c.name)}" loading="lazy">
-      <span class="badge">${esc(c.fuel)} · ${c.year}</span>
-      ${ownerMode ? `<button class="edit-btn" title="Edit car" onclick="event.stopPropagation();openEditCar('${c.id}')">✎</button>
-      <button class="del-btn" title="Delete car" onclick="event.stopPropagation();deleteCar('${c.id}')">✕</button>` : ``}
-    </div>
-    <div class="body" onclick="openDetail('${c.id}')">
-      <h3>${esc(c.name)}</h3>
-      <div class="meta">${c.year} · ${Number(c.km).toLocaleString("en-IN")} km · ${esc(c.trans)}</div>
-      <div class="price">${fmt(c.price)}</div>
-      <div class="card-actions">
-        <button class="btn details-btn" onclick="event.stopPropagation();openDetail('${c.id}')">Details</button>
-        <button class="btn book" onclick="event.stopPropagation();openBooking('${c.id}')">Book now</button>
-      </div>
-    </div>
-  </div>`;
-}
-function renderCars(){
-  const q    = document.getElementById("searchBox").value.trim().toLowerCase();
-  const fuel = document.getElementById("fuelFilter").value;
-  const sort = document.getElementById("sortBy").value;
-
-  let list = cars.filter(c =>
-    (!q || (c.name+" "+c.brand+" "+(c.loc||"")).toLowerCase().includes(q)) &&
-    (!fuel || c.fuel === fuel) &&
-    (!brandFilter || (c.brand||"").toLowerCase().includes(brandFilter.split(" ")[0].toLowerCase()))
-  );
-  if(sort==="low")  list.sort((a,b)=>a.price-b.price);
-  if(sort==="high") list.sort((a,b)=>b.price-a.price);
-  if(sort==="new")  list.sort((a,b)=>b.year-a.year);
-
-  document.getElementById("countNote").textContent =
-    list.length + (list.length===1 ? " car" : " cars") + (brandFilter ? " · " + brandFilter : "") + " · tap a car for details";
-
-  /* chunks of 6, interleaved with brand picker / why-us / promo strips */
-  const strips = [stripBrands, stripWhy, stripPromo];
-  let html = "";
-  if(!list.length){
-    html = `<div class="empty"><div class="big">🚙</div><b>No cars found</b><br>Try a different search or brand — new cars arrive every week!</div>`;
-    html += stripBrands() + stripWhy();
-  }else{
-    let stripIdx = 0;
-    for(let i = 0; i < list.length; i += 6){
-      html += list.slice(i, i+6).map(cardHTML).join("");
-      if(i + 6 < list.length || stripIdx < 2){
-        html += strips[stripIdx % strips.length]();
-        stripIdx++;
-      }
-    }
-    if(stripIdx < 1) html += stripBrands();
-    if(stripIdx < 2) html += stripWhy();
+/* ---------- router ---------- */
+function go(name){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  if(name === "work"){
+    if(session && session.registered){ name = "me"; }
   }
-  const grid = document.getElementById("carGrid");
-  grid.innerHTML = html;
-  watchReveals(grid);
+  $("scr-" + name).classList.add("on");
+  window.scrollTo({top:0});
+  if(name === "work") authTab("in");
+  if(name === "hire") initHire();
+  if(name === "me") renderMe();
+  if(name === "register") initRegister();
 }
 
-/* ---------- detail ---------- */
-function swapPhoto(i){
-  const g = window._detailGallery || [];
-  if(!g[i]) return;
-  document.getElementById("detailMainPhoto").src = g[i];
-  document.querySelectorAll(".gal-thumbs img").forEach((t,j)=>t.classList.toggle("on", j===i));
+/* ---------- auth ---------- */
+function authTab(which){
+  $("tabIn").classList.toggle("on", which==="in");
+  $("tabUp").classList.toggle("on", which==="up");
+  $("authIn").style.display = which==="in" ? "block" : "none";
+  $("authUp").style.display = which==="up" ? "block" : "none";
 }
-function openDetail(id){
-  const c = cars.find(x=>x.id===id); if(!c) return;
-  const g = gallery(c);
-  window._detailGallery = g;
-  const thumbs = g.length > 1
-    ? `<div class="gal-thumbs">` + g.map((p,i)=>`<img src="${p}" class="${i===0?"on":""}" onclick="swapPhoto(${i})" alt="photo ${i+1}">`).join("") + `</div>`
-    : ``;
-  document.getElementById("detailContent").innerHTML = `
-    <div class="detail-photo"><img id="detailMainPhoto" src="${g[0]}" alt="${esc(c.name)}"></div>
-    ${thumbs}
-    <h3>${esc(c.name)}</h3>
-    <p class="sub">${esc(c.brand)}${c.loc ? " · " + esc(c.loc) : ""}</p>
-    <div class="detail-price">${fmt(c.price)}</div>
-    <div class="detail-specs">
-      <div class="dspec"><span>Year</span><b>${c.year}</b></div>
-      <div class="dspec"><span>KM driven</span><b>${Number(c.km).toLocaleString("en-IN")} km</b></div>
-      <div class="dspec"><span>Fuel</span><b>${esc(c.fuel)}</b></div>
-      <div class="dspec"><span>Transmission</span><b>${esc(c.trans)}</b></div>
-      <div class="dspec"><span>Ownership</span><b>${esc(c.owners)}</b></div>
-      <div class="dspec"><span>Colour</span><b>${esc(c.color||"—")}</b></div>
-      <div class="dspec"><span>Insurance</span><b>${esc(c.ins||"—")}</b></div>
-      <div class="dspec"><span>Registration</span><b>${esc(c.loc||"—")}</b></div>
-    </div>
-    ${c.desc ? `<p style="color:var(--muted);font-size:.9rem;margin-bottom:16px">${esc(c.desc)}</p>` : ""}
-    <button class="btn btn-gold btn-block" style="padding:14px" onclick="closeModal('detailOverlay');openBooking('${c.id}')">Book this car</button>`;
-  openModal("detailOverlay");
-}
-
-/* ---------- booking + UPI ---------- */
-let payMethod = "upi";
-function openBooking(id){
-  bookingCar = cars.find(x=>x.id===id); if(!bookingCar) return;
-  document.getElementById("bookCarName").textContent =
-    bookingCar.name + " (" + bookingCar.year + ") — " + fmt(bookingCar.price);
-  document.getElementById("amountSlider").value = 10000;
-  setPayMethod("upi");
-  updateAmount();
-  openModal("bookOverlay");
-}
-function setPayMethod(m){
-  payMethod = m;
-  document.getElementById("payOptUpi").classList.toggle("on", m === "upi");
-  document.getElementById("payOptCash").classList.toggle("on", m === "cash");
-  document.getElementById("upiBox").style.display = m === "upi" ? "block" : "none";
-  document.getElementById("bookHint").textContent = m === "upi"
-    ? "Tap Pay to open your UPI app, then Confirm — your booking details reach us on WhatsApp and we reply within a few hours."
-    : "No payment needed now — confirm your booking and pay the token in cash when you visit us.";
-}
-function updateAmount(){
-  const amt = document.getElementById("amountSlider").value;
-  document.getElementById("amountVal").textContent = fmt(amt);
-  document.getElementById("payAmt").textContent = fmt(amt);
-  const note = "Token booking" + (bookingCar ? " " + bookingCar.name : "") ;
-  document.getElementById("upiPayBtn").href =
-    "upi://pay?pa=" + encodeURIComponent(UPI_ID) +
-    "&pn=" + encodeURIComponent("Budget Cars") +
-    "&am=" + amt + "&cu=INR&tn=" + encodeURIComponent(note.slice(0,40));
-}
-function copyUpi(){
-  const done = () => toast("UPI ID copied: " + UPI_ID);
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(UPI_ID).then(done, done);
-  }else{
-    const ta = document.createElement("textarea");
-    ta.value = UPI_ID; document.body.appendChild(ta); ta.select();
-    try{ document.execCommand("copy"); }catch(e){}
-    document.body.removeChild(ta); done();
-  }
-}
-function confirmBooking(){
-  const name  = document.getElementById("bookName").value.trim();
-  const phone = document.getElementById("bookPhone").value.trim();
-  const amt   = document.getElementById("amountSlider").value;
+async function signUp(){
+  const name = $("upName").value.trim(), phone = $("upPhone").value.trim(), pin = $("upPin").value.trim();
   if(!name){ toast("Please enter your name"); return; }
   if(!/^\d{10}$/.test(phone)){ toast("Please enter a valid 10-digit phone number"); return; }
-  const payLine = payMethod === "upi"
-    ? `*Payment:* Token by UPI to ${UPI_ID}`
-    : `*Payment:* Will visit the showroom and pay the token in cash`;
-  const msg =
-`🚗 *NEW BOOKING — Budget Cars*
+  if(!/^\d{4}$/.test(pin)){ toast("PIN must be exactly 4 digits"); return; }
+  const all = await api.list();
+  if(all.some(w=>w.phone===phone)){ toast("This number is already registered — sign in instead"); authTab("in"); $("inPhone").value = phone; return; }
+  session = {phone, pin, name, registered:false};
+  saveSession();
+  go("register");
+}
+async function signIn(){
+  const phone = $("inPhone").value.trim(), pin = $("inPin").value.trim();
+  if(!/^\d{10}$/.test(phone) || !/^\d{4}$/.test(pin)){ toast("Enter your 10-digit number and 4-digit PIN"); return; }
+  try{
+    const w = await api.login(phone, pin);
+    session = {phone, pin, name:w.name, registered:true, worker:w};
+    saveSession();
+    toast("Welcome back, " + w.name.split(" ")[0] + "!");
+    go("me");
+  }catch(e){ toast("❌ " + e.message); }
+}
+function signOut(){
+  session = null; localStorage.removeItem(SSTORE);
+  toast("Signed out");
+  go("home");
+}
+function saveSession(){ try{ localStorage.setItem(SSTORE, JSON.stringify(session)); }catch(e){} }
+function loadSession(){ try{ session = JSON.parse(localStorage.getItem(SSTORE)); }catch(e){ session = null; } }
 
-*Car:* ${bookingCar.name} (${bookingCar.year})
-*Price:* ${fmt(bookingCar.price)}
-*Token amount:* ${fmt(amt)}
-${payLine}
-
-*Customer:* ${name}
-*Phone:* ${phone}
-
-Please confirm my booking. Thank you!`;
-  window.open("https://wa.me/"+PHONE+"?text="+encodeURIComponent(msg), "_blank");
-  closeModal("bookOverlay");
-  toast("✅ Booking sent! We'll confirm on WhatsApp shortly.");
+/* ---------- register / edit profile ---------- */
+function initRegister(){
+  const editing = session && session.registered;
+  $("regTitle").innerHTML = editing ? 'Edit your <span class="hl">worker profile</span>' : 'Set up your <span class="hl">worker profile</span>';
+  $("regSaveBtn").textContent = editing ? "💾 Save my profile" : "✅ Register me as a worker";
+  const w = editing ? session.worker : null;
+  selectedSkills = w ? (w.skills||[]).map(s=>s.skill) : [];
+  selfieData = w ? w.selfie : null;
+  regLoc = w && w.lat != null ? {lat:w.lat, lng:w.lng} : null;
+  $("regCity").value  = w ? (w.city||"")  : "";
+  $("regArea").value  = w ? (w.area||"")  : "";
+  $("regAbout").value = w ? (w.about||"") : "";
+  renderSkillChips(w ? w.skills : []);
+  renderSelfie();
+  renderLocBtn();
 }
-
-/* ---------- owner mode ---------- */
-async function ownerLogin(){
-  if(ownerMode){ exitOwner(); return; }
-  const pin = prompt("Enter owner PIN:");
-  if(pin === null) return;
-  let ok = false;
-  if(SB_ON){
-    try{ ok = await sb("rpc/check_pin", {method:"POST", body:JSON.stringify({p_pin:pin})}) === true; }
-    catch(e){ console.error(e); toast("⚠️ Could not verify PIN — check your connection"); return; }
-  }else{
-    ok = (pin === DEMO_PIN);
-  }
-  if(ok){
-    ownerMode = true;
-    ownerPin = pin;
-    document.getElementById("ownerBar").classList.add("on");
-    document.getElementById("ownerBtn").textContent = "Owner ✓";
-    document.getElementById("demoNote").style.display = SB_ON ? "none" : "inline";
-    renderCars();
-    toast("Owner mode ON — you can add & delete cars");
-  }else{
-    toast("❌ Wrong PIN");
-  }
+function renderSkillChips(existing){
+  const q = ($("skillSearch").value || "").trim().toLowerCase();
+  const pool = SKILLS.filter(s => !q || s.toLowerCase().includes(q));
+  const shown = [...new Set([...selectedSkills, ...pool])];
+  $("skillCount").textContent = selectedSkills.length;
+  $("skillChips").innerHTML = shown.map(s=>{
+    const on = selectedSkills.includes(s);
+    const dis = !on && selectedSkills.length >= 3;
+    return `<button class="skill-chip${on?" on":""}" ${dis?"disabled":""} onclick="toggleSkill('${esc(s).replace(/'/g,"\\'")}')">${esc(s)}</button>`;
+  }).join("")
+  + (q && !pool.length ? `<span class="note" style="margin:4px 6px 0">No match — add it yourself:</span>` : "")
+  + `<button class="skill-chip" style="border-style:dashed" ${selectedSkills.length>=3?"disabled":""} onclick="addCustomSkill()">➕ Other skill</button>`;
+  $("skillDetails").innerHTML = selectedSkills.map(s=>{
+    const ex = (existing||[]).find(x=>x.skill===s) || {};
+    return `<div class="skill-detail" data-skill="${s}">
+      <h4><span class="dot"></span>${s} — your price &amp; experience</h4>
+      <div class="row">
+        <input type="number" min="0" class="sd-price" placeholder="Price e.g. 500" value="${ex.price??""}">
+        <select class="sd-unit">${UNITS.map(u=>`<option${ex.unit===u?" selected":""}>${u}</option>`).join("")}</select>
+        <input type="text" class="sd-exp" placeholder="Experience e.g. 5 years" value="${esc(ex.exp||"")}">
+      </div>
+    </div>`;
+  }).join("");
 }
-function exitOwner(){
-  ownerMode = false;
-  ownerPin = null;
-  document.getElementById("ownerBar").classList.remove("on");
-  document.getElementById("ownerBtn").textContent = "Owner";
-  renderCars();
+function toggleSkill(s){
+  const existing = collectSkills();
+  if(selectedSkills.includes(s)) selectedSkills = selectedSkills.filter(x=>x!==s);
+  else if(selectedSkills.length < 3) selectedSkills.push(s);
+  renderSkillChips(existing);
 }
-async function deleteCar(id){
-  const c = cars.find(x=>x.id===id); if(!c) return;
-  if(!confirm("Delete \""+c.name+"\" from the website?")) return;
-  if(SB_ON){
-    try{
-      await sb("rpc/delete_car", {method:"POST", body:JSON.stringify({p_pin:ownerPin, p_id:id})});
-    }catch(e){ console.error(e); toast("⚠️ Delete failed: " + e.message); return; }
-  }
-  cars = cars.filter(x=>x.id!==id);
-  save(); renderCars();
-  toast("🗑️ Car deleted");
+function addCustomSkill(){
+  if(selectedSkills.length >= 3){ toast("You already have 3 skills — remove one first"); return; }
+  let s = prompt("Type your skill (e.g. Drone Pilot):");
+  if(!s) return;
+  s = s.trim().replace(/\s+/g," ").slice(0, 30);
+  s = s.charAt(0).toUpperCase() + s.slice(1);
+  if(!s){ return; }
+  const match = SKILLS.find(x => x.toLowerCase() === s.toLowerCase());
+  if(match) s = match;
+  if(selectedSkills.includes(s)){ toast("You already added that skill"); return; }
+  const existing = collectSkills();
+  selectedSkills.push(s);
+  renderSkillChips(existing);
+  toast("✅ \"" + s + "\" added — set your price below");
 }
-
-/* ---------- add / edit car ---------- */
-let pendingPhotos = [null, null, null, null];
-let photoSlotIdx = 0;
-let editingId = null;
-
-function refreshSlots(){
-  for(let i = 0; i < 4; i++){
-    const el = document.getElementById("slot" + i);
-    el.innerHTML = pendingPhotos[i]
-      ? `<img src="${pendingPhotos[i]}" alt=""><button class="slot-x" onclick="event.stopPropagation();removePhoto(${i})">✕</button>`
-      : `<span>＋ Photo ${i+1}</span>`;
-  }
+function collectSkills(){
+  return [...document.querySelectorAll(".skill-detail")].map(d=>({
+    skill: d.dataset.skill,
+    price: +d.querySelector(".sd-price").value || 0,
+    unit:  d.querySelector(".sd-unit").value,
+    exp:   d.querySelector(".sd-exp").value.trim()
+  }));
 }
-function pickPhoto(i){
-  photoSlotIdx = i;
-  const inp = document.getElementById("photoInput");
-  inp.value = "";
-  inp.click();
+function renderSelfie(){
+  $("selfieCircle").innerHTML = selfieData ? `<img src="${selfieData}" alt="Your selfie">` : "📷";
 }
-function removePhoto(i){
-  pendingPhotos[i] = null;
-  refreshSlots();
-}
-function handlePhoto(input){
+function handleSelfie(input){
   const file = input.files && input.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
-      const MAX = 900;
-      const scale = Math.min(1, MAX / img.width);
-      const cv = document.createElement("canvas");
-      cv.width = Math.round(img.width*scale);
-      cv.height = Math.round(img.height*scale);
-      cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
-      pendingPhotos[photoSlotIdx] = cv.toDataURL("image/jpeg", .82);
-      refreshSlots();
+      const S = 400, side = Math.min(img.width, img.height);
+      const cv = document.createElement("canvas"); cv.width = S; cv.height = S;
+      cv.getContext("2d").drawImage(img, (img.width-side)/2, (img.height-side)/2, side, side, 0, 0, S, S);
+      selfieData = cv.toDataURL("image/jpeg", .82);
+      renderSelfie();
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
-function setAddModalMode(){
-  document.getElementById("addTitle").innerHTML = editingId ? 'Edit this <i>car</i>' : 'Add a <i>car</i>';
-  document.getElementById("addSub").textContent = editingId
-    ? "Change anything — then save. Customers see the update instantly."
-    : "Fill every detail — customers see exactly this.";
-  document.getElementById("saveCarBtn").textContent = editingId ? "💾 Save changes" : "✅ Add this Car";
+function renderLocBtn(){
+  const b = $("regLocBtn"), t = $("regLocText");
+  if(regLoc){ b.classList.add("ok"); t.textContent = "Location saved ✓ — customers nearby will see you first"; }
+  else{ b.classList.remove("ok"); t.textContent = "Tap to use my current location"; }
 }
-function openAddCar(){
-  editingId = null;
-  ["f_name","f_brand","f_year","f_price","f_km","f_color","f_loc","f_desc"].forEach(i=>document.getElementById(i).value="");
-  pendingPhotos = [null, null, null, null];
-  refreshSlots(); setAddModalMode();
-  openModal("addOverlay");
+function captureLocation(){
+  if(!navigator.geolocation){ toast("Location is not supported on this device"); return; }
+  $("regLocText").textContent = "Getting your location…";
+  navigator.geolocation.getCurrentPosition(
+    pos => { regLoc = {lat:pos.coords.latitude, lng:pos.coords.longitude}; renderLocBtn(); toast("📍 Location saved!"); },
+    ()  => { $("regLocText").textContent = "Tap to use my current location"; toast("Could not get location — you can still register"); },
+    {enableHighAccuracy:true, timeout:10000}
+  );
 }
-function openEditCar(id){
-  const c = cars.find(x=>x.id===id); if(!c) return;
-  editingId = id;
-  document.getElementById("f_name").value  = c.name || "";
-  document.getElementById("f_brand").value = c.brand || "";
-  document.getElementById("f_year").value  = c.year || "";
-  document.getElementById("f_price").value = c.price || "";
-  document.getElementById("f_km").value    = c.km ?? "";
-  document.getElementById("f_fuel").value  = c.fuel || "Petrol";
-  document.getElementById("f_trans").value = c.trans || "Manual";
-  document.getElementById("f_owners").value= c.owners || "1st Owner";
-  document.getElementById("f_color").value = c.color || "";
-  document.getElementById("f_ins").value   = c.ins || "Valid — Comprehensive";
-  document.getElementById("f_loc").value   = c.loc || "";
-  document.getElementById("f_desc").value  = c.desc || "";
-  pendingPhotos = [null, null, null, null];
-  (c.photos || []).slice(0,4).forEach((p,i)=>pendingPhotos[i]=p);
-  refreshSlots(); setAddModalMode();
-  openModal("addOverlay");
-}
-async function saveCar(){
-  const g = id => document.getElementById(id).value.trim();
-  const name = g("f_name"), brand = g("f_brand"), year = +g("f_year"), price = +g("f_price"), km = g("f_km");
-  if(!name || !brand || !year || !price || km===""){ toast("Please fill all fields marked *"); return; }
-  const details = {
-    name, brand, year, price,
-    km: +km,
-    fuel:  document.getElementById("f_fuel").value,
-    trans: document.getElementById("f_trans").value,
-    owners:document.getElementById("f_owners").value,
-    color: g("f_color"),
-    ins:   document.getElementById("f_ins").value,
-    loc:   g("f_loc"),
-    desc:  g("f_desc")
+async function saveProfile(){
+  if(!session){ go("work"); return; }
+  const skills = collectSkills();
+  if(!skills.length){ toast("Choose at least 1 skill"); return; }
+  if(skills.some(s=>!s.price)){ toast("Set a price for every skill you chose"); return; }
+  if(!selfieData){ toast("Please add your selfie — it builds trust"); return; }
+  const city = $("regCity").value.trim();
+  if(!city){ toast("Please enter your city or town"); return; }
+  const data = {
+    name: session.name || (session.worker && session.worker.name),
+    skills, selfie:selfieData, city,
+    area: $("regArea").value.trim(),
+    about: $("regAbout").value.trim(),
+    lat: regLoc ? regLoc.lat : null,
+    lng: regLoc ? regLoc.lng : null,
+    available: session.worker ? session.worker.available !== false : true
   };
-  const photos = pendingPhotos.filter(Boolean);
-  if(SB_ON){
-    const btn = document.getElementById("saveCarBtn");
-    btn.disabled = true; btn.textContent = "⏳ Saving…";
-    try{
-      const row = { ...details, description: details.desc, photo: packPhotos(photos) };
-      delete row.desc;
-      /* editing = save the new version first, then remove the old one */
-      await sb("rpc/add_car", {method:"POST", body:JSON.stringify({p_pin:ownerPin, p_car:row})});
-      if(editingId){
-        try{
-          await sb("rpc/delete_car", {method:"POST", body:JSON.stringify({p_pin:ownerPin, p_id:editingId})});
-        }catch(e){
-          console.error(e);
-          toast("⚠️ Saved, but the old copy could not be removed — delete it manually");
-        }
-      }
-      await load();
-    }catch(e){
-      console.error(e); toast("⚠️ Could not save: " + e.message);
-      btn.disabled = false; setAddModalMode();
-      return;
-    }
-    btn.disabled = false;
-  }else{
-    if(editingId){
-      const i = cars.findIndex(x=>x.id===editingId);
-      if(i > -1) cars[i] = { ...cars[i], ...details, photos };
-    }else{
-      cars.unshift({ id: "c" + Date.now(), ...details, photos });
-    }
-    save(); renderCars();
-  }
-  closeModal("addOverlay");
-  toast(editingId ? "✅ \""+name+"\" updated!" : "✅ \""+name+"\" added to the website!");
-  editingId = null;
+  const btn = $("regSaveBtn"); btn.disabled = true; btn.textContent = "⏳ Saving…";
+  try{
+    let w;
+    if(session.registered) w = await api.update(session.phone, session.pin, data);
+    else w = await api.register(session.phone, session.pin, data);
+    session.registered = true; session.worker = {...(session.worker||{}), ...w, ...data, phone:session.phone};
+    saveSession();
+    toast("🎉 You're live on Nearse!");
+    go("me");
+  }catch(e){ toast("❌ " + e.message); }
+  btn.disabled = false;
 }
 
+/* ---------- my profile ---------- */
+function renderMe(){
+  const w = session && session.worker; if(!w){ go("work"); return; }
+  $("meCard").innerHTML = `
+    <div class="me-top">
+      <div class="ava"><img src="${avatar(w)}" alt=""></div>
+      <div>
+        <h3>${esc(w.name)}</h3>
+        <div class="sub">${esc(w.area ? w.area + ", " : "")}${esc(w.city||"")}</div>
+        <div style="margin-top:4px">${stars(w)}</div>
+      </div>
+    </div>
+    <div class="av-toggle">
+      <div><b>I'm available for work</b><span>Turn off when you're busy — you'll disappear from search.</span></div>
+      <label class="switch"><input type="checkbox" id="avSwitch" ${w.available!==false?"checked":""} onchange="toggleAvailable(this.checked)"><span class="slider-t"></span></label>
+    </div>
+    <div class="me-skills">
+      ${(w.skills||[]).map(s=>`<div class="me-skill"><div><b>${esc(s.skill)}</b><span> · ${esc(s.exp||"")}</span></div><span class="p">${fmt(s.price)} ${esc(s.unit)}</span></div>`).join("")}
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px">
+      <button class="btn btn-line btn-sm" style="flex:1" onclick="go('register')">✎ Edit profile</button>
+      <button class="btn btn-line btn-sm" style="flex:1" onclick="signOut()">Sign out</button>
+    </div>`;
+}
+async function toggleAvailable(v){
+  try{
+    await api.update(session.phone, session.pin, {available: v});
+    session.worker.available = v; saveSession();
+    toast(v ? "✅ You're visible to customers" : "You're hidden until you switch back on");
+  }catch(e){ toast("❌ " + e.message); }
+}
+
+/* ---------- hire ---------- */
+async function initHire(){
+  initHireChipsOnly();
+  refreshLocNote();
+  if(!myLoc) requestMyLocation(false);
+  try{ workers = await api.list(); }catch(e){ console.error(e); workers = []; toast("⚠️ Could not load workers — check your connection"); }
+  renderWorkers();
+}
+function setHireSkill(s){ hireSkill = s; initHireChipsOnly(); renderWorkers(); }
+function initHireChipsOnly(){
+  const chipSet = [...new Set([...(hireSkill ? [hireSkill] : []), ...POPULAR])];
+  $("hireChips").innerHTML =
+    `<button class="skill-chip${hireSkill===""?" on":""}" onclick="setHireSkill('')">All skills</button>` +
+    chipSet.map(k=>`<button class="skill-chip${hireSkill===k?" on":""}" onclick="setHireSkill('${k.replace(/'/g,"\\'")}')">${k}</button>`).join("") +
+    `<button class="skill-chip" style="border-style:dashed" onclick="$('hireSearch').focus()">🔍 60+ more — search</button>`;
+}
+function refreshLocNote(){
+  $("locNote").innerHTML = myLoc
+    ? `📍 Showing nearest workers first`
+    : `📍 Location off — sorted by rating. <button onclick="requestMyLocation(true)">Enable location</button> to see who's nearest.`;
+}
+function requestMyLocation(loud){
+  if(!navigator.geolocation){ if(loud) toast("Location is not supported on this device"); return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => { myLoc = {lat:pos.coords.latitude, lng:pos.coords.longitude}; refreshLocNote(); renderWorkers(); },
+    ()  => { if(loud) toast("Location permission denied — sorting by rating instead"); },
+    {enableHighAccuracy:true, timeout:10000}
+  );
+}
+function matches(w, q){
+  if(hireSkill && !(w.skills||[]).some(s=>s.skill===hireSkill)) return false;
+  if(!q) return true;
+  const hay = (w.name+" "+(w.city||"")+" "+(w.area||"")+" "+(w.skills||[]).map(s=>s.skill).join(" ")).toLowerCase();
+  return hay.includes(q);
+}
+function rankOf(w){
+  const n = w.rating_count||0;
+  return n ? (w.rating_sum/n) : 2.5; /* unrated sits mid-table, not last */
+}
+function renderWorkers(){
+  const q = $("hireSearch").value.trim().toLowerCase();
+  let list = workers.filter(w => w.available !== false && matches(w, q));
+  list.sort((a,b)=>{
+    const da = km(a), db = km(b);
+    if(da != null && db != null && Math.abs(da-db) > 0.4) return da - db;
+    if(da != null && db == null) return -1;
+    if(da == null && db != null) return 1;
+    return rankOf(b) - rankOf(a);
+  });
+  if(!list.length){
+    $("workerGrid").innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="big">🧑‍🔧</div><b>No workers found${hireSkill?" for "+esc(hireSkill):""}</b><br>Try another skill — new workers join every day!</div>`;
+    return;
+  }
+  $("workerGrid").innerHTML = list.map(w=>{
+    const d = km(w);
+    const s0 = (w.skills||[])[0];
+    return `<div class="wcard" onclick="openWorker('${w.id}')">
+      <span class="badge-av">Available</span>
+      <div class="ava"><img src="${avatar(w)}" alt="${esc(w.name)}" loading="lazy"></div>
+      <div style="min-width:0">
+        <h3>${esc(w.name)}</h3>
+        <div class="skills-line">${(w.skills||[]).map(s=>esc(s.skill)).join(" · ")}</div>
+        <div class="meta">
+          ${d != null ? `<span>📍 ${d < 1 ? Math.round(d*1000)+" m" : d.toFixed(1)+" km"}</span>` : (w.city ? `<span>📍 ${esc(w.city)}</span>` : "")}
+          <span>${stars(w)}</span>
+        </div>
+        ${s0 ? `<div class="price-line">${fmt(s0.price)} <small style="color:var(--muted);font-weight:600">${esc(s0.unit)} · ${esc(s0.skill)}</small></div>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ---------- worker detail + booking + rating ---------- */
+function openWorker(id){
+  const w = workers.find(x=>x.id===id); if(!w) return;
+  currentWorker = w; pendingStars = 0;
+  const d = km(w);
+  $("wDetail").innerHTML = `
+    <div class="w-detail-top">
+      <div class="ava"><img src="${avatar(w)}" alt=""></div>
+      <div>
+        <h3>${esc(w.name)}</h3>
+        <div class="sub" style="margin:0">${esc(w.area ? w.area + ", " : "")}${esc(w.city||"")}${d!=null ? " · " + (d<1 ? Math.round(d*1000)+" m away" : d.toFixed(1)+" km away") : ""}</div>
+        <div style="margin-top:4px">${stars(w)}</div>
+      </div>
+    </div>
+    ${w.about ? `<p style="color:var(--muted);font-size:.9rem;margin-bottom:12px">${esc(w.about)}</p>` : ""}
+    <div class="price-table">
+      ${(w.skills||[]).map(s=>`<div class="price-row2"><div><b>${esc(s.skill)}</b>${s.exp?`<span>${esc(s.exp)} experience</span>`:""}</div><span class="p">${fmt(s.price)} ${esc(s.unit)}</span></div>`).join("")}
+    </div>
+    <div class="rate-box">
+      <span class="t">Worked with ${esc(w.name.split(" ")[0])}?<br>Rate them:</span>
+      <div class="rate-stars" id="rateStars">${[1,2,3,4,5].map(i=>`<span data-s="${i}" onclick="setStars(${i})">★</span>`).join("")}</div>
+      <button class="btn btn-line btn-sm" onclick="submitRating()">Rate</button>
+    </div>
+    <button class="btn btn-cobalt btn-block" style="padding:14px" onclick="openBooking()">📅 Book ${esc(w.name.split(" ")[0])}</button>`;
+  openModal("wOverlay");
+}
+function setStars(n){
+  pendingStars = n;
+  document.querySelectorAll("#rateStars span").forEach(s=>s.classList.toggle("lit", +s.dataset.s <= n));
+}
+async function submitRating(){
+  if(!pendingStars){ toast("Tap the stars first (1–5)"); return; }
+  try{
+    await api.rate(currentWorker.id, pendingStars);
+    currentWorker.rating_sum = (currentWorker.rating_sum||0) + pendingStars;
+    currentWorker.rating_count = (currentWorker.rating_count||0) + 1;
+    toast("⭐ Thanks for rating!");
+    renderWorkers(); openWorker(currentWorker.id);
+  }catch(e){ toast("❌ " + e.message); }
+}
+function openBooking(){
+  closeModal("wOverlay");
+  $("bookWName").textContent = currentWorker.name.split(" ")[0];
+  openModal("bookOverlay");
+}
+function confirmBooking(){
+  const name = $("bookName").value.trim(), phone = $("bookPhone").value.trim(), note = $("bookNote").value.trim();
+  if(!name){ toast("Please enter your name"); return; }
+  if(!/^\d{10}$/.test(phone)){ toast("Please enter a valid 10-digit phone number"); return; }
+  const w = currentWorker;
+  api.book({worker_id:w.id, worker_name:w.name, customer_name:name, customer_phone:phone, note});
+  const msg =
+`🤝 *Booking request via Nearse*
+
+Hi ${w.name.split(" ")[0]}! I found you on Nearse (nearse.in) and would like to book you.
+${note ? "\n*What I need:* " + note + "\n" : ""}
+*My name:* ${name}
+*My phone:* ${phone}
+
+Please reply to confirm. Thank you!`;
+  window.open("https://wa.me/91" + w.phone + "?text=" + encodeURIComponent(msg), "_blank");
+  closeModal("bookOverlay");
+  toast("✅ Request sent! " + w.name.split(" ")[0] + " will reply on WhatsApp.");
+}
+
+/* ---------- landing extras ---------- */
+(function(){
+  const items = POPULAR.concat(["60+ skills","No commission","Set your own price","Nearest first"]);
+  const half = items.map(t=>`<span>${t}<b>✦</b></span>`).join("");
+  $("skillTicker").innerHTML = half + half;
+  $("popChips").innerHTML = POPULAR
+    .map(s=>`<button class="pop-chip" onclick="goSkill('${s.replace(/'/g,"\\'")}')">${s}</button>`).join("");
+})();
+function goSkill(s){ hireSkill = s; go("hire"); }
+const revealer = ("IntersectionObserver" in window)
+  ? new IntersectionObserver(entries => {
+      entries.forEach(en => { if(en.isIntersecting){ en.target.classList.add("in"); revealer.unobserve(en.target); } });
+    }, {threshold:.12})
+  : null;
+document.querySelectorAll(".reveal").forEach(el=>{
+  if(revealer) revealer.observe(el); else el.classList.add("in");
+});
+
 /* ---------- init ---------- */
-document.getElementById("year").textContent = new Date().getFullYear();
+$("year").textContent = new Date().getFullYear();
 document.addEventListener("keydown", e => {
   if(e.key==="Escape") document.querySelectorAll(".overlay.open").forEach(o=>o.classList.remove("open"));
 });
-document.getElementById("carGrid").innerHTML =
-  '<div class="empty"><div class="big">⏳</div><b>Loading cars…</b></div>';
-watchReveals(document);
-load();
+(async function init(){
+  loadSession();
+  try{
+    await sb("workers?select=id&limit=1");
+    LIVE = true;
+  }catch(e){
+    LIVE = false;
+    $("demoNote").classList.add("on");
+  }
+  if(session && session.registered){
+    $("navWork").textContent = "My profile";
+    try{ const w = await api.login(session.phone, session.pin); session.worker = w; saveSession(); }catch(e){}
+  }
+})();
 </script>
 </body>
 </html>
