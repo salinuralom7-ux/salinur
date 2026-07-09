@@ -1,0 +1,40 @@
+name: Check nearse.in HTTPS
+# Temporary helper: inspects the TLS certificate served by nearse.in and
+# writes a report to .github/https-status.txt. Removed after launch.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/check-https.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect certificate
+        run: |
+          R=.github/https-status.txt
+          echo "checked: $(date -u +%Y-%m-%dT%H:%M:%SZ)" > $R
+          echo "--- certificate served on nearse.in:443 ---" >> $R
+          echo | timeout 15 openssl s_client -connect nearse.in:443 -servername nearse.in 2>/dev/null \
+            | openssl x509 -noout -subject -issuer -dates >> $R 2>&1 \
+            || echo "no certificate presented / handshake failed" >> $R
+          echo "--- strict https request ---" >> $R
+          curl -sS -o /dev/null -m 15 -w "https://nearse.in -> HTTP %{http_code} (certificate TRUSTED)\n" https://nearse.in/ >> $R 2>&1 \
+            || echo "strict https failed -> certificate not trusted yet" >> $R
+          echo "--- via github.io ---" >> $R
+          curl -sS -o /dev/null -m 15 -w "github.io redirect -> HTTP %{http_code} -> %{redirect_url}\n" https://salinuralom7-ux.github.io/salinur/ >> $R 2>&1 || true
+          cat $R
+      - name: Commit report
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/https-status.txt
+          git commit -m "HTTPS status report" || echo "nothing to commit"
+          git push || true
