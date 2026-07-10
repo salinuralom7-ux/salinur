@@ -455,7 +455,6 @@ input[type=range]{width:100%;accent-color:var(--gold);height:6px;cursor:pointer}
     <a href="#" class="logo">Budget <i>Cars</i></a>
     <nav class="nav-right">
       <a href="#contact">Contact</a>
-      <button class="btn btn-line" id="ownerBtn" onclick="ownerLogin()">Owner</button>
     </nav>
   </div>
 </header>
@@ -990,7 +989,6 @@ async function ownerLogin(){
     ownerMode = true;
     ownerPin = pin;
     document.getElementById("ownerBar").classList.add("on");
-    document.getElementById("ownerBtn").textContent = "Owner ✓";
     document.getElementById("demoNote").style.display = SB_ON ? "none" : "inline";
     renderCars();
     toast("Owner mode ON — you can add & delete cars");
@@ -1002,7 +1000,7 @@ function exitOwner(){
   ownerMode = false;
   ownerPin = null;
   document.getElementById("ownerBar").classList.remove("on");
-  document.getElementById("ownerBtn").textContent = "Owner";
+  if(location.hash.toLowerCase() === "#owner") history.replaceState(null, "", location.pathname);
   renderCars();
 }
 async function deleteCar(id){
@@ -1155,7 +1153,12 @@ document.addEventListener("keydown", e => {
 document.getElementById("carGrid").innerHTML =
   '<div class="empty"><div class="big">⏳</div><b>Loading cars…</b></div>';
 watchReveals(document);
+function maybeOwnerFromHash(){
+  if(location.hash.toLowerCase() === "#owner" && !ownerMode) ownerLogin();
+}
+window.addEventListener("hashchange", maybeOwnerFromHash);
 load();
+setTimeout(maybeOwnerFromHash, 600);
 </script>
 </body>
 </html>

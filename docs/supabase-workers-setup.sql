@@ -135,3 +135,26 @@ begin
   where id = p_id;
 end;
 $$;
+
+-- ============================================================
+-- Budget Cars: owner PIN moved to a bcrypt hash (never stored in
+-- plain text, never committed to the repo). check_pin now verifies
+-- against the hash.
+-- ============================================================
+alter table public.owner_settings add column if not exists pin_hash text;
+update public.owner_settings
+  set pin_hash = '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea',
+      pin = ''
+  where id = 1;
+
+create or replace function public.check_pin(p_pin text)
+returns boolean
+language sql
+security definer
+set search_path = public, extensions
+as $$
+  select exists (
+    select 1 from owner_settings
+    where id = 1 and pin_hash is not null and pin_hash = crypt(p_pin, pin_hash)
+  );
+$$;
