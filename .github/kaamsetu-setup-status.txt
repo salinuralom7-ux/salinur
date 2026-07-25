@@ -1,8 +1,8 @@
-run: 2026-07-25T12:37:37Z
+run: 2026-07-25T12:44:45Z
 secret: present (44 chars)
 list projects: HTTP 200
 project: mpufunsitqtdkqlibxof
 run SQL: HTTP 201
 verify workers table: HTTP 201 — [{"n":2}]
-verify migration: HTTP 201 — [{"new_worker_cols":3,"new_functions":2,"email_leaked_to_public":0,"require_phone_otp":false,"approved_now":2}]
+verify migration: HTTP 201 — [{"new_worker_cols":3,"new_functions":2,"email_leaked_to_public":0,"require_phone_otp":false,"approved_now":2,"private_cols":2,"wa_fn":1,"wa_code_leaked":0}]
 SUCCESS: Nearse database is live
