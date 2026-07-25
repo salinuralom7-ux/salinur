@@ -399,27 +399,32 @@ header{
   border:none;background:none;color:var(--muted);font-size:1rem;padding:2px 4px;display:none;
 }
 .searchbar .clear.on{display:block}
-.cat-row{display:flex;gap:8px;overflow-x:auto;padding:16px 0 6px;scrollbar-width:none}
+.row-label{
+  font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin:26px 0 10px;
+}
+.row-label.quiet{margin-top:22px;color:rgba(138,151,160,.75)}
+.cat-row{display:flex;gap:9px;overflow-x:auto;padding:0 0 8px;scrollbar-width:none}
 .cat-row::-webkit-scrollbar{display:none}
 .cat-chip{
-  flex:0 0 auto;border:1px solid var(--line-strong);background:var(--surface);
-  border-radius:999px;padding:8px 16px;font-size:.87rem;font-weight:600;color:var(--ink-2);
-  transition:all .14s ease;
+  flex:0 0 auto;border:1px solid var(--line-strong);background:var(--surface-2);
+  border-radius:999px;padding:11px 19px;font-size:.92rem;font-weight:700;color:var(--ink);
+  letter-spacing:-.01em;transition:all .14s ease;box-shadow:var(--shadow-sm);
 }
-.cat-chip:hover{border-color:var(--brand);color:var(--brand)}
+.cat-chip:hover{border-color:var(--brand);color:var(--brand-2);background:var(--raise)}
 .cat-chip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:700}
 .result-meta{
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-  padding:14px 0 4px;color:var(--muted);font-size:.84rem;font-weight:600;
+  padding:24px 0 4px;border-top:1px solid var(--line);margin-top:22px;color:var(--muted);font-size:.84rem;font-weight:600;
 }
 .result-meta button{
   border:none;background:none;color:var(--brand);font-weight:700;font-size:.84rem;
   text-decoration:underline;text-underline-offset:2px;
 }
-.suggests{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.suggests{display:flex;flex-wrap:wrap;gap:7px}
 .suggest{
-  border:1px solid var(--line);background:var(--surface);border-radius:999px;
-  padding:6px 13px;font-size:.83rem;color:var(--ink-2);font-weight:500;
+  border:1px solid var(--line);background:transparent;border-radius:999px;
+  padding:6px 13px;font-size:.82rem;color:var(--muted);font-weight:500;
 }
 .suggest:hover{border-color:var(--brand);color:var(--brand)}
 
@@ -749,9 +754,11 @@ footer a:hover{color:var(--brand)}
         <input type="text" id="hireSearch" placeholder="Try: carpenter, maid, cook, electrician…" oninput="onSearchInput()" autocomplete="off">
         <button class="clear" id="clearSearch" onclick="clearSearch()" aria-label="Clear search">✕</button>
       </div>
-      <div class="suggests" id="suggests"></div>
     </div>
+    <div class="row-label">Browse by category</div>
     <div class="cat-row" id="catRow"></div>
+    <div class="row-label quiet">Or pick a popular service</div>
+    <div class="suggests" id="suggests"></div>
     <div class="result-meta" id="resultMeta"></div>
     <div class="results" id="results"></div>
   </div>
