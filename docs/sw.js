@@ -1,14 +1,15 @@
 /* Nearse service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls and the separate /cars/ site always go to the network. */
-const CACHE = "nearse-shell-v4";
+const CACHE = "nearse-shell-v5";
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./icons/maskable-512.png"
+  "./icons/maskable-512.png",
+  "./icons/logo.png"
 ];
 
 self.addEventListener("install", e => {
