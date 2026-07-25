@@ -89,7 +89,7 @@ body{
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;color:inherit}
-input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ink)}
+input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ink);color-scheme:dark}
 svg{display:block}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 .wrap-sm{max-width:620px;margin:0 auto;padding:0 20px}
@@ -124,7 +124,7 @@ header{
   border-bottom:1px solid var(--line);background:rgba(15,20,24,.88);
   backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;
 }
-.masthead{display:flex;align-items:center;justify-content:space-between;padding:16px 0;gap:12px}
+.masthead{display:flex;align-items:center;justify-content:space-between;padding-top:16px;padding-bottom:16px;gap:12px}
 .brand{display:inline-flex;align-items:center;gap:10px}
 .brand .mark{
   width:30px;height:30px;border-radius:8px;background:var(--brand);color:var(--brand-ink);
@@ -453,11 +453,84 @@ header{
   text-decoration:underline;text-underline-offset:2px;
 }
 .suggests{display:flex;flex-wrap:wrap;gap:7px}
+.suggest-row{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:12px}
+.suggest-lead{
+  font-size:.74rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);margin-right:2px;
+}
 .suggest{
   border:1px solid var(--line);background:transparent;border-radius:999px;
   padding:6px 13px;font-size:.82rem;color:var(--muted);font-weight:500;
 }
 .suggest:hover{border-color:var(--brand);color:var(--brand)}
+
+/* ---------- location bar ---------- */
+.loc-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:6px 0 16px;
+}
+.loc-city{
+  display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;color:var(--ink);
+}
+.loc-city svg{color:var(--brand-2)}
+.loc-area{
+  background:var(--surface);border:1px solid var(--line-strong);border-radius:999px;
+  padding:7px 13px;font-size:.82rem;font-weight:600;color:var(--ink-2);outline:none;
+}
+.loc-area:focus{border-color:var(--brand)}
+
+/* ---------- category tiles ---------- */
+.tile-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px;
+}
+@media(max-width:560px){.tile-grid{grid-template-columns:repeat(3,1fr);gap:8px}}
+.tile{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:15px 9px 13px;display:flex;flex-direction:column;align-items:center;gap:9px;
+  transition:all .15s ease;text-align:center;
+}
+.tile:hover{border-color:var(--brand);background:var(--surface-2);transform:translateY(-2px)}
+.tile.on{border-color:var(--brand);background:var(--brand-soft)}
+.tile .t-ico{
+  width:40px;height:40px;border-radius:11px;display:grid;place-items:center;
+  background:var(--surface-2);color:var(--brand-2);
+}
+.tile.on .t-ico{background:var(--brand);color:var(--brand-ink)}
+.tile b{font-size:.78rem;font-weight:600;line-height:1.25;color:var(--ink-2);letter-spacing:-.01em}
+.tile.on b{color:var(--ink)}
+
+/* ---------- trust strip ---------- */
+.trust-strip{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+  margin-top:34px;padding-top:26px;border-top:1px solid var(--line);
+}
+@media(max-width:680px){.trust-strip{grid-template-columns:1fr;gap:16px}}
+.trust-item{display:flex;gap:11px;align-items:flex-start}
+.ti-ico{
+  width:32px;height:32px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;
+  background:var(--brand-soft);color:var(--brand-2);
+}
+.trust-item b{display:block;font-size:.88rem;margin-bottom:2px}
+.trust-item span{color:var(--muted);font-size:.79rem;line-height:1.5;display:block}
+
+/* ---------- booking options ---------- */
+.opt-row{display:flex;flex-wrap:wrap;gap:7px}
+.opt{
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r-sm);
+  padding:10px 14px;font-size:.86rem;font-weight:600;color:var(--ink-2);transition:all .14s ease;
+}
+.opt:hover{border-color:var(--brand);color:var(--brand-2)}
+.opt.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.opt small{display:block;font-size:.72rem;font-weight:500;opacity:.75;margin-top:1px}
+.quote{
+  border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r-sm);
+  padding:13px 15px;margin:6px 0 14px;display:none;
+}
+.quote.on{display:block}
+.quote .line{display:flex;justify-content:space-between;gap:12px;font-size:.86rem;margin-bottom:5px}
+.quote .line:last-child{margin-bottom:0}
+.quote .line b{font-weight:700}
+.quote .muted{color:var(--muted)}
 
 /* ---------- worker cards ---------- */
 .results{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px;margin-top:14px}
@@ -795,20 +868,44 @@ footer a:hover{color:var(--brand)}
       Back
     </button>
     <div class="search-head">
+      <div class="loc-bar">
+        <span class="loc-city">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Guwahati
+        </span>
+        <select id="areaFilter" class="loc-area" onchange="renderResults()" aria-label="Filter by area"></select>
+      </div>
       <h1>What do you need done?</h1>
-      <p>Search a service and we'll show verified workers nearest to you in Guwahati.</p>
       <div class="searchbar">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="text" id="hireSearch" placeholder="Try: carpenter, maid, cook, electrician…" oninput="onSearchInput()" autocomplete="off">
+        <input type="text" id="hireSearch" placeholder="Search: maid, cook, electrician…" oninput="onSearchInput()" autocomplete="off">
         <button class="clear" id="clearSearch" onclick="clearSearch()" aria-label="Clear search">✕</button>
       </div>
+      <div class="suggest-row" id="suggests"></div>
     </div>
-    <div class="row-label">Browse by category</div>
+
+    <div class="tile-grid" id="tileGrid"></div>
+
+    <div class="row-label" id="moreLabel">All categories</div>
     <div class="cat-row" id="catRow"></div>
-    <div class="row-label quiet">Or pick a popular service</div>
-    <div class="suggests" id="suggests"></div>
+
     <div class="result-meta" id="resultMeta"></div>
     <div class="results" id="results"></div>
+
+    <div class="trust-strip">
+      <div class="trust-item">
+        <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
+        <div><b>Checked by us</b><span>Every profile is reviewed by the Nearse team before it goes live.</span></div>
+      </div>
+      <div class="trust-item">
+        <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+        <div><b>Clear rates, no fees</b><span>Workers set their own price. Nearse charges no commission.</span></div>
+      </div>
+      <div class="trust-item">
+        <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        <div><b>Talk directly</b><span>Your request goes straight to the worker on WhatsApp.</span></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -843,11 +940,33 @@ footer a:hover{color:var(--brand)}
     <button class="close" onclick="closeModal('bookOverlay')" aria-label="Close">✕</button>
     <h3>Request a booking</h3>
     <p class="sub" id="bookWName"></p>
-    <div class="field"><label for="bookName">Your name</label><input type="text" id="bookName" placeholder="e.g. Priya Das"></div>
-    <div class="field"><label for="bookPhone">Your mobile number</label><input type="tel" id="bookPhone" placeholder="10-digit number" maxlength="10" inputmode="numeric"></div>
-    <div class="field"><label for="bookNote">What do you need? <span class="sublabel">— optional</span></label><textarea id="bookNote" rows="2" placeholder="e.g. Two ceiling fans to be installed this Saturday morning."></textarea></div>
+
+    <div class="field">
+      <label>Which service?</label>
+      <div class="opt-row" id="bookServices"></div>
+    </div>
+
+    <div class="field">
+      <label>When do you need it?</label>
+      <div class="opt-row" id="bookWhen"></div>
+      <input type="date" id="bookDate" style="display:none;margin-top:9px">
+    </div>
+
+    <div class="field">
+      <label>Preferred time</label>
+      <div class="opt-row" id="bookSlot"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="field"><label for="bookName">Your name</label><input type="text" id="bookName" placeholder="e.g. Priya Das"></div>
+      <div class="field"><label for="bookPhone">Mobile number</label><input type="tel" id="bookPhone" placeholder="10-digit number" maxlength="10" inputmode="numeric"></div>
+      <div class="field full"><label for="bookArea">Your area in Guwahati</label><select id="bookArea"></select></div>
+      <div class="field full"><label for="bookNote">Details <span class="sublabel">— optional</span></label><textarea id="bookNote" rows="2" placeholder="e.g. Two ceiling fans to be installed."></textarea></div>
+    </div>
+
+    <div class="quote" id="bookQuote"></div>
     <button class="btn btn-brand btn-block" id="confirmBookBtn" onclick="confirmBooking()" style="padding:14px">Send request on WhatsApp</button>
-    <p class="hint" style="margin-top:11px;text-align:center">Your details go straight to the worker. Nearse takes no commission.</p>
+    <p class="hint" style="margin-top:11px;text-align:center">Goes straight to the worker. Nearse takes no commission.</p>
   </div>
 </div>
 
@@ -1480,14 +1599,58 @@ async function toggleAvailable(v){
 }
 
 /* ---------- hire ---------- */
+const CAT_ICON = {
+  home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M9.5 20v-6h5v6"/>',
+  cook:'<path d="M6 3v7a3 3 0 0 0 6 0V3"/><path d="M9 10v11"/><path d="M18 3c-1.5 1.5-2 3.5-2 6v4h4V9c0-2.5-.5-4.5-2-6z"/><path d="M18 13v8"/>',
+  care:'<path d="M20.8 6.6a5 5 0 0 0-7.1 0L12 8.3l-1.7-1.7a5 5 0 1 0-7.1 7.1L12 22l8.8-8.3a5 5 0 0 0 0-7.1z"/>',
+  repair:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>',
+  build:'<path d="M3 21h18"/><path d="M13.5 3.5 20 10l-2.5 2.5L11 6z"/><path d="m10.5 7.5-7 7V21h6.5l7-7"/>',
+  vehicle:'<path d="M4 16.5V12l2.2-5h11.6L20 12v4.5"/><path d="M4 12h16"/><path d="M4 16.5h16"/><circle cx="7.5" cy="16.5" r="1.6"/><circle cx="16.5" cy="16.5" r="1.6"/>',
+  beauty:'<path d="M12 2.5 13.6 8 19 9.6 13.6 11.2 12 16.7 10.4 11.2 5 9.6 10.4 8z"/><path d="M18 16.5l.7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7z"/>',
+  tutor:'<path d="M3 8l9-4 9 4-9 4z"/><path d="M7 11v5c0 1.5 2.2 3 5 3s5-1.5 5-3v-5"/>',
+  event:'<path d="M4 8h16v12H4z"/><path d="M4 8l8-5 8 5"/><circle cx="12" cy="14" r="3"/>',
+  prof:'<path d="M4 7h16v13H4z"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M4 12h16"/>',
+  tech:'<path d="M3 5h18v11H3z"/><path d="M8 20h8"/><path d="M12 16v4"/>',
+  garden:'<path d="M12 21c0-5 3-9 8-10-1 5-4 8-8 10z"/><path d="M12 21c0-5-3-9-8-10 1 5 4 8 8 10z"/><path d="M12 21v-6"/>',
+  pet:'<circle cx="8" cy="9" r="2"/><circle cx="16" cy="9" r="2"/><circle cx="6" cy="15" r="1.8"/><circle cx="18" cy="15" r="1.8"/><path d="M12 13c2.5 0 4 2 4 4s-1.5 3-4 3-4-1.5-4-3 1.5-4 4-4z"/>',
+  tailor:'<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M8.5 15 17 4"/><path d="M15.5 15 7 4"/>',
+  move:'<path d="M3 8h11v8H3z"/><path d="M14 11h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17" cy="18" r="1.7"/>',
+  facility:'<path d="M12 3l8 3v6c0 4.5-3.2 8.5-8 9.5C7.2 20.5 4 16.5 4 12V6z"/>'
+};
+const TILE_CATS = ["home","cook","repair","build","care","beauty","tutor","vehicle","event","tailor","move","tech"];
+const TILE_LABEL = {
+  home:"Cleaning", cook:"Cooking", repair:"Repairs", build:"Building", care:"Care",
+  beauty:"Beauty", tutor:"Tutors", vehicle:"Vehicle", event:"Events", tailor:"Tailoring",
+  move:"Moving", tech:"Tech", garden:"Gardening", pet:"Pet Care", prof:"Professional", facility:"Security"
+};
+const SLOTS = [["morning","Morning","8 am – 12 pm"],["afternoon","Afternoon","12 – 4 pm"],["evening","Evening","4 – 8 pm"],["any","Anytime",""]];
+const WHENS = [["today","Today",""],["tomorrow","Tomorrow",""],["pick","Pick a date",""]];
 async function initHire(){
+  renderTiles();
   renderCats();
   renderSuggests();
   if(!myLoc) requestLocation(false);
   $("results").innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
   try{ workers = await api.list(); }
   catch(e){ console.error(e); workers = []; toast("Couldn't load workers — check your connection"); }
+  renderAreaFilter();
   renderResults();
+}
+function renderTiles(){
+  $("tileGrid").innerHTML = TILE_CATS.map(k=>{
+    const label = CAT_LABEL[k] || k;
+    const short = TILE_LABEL[k] || label.split(" & ")[0];
+    return `<button class="tile${hireCat===k?" on":""}" onclick="setCat('${hireCat===k?"":k}')" aria-label="${esc(label)}">
+      <span class="t-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${CAT_ICON[k]||""}</svg></span>
+      <b>${esc(short)}</b>
+    </button>`;
+  }).join("");
+}
+function renderAreaFilter(){
+  const sel = $("areaFilter");
+  const areas = [...new Set(workers.filter(w=>w.verified!==false && w.area).map(w=>w.area))].sort();
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All areas</option>' + areas.map(a=>`<option${a===cur?" selected":""}>${esc(a)}</option>`).join("");
 }
 function renderCats(){
   $("catRow").innerHTML =
@@ -1495,10 +1658,11 @@ function renderCats(){
     CATALOGUE.map(([key,label])=>`<button class="cat-chip${hireCat===key?" on":""}" onclick="setCat('${key}')">${esc(label)}</button>`).join("");
 }
 function renderSuggests(){
-  $("suggests").innerHTML = POPULAR.map(s=>`<button class="suggest" onclick="searchFor('${jsq(s)}')">${esc(s)}</button>`).join("");
+  $("suggests").innerHTML = '<span class="suggest-lead">Popular</span>' +
+    POPULAR.slice(0,5).map(s=>`<button class="suggest" onclick="searchFor('${jsq(s)}')">${esc(s)}</button>`).join("");
 }
-function setCat(k){ hireCat = k; renderCats(); renderResults(); }
-function searchFor(s){ $("hireSearch").value = s; hireCat = ""; renderCats(); onSearchInput(); }
+function setCat(k){ hireCat = k; renderTiles(); renderCats(); renderResults(); }
+function searchFor(s){ $("hireSearch").value = s; hireCat = ""; renderTiles(); renderCats(); onSearchInput(); }
 function clearSearch(){ $("hireSearch").value = ""; onSearchInput(); }
 function onSearchInput(){
   $("clearSearch").classList.toggle("on", !!$("hireSearch").value);
@@ -1528,7 +1692,9 @@ function score(w){ const n = w.rating_count||0; return n ? (w.rating_sum/n) : 3.
 function renderResults(){
   const q = $("hireSearch").value.trim().toLowerCase();
   const inCity = w => !w.city || w.city.toLowerCase().includes(CITY.toLowerCase());
-  const list = workers.filter(w => w.available !== false && w.verified !== false && inCity(w) && matchesQuery(w, q));
+  const areaPick = $("areaFilter") ? $("areaFilter").value : "";
+  const list = workers.filter(w => w.available !== false && w.verified !== false && inCity(w)
+    && (!areaPick || w.area === areaPick) && matchesQuery(w, q));
   list.sort((a,b)=>{
     const da = distanceTo(a), db = distanceTo(b);
     if(da != null && db != null && Math.abs(da-db) > 0.4) return da - db;
@@ -1610,22 +1776,113 @@ async function submitRating(){
     renderResults(); openWorker(currentWorker.id);
   }catch(e){ toast(e.message); }
 }
+let bookPick = { svc:0, when:"today", slot:"any", date:"" };
+
 function openBooking(){
   closeModal("wOverlay");
-  $("bookWName").textContent = currentWorker.name + " · " + ((currentWorker.skills||[])[0]||{}).skill;
+  const w = currentWorker;
+  bookPick = { svc:0, when:"today", slot:"any", date:"" };
+  $("bookWName").textContent = w.name + (w.area ? " · " + w.area : "");
+
+  const skills = w.skills || [];
+  $("bookServices").innerHTML = skills.map((s,i)=>
+    `<button type="button" class="opt${i===0?" on":""}" onclick="setBookSvc(${i})">${esc(s.skill)}
+      <small>from ${money(s.price)} ${esc(s.unit||"")}</small></button>`).join("")
+    || `<span class="hint">No services listed</span>`;
+
+  $("bookWhen").innerHTML = WHENS.map(([k,label,sub])=>
+    `<button type="button" class="opt${k===bookPick.when?" on":""}" onclick="setBookWhen('${k}')">${label}
+      ${sub?`<small>${sub}</small>`:""}</button>`).join("");
+
+  $("bookSlot").innerHTML = SLOTS.map(([k,label,sub])=>
+    `<button type="button" class="opt${k===bookPick.slot?" on":""}" onclick="setBookSlot('${k}')">${label}
+      ${sub?`<small>${sub}</small>`:""}</button>`).join("");
+
+  const d = $("bookDate");
+  d.style.display = "none";
+  d.min = todayISO();
+  d.value = "";
+  d.onchange = ()=>{ bookPick.date = d.value; renderQuote(); };
+
+  const areaSel = $("bookArea");
+  areaSel.innerHTML = '<option value="">Select your area</option>' +
+    AREAS.map(a=>`<option${a===w.area?" selected":""}>${esc(a)}</option>`).join("");
+  areaSel.onchange = renderQuote;
+
+  renderQuote();
   openModal("bookOverlay");
 }
+function setBookSvc(i){
+  bookPick.svc = i;
+  document.querySelectorAll("#bookServices .opt").forEach((b,n)=>b.classList.toggle("on", n===i));
+  renderQuote();
+}
+function setBookWhen(k){
+  bookPick.when = k;
+  document.querySelectorAll("#bookWhen .opt").forEach((b,n)=>b.classList.toggle("on", WHENS[n][0]===k));
+  const d = $("bookDate");
+  d.style.display = k === "pick" ? "block" : "none";
+  if(k !== "pick"){ d.value = ""; bookPick.date = ""; }
+  renderQuote();
+}
+function setBookSlot(k){
+  bookPick.slot = k;
+  document.querySelectorAll("#bookSlot .opt").forEach((b,n)=>b.classList.toggle("on", SLOTS[n][0]===k));
+  renderQuote();
+}
+function todayISO(){
+  const t = new Date(); t.setMinutes(t.getMinutes() - t.getTimezoneOffset());
+  return t.toISOString().slice(0,10);
+}
+function bookWhenText(){
+  if(bookPick.when === "today") return "Today";
+  if(bookPick.when === "tomorrow") return "Tomorrow";
+  if(!bookPick.date) return "";
+  const d = new Date(bookPick.date + "T00:00:00");
+  return d.toLocaleDateString("en-IN", { weekday:"short", day:"numeric", month:"short" });
+}
+function bookSlotText(){
+  const s = SLOTS.find(x=>x[0]===bookPick.slot);
+  return s ? (s[2] ? s[1] + " (" + s[2] + ")" : s[1]) : "";
+}
+function renderQuote(){
+  const w = currentWorker; if(!w) return;
+  const s = (w.skills||[])[bookPick.svc];
+  const box = $("bookQuote");
+  if(!s){ box.classList.remove("on"); box.innerHTML = ""; return; }
+  const when = bookWhenText(), area = $("bookArea").value;
+  box.innerHTML =
+    `<div class="line"><span class="muted">Service</span><b>${esc(s.skill)}</b></div>
+     <div class="line"><span class="muted">Rate</span><b>${money(s.price)} <span class="muted">${esc(s.unit||"")}</span></b></div>
+     <div class="line"><span class="muted">When</span><b>${when ? esc(when) : "—"}${when?" · "+esc(bookSlotText()):""}</b></div>
+     <div class="line"><span class="muted">Where</span><b>${area ? esc(area) + ", Guwahati" : "—"}</b></div>
+     <div class="line" style="margin-top:9px"><span class="muted">Final amount is agreed with ${esc(w.name.split(" ")[0])} after seeing the job.</span></div>`;
+  box.classList.add("on");
+}
 function confirmBooking(){
-  const name = $("bookName").value.trim(), phone = $("bookPhone").value.trim(), note = $("bookNote").value.trim();
+  const w = currentWorker;
+  const s = (w.skills||[])[bookPick.svc];
+  if(!s){ toast("Please choose a service"); return; }
+  if(bookPick.when === "pick" && !bookPick.date){ toast("Please pick a date"); return; }
+  const name = $("bookName").value.trim(), phone = $("bookPhone").value.trim();
+  const area = $("bookArea").value, note = $("bookNote").value.trim();
   if(!name){ toast("Please enter your name"); return; }
   if(!/^\d{10}$/.test(phone)){ toast("Enter a valid 10-digit mobile number"); return; }
-  const w = currentWorker;
-  api.book({worker_id:w.id, worker_name:w.name, customer_name:name, customer_phone:phone, note});
+  if(!area){ toast("Please choose your area"); return; }
+
+  const when = bookWhenText() + " · " + bookSlotText();
+  api.book({ worker_id:w.id, worker_name:w.name, customer_name:name, customer_phone:phone,
+             note:[s.skill, when, area, note].filter(Boolean).join(" | ") });
+
   const msg =
 `*Booking request via Nearse (nearse.in)*
 
 Hello ${w.name.split(" ")[0]}, I found your profile on Nearse and would like to book you.
-${note ? "\n*Work needed:* " + note + "\n" : ""}
+
+*Service:* ${s.skill} (${money(s.price)} ${s.unit||""})
+*When:* ${when}
+*Where:* ${area}, Guwahati${note ? "\n*Details:* " + note : ""}
+
 *Name:* ${name}
 *Mobile:* ${phone}
 
