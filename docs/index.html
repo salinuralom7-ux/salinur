@@ -411,6 +411,29 @@ header{
   border-radius:var(--r-sm);padding:12px 14px;margin-bottom:15px;font-size:.83rem;line-height:1.55;
 }
 .otp-preview b{display:block;font-size:1.25rem;letter-spacing:.3em;margin-top:5px;color:var(--ink)}
+.wa-code{
+  border:1px solid var(--line-strong);background:var(--surface-2);border-radius:var(--r);
+  padding:16px;text-align:center;margin-bottom:18px;
+  font-size:2rem;font-weight:800;letter-spacing:.28em;text-indent:.28em;
+  font-variant-numeric:tabular-nums;color:var(--brand-2);
+}
+.wa-steps{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:12px}
+.wa-steps li{display:flex;gap:12px;align-items:flex-start}
+.wa-steps .n{
+  width:23px;height:23px;border-radius:50%;background:var(--brand-soft);color:var(--brand-2);
+  display:grid;place-items:center;font-size:.76rem;font-weight:800;flex:0 0 auto;margin-top:1px;
+}
+.wa-steps p{font-size:.89rem;color:var(--ink-2);line-height:1.55}
+.btn-wa{
+  background:#25D366;color:#062B16;display:inline-flex;align-items:center;justify-content:center;
+  gap:9px;padding:14px;font-weight:800;
+}
+.btn-wa:hover{background:#1FBE5A}
+.wa-expect{
+  border:1px dashed var(--line-strong);background:var(--surface-2);border-radius:var(--r-sm);
+  padding:9px 12px;margin:9px 0 2px;font-size:.8rem;color:var(--muted);line-height:1.5;
+}
+.wa-expect b{color:var(--brand-2);letter-spacing:.16em;font-size:.95rem}
 
 /* ---------- admin review ---------- */
 .admin-card{
@@ -832,21 +855,38 @@ footer a:hover{color:var(--brand)}
       <div class="otp-mark">
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </div>
-      <h2>Verify your WhatsApp number</h2>
-      <p class="sub" id="otpSent">Sending a 6-digit code…</p>
+      <h2>Confirm your WhatsApp number</h2>
+      <p class="sub" id="otpSent">Preparing your code…</p>
 
-      <div class="field">
-        <label for="otpCode">Enter the 6-digit code</label>
-        <input type="text" id="otpCode" class="otp-box" placeholder="······" maxlength="6" inputmode="numeric"
-               autocomplete="one-time-code" oninput="onOtpInput()">
+      <!-- click-to-chat verification: the worker sends the code from their own
+           WhatsApp, so the message arriving proves the number is theirs -->
+      <div id="waFlow">
+        <div class="wa-code" id="waCode"></div>
+        <ol class="wa-steps">
+          <li><span class="n">1</span><p>Tap the green button. WhatsApp opens with the message already written.</p></li>
+          <li><span class="n">2</span><p>Press send. Nothing to type.</p></li>
+          <li><span class="n">3</span><p>Come back here and tap <b>I’ve sent it</b>.</p></li>
+        </ol>
+        <a class="btn btn-wa btn-block" id="waSendBtn" href="#" target="_blank" rel="noopener" onclick="markWaOpened()">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24m4.52 10.35c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.38.1-.5.11-.11.25-.29.37-.44.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.13-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.28"/></svg>
+          Send my code on WhatsApp
+        </a>
+        <button class="btn btn-brand btn-block" id="waDoneBtn" onclick="waSent()" style="padding:14px;margin-top:10px" disabled>I’ve sent it</button>
+        <p class="hint" style="margin-top:12px">Goes to the Nearse number. We check it against the number you entered — that’s how we know it’s really you, and that bookings will reach you.</p>
       </div>
 
-      <div class="otp-preview" id="otpPreview" hidden></div>
-
-      <button class="btn btn-brand btn-block" id="otpVerifyBtn" onclick="verifyOtp()" style="padding:14px">Verify and continue</button>
-      <div class="otp-foot">
-        <button class="linkish" id="otpResend" onclick="resendOtp()">Resend code</button>
-        <button class="linkish" onclick="go('work')">Change number</button>
+      <!-- code-entry flow, used once an SMS/WhatsApp provider is connected -->
+      <div id="codeFlow" hidden>
+        <div class="field">
+          <label for="otpCode">Enter the 6-digit code</label>
+          <input type="text" id="otpCode" class="otp-box" placeholder="······" maxlength="6" inputmode="numeric"
+                 autocomplete="one-time-code" oninput="onOtpInput()">
+        </div>
+        <button class="btn btn-brand btn-block" id="otpVerifyBtn" onclick="verifyOtp()" style="padding:14px">Verify and continue</button>
+        <div class="otp-foot">
+          <button class="linkish" id="otpResend" onclick="resendOtp()">Resend code</button>
+          <button class="linkish" onclick="go('work')">Change number</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1328,7 +1368,8 @@ const api = {
     const all = demoAll();
     if(all.some(w => w.phone === phone)) throw new Error("This number is already registered — please sign in");
     const w = {id:"w"+Date.now(), created_at:new Date().toISOString(), phone, pin, rating_sum:0, rating_count:0,
-      available:true, status:"pending", verified:false, phone_verified:!!(session && session.phoneVerified), ...data};
+      available:true, status:"pending", verified:false, phone_verified:!!(session && session.phoneVerified),
+      wa_claim:(session && session.waCode) || null, ...data};
     all.unshift(w); demoSave(all); return w;
   },
   async login(phone, pin){
@@ -1465,11 +1506,52 @@ async function sbAuth(path, body){
   return data;
 }
 
+const NEARSE_WA = "917086269537";   /* the Nearse business WhatsApp number */
+
 function initOtp(){
-  $("otpCode").value = "";
-  $("otpPreview").hidden = true;
-  $("otpVerifyBtn").disabled = false;
-  sendOtp(false);
+  if(!session || !session.phone){ go("work"); return; }
+  const codeMode = LIVE && REQUIRE_OTP;
+  $("waFlow").hidden   = codeMode;
+  $("codeFlow").hidden = !codeMode;
+  if(codeMode){
+    $("otpCode").value = "";
+    $("otpPreview").hidden = true;
+    $("otpVerifyBtn").disabled = false;
+    sendOtp(false);
+  }else{
+    initWaVerify();
+  }
+}
+
+/* ---------- WhatsApp click-to-chat verification ----------
+   No SMS gateway, no DLT registration, no Meta Business API. The worker sends
+   a code from their own WhatsApp to the Nearse number; the message arriving
+   from that number is the proof that the number is theirs and is on WhatsApp.
+   The admin matches code against sender when reviewing the profile. */
+function initWaVerify(){
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  otpState = { phone: session.phone, channel: "wa-claim", previewCode: code, sentAt: Date.now() };
+  session.waCode = code;
+  saveSession();
+
+  $("waCode").textContent = code;
+  $("otpSent").innerHTML = `One tap to confirm <b>+91 ${esc(session.phone)}</b> is on WhatsApp.`;
+
+  const msg = `Nearse verification\nName: ${session.name}\nNumber: ${session.phone}\nCode: ${code}`;
+  $("waSendBtn").href = "https://wa.me/" + NEARSE_WA + "?text=" + encodeURIComponent(msg);
+  $("waDoneBtn").disabled = true;
+}
+function markWaOpened(){
+  /* only enable "I've sent it" once WhatsApp has actually been opened */
+  $("waDoneBtn").disabled = false;
+  return true;
+}
+function waSent(){
+  session.phoneVerified = false;      /* claimed, not yet matched by the admin */
+  session.waClaimed = true;
+  saveSession();
+  toast("Thanks — we'll match your code when we review your profile");
+  go("register");
 }
 
 async function sendOtp(isResend){
@@ -1799,6 +1881,7 @@ async function saveProfile(){
     available: session.worker ? session.worker.available !== false : true
   };
   if(session.email) data.email = session.email;
+  if(session.waCode) data.wa_code = session.waCode;
   const btn = $("regSaveBtn"); const label = btn.textContent;
   btn.disabled = true; btn.textContent = "Saving…";
   try{
@@ -2197,11 +2280,25 @@ function statusOf(w){
   if(w.status) return w.status;
   return w.verified === false ? "pending" : "approved";
 }
+let waCodes = {};    /* worker id -> the code they claim to have sent us */
+
+async function loadWaCodes(){
+  waCodes = {};
+  try{
+    if(LIVE){
+      const rows = await sb("rpc/admin_wa_codes", {method:"POST", body:JSON.stringify({p_pin:adminPin})});
+      (rows||[]).forEach(r => { waCodes[r.worker_id] = r.wa_code; });
+    }else{
+      demoAll().forEach(w => { if(w.wa_claim) waCodes[w.id] = w.wa_claim; });
+    }
+  }catch(e){ /* codes are a convenience — never block the queue on them */ }
+}
 async function renderAdmin(){
   const host = $("adminPanel");
   host.innerHTML = '<div class="skeleton"></div>';
   let all = [];
   try{ all = await api.list(); }catch(e){ host.innerHTML = '<p class="hint">Could not load profiles.</p>'; return; }
+  await loadWaCodes();
   const pending  = all.filter(w => statusOf(w) === "pending");
   const approved = all.filter(w => statusOf(w) === "approved");
   const rejected = all.filter(w => statusOf(w) === "rejected");
@@ -2214,8 +2311,8 @@ async function renderAdmin(){
     <p class="hint">${pending.length} awaiting approval · ${approved.length} live · ${rejected.length} rejected</p>
 
     <div class="switch-row" style="margin-top:16px">
-      <div><b>Require WhatsApp verification</b><span>${LIVE
-        ? "Turn on once your SMS or WhatsApp provider is connected. Registration is blocked without a verified code."
+      <div><b>Automatic code delivery</b><span>${LIVE
+        ? "Off: workers send a code to you from their own WhatsApp and you match it below. On: codes are sent to them automatically — only turn this on once a provider is connected in Supabase and a test code has actually arrived."
         : "Available when the live database is connected."}</span></div>
       <label class="switch"><input type="checkbox" id="otpSwitch" ${REQUIRE_OTP?"checked":""}
         ${LIVE?"":"disabled"} onchange="adminRequireOtp(this.checked)"><span class="track"></span></label>
@@ -2243,13 +2340,19 @@ function adminCard(w){
     <div style="flex:1;min-width:0">
       <h4>${esc(w.name)} ${w.phone_verified
         ? '<span class="verified-badge">✓ Number verified</span>'
-        : '<span class="verified-badge warn">Number not verified</span>'}</h4>
+        : (waCodes[w.id]
+            ? '<span class="verified-badge warn">WhatsApp check pending</span>'
+            : '<span class="verified-badge warn">Number not verified</span>')}</h4>
       <p class="meta">
         ${esc((w.skills||[]).map(x=>x.skill + " — ₹" + x.price + " " + x.unit).join(" · "))}<br>
         ${esc(w.area ? w.area + ", " : "")}${esc(w.city||"")} · ${esc(w.phone||"")}
         ${w.about ? "<br>" + esc(w.about) : ""}
         ${w.review_note ? `<br><em>Reason given: ${esc(w.review_note)}</em>` : ""}
       </p>
+      ${waCodes[w.id] && st === "pending" ? `<div class="wa-expect">
+        Check WhatsApp for <b>${esc(waCodes[w.id])}</b> from <b>${esc(w.phone||"")}</b>.
+        Approve only if both match.
+      </div>` : ""}
       <div class="admin-actions">${actions}</div>
     </div>
   </div>`;
@@ -2267,7 +2370,12 @@ async function adminSet(id, status, note){
     }else{
       const all = demoAll();
       const w = all.find(x=>x.id===id);
-      if(w){ w.status = status; w.verified = (status === "approved"); w.review_note = (note||"").trim() || null; demoSave(all); }
+      if(w){
+        w.status = status; w.verified = (status === "approved");
+        w.review_note = (note||"").trim() || null;
+        if(status === "approved" && w.wa_claim) w.phone_verified = true;
+        demoSave(all);
+      }
     }
     toast({approved:"Profile approved", rejected:"Profile rejected", pending:"Moved back to review"}[status]);
     renderAdmin();
@@ -2277,7 +2385,7 @@ async function adminRequireOtp(on){
   try{
     await sb("rpc/admin_set_require_otp", {method:"POST", body:JSON.stringify({p_pin:adminPin, p_require:on})});
     REQUIRE_OTP = on;
-    toast(on ? "WhatsApp verification is now required" : "WhatsApp verification turned off");
+    toast(on ? "Codes will now be sent automatically" : "Back to WhatsApp code matching");
   }catch(e){
     toast(e.message);
     $("otpSwitch").checked = REQUIRE_OTP;
