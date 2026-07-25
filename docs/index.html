@@ -550,6 +550,8 @@ header{
 .wcard h3{font-size:1.02rem;letter-spacing:-.02em;margin-bottom:2px}
 .wcard .trade{color:var(--brand);font-size:.85rem;font-weight:600;margin-bottom:6px}
 .wcard .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.8rem;font-weight:600}
+.wcard .where{color:var(--ink-2)}
+.wcard .where em{font-style:normal;color:var(--muted);font-weight:500}
 .wcard .price{
   margin-top:9px;font-size:.95rem;font-weight:700;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;
@@ -566,6 +568,10 @@ header{
   border:1px dashed var(--line-strong);border-radius:var(--r);margin-top:14px;
 }
 .empty b{display:block;color:var(--ink);font-size:1.02rem;margin-bottom:6px}
+.linkish{
+  border:none;background:none;color:var(--brand);font-weight:700;font-size:inherit;
+  text-decoration:underline;text-underline-offset:2px;padding:0;
+}
 .skeleton{
   height:98px;border-radius:var(--r);background:linear-gradient(90deg,#161C21,#1F262C,#161C21);
   background-size:200% 100%;animation:sk 1.3s ease-in-out infinite;
@@ -827,8 +833,9 @@ footer a:hover{color:var(--brand)}
         <p class="hint" style="margin-top:6px">Nearse is live in Guwahati first. More cities are coming soon.</p>
       </div>
       <div class="field">
-        <label for="regArea">Area / locality</label>
+        <label for="regArea">Which locality are you in?</label>
         <select id="regArea"></select>
+        <p class="hint" style="margin-top:6px">Customers search by locality — pick the one nearest to where you live or work.</p>
       </div>
       <div class="field full">
         <label for="regAbout">About your work <span class="sublabel">— optional</span></label>
@@ -1005,10 +1012,52 @@ const SUPABASE_URL      = "https://mpufunsitqtdkqlibxof.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdWZ1bnNpdHF0ZGtxbGlieG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTAyNTksImV4cCI6MjA5ODkyNjI1OX0.iyYX1EFJwrdPWxXLTCHHm8cdmuO-roPIjjX4T-SU53E";
 
 const CITY = "Guwahati";
-const AREAS = ["Six Mile","Beltola","Ganeshguri","Dispur","Zoo Road","Chandmari","Uzan Bazar","Silpukhuri",
-  "Paltan Bazar","Fancy Bazar","Panbazar","Ulubari","Bhangagarh","Christian Basti","Rukminigaon","Hatigaon",
-  "Khanapara","Basistha","Lokhra","Kahilipara","Beltola Tiniali","Maligaon","Jalukbari","Adabari","Garchuk",
-  "Azara","Boragaon","Noonmati","Narengi","Bamunimaidam","Geetanagar","Sixmile Bypass","Other area in Guwahati"];
+/* Localities grouped by zone. Names follow the Guwahati Municipal Corporation
+   60-ward delimitation, plus the everyday names people actually use. */
+const AREA_GROUPS = [
+  ["Central & Riverfront", [
+    "Panbazar","Fancy Bazar","Paltan Bazar","Machkhowa","Athgaon","Lakhtokia","Kumarpara","Santipur",
+    "Bhootnath","Bharalumukh","Uzan Bazar","Kharghuli","Latasil","Silpukhuri","Chenikuthi","Sarania",
+    "Ambari","Guwahati Club","Rehabari","Lachit Nagar","Ulubari","Bhangagarh","Nabin Nagar","Anil Nagar",
+    "Rajgarh","Tarun Nagar"
+  ]],
+  ["G.S. Road & Dispur", [
+    "Christian Basti","Zoo Road","Zoo Road Tiniali","Ganeshguri","Dispur","Dispur Last Gate",
+    "Supermarket (Dispur)","Capital Complex","Rukminigaon","Six Mile","Sixmile Bypass","Khanapara",
+    "Jayanagar","Wireless"
+  ]],
+  ["East Guwahati", [
+    "Chandmari","Milanpur","Krishna Nagar","Geetanagar","Bamunimaidam","Jyoti Nagar","Noonmati",
+    "Noonmati Refinery","New Guwahati","Salbari","Satgaon","Birkuchi","Kalitakuchi","Narengi",
+    "Udayan Vihar","Bagharbari"
+  ]],
+  ["South & South-East", [
+    "Hengrabari","Sarumotoria","Bormotoria","VIP Road","Dwarka Nagar","Panjabari","Juripar","Japorigog",
+    "Chachal","Sundarpur","Beharbari","Beharbari Chariali","Ghoramara","Beltola","Beltola Tiniali",
+    "Beltola Survey","Bhetapara","Hatigaon","Basistha","Basistha Chariali","Lalmati","Sarusajai",
+    "Barsajai","Saukuchi","Nalapara","Barpathar","Ganesh Nagar"
+  ]],
+  ["West Guwahati", [
+    "Jalukbari","Gotanagar","Pandu","Maligaon","Adabari","Kamakhya","Tetelia","Sadilapur","Garigaon",
+    "Bishnupur","Fatasil Ambari","Kalapahar","Dhirenpara","Birubari","Nizarapara","Rupnagar"
+  ]],
+  ["South-West Guwahati", [
+    "Lokhra","Lal Ganesh","Kahilipara","Narakasur","Binova Nagar","Barsapara","Bhaskar Nagar","Jyotikuchi",
+    "Odalbakra","Garchuk","Boragaon","Betkuchi","Dharapur","Azara","Pamohi","Ananda Nagar"
+  ]],
+  ["North Guwahati & outskirts", [
+    "Amingaon","North Guwahati","Sila","Changsari","Chandrapur","Sonapur","Palasbari","Rani","Mirza"
+  ]],
+  ["Not listed", ["Other area in Guwahati"]]
+];
+const AREAS = AREA_GROUPS.flatMap(([, list]) => list);
+/* <optgroup> markup for any locality picker; pass the currently saved value. */
+function areaOptions(selected){
+  return AREA_GROUPS.map(([zone, list]) =>
+    `<optgroup label="${esc(zone)}">` +
+    list.map(a=>`<option${a === selected ? " selected" : ""}>${esc(a)}</option>`).join("") +
+    `</optgroup>`).join("");
+}
 const WSTORE = "nearse_workers_v1";
 const SSTORE = "nearse_session_v1";
 const UNITS  = ["per hour","per visit","per day","per week","per month","per job","per project","per piece","per session","per trip","per sq ft","per plate"];
@@ -1341,8 +1390,7 @@ function initRegister(){
   regLoc = (w && w.lat != null) ? {lat:w.lat, lng:w.lng} : null;
   $("regCity").value = CITY;
   const areaSel = $("regArea");
-  areaSel.innerHTML = '<option value="">Select your area</option>' +
-    AREAS.map(a=>`<option${w && w.area === a ? " selected" : ""}>${a}</option>`).join("");
+  areaSel.innerHTML = '<option value="">Select your locality</option>' + areaOptions(w && w.area);
   if(w && w.area && !AREAS.includes(w.area)){
     areaSel.insertAdjacentHTML("beforeend", `<option selected>${esc(w.area)}</option>`);
   }
@@ -1646,11 +1694,22 @@ function renderTiles(){
     </button>`;
   }).join("");
 }
+/* Only offer localities that actually have someone available, grouped by zone
+   so a long list stays scannable. */
 function renderAreaFilter(){
   const sel = $("areaFilter");
-  const areas = [...new Set(workers.filter(w=>w.verified!==false && w.area).map(w=>w.area))].sort();
   const cur = sel.value;
-  sel.innerHTML = '<option value="">All areas</option>' + areas.map(a=>`<option${a===cur?" selected":""}>${esc(a)}</option>`).join("");
+  const live = new Set(workers.filter(w=>w.verified!==false && w.available!==false && w.area).map(w=>w.area));
+  const groups = AREA_GROUPS
+    .map(([zone, list]) => [zone, list.filter(a=>live.has(a))])
+    .filter(([, list]) => list.length);
+  const extra = [...live].filter(a=>!AREAS.includes(a)).sort();
+  if(extra.length) groups.push(["Other", extra]);
+  sel.innerHTML = '<option value="">All localities</option>' + groups.map(([zone, list]) =>
+    `<optgroup label="${esc(zone)}">` +
+    list.map(a=>`<option${a===cur?" selected":""}>${esc(a)}</option>`).join("") +
+    `</optgroup>`).join("");
+  if(cur && !live.has(cur)) sel.value = "";
 }
 function renderCats(){
   $("catRow").innerHTML =
@@ -1704,14 +1763,17 @@ function renderResults(){
   });
 
   $("resultMeta").innerHTML = list.length
-    ? `<span>${list.length} ${list.length===1?"worker":"workers"} available${hireCat?" in "+esc(CAT_LABEL[hireCat]):""}</span>` +
+    ? `<span>${list.length} ${list.length===1?"worker":"workers"} available${hireCat?" in "+esc(CAT_LABEL[hireCat]):""}` +
+      `${areaPick?" · "+esc(areaPick):""}</span>` +
       (myLoc ? `<span>Sorted by distance</span>` : `<button onclick="requestLocation(true)">Show nearest to me</button>`)
     : "";
 
   if(!list.length){
     $("results").innerHTML = `<div class="empty" style="grid-column:1/-1">
-      <b>No workers found${q?" for “"+esc(q)+"”":""}</b>
-      Try a different service, or browse a category above. New workers join every week.</div>`;
+      <b>No workers found${q?" for “"+esc(q)+"”":""}${areaPick?" in "+esc(areaPick):""}</b>
+      ${areaPick
+        ? `Try <button class="linkish" onclick="document.getElementById('areaFilter').value='';renderResults()">all localities</button>, or a different service.`
+        : "Try a different service, or browse a category above. New workers join every week."}</div>`;
     return;
   }
   $("results").innerHTML = list.map(w=>{
@@ -1724,7 +1786,7 @@ function renderResults(){
         <h3>${esc(w.name)} <span class="verified-badge">✓ Verified</span></h3>
         <div class="trade">${trades}</div>
         <div class="row">
-          <span>${d != null ? showDist(d) : esc(w.area || w.city || "")}</span>
+          <span class="where">${esc(w.area || w.city || "")}${d != null ? ' <em>· ' + esc(showDist(d)) + '</em>' : ""}</span>
           <span>${starsOf(w)}</span>
         </div>
         <div class="price">${money(s0.price||0)} <small>${esc(s0.unit||"")}</small></div>
@@ -1805,8 +1867,7 @@ function openBooking(){
   d.onchange = ()=>{ bookPick.date = d.value; renderQuote(); };
 
   const areaSel = $("bookArea");
-  areaSel.innerHTML = '<option value="">Select your area</option>' +
-    AREAS.map(a=>`<option${a===w.area?" selected":""}>${esc(a)}</option>`).join("");
+  areaSel.innerHTML = '<option value="">Select your locality</option>' + areaOptions(w.area);
   areaSel.onchange = renderQuote;
 
   renderQuote();
