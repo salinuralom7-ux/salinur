@@ -1891,6 +1891,41 @@ function handleSelfie(input){
   };
   reader.readAsDataURL(file);
 }
+/* ---------- profile photo upload ----------
+   Photos live in Supabase Storage, not in the workers table. The column keeps
+   holding whatever string it is given, so old base64 rows still render and no
+   backfill was needed — an <img src> takes a data: URL and an https: URL alike.
+   Storage is served from a CDN, so a returning customer downloads a photo once
+   instead of on every visit. */
+const SELFIE_BUCKET = "selfies";
+
+function dataUrlToBlob(dataUrl){
+  const [head, b64] = dataUrl.split(",");
+  const mime = (head.match(/data:([^;]+)/) || [,"image/jpeg"])[1];
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], {type: mime});
+}
+
+async function uploadSelfie(dataUrl, phone){
+  if(!LIVE || !dataUrl || !dataUrl.startsWith("data:")) return dataUrl;
+  const blob = dataUrlToBlob(dataUrl);
+  const path = `${phone}-${Date.now()}.jpg`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${SELFIE_BUCKET}/${path}`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: "Bearer " + SUPABASE_ANON_KEY,
+      "Content-Type": blob.type,
+      "x-upsert": "true"
+    },
+    body: blob
+  });
+  if(!res.ok) throw new Error("Could not upload your photo — check your connection");
+  return `${SUPABASE_URL}/storage/v1/object/public/${SELFIE_BUCKET}/${path}`;
+}
+
 function renderLocBtn(){
   const b = $("regLocBtn"), t = $("regLocText");
   if(regLoc){ b.classList.add("ok"); t.textContent = "Location saved — nearby customers will see you first"; }
@@ -1915,9 +1950,22 @@ async function saveProfile(){
   const area = $("regArea").value.trim();
   if(!area){ toast("Please choose your area in Guwahati"); return; }
 
+  const btn = $("regSaveBtn"); const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Saving…";
+
+  let selfieUrl = selfieData;
+  try{
+    if(selfieData.startsWith("data:")){
+      btn.textContent = "Uploading photo…";
+      selfieUrl = await uploadSelfie(selfieData, session.phone);
+    }
+  }catch(e){
+    toast(e.message); btn.disabled = false; btn.textContent = label; return;
+  }
+
   const data = {
     name: session.name || (session.worker && session.worker.name),
-    skills, selfie:selfieData, city:CITY, area,
+    skills, selfie:selfieUrl, city:CITY, area,
     about: $("regAbout").value.trim(),
     lat: regLoc ? regLoc.lat : null,
     lng: regLoc ? regLoc.lng : null,
@@ -1925,8 +1973,7 @@ async function saveProfile(){
   };
   if(session.email) data.email = session.email;
   if(session.waCode) data.wa_code = session.waCode;
-  const btn = $("regSaveBtn"); const label = btn.textContent;
-  btn.disabled = true; btn.textContent = "Saving…";
+  btn.textContent = "Saving…";
   try{
     const w = session.registered
       ? await api.update(session.phone, session.pin, data)

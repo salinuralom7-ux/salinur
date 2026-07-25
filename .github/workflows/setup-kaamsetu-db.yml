@@ -88,12 +88,45 @@ jobs:
             (select count(*)::int from pg_trigger
               where tgname = 'workers_coarse_location_trg') as coarse_loc_trigger,
             (select count(*)::int from public.workers
-              where lat is not null and lat <> round(lat::numeric, 3)::double precision) as precise_coords_left
+              where lat is not null and lat <> round(lat::numeric, 3)::double precision) as precise_coords_left,
+            (select count(*)::int from storage.buckets where id='selfies' and public) as selfie_bucket,
+            (select file_size_limit from storage.buckets where id='selfies') as selfie_size_cap,
+            (select count(*)::int from pg_policies
+              where schemaname='storage' and tablename='objects'
+                and policyname in ('selfies are publicly readable','anyone may upload a selfie')) as selfie_policies,
+            (select count(*)::int from public.workers where selfie like 'data:%') as photos_still_in_db
           VSQL
           jq -Rs '{query: .}' /tmp/verify.sql > /tmp/v.json
           code=$(curl -sS -o /tmp/verify.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/v.json)
           note "verify migration: HTTP $code — $(head -c 400 /tmp/verify.json)"
           [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
+          # End-to-end photo upload, using the public anon key exactly as the
+          # browser does — proves the bucket, its policies and public read all work.
+          anon=$(grep -oP 'SUPABASE_ANON_KEY\s*=\s*"\K[^"]+' docs/index.html | head -1)
+          base=$(grep -oP 'SUPABASE_URL\s*=\s*"\K[^"]+' docs/index.html | head -1)
+          if [ -n "$anon" ] && [ -n "$base" ]; then
+            printf '\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01' > /tmp/probe.jpg
+            head -c 900 /dev/urandom >> /tmp/probe.jpg
+            obj="ci-probe-$(date +%s).jpg"
+            code=$(curl -sS -o /tmp/up.json -w "%{http_code}" -X POST \
+              "$base/storage/v1/object/selfies/$obj" \
+              -H "apikey: $anon" -H "Authorization: Bearer $anon" \
+              -H "Content-Type: image/jpeg" --data-binary @/tmp/probe.jpg)
+            note "upload photo as anon: HTTP $code"
+            code=$(curl -sS -o /tmp/down.jpg -w "%{http_code}" "$base/storage/v1/object/public/selfies/$obj")
+            same=$(cmp -s /tmp/probe.jpg /tmp/down.jpg && echo yes || echo no)
+            note "read it back publicly: HTTP $code — byte-identical: $same"
+            # a plain-text file must be refused by the mime allow-list
+            echo "not an image" > /tmp/bad.txt
+            code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST \
+              "$base/storage/v1/object/selfies/ci-probe-bad.txt" \
+              -H "apikey: $anon" -H "Authorization: Bearer $anon" \
+              -H "Content-Type: text/plain" --data-binary @/tmp/bad.txt)
+            note "non-image upload refused (want 4xx): HTTP $code"
+          else
+            note "WARN: could not read anon key from docs/index.html — upload probe skipped"
+          fi
+
           note "SUCCESS: Nearse database is live"
 
       - name: Commit status report

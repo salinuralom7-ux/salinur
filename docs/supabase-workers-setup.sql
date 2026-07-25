@@ -597,3 +597,47 @@ drop trigger if exists workers_coarse_location_trg on public.workers;
 create trigger workers_coarse_location_trg
   before insert or update of lat, lng on public.workers
   for each row execute function public.workers_coarse_location();
+
+-- ============================================================
+-- MIGRATION 6 — photos move out of the database
+--
+-- Photos were stored as base64 text inside workers.selfie, and the browse
+-- screen selects every column, so a customer downloaded every worker's photo
+-- on every visit (~36 KB per profile — 7 MB at 200 profiles). Photos now go
+-- to Storage and the column holds a URL instead.
+--
+-- The column type does not change: an <img src> accepts a data: URL and an
+-- https: URL alike, so existing base64 rows keep working untouched and no
+-- backfill is needed.
+--
+-- Guarded because the storage schema only exists on Supabase; this file is
+-- also run against a plain Postgres for testing.
+-- ============================================================
+do $$
+begin
+  if not exists (select 1 from information_schema.schemata where schema_name = 'storage') then
+    raise notice 'no storage schema (not Supabase) — skipping bucket setup';
+    return;
+  end if;
+
+  -- Public read: profile photos are shown to customers, same as the rest of
+  -- a published profile. Size and type are capped because uploads are
+  -- unauthenticated — the app has no Supabase Auth session to attach.
+  insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values ('selfies', 'selfies', true, 400000, array['image/jpeg','image/png','image/webp'])
+  on conflict (id) do update
+    set public = true,
+        file_size_limit = 400000,
+        allowed_mime_types = array['image/jpeg','image/png','image/webp'];
+
+  execute 'drop policy if exists "selfies are publicly readable" on storage.objects';
+  execute $p$create policy "selfies are publicly readable"
+    on storage.objects for select using (bucket_id = 'selfies')$p$;
+
+  execute 'drop policy if exists "anyone may upload a selfie" on storage.objects';
+  execute $p$create policy "anyone may upload a selfie"
+    on storage.objects for insert with check (bucket_id = 'selfies')$p$;
+
+  -- no update or delete policy: an uploaded photo cannot be overwritten or
+  -- removed by a visitor, only replaced by a new upload under a new name
+end $$;
