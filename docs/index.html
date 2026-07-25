@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nearse — Trusted Local Workers, Booked Directly</title>
-<meta name="description" content="Nearse connects you with verified local workers — maids, cooks, electricians, plumbers, tutors, drivers, beauticians and more. Nearest first, rated by the community, priced by the workers themselves.">
+<title>Nearse — Trusted Local Workers in Guwahati, Booked Directly</title>
+<meta name="description" content="Nearse connects you with verified local workers in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers, beauticians and more. Nearest first, rated by the community, priced by the workers themselves.">
 <meta name="keywords" content="Nearse, nearse.in, local workers near me, book maid cook electrician plumber, home services Guwahati, hire tutor driver Assam, find work near me">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://nearse.in/">
@@ -215,6 +215,16 @@ header{
   border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,163,124,.22);
 }
 .field input::placeholder,.field textarea::placeholder{color:#6E7B84}
+.field input.locked{
+  background:var(--surface-2);color:var(--muted);cursor:default;
+  border-style:dashed;
+}
+.city-pill{
+  display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);
+  background:var(--surface);border-radius:999px;padding:6px 14px;
+  font-size:.78rem;font-weight:700;color:var(--ink-2);letter-spacing:-.01em;
+}
+.city-pill svg{color:var(--brand-2)}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
 .grid-2 .full{grid-column:1/-1}
 @media(max-width:540px){.grid-2{grid-template-columns:1fr}}
@@ -580,6 +590,10 @@ footer a:hover{color:var(--brand)}
 <!-- ============================= LANDING ============================= -->
 <section class="screen on" id="scr-home">
   <div class="wrap landing">
+    <span class="city-pill" style="margin-bottom:18px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Now live in Guwahati
+    </span>
     <h1>Trusted people for every job,<br>right where you are.</h1>
     <p class="sub">Choose how you'd like to begin.</p>
 
@@ -707,8 +721,15 @@ footer a:hover{color:var(--brand)}
 
 
     <div class="grid-2">
-      <div class="field"><label for="regCity">City / town</label><input type="text" id="regCity" placeholder="e.g. Guwahati"></div>
-      <div class="field"><label for="regArea">Area / locality</label><input type="text" id="regArea" placeholder="e.g. Six Mile"></div>
+      <div class="field">
+        <label for="regCity">City</label>
+        <input type="text" id="regCity" value="Guwahati" readonly aria-readonly="true" class="locked">
+        <p class="hint" style="margin-top:6px">Nearse is live in Guwahati first. More cities are coming soon.</p>
+      </div>
+      <div class="field">
+        <label for="regArea">Area / locality</label>
+        <select id="regArea"></select>
+      </div>
       <div class="field full">
         <label for="regAbout">About your work <span class="sublabel">— optional</span></label>
         <textarea id="regAbout" rows="2" placeholder="e.g. 8 years of experience in home wiring and repairs. Punctual and neat."></textarea>
@@ -748,7 +769,7 @@ footer a:hover{color:var(--brand)}
     </button>
     <div class="search-head">
       <h1>What do you need done?</h1>
-      <p>Search a service and we'll show verified workers nearest to you.</p>
+      <p>Search a service and we'll show verified workers nearest to you in Guwahati.</p>
       <div class="searchbar">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input type="text" id="hireSearch" placeholder="Try: carpenter, maid, cook, electrician…" oninput="onSearchInput()" autocomplete="off">
@@ -823,6 +844,11 @@ footer a:hover{color:var(--brand)}
 const SUPABASE_URL      = "https://mpufunsitqtdkqlibxof.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdWZ1bnNpdHF0ZGtxbGlieG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTAyNTksImV4cCI6MjA5ODkyNjI1OX0.iyYX1EFJwrdPWxXLTCHHm8cdmuO-roPIjjX4T-SU53E";
 
+const CITY = "Guwahati";
+const AREAS = ["Six Mile","Beltola","Ganeshguri","Dispur","Zoo Road","Chandmari","Uzan Bazar","Silpukhuri",
+  "Paltan Bazar","Fancy Bazar","Panbazar","Ulubari","Bhangagarh","Christian Basti","Rukminigaon","Hatigaon",
+  "Khanapara","Basistha","Lokhra","Kahilipara","Beltola Tiniali","Maligaon","Jalukbari","Adabari","Garchuk",
+  "Azara","Boragaon","Noonmati","Narengi","Bamunimaidam","Geetanagar","Sixmile Bypass","Other area in Guwahati"];
 const WSTORE = "nearse_workers_v1";
 const SSTORE = "nearse_session_v1";
 const UNITS  = ["per hour","per visit","per day","per week","per month","per job","per project","per piece","per session","per trip","per sq ft","per plate"];
@@ -1153,8 +1179,13 @@ function initRegister(){
   selfieData = w ? w.selfie : null;
   selfieLive = false;
   regLoc = (w && w.lat != null) ? {lat:w.lat, lng:w.lng} : null;
-  $("regCity").value  = w ? (w.city||"")  : "";
-  $("regArea").value  = w ? (w.area||"")  : "";
+  $("regCity").value = CITY;
+  const areaSel = $("regArea");
+  areaSel.innerHTML = '<option value="">Select your area</option>' +
+    AREAS.map(a=>`<option${w && w.area === a ? " selected" : ""}>${a}</option>`).join("");
+  if(w && w.area && !AREAS.includes(w.area)){
+    areaSel.insertAdjacentHTML("beforeend", `<option selected>${esc(w.area)}</option>`);
+  }
   $("regAbout").value = w ? (w.about||"") : "";
   $("skillSearch").value = "";
   pickCat = "";
@@ -1339,13 +1370,12 @@ async function saveProfile(){
   const missing = skills.find(s => !s.price || s.price < 1);
   if(missing){ toast("Set your rate for " + missing.skill); return; }
   if(!selfieData){ toast("Please take your verification photo"); return; }
-  const city = $("regCity").value.trim();
-  if(!city){ toast("Please enter your city or town"); return; }
+  const area = $("regArea").value.trim();
+  if(!area){ toast("Please choose your area in Guwahati"); return; }
 
   const data = {
     name: session.name || (session.worker && session.worker.name),
-    skills, selfie:selfieData, city,
-    area: $("regArea").value.trim(),
+    skills, selfie:selfieData, city:CITY, area,
     about: $("regAbout").value.trim(),
     lat: regLoc ? regLoc.lat : null,
     lng: regLoc ? regLoc.lng : null,
@@ -1456,7 +1486,8 @@ function matchesQuery(w, q){
 function score(w){ const n = w.rating_count||0; return n ? (w.rating_sum/n) : 3.4; }
 function renderResults(){
   const q = $("hireSearch").value.trim().toLowerCase();
-  const list = workers.filter(w => w.available !== false && w.verified !== false && matchesQuery(w, q));
+  const inCity = w => !w.city || w.city.toLowerCase().includes(CITY.toLowerCase());
+  const list = workers.filter(w => w.available !== false && w.verified !== false && inCity(w) && matchesQuery(w, q));
   list.sort((a,b)=>{
     const da = distanceTo(a), db = distanceTo(b);
     if(da != null && db != null && Math.abs(da-db) > 0.4) return da - db;
