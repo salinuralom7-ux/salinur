@@ -15,6 +15,13 @@
 <meta property="og:url" content="https://nearse.in/">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#0F1418">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nearse">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232FA37C'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%2306130E' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -125,6 +132,20 @@ header{
 }
 .brand .name{font-weight:800;font-size:1.18rem;letter-spacing:-.03em}
 .header-link{font-size:.88rem;font-weight:600;color:var(--muted)}
+.install-btn{
+  display:inline-flex;align-items:center;gap:7px;border:1px solid var(--brand);
+  background:var(--brand-soft);color:var(--brand-2);border-radius:999px;
+  padding:8px 15px;font-size:.82rem;font-weight:700;letter-spacing:-.01em;
+}
+.install-btn:hover{background:var(--brand);color:var(--brand-ink)}
+.install-btn[hidden]{display:none}
+.ios-steps{display:flex;flex-direction:column;gap:12px;margin:16px 0 4px}
+.ios-step{display:flex;gap:12px;align-items:flex-start}
+.ios-step .n{
+  width:24px;height:24px;border-radius:50%;background:var(--brand-soft);color:var(--brand-2);
+  display:grid;place-items:center;font-size:.78rem;font-weight:800;flex:0 0 auto;
+}
+.ios-step p{font-size:.9rem;color:var(--ink-2);line-height:1.5}
 .header-link:hover{color:var(--ink)}
 .demo-note{
   display:none;font-size:.78rem;font-weight:600;color:var(--warn);background:rgba(214,168,92,.10);
@@ -581,7 +602,13 @@ footer a:hover{color:var(--brand)}
     <a class="brand" href="#" onclick="go('home');return false" aria-label="Nearse home">
       <span class="mark">N</span><span class="name">Nearse</span>
     </a>
-    <a class="header-link" href="#" onclick="go('hire');return false">Browse workers</a>
+    <div style="display:flex;align-items:center;gap:14px">
+      <button class="install-btn" id="installBtn" onclick="installApp()" hidden>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>
+        Install app
+      </button>
+      <a class="header-link" href="#" onclick="go('hire');return false">Browse workers</a>
+    </div>
   </div>
 </header>
 <div class="demo-note" id="demoNote">Preview mode — profiles are saved on this device only while the live database connects.</div>
@@ -832,6 +859,20 @@ footer a:hover{color:var(--brand)}
     <div class="cam-stage"><video id="camVideo" autoplay playsinline muted></video><div class="cam-oval"></div></div>
     <p class="cam-tip" id="camTip">Only a live photo is accepted — this is how we keep Nearse trustworthy.</p>
     <button class="btn btn-brand btn-block" id="camShot" onclick="captureFrame()" style="padding:14px">Capture photo</button>
+  </div>
+</div>
+
+<div class="overlay" id="iosOverlay" onclick="if(event.target===this)closeModal('iosOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('iosOverlay')" aria-label="Close">✕</button>
+    <h3>Install Nearse</h3>
+    <p class="sub">Add Nearse to your home screen — it opens like a normal app, full screen.</p>
+    <div class="ios-steps">
+      <div class="ios-step"><span class="n">1</span><p>Tap the <b>Share</b> button at the bottom of Safari (the square with an arrow pointing up).</p></div>
+      <div class="ios-step"><span class="n">2</span><p>Scroll down and tap <b>Add to Home Screen</b>.</p></div>
+      <div class="ios-step"><span class="n">3</span><p>Tap <b>Add</b>. The Nearse icon appears with your other apps.</p></div>
+    </div>
+    <button class="btn btn-brand btn-block" onclick="closeModal('iosOverlay')" style="margin-top:8px">Got it</button>
   </div>
 </div>
 
@@ -1668,6 +1709,33 @@ async function adminSet(id, verified){
   }catch(e){ toast(e.message); }
 }
 
+/* ---------- install as an app ---------- */
+let deferredInstall = null;
+const isStandalone = () =>
+  window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredInstall = e;
+  if(!isStandalone()) $("installBtn").hidden = false;
+});
+window.addEventListener("appinstalled", () => {
+  deferredInstall = null;
+  $("installBtn").hidden = true;
+  toast("Nearse installed — open it from your home screen");
+});
+async function installApp(){
+  if(deferredInstall){
+    deferredInstall.prompt();
+    const { outcome } = await deferredInstall.userChoice;
+    if(outcome === "accepted") $("installBtn").hidden = true;
+    deferredInstall = null;
+    return;
+  }
+  openModal("iosOverlay");
+}
+
 /* ---------- init ---------- */
 $("year").textContent = new Date().getFullYear();
 document.addEventListener("keydown", e => {
@@ -1681,6 +1749,11 @@ function checkAdminHash(){
   }
 }
 window.addEventListener("hashchange", checkAdminHash);
+
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
 
 (async function init(){
   loadSession();
