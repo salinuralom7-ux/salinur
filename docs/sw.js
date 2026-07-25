@@ -1,7 +1,7 @@
 /* Nearse service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls and the separate /cars/ site always go to the network. */
-const CACHE = "nearse-shell-v5";
+const CACHE = "nearse-shell-v6";
 const SHELL = [
   "./",
   "./index.html",
@@ -46,15 +46,22 @@ self.addEventListener("fetch", e => {
 
   if (url.pathname.includes("/cars")) return;             // Budget Cars is a separate site
 
-  if (req.mode === "navigate") {                          // fresh page, cached fallback offline
+  if (req.mode === "navigate") {
+    // Only the app itself is the shell. The standalone pages (about, privacy,
+    // terms) are cached under their own URL — caching them as "./index.html"
+    // would serve a policy page when someone opens the app offline.
+    const isApp = url.pathname === "/" || url.pathname.endsWith("/index.html")
+                  ? !url.pathname.includes("/about") && !url.pathname.includes("/privacy") && !url.pathname.includes("/terms")
+                  : false;
     e.respondWith(
       fetch(req)
         .then(res => {
           const copy = res.clone();
-          caches.open(CACHE).then(c => c.put("./index.html", copy));
+          caches.open(CACHE).then(c => c.put(isApp ? "./index.html" : req, copy));
           return res;
         })
-        .catch(() => caches.match("./index.html").then(r => r || caches.match("./")))
+        .catch(() => caches.match(req)
+          .then(r => r || (isApp ? caches.match("./index.html").then(x => x || caches.match("./")) : undefined)))
     );
     return;
   }
