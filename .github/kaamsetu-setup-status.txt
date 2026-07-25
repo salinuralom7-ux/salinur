@@ -1,7 +1,7 @@
-run: 2026-07-08T05:36:22Z
+run: 2026-07-10T04:16:46Z
 secret: present (44 chars)
 list projects: HTTP 200
 project: mpufunsitqtdkqlibxof
 run SQL: HTTP 201
-verify workers table: HTTP 201 — [{"n":0}]
+verify workers table: HTTP 201 — [{"n":1}]
 SUCCESS: Nearse database is live

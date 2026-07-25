@@ -1,0 +1,10 @@
+checked: 2026-07-10T04:12:56Z
+--- certificate served on nearse.in:443 ---
+subject=CN = nearse.in
+issuer=C = US, O = Let's Encrypt, CN = YR2
+notBefore=Jul  8 14:18:28 2026 GMT
+notAfter=Oct  6 14:18:27 2026 GMT
+--- strict https request ---
+https://nearse.in -> HTTP 200 (certificate TRUSTED)
+--- via github.io ---
+github.io redirect -> HTTP 301 -> http://nearse.in/
