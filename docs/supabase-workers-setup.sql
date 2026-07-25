@@ -439,3 +439,112 @@ begin
   return query select * from workers where id = new_id;
 end;
 $$;
+
+-- ============================================================
+-- MIGRATION 4 — WhatsApp click-to-chat verification
+--
+-- Instead of paying a provider to send a code TO the worker, the worker
+-- sends a code FROM their own WhatsApp to the Nearse business number. The
+-- message arriving from that number is the proof: it can only have come
+-- through WhatsApp, and only from the account that controls it. No SMS
+-- gateway, no DLT registration, no Meta Business API.
+--
+-- The code lives in worker_secrets (no RLS policy) so it is not readable
+-- by the public; the admin reads it through a PIN-gated function.
+-- ============================================================
+
+alter table public.worker_secrets add column if not exists wa_code text;
+
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  new_id     uuid;
+  jwt_phone  text;
+  need_otp   boolean;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then
+    raise exception 'PIN must be exactly 4 digits';
+  end if;
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit Indian mobile number';
+  end if;
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''),
+    '\D', '', 'g');
+  if length(jwt_phone) > 10 then
+    jwt_phone := right(jwt_phone, 10);
+  end if;
+
+  if coalesce(need_otp, false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, city, area, about, lat, lng, skills, available, phone_verified)
+  values (
+    coalesce(p_data->>'name',''),
+    p_phone,
+    p_data->>'selfie',
+    p_data->>'city',
+    p_data->>'area',
+    p_data->>'about',
+    (p_data->>'lat')::double precision,
+    (p_data->>'lng')::double precision,
+    coalesce(p_data->'skills','[]'::jsonb),
+    coalesce((p_data->>'available')::boolean, true),
+    jwt_phone <> ''
+  ) returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash, email, wa_code)
+    values (new_id,
+            crypt(p_pin, gen_salt('bf')),
+            nullif(btrim(coalesce(p_data->>'email','')), ''),
+            nullif(btrim(coalesce(p_data->>'wa_code','')), ''));
+  return query select * from workers where id = new_id;
+end;
+$$;
+
+-- The admin panel shows, next to each profile awaiting review, the code that
+-- should have arrived on the Nearse WhatsApp from that worker's number.
+create or replace function public.admin_wa_codes(p_pin text)
+returns table (worker_id uuid, wa_code text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  return query select s.worker_id, s.wa_code from worker_secrets s where s.wa_code is not null;
+end;
+$$;
+
+-- Approving a profile that went through the WhatsApp check IS the verification:
+-- the admin has matched the code against the sending number by hand.
+create or replace function public.admin_set_status(p_pin text, p_id uuid, p_status text, p_note text default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  if p_status not in ('pending','approved','rejected') then
+    raise exception 'Unknown status: %', p_status;
+  end if;
+  update workers w
+     set status      = p_status,
+         review_note = nullif(btrim(coalesce(p_note,'')), ''),
+         reviewed_at = now(),
+         phone_verified = case
+           when p_status = 'approved'
+                and exists (select 1 from worker_secrets s
+                            where s.worker_id = w.id and s.wa_code is not null)
+           then true else w.phone_verified end
+   where w.id = p_id;
+end;
+$$;
