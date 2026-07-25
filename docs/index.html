@@ -14,8 +14,8 @@
 <meta property="og:description" content="Verified local workers near you. Nearest first, community rated, prices set by the workers.">
 <meta property="og:url" content="https://nearse.in/">
 <meta name="twitter:card" content="summary">
-<meta name="theme-color" content="#0E4F4A">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230E4F4A'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%23FAF9F7' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#0F1418">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232FA37C'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%2306130E' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
@@ -39,27 +39,29 @@
    paper ground · petrol green brand · ink type · sand accents
    ========================================================================== */
 :root{
-  --bg:#FAF9F7;
-  --surface:#FFFFFF;
-  --surface-2:#F3F1ED;
-  --ink:#141A1F;
-  --ink-2:#39424B;
-  --muted:#6E7A85;
-  --line:rgba(20,26,31,.11);
-  --line-strong:rgba(20,26,31,.22);
-  --brand:#0E4F4A;
-  --brand-700:#0A3B37;
-  --brand-50:#EAF2F0;
-  --sand:#E7DFD2;
-  --sand-50:#F5F1E9;
-  --gold:#B08B4F;
-  --ok:#1F7A56;
-  --danger:#B4443C;
+  --bg:#0F1418;
+  --bg-2:#0B1013;
+  --surface:#161C21;
+  --surface-2:#1D242A;
+  --raise:#232B32;
+  --ink:#EDF1F3;
+  --ink-2:#C4CDD3;
+  --muted:#8A97A0;
+  --line:rgba(237,241,243,.10);
+  --line-strong:rgba(237,241,243,.19);
+  --brand:#2FA37C;
+  --brand-2:#3BBB90;
+  --brand-ink:#06130E;
+  --brand-soft:rgba(47,163,124,.13);
+  --gold:#D6A85C;
+  --ok:#3BBB90;
+  --warn:#D6A85C;
+  --danger:#E0685E;
   --r-sm:10px;
   --r:14px;
   --r-lg:20px;
-  --shadow-sm:0 1px 2px rgba(20,26,31,.05);
-  --shadow:0 10px 30px rgba(20,26,31,.09);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+  --shadow:0 18px 44px rgba(0,0,0,.45);
   --sans:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-serif;
   --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
 }
@@ -67,7 +69,10 @@
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
   font-family:var(--sans);
-  background:var(--bg);
+  background:
+    radial-gradient(1100px 520px at 82% -12%, rgba(47,163,124,.10), transparent 62%),
+    radial-gradient(760px 420px at -6% 12%, rgba(47,163,124,.05), transparent 58%),
+    var(--bg);
   color:var(--ink);
   font-size:16px;
   line-height:1.55;
@@ -97,41 +102,33 @@ h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.15;font-weight:700}
   transition:background .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease;
 }
 .btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-.btn-brand{background:var(--brand);color:#fff}
-.btn-brand:hover{background:var(--brand-700)}
+.btn-brand{background:var(--brand);color:var(--brand-ink);font-weight:700}
+.btn-brand:hover{background:var(--brand-2)}
 .btn-outline{background:transparent;color:var(--ink);border-color:var(--line-strong)}
 .btn-outline:hover{border-color:var(--ink);background:var(--surface)}
 .btn-quiet{background:var(--surface-2);color:var(--ink-2);border-color:transparent}
-.btn-quiet:hover{background:var(--sand-50)}
+.btn-quiet:hover{background:var(--surface-2)}
 .btn-block{width:100%}
 .btn-sm{padding:9px 15px;font-size:.87rem}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 
 /* ---------- header ---------- */
 header{
-  border-bottom:1px solid var(--line);background:rgba(250,249,247,.92);
+  border-bottom:1px solid var(--line);background:rgba(15,20,24,.88);
   backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;
 }
 .masthead{display:flex;align-items:center;justify-content:space-between;padding:16px 0;gap:12px}
 .brand{display:inline-flex;align-items:center;gap:10px}
 .brand .mark{
-  width:30px;height:30px;border-radius:8px;background:var(--brand);color:#fff;
+  width:30px;height:30px;border-radius:8px;background:var(--brand);color:var(--brand-ink);
   display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:1.05rem;line-height:1;
 }
 .brand .name{font-weight:800;font-size:1.18rem;letter-spacing:-.03em}
 .header-link{font-size:.88rem;font-weight:600;color:var(--muted)}
 .header-link:hover{color:var(--ink)}
-.notice{
-  font-size:.78rem;color:var(--ink-2);background:var(--sand-50);
-  border-bottom:1px solid var(--line);padding:8px 20px;text-align:center;display:none;
-  align-items:center;justify-content:center;gap:8px;
-}
-.notice.on{display:flex}
-.notice a{color:var(--brand);font-weight:700;text-decoration:underline;text-underline-offset:2px}
-.notice button{border:none;background:none;color:var(--muted);font-size:.9rem;line-height:1;padding:2px 4px}
 .demo-note{
-  display:none;font-size:.78rem;font-weight:600;color:#7A5A12;background:#FBF3DE;
-  border-bottom:1px solid rgba(122,90,18,.2);padding:8px 20px;text-align:center;
+  display:none;font-size:.78rem;font-weight:600;color:var(--warn);background:rgba(214,168,92,.10);
+  border-bottom:1px solid rgba(214,168,92,.22);padding:8px 20px;text-align:center;
 }
 .demo-note.on{display:block}
 
@@ -153,29 +150,30 @@ header{
 }
 .landing .sub{color:var(--muted);margin-top:14px;font-size:1.02rem}
 .doors{
-  display:grid;grid-template-columns:1fr 1fr;gap:16px;
-  max-width:760px;margin:clamp(34px,6vw,52px) auto 0;text-align:left;
+  display:flex;flex-direction:column;gap:14px;
+  max-width:520px;margin:clamp(32px,6vw,46px) auto 0;
 }
-@media(max-width:660px){.doors{grid-template-columns:1fr}}
-.door{
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
-  padding:30px 26px 26px;display:flex;flex-direction:column;gap:10px;
-  text-align:left;align-items:flex-start;font-family:inherit;color:inherit;
-  transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
-  min-height:196px;
+.cta{
+  display:flex;align-items:center;gap:16px;width:100%;text-align:left;
+  border-radius:var(--r);padding:20px 22px;font-family:inherit;
+  border:1px solid transparent;cursor:pointer;
+  transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease;
 }
-.door:hover{border-color:var(--brand);box-shadow:var(--shadow);transform:translateY(-2px)}
-.door .ico{
-  width:42px;height:42px;border-radius:11px;display:grid;place-items:center;margin-bottom:8px;
-  background:var(--brand-50);color:var(--brand);
+.cta:active{transform:scale(.99)}
+.cta:focus-visible{outline:2px solid var(--brand-2);outline-offset:3px}
+.cta-ico{
+  width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;
 }
-.door.hire .ico{background:var(--sand-50);color:var(--brand-700)}
-.door h2{font-size:1.32rem;letter-spacing:-.03em}
-.door p{color:var(--muted);font-size:.9rem;line-height:1.5}
-.door .go{
-  margin-top:auto;padding-top:14px;display:inline-flex;align-items:center;gap:8px;
-  font-weight:700;font-size:.9rem;color:var(--brand);
-}
+.cta-text{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.cta-text b{font-size:1.06rem;font-weight:700;letter-spacing:-.02em;line-height:1.25}
+.cta-text i{font-style:normal;font-size:.84rem;font-weight:500;opacity:.72}
+.cta-arrow{flex:0 0 auto;opacity:.55}
+.cta.primary{background:var(--brand);color:var(--brand-ink);box-shadow:0 12px 28px rgba(47,163,124,.22)}
+.cta.primary .cta-ico{background:rgba(6,19,14,.14)}
+.cta.primary:hover{background:var(--brand-2);transform:translateY(-2px);box-shadow:0 16px 34px rgba(47,163,124,.3)}
+.cta.secondary{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.cta.secondary .cta-ico{background:var(--brand-soft);color:var(--brand-2)}
+.cta.secondary:hover{border-color:var(--brand);transform:translateY(-2px);box-shadow:var(--shadow)}
 .assure{
   display:flex;gap:26px;justify-content:center;flex-wrap:wrap;
   margin:clamp(34px,6vw,50px) 0 0;color:var(--muted);font-size:.83rem;font-weight:600;
@@ -185,15 +183,15 @@ header{
 
 /* ---------- worker banner ---------- */
 .banner{
-  background:var(--brand);color:#fff;padding:clamp(44px,8vw,72px) 0;text-align:center;
-  border-bottom:1px solid var(--brand-700);
+  background:linear-gradient(160deg,#12332A,#0E2620);color:var(--ink);padding:clamp(44px,8vw,72px) 0;text-align:center;
+  border-bottom:1px solid var(--line);
 }
 .banner h1{
   font-family:var(--serif);font-weight:600;letter-spacing:-.02em;
   font-size:clamp(1.9rem,6.2vw,3.15rem);text-wrap:balance;
 }
-.banner p{color:rgba(255,255,255,.78);margin-top:14px;font-size:1rem}
-.banner .eyebrow{color:rgba(255,255,255,.62);margin-bottom:16px}
+.banner p{color:var(--ink-2);margin-top:14px;font-size:1rem}
+.banner .eyebrow{color:var(--brand-2);margin-bottom:16px}
 
 /* ---------- panels & forms ---------- */
 .panel{
@@ -214,9 +212,9 @@ header{
   transition:border-color .15s ease,box-shadow .15s ease;
 }
 .field input:focus,.field select:focus,.field textarea:focus{
-  border-color:var(--brand);box-shadow:0 0 0 3px rgba(14,79,74,.12);
+  border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,163,124,.22);
 }
-.field input::placeholder,.field textarea::placeholder{color:#9AA4AD}
+.field input::placeholder,.field textarea::placeholder{color:#6E7B84}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
 .grid-2 .full{grid-column:1/-1}
 @media(max-width:540px){.grid-2{grid-template-columns:1fr}}
@@ -252,7 +250,7 @@ header{
   transition:all .14s ease;line-height:1.3;
 }
 .chip:hover:not(:disabled){border-color:var(--brand);color:var(--brand)}
-.chip.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+.chip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:700}
 .chip:disabled{opacity:.38;cursor:not-allowed}
 .chip-count{
   font-size:.78rem;color:var(--muted);font-weight:600;margin-left:auto;
@@ -273,13 +271,98 @@ header{
   width:100%;border:1px solid var(--line-strong);border-radius:var(--r-sm);
   padding:11px 13px;font-size:.92rem;outline:none;background:var(--surface);
 }
-.rate-row input:focus,.rate-row select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(14,79,74,.12)}
+.rate-row input:focus,.rate-row select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,163,124,.22)}
 .rupee{position:relative}
 .rupee input{padding-left:28px}
 .rupee span{
   position:absolute;left:13px;top:50%;transform:translateY(-50%);
   color:var(--muted);font-weight:600;font-size:.92rem;
 }
+
+/* ---------- step-by-step service picker ---------- */
+.pick-step{margin-top:4px}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:9px}
+.cat-tile{
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r-sm);
+  padding:14px 14px;text-align:left;transition:all .15s ease;
+  display:flex;flex-direction:column;gap:3px;
+}
+.cat-tile:hover{border-color:var(--brand);background:var(--surface-2)}
+.cat-tile b{font-size:.92rem;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.cat-tile span{font-size:.76rem;color:var(--muted)}
+.step-head{
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;
+}
+.step-back{
+  border:none;background:none;color:var(--brand-2);font-weight:700;font-size:.85rem;
+  display:inline-flex;align-items:center;gap:6px;padding:0;
+}
+.step-head h6{font-size:.95rem;font-weight:700;letter-spacing:-.01em}
+.svc-list{display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto}
+.svc-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;
+  border:1px solid var(--line);background:var(--surface);border-radius:var(--r-sm);
+  padding:13px 15px;transition:all .14s ease;
+}
+.svc-row:hover:not(:disabled){border-color:var(--brand);background:var(--surface-2)}
+.svc-row:disabled{opacity:.4;cursor:not-allowed}
+.svc-row b{font-size:.92rem;font-weight:500}
+.svc-row .unit{font-size:.76rem;color:var(--muted);display:block;margin-top:1px}
+.svc-row .tick{
+  width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-strong);flex:0 0 auto;
+  display:grid;place-items:center;color:transparent;font-size:.7rem;
+}
+.svc-row.on{border-color:var(--brand);background:var(--brand-soft)}
+.svc-row.on .tick{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.link-alt{
+  display:block;margin-top:10px;background:none;border:none;padding:0;
+  color:var(--muted);font-size:.8rem;text-decoration:underline;text-underline-offset:2px;
+}
+.link-alt:hover{color:var(--ink-2)}
+
+/* ---------- camera capture ---------- */
+.cam-stage{position:relative;background:#000;border-radius:var(--r);overflow:hidden;aspect-ratio:1;margin-bottom:16px}
+.cam-stage video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.cam-oval{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 38% 46% at 50% 46%, transparent 98%, rgba(11,16,19,.78) 100%);
+}
+.cam-oval::after{
+  content:"";position:absolute;left:12%;top:8%;width:76%;height:76%;
+  border:2px dashed rgba(47,163,124,.8);border-radius:50%;
+}
+.cam-tip{text-align:center;color:var(--muted);font-size:.84rem;margin-bottom:14px;line-height:1.5}
+
+/* ---------- verification status ---------- */
+.vstatus{
+  display:flex;align-items:flex-start;gap:11px;border-radius:var(--r);padding:14px 16px;margin-top:18px;
+  border:1px solid var(--line);background:var(--surface-2);
+}
+.vstatus.pending{border-color:rgba(214,168,92,.35);background:rgba(214,168,92,.08)}
+.vstatus.done{border-color:rgba(59,187,144,.32);background:rgba(59,187,144,.08)}
+.vstatus b{display:block;font-size:.92rem;margin-bottom:2px}
+.vstatus span{color:var(--muted);font-size:.81rem;line-height:1.5;display:block}
+.vstatus .dotmark{
+  width:20px;height:20px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  font-size:.68rem;font-weight:800;margin-top:2px;
+}
+.vstatus.pending .dotmark{background:rgba(214,168,92,.2);color:var(--warn)}
+.vstatus.done .dotmark{background:rgba(59,187,144,.2);color:var(--ok)}
+.verified-badge{
+  display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;
+  color:var(--brand-2);background:var(--brand-soft);padding:2px 8px;border-radius:999px;
+}
+
+/* ---------- admin review ---------- */
+.admin-card{
+  border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--surface);
+  display:flex;gap:14px;margin-bottom:12px;
+}
+.admin-card .avatar{width:76px;height:76px;border-radius:12px}
+.admin-card h4{font-size:1rem;margin-bottom:2px}
+.admin-card .meta{color:var(--muted);font-size:.8rem;line-height:1.5}
+.admin-actions{display:flex;gap:8px;margin-top:11px}
+.admin-actions .btn{flex:1;padding:9px}
 
 /* ---------- selfie & location ---------- */
 .selfie-row{display:flex;align-items:center;gap:18px}
@@ -296,7 +379,7 @@ header{
   padding:13px 15px;font-weight:600;font-size:.9rem;color:var(--ink-2);
 }
 .loc-btn:hover{border-color:var(--brand);color:var(--brand)}
-.loc-btn.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:rgba(31,122,86,.05)}
+.loc-btn.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:rgba(59,187,144,.08)}
 
 /* ---------- hire: search ---------- */
 .search-head{padding:34px 0 4px}
@@ -308,10 +391,10 @@ header{
   padding:14px 18px;margin-top:20px;box-shadow:var(--shadow-sm);
   transition:border-color .15s,box-shadow .15s;
 }
-.searchbar:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(14,79,74,.1)}
+.searchbar:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,163,124,.2)}
 .searchbar svg{color:var(--muted);flex:0 0 auto}
 .searchbar input{border:none;outline:none;background:transparent;width:100%;font-size:1.02rem}
-.searchbar input::placeholder{color:#9AA4AD}
+.searchbar input::placeholder{color:#6E7B84}
 .searchbar .clear{
   border:none;background:none;color:var(--muted);font-size:1rem;padding:2px 4px;display:none;
 }
@@ -324,7 +407,7 @@ header{
   transition:all .14s ease;
 }
 .cat-chip:hover{border-color:var(--brand);color:var(--brand)}
-.cat-chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.cat-chip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:700}
 .result-meta{
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
   padding:14px 0 4px;color:var(--muted);font-size:.84rem;font-weight:600;
@@ -366,7 +449,7 @@ header{
 .stars{color:var(--gold);letter-spacing:.5px;font-size:.82rem;display:inline-flex;align-items:center;gap:5px}
 .stars small{color:var(--muted);font-weight:600;letter-spacing:0}
 .new-tag{
-  font-size:.7rem;font-weight:700;color:var(--brand);background:var(--brand-50);
+  font-size:.7rem;font-weight:700;color:var(--brand);background:var(--brand-soft);
   padding:2px 8px;border-radius:999px;letter-spacing:.02em;
 }
 .empty{
@@ -375,7 +458,7 @@ header{
 }
 .empty b{display:block;color:var(--ink);font-size:1.02rem;margin-bottom:6px}
 .skeleton{
-  height:98px;border-radius:var(--r);background:linear-gradient(90deg,#F0EEEA,#F7F5F2,#F0EEEA);
+  height:98px;border-radius:var(--r);background:linear-gradient(90deg,#161C21,#1F262C,#161C21);
   background-size:200% 100%;animation:sk 1.3s ease-in-out infinite;
 }
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -394,11 +477,11 @@ header{
 .switch{position:relative;width:48px;height:28px;flex:0 0 auto}
 .switch input{opacity:0;width:0;height:0}
 .track{
-  position:absolute;inset:0;border-radius:999px;background:#CBD2D8;
+  position:absolute;inset:0;border-radius:999px;background:var(--raise);
   transition:background .2s;cursor:pointer;
 }
 .track::before{
-  content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;
+  content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:var(--ink);
   top:3px;left:3px;transition:transform .2s;box-shadow:var(--shadow-sm);
 }
 .switch input:checked + .track{background:var(--ok)}
@@ -415,7 +498,7 @@ header{
 
 /* ---------- modal ---------- */
 .overlay{
-  position:fixed;inset:0;background:rgba(20,26,31,.42);backdrop-filter:blur(3px);
+  position:fixed;inset:0;background:rgba(5,8,10,.66);backdrop-filter:blur(3px);
   display:none;align-items:flex-end;justify-content:center;z-index:100;
 }
 @media(min-width:600px){.overlay{align-items:center;padding:24px}}
@@ -452,13 +535,13 @@ header{
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
 }
 .rating-box .t{font-size:.85rem;color:var(--muted);font-weight:600}
-.pick-stars{display:flex;gap:4px;font-size:1.35rem;color:#D3D8DC;cursor:pointer;line-height:1}
+.pick-stars{display:flex;gap:4px;font-size:1.35rem;color:#3A444C;cursor:pointer;line-height:1}
 .pick-stars span:hover,.pick-stars span.lit{color:var(--gold)}
 
 /* ---------- toast + footer ---------- */
 .toast{
   position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(90px);
-  background:var(--ink);color:#fff;padding:13px 22px;border-radius:999px;
+  background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:13px 22px;border-radius:999px;
   font-size:.88rem;font-weight:600;z-index:200;opacity:0;transition:all .28s ease;
   box-shadow:var(--shadow);max-width:92vw;text-align:center;
 }
@@ -487,10 +570,7 @@ footer a:hover{color:var(--brand)}
   </div>
 </header>
 <div class="demo-note" id="demoNote">Preview mode — profiles are saved on this device only while the live database connects.</div>
-<div class="notice" id="carsNote">
-  <span>Budget Cars has moved — <a href="cars/">nearse.in/cars</a></span>
-  <button onclick="dismissCarsNote()" aria-label="Dismiss">✕</button>
-</div>
+
 
 <!-- ============================= LANDING ============================= -->
 <section class="screen on" id="scr-home">
@@ -499,30 +579,20 @@ footer a:hover{color:var(--brand)}
     <p class="sub">Choose how you'd like to begin.</p>
 
     <div class="doors">
-      <button class="door work" id="ctaWork" onclick="go('work')">
-        <span class="ico" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-          </svg>
+      <button class="cta primary" id="ctaHire" onclick="go('hire')">
+        <span class="cta-ico" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         </span>
-        <h2>I am a worker</h2>
-        <p>Register your skills, set your own rates and receive booking requests directly.</p>
-        <span class="go">Continue
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </span>
+        <span class="cta-text"><b>I am looking for a worker</b><i>Search verified people near you</i></span>
+        <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
 
-      <button class="door hire" id="ctaHire" onclick="go('hire')">
-        <span class="ico" aria-hidden="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
-          </svg>
+      <button class="cta secondary" id="ctaWork" onclick="go('work')">
+        <span class="cta-ico" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
         </span>
-        <h2>I am looking for a worker</h2>
-        <p>Search any service and see verified people near you, with their rates and ratings.</p>
-        <span class="go">Continue
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </span>
+        <span class="cta-text"><b>I am a worker</b><i>Register and receive bookings</i></span>
+        <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
     </div>
 
@@ -607,29 +677,29 @@ footer a:hover{color:var(--brand)}
       </label>
       <div class="skill-search">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="text" id="skillSearch" placeholder="Search services — cook, electrician, tutor…" oninput="renderSkillPicker()">
+        <input type="text" id="skillSearch" placeholder="Type your work — cook, driver, tutor…" oninput="renderSkillPicker()">
       </div>
-      <div class="skill-box" id="skillBox"></div>
+      <div id="skillPicker"></div>
       <div class="picked" id="pickedSkills"></div>
     </div>
 
     <div class="divider"></div>
 
     <div class="field">
-      <label>Photo <span class="sublabel">— a clear face photo earns more bookings</span></label>
+      <label>Verification photo <span class="sublabel">— taken live, not from your gallery</span></label>
       <div class="selfie-row">
-        <div class="selfie" id="selfieCircle" onclick="document.getElementById('selfieInput').click()" role="button" tabindex="0">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/>
-          </svg>
+        <div class="selfie" id="selfieCircle" onclick="startCamera()" role="button" tabindex="0" aria-label="Take verification photo">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>
         </div>
-        <div>
-          <button class="btn btn-outline btn-sm" onclick="document.getElementById('selfieInput').click()">Upload photo</button>
-          <p class="hint" style="margin-top:8px">JPG or PNG. Taken in good light.</p>
+        <div style="flex:1">
+          <button class="btn btn-outline btn-sm" onclick="startCamera()">Open camera</button>
+          <p class="hint" style="margin-top:8px">Your face is checked by our team before your profile goes live. Photos of anything other than your face are rejected.</p>
+          <button class="link-alt" id="uploadAlt" onclick="document.getElementById('selfieInput').click()">Camera not working? Upload instead</button>
         </div>
       </div>
       <input type="file" id="selfieInput" accept="image/*" capture="user" style="display:none" onchange="handleSelfie(this)">
     </div>
+
 
     <div class="grid-2">
       <div class="field"><label for="regCity">City / town</label><input type="text" id="regCity" placeholder="e.g. Guwahati"></div>
@@ -687,10 +757,21 @@ footer a:hover{color:var(--brand)}
   </div>
 </section>
 
+<!-- ============================= ADMIN REVIEW (private) ============================= -->
+<section class="screen" id="scr-admin">
+  <div class="wrap-sm">
+    <button class="back" onclick="go('home')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Home
+    </button>
+    <div class="panel" id="adminPanel"></div>
+  </div>
+</section>
+
 <footer>
   <div class="wrap">
     <span>© <span id="year"></span> Nearse · Local services, done right</span>
-    <span><a href="cars/">Budget Cars</a> · Guwahati, Assam</span>
+    <span>Guwahati, Assam</span>
   </div>
 </footer>
 
@@ -712,6 +793,17 @@ footer a:hover{color:var(--brand)}
     <div class="field"><label for="bookNote">What do you need? <span class="sublabel">— optional</span></label><textarea id="bookNote" rows="2" placeholder="e.g. Two ceiling fans to be installed this Saturday morning."></textarea></div>
     <button class="btn btn-brand btn-block" id="confirmBookBtn" onclick="confirmBooking()" style="padding:14px">Send request on WhatsApp</button>
     <p class="hint" style="margin-top:11px;text-align:center">Your details go straight to the worker. Nearse takes no commission.</p>
+  </div>
+</div>
+
+<div class="overlay" id="camOverlay" onclick="if(event.target===this)stopCamera()">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="stopCamera()" aria-label="Close">✕</button>
+    <h3>Verification photo</h3>
+    <p class="sub">Look straight at the camera, in good light, face inside the circle.</p>
+    <div class="cam-stage"><video id="camVideo" autoplay playsinline muted></video><div class="cam-oval"></div></div>
+    <p class="cam-tip" id="camTip">Only a live photo is accepted — this is how we keep Nearse trustworthy.</p>
+    <button class="btn btn-brand btn-block" id="camShot" onclick="captureFrame()" style="padding:14px">Capture photo</button>
   </div>
 </div>
 
@@ -842,6 +934,7 @@ let session = null;
 let myLoc = null;
 let regLoc = null;
 let selfieData = null;
+let selfieLive = false;
 let picked = [];             /* selected skill names, max 3 */
 let hireCat = "";
 let currentWorker = null;
@@ -919,7 +1012,7 @@ const api = {
     }
     const all = demoAll();
     if(all.some(w => w.phone === phone)) throw new Error("This number is already registered — please sign in");
-    const w = {id:"w"+Date.now(), created_at:new Date().toISOString(), phone, pin, rating_sum:0, rating_count:0, available:true, ...data};
+    const w = {id:"w"+Date.now(), created_at:new Date().toISOString(), phone, pin, rating_sum:0, rating_count:0, available:true, verified:false, ...data};
     all.unshift(w); demoSave(all); return w;
   },
   async login(phone, pin){
@@ -961,7 +1054,7 @@ function demoSeed(){
   const mk = (name, area, skills, dLat, dLng, rs, rc) => ({
     id:"d"+name.replace(/\s/g,""), created_at:new Date().toISOString(),
     name, phone:"7086269537", pin:"0000", city:"Guwahati", area, about:"",
-    selfie:null, lat:base.lat+dLat, lng:base.lng+dLng, skills, available:true, rating_sum:rs, rating_count:rc
+    selfie:null, lat:base.lat+dLat, lng:base.lng+dLng, skills, available:true, verified:true, rating_sum:rs, rating_count:rc
   });
   return [
     mk("Rahim Ali","Six Mile",[{skill:"Electrician",price:400,unit:"per visit",exp:"9 years"},{skill:"Wi-Fi & Network Setup",price:500,unit:"per visit",exp:"4 years"}], .010,.008, 47,10),
@@ -1051,34 +1144,62 @@ function initRegister(){
   $("regSaveBtn").textContent = editing ? "Save changes" : "Publish my profile";
   picked = w ? (w.skills||[]).map(s=>s.skill) : [];
   selfieData = w ? w.selfie : null;
+  selfieLive = false;
   regLoc = (w && w.lat != null) ? {lat:w.lat, lng:w.lng} : null;
   $("regCity").value  = w ? (w.city||"")  : "";
   $("regArea").value  = w ? (w.area||"")  : "";
   $("regAbout").value = w ? (w.about||"") : "";
   $("skillSearch").value = "";
+  pickCat = "";
   window._existing = w ? (w.skills||[]) : [];
   renderSkillPicker();
   renderPicked();
   renderSelfie();
   renderLocBtn();
 }
+let pickCat = "";
 function renderSkillPicker(){
   const q = $("skillSearch").value.trim().toLowerCase();
-  const box = $("skillBox");
-  let html = "";
-  CATALOGUE.forEach(([key,label])=>{
-    const items = SKILLS.filter(s => s.c === key && (!q || s.n.toLowerCase().includes(q)));
-    if(!items.length) return;
-    html += `<div class="skill-group"><h5>${esc(label)}</h5><div class="chips">` +
-      items.map(s=>{
-        const on = picked.includes(s.n);
-        const dis = !on && picked.length >= 3;
-        return `<button class="chip${on?" on":""}" ${dis?"disabled":""} onclick="toggleSkill('${jsq(s.n)}')">${esc(s.n)}</button>`;
-      }).join("") + `</div></div>`;
-  });
-  box.innerHTML = html || `<p class="hint" style="padding:8px">No service matches “${esc(q)}”. Try another word.</p>`;
+  const host = $("skillPicker");
   $("skillCount").textContent = picked.length + " of 3";
+
+  if(q){
+    const hits = SKILLS.filter(x => x.n.toLowerCase().includes(q)).slice(0, 40);
+    host.innerHTML = `<div class="pick-step">
+      <div class="step-head"><h6>${hits.length} match${hits.length===1?"":"es"} for “${esc(q)}”</h6></div>
+      <div class="svc-list">${hits.map(svcRow).join("") || '<p class="hint">No service found. Try another word, or browse the categories below.</p>'}</div>
+    </div>`;
+    return;
+  }
+  if(!pickCat){
+    host.innerHTML = `<div class="pick-step">
+      <div class="step-head"><h6>Choose the type of work you do</h6></div>
+      <div class="cat-grid">${CATALOGUE.map(([key,label,items])=>
+        `<button class="cat-tile" onclick="openCat('${key}')"><b>${esc(label)}</b><span>${items.length} services</span></button>`).join("")}</div>
+    </div>`;
+    return;
+  }
+  const cat = CATALOGUE.find(c=>c[0]===pickCat);
+  host.innerHTML = `<div class="pick-step">
+    <div class="step-head">
+      <button class="step-back" onclick="openCat('')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        All categories
+      </button>
+      <h6>${esc(cat[1])}</h6>
+    </div>
+    <div class="svc-list">${SKILLS.filter(x=>x.c===pickCat).map(svcRow).join("")}</div>
+  </div>`;
 }
+function svcRow(x){
+  const on = picked.includes(x.n);
+  const dis = !on && picked.length >= 3;
+  return `<button class="svc-row${on?" on":""}" ${dis?"disabled":""} onclick="toggleSkill('${jsq(x.n)}')">
+    <span><b>${esc(x.n)}</b><span class="unit">Usually priced ${esc(x.u)}</span></span>
+    <span class="tick">✓</span>
+  </button>`;
+}
+function openCat(k){ pickCat = k; renderSkillPicker(); }
 function toggleSkill(name){
   const current = collectSkills();
   if(picked.includes(name)) picked = picked.filter(x => x !== name);
@@ -1091,9 +1212,12 @@ function toggleSkill(name){
 function renderPicked(){
   const prior = window._existing || [];
   const live = collectSkills();
-  $("pickedSkills").innerHTML = picked.map(name=>{
+  const host = $("pickedSkills");
+  if(!picked.length){ host.innerHTML = ""; return; }
+  host.innerHTML = `<p class="hint" style="margin:4px 0 2px">Set your rate for each service</p>` + picked.map(name=>{
     const known = live.find(x=>x.skill===name) || prior.find(x=>x.skill===name) || {};
     const unit = known.unit || SKILL_UNIT[name] || "per visit";
+    const units = UNITS.includes(unit) ? UNITS : UNITS.concat([unit]);
     return `<div class="picked-card" data-skill="${esc(name)}">
       <div class="picked-head">
         <b>${esc(name)}</b>
@@ -1101,7 +1225,7 @@ function renderPicked(){
       </div>
       <div class="rate-row">
         <label class="rupee"><span>₹</span><input class="sd-price" type="number" min="1" inputmode="numeric" placeholder="Your rate" value="${known.price ?? ""}"></label>
-        <select class="sd-unit">${UNITS.concat(unit === "per unit" ? ["per unit"] : []).filter((u,i,a)=>a.indexOf(u)===i).map(u=>`<option${u===unit?" selected":""}>${u}</option>`).join("")}</select>
+        <select class="sd-unit">${units.map(u=>`<option${u===unit?" selected":""}>${u}</option>`).join("")}</select>
         <input class="sd-exp exp" type="text" placeholder="Experience — e.g. 5 years" value="${esc(known.exp||"")}">
       </div>
     </div>`;
@@ -1120,6 +1244,56 @@ function renderSelfie(){
     ? `<img src="${selfieData}" alt="Your photo">`
     : `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>`;
 }
+let camStream = null;
+async function startCamera(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    toast("Camera not available — you can upload a photo instead");
+    return;
+  }
+  openModal("camOverlay");
+  $("camShot").disabled = true;
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user", width:{ideal:720}, height:{ideal:720}}, audio:false});
+    const v = $("camVideo");
+    v.srcObject = camStream;
+    await v.play();
+    $("camShot").disabled = false;
+  }catch(e){
+    stopCamera();
+    toast("Camera permission denied — allow the camera, or upload a photo instead");
+  }
+}
+function stopCamera(){
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream = null; }
+  const v = $("camVideo"); if(v) v.srcObject = null;
+  closeModal("camOverlay");
+}
+async function captureFrame(){
+  const v = $("camVideo");
+  if(!v || !v.videoWidth){ toast("Camera is still starting — try again"); return; }
+  const S = 460, side = Math.min(v.videoWidth, v.videoHeight);
+  const cv = document.createElement("canvas"); cv.width = S; cv.height = S;
+  const ctx = cv.getContext("2d");
+  ctx.translate(S, 0); ctx.scale(-1, 1);   /* un-mirror */
+  ctx.drawImage(v, (v.videoWidth-side)/2, (v.videoHeight-side)/2, side, side, 0, 0, S, S);
+
+  /* on-device face check where the browser supports it */
+  if("FaceDetector" in window){
+    try{
+      const faces = await new window.FaceDetector({fastMode:true}).detect(cv);
+      if(!faces.length){
+        $("camTip").textContent = "No face detected. Move closer, use better light, and keep your face inside the circle.";
+        toast("No face detected — please try again");
+        return;
+      }
+    }catch(e){}
+  }
+  selfieData = cv.toDataURL("image/jpeg", .82);
+  selfieLive = true;
+  renderSelfie();
+  stopCamera();
+  toast("Photo captured");
+}
 function handleSelfie(input){
   const file = input.files && input.files[0]; if(!file) return;
   const reader = new FileReader();
@@ -1130,6 +1304,7 @@ function handleSelfie(input){
       const cv = document.createElement("canvas"); cv.width = S; cv.height = S;
       cv.getContext("2d").drawImage(img, (img.width-side)/2, (img.height-side)/2, side, side, 0, 0, S, S);
       selfieData = cv.toDataURL("image/jpeg", .82);
+      selfieLive = false;
       renderSelfie();
     };
     img.src = e.target.result;
@@ -1156,7 +1331,7 @@ async function saveProfile(){
   if(!skills.length){ toast("Choose at least one service"); return; }
   const missing = skills.find(s => !s.price || s.price < 1);
   if(missing){ toast("Set your rate for " + missing.skill); return; }
-  if(!selfieData){ toast("Please add your photo — it builds trust"); return; }
+  if(!selfieData){ toast("Please take your verification photo"); return; }
   const city = $("regCity").value.trim();
   if(!city){ toast("Please enter your city or town"); return; }
 
@@ -1178,7 +1353,7 @@ async function saveProfile(){
     session.registered = true;
     session.worker = {...(session.worker||{}), ...w, ...data, phone:session.phone};
     saveSession();
-    toast(session.registered ? "Your profile is live" : "Welcome to Nearse");
+    toast(w && w.verified ? "Your profile is live" : "Submitted — our team reviews it shortly");
     go("me");
   }catch(e){ toast(e.message); }
   btn.disabled = false; btn.textContent = label;
@@ -1196,6 +1371,13 @@ function renderMe(){
         <div style="margin-top:5px">${starsOf(w)}</div>
       </div>
     </div>
+    ${w.verified === false ? `<div class="vstatus pending">
+      <span class="dotmark">!</span>
+      <div><b>Profile under review</b><span>Our team is checking your photo and details. You'll appear in customer searches as soon as it's approved — usually within a day.</span></div>
+    </div>` : `<div class="vstatus done">
+      <span class="dotmark">✓</span>
+      <div><b>Verified profile</b><span>You're visible to customers searching near you.</span></div>
+    </div>`}
     <div class="switch-row">
       <div><b>Available for work</b><span>Turn this off when you're busy — you won't appear in search.</span></div>
       <label class="switch"><input type="checkbox" id="avSwitch" ${w.available!==false?"checked":""} onchange="toggleAvailable(this.checked)"><span class="track"></span></label>
@@ -1267,7 +1449,7 @@ function matchesQuery(w, q){
 function score(w){ const n = w.rating_count||0; return n ? (w.rating_sum/n) : 3.4; }
 function renderResults(){
   const q = $("hireSearch").value.trim().toLowerCase();
-  const list = workers.filter(w => w.available !== false && matchesQuery(w, q));
+  const list = workers.filter(w => w.available !== false && w.verified !== false && matchesQuery(w, q));
   list.sort((a,b)=>{
     const da = distanceTo(a), db = distanceTo(b);
     if(da != null && db != null && Math.abs(da-db) > 0.4) return da - db;
@@ -1294,7 +1476,7 @@ function renderResults(){
     return `<button class="wcard" onclick="openWorker('${jsq(w.id)}')">
       <span class="avatar"><img src="${avatarOf(w)}" alt="" loading="lazy"></span>
       <span class="info">
-        <h3>${esc(w.name)}</h3>
+        <h3>${esc(w.name)} <span class="verified-badge">✓ Verified</span></h3>
         <div class="trade">${trades}</div>
         <div class="row">
           <span>${d != null ? showDist(d) : esc(w.area || w.city || "")}</span>
@@ -1374,10 +1556,78 @@ Please reply to confirm. Thank you.`;
   toast("Request sent — " + w.name.split(" ")[0] + " will reply on WhatsApp");
 }
 
-/* ---------- Budget Cars notice ---------- */
-function dismissCarsNote(){
-  $("carsNote").classList.remove("on");
-  try{ localStorage.setItem("nearse_cars_note_off","1"); }catch(e){}
+/* ---------- admin review (private, PIN-gated) ---------- */
+const DEMO_ADMIN_PIN = "Nearse@20";
+let adminPin = null;
+async function adminAuth(){
+  const pin = prompt("Admin PIN");
+  if(pin === null) return false;
+  let ok = false;
+  if(LIVE){
+    try{ ok = await sb("rpc/admin_check", {method:"POST", body:JSON.stringify({p_pin:pin})}) === true; }
+    catch(e){ toast("Could not verify — check your connection"); return false; }
+  }else ok = (pin === DEMO_ADMIN_PIN);
+  if(!ok){ toast("Wrong admin PIN"); return false; }
+  adminPin = pin;
+  return true;
+}
+async function openAdmin(){
+  if(!adminPin && !(await adminAuth())){ go("home"); return; }
+  go("admin");
+  renderAdmin();
+}
+async function renderAdmin(){
+  const host = $("adminPanel");
+  host.innerHTML = '<div class="skeleton"></div>';
+  let all = [];
+  try{ all = await api.list(); }catch(e){ host.innerHTML = '<p class="hint">Could not load profiles.</p>'; return; }
+  const pending  = all.filter(w => w.verified === false);
+  const approved = all.filter(w => w.verified !== false);
+  host.innerHTML = `
+    <h2>Profile review</h2>
+    <p class="hint">${pending.length} awaiting approval · ${approved.length} live</p>
+    <div class="divider"></div>
+    ${pending.length ? pending.map(adminCard).join("") :
+      '<div class="empty" style="margin:0"><b>Nothing to review</b>New profiles will appear here.</div>'}
+    ${approved.length ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px">Live profiles</p>` +
+      approved.map(w=>`<div class="admin-card">
+        <span class="avatar"><img src="${avatarOf(w)}" alt=""></span>
+        <div style="flex:1;min-width:0">
+          <h4>${esc(w.name)}</h4>
+          <p class="meta">${esc((w.skills||[]).map(x=>x.skill).join(" · "))}<br>${esc(w.area?w.area+", ":"")}${esc(w.city||"")} · ${esc(w.phone||"")}</p>
+          <div class="admin-actions"><button class="btn btn-outline btn-sm" onclick="adminSet('${jsq(w.id)}',false)">Hide profile</button></div>
+        </div>
+      </div>`).join("") : ""}
+    <button class="btn btn-quiet btn-block btn-sm" style="margin-top:18px" onclick="adminPin=null;go('home')">Exit admin</button>`;
+}
+function adminCard(w){
+  return `<div class="admin-card">
+    <span class="avatar"><img src="${avatarOf(w)}" alt=""></span>
+    <div style="flex:1;min-width:0">
+      <h4>${esc(w.name)}</h4>
+      <p class="meta">
+        ${esc((w.skills||[]).map(x=>x.skill + " — ₹" + x.price + " " + x.unit).join(" · "))}<br>
+        ${esc(w.area ? w.area + ", " : "")}${esc(w.city||"")} · ${esc(w.phone||"")}
+        ${w.about ? "<br>" + esc(w.about) : ""}
+      </p>
+      <div class="admin-actions">
+        <button class="btn btn-brand btn-sm" onclick="adminSet('${jsq(w.id)}',true)">Approve</button>
+        <button class="btn btn-outline btn-sm" onclick="adminSet('${jsq(w.id)}',false)">Keep hidden</button>
+      </div>
+    </div>
+  </div>`;
+}
+async function adminSet(id, verified){
+  try{
+    if(LIVE){
+      await sb("rpc/admin_set_verified", {method:"POST", body:JSON.stringify({p_pin:adminPin, p_id:id, p_verified:verified})});
+    }else{
+      const all = demoAll();
+      const w = all.find(x=>x.id===id); if(w){ w.verified = verified; demoSave(all); }
+    }
+    toast(verified ? "Profile approved" : "Profile hidden");
+    renderAdmin();
+  }catch(e){ toast(e.message); }
 }
 
 /* ---------- init ---------- */
@@ -1385,8 +1635,14 @@ $("year").textContent = new Date().getFullYear();
 document.addEventListener("keydown", e => {
   if(e.key === "Escape") document.querySelectorAll(".overlay.open").forEach(o=>o.classList.remove("open"));
 });
-try{ if(!localStorage.getItem("nearse_cars_note_off")) $("carsNote").classList.add("on"); }
-catch(e){ $("carsNote").classList.add("on"); }
+
+function checkAdminHash(){
+  if(location.hash.toLowerCase() === "#admin"){
+    history.replaceState(null, "", location.pathname);
+    openAdmin();
+  }
+}
+window.addEventListener("hashchange", checkAdminHash);
 
 (async function init(){
   loadSession();
@@ -1395,6 +1651,7 @@ catch(e){ $("carsNote").classList.add("on"); }
   if(session && session.registered){
     try{ session.worker = await api.login(session.phone, session.pin); saveSession(); }catch(e){}
   }
+  checkAdminHash();
 })();
 </script>
 </body>
