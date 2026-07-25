@@ -75,7 +75,14 @@ jobs:
             (select count(*)::int from information_schema.columns
               where table_schema='public' and table_name='workers' and column_name='email') as email_leaked_to_public,
             (select require_phone_otp from public.nearse_config where id=1) as require_phone_otp,
-            (select count(*)::int from public.workers where status='approved') as approved_now
+            (select count(*)::int from public.workers where status='approved') as approved_now,
+            (select count(*)::int from information_schema.columns
+              where table_schema='public' and table_name='worker_secrets'
+                and column_name in ('email','wa_code')) as private_cols,
+            (select count(*)::int from information_schema.routines
+              where routine_schema='public' and routine_name='admin_wa_codes') as wa_fn,
+            (select count(*)::int from information_schema.columns
+              where table_schema='public' and table_name='workers' and column_name='wa_code') as wa_code_leaked
           VSQL
           jq -Rs '{query: .}' /tmp/verify.sql > /tmp/v.json
           code=$(curl -sS -o /tmp/verify.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/v.json)
