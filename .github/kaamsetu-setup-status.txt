@@ -1,7 +1,8 @@
-run: 2026-07-25T12:01:22Z
+run: 2026-07-25T12:02:22Z
 secret: present (44 chars)
 list projects: HTTP 200
 project: mpufunsitqtdkqlibxof
 run SQL: HTTP 201
 verify workers table: HTTP 201 — [{"n":2}]
-verify migration: HTTP 400 — {"message":"Failed to run sql query: ERROR:  42703: column \"public\" does not exist\nLINE 1: select (select count(*)::int from information_schema.columns where table_schema=public and table_name=workers and column_name in (status,phone_verified,review_note)) as new_worker_cols, (select count(*)::int from information_schema.routines where routine_schema=public and routine_name in (admin_set_status
+verify migration: HTTP 201 — [{"new_worker_cols":3,"new_functions":2,"email_leaked_to_public":0,"require_phone_otp":false,"approved_now":2}]
+SUCCESS: Nearse database is live
