@@ -548,3 +548,52 @@ begin
    where w.id = p_id;
 end;
 $$;
+
+-- ============================================================
+-- MIGRATION 5 — deletion rights and location privacy
+--
+--   * delete_worker lets a worker erase their own profile with their PIN.
+--     Required by the DPDP Act's right to erasure, and by the Play Store,
+--     which will not list an app that creates accounts it cannot delete.
+--   * Coordinates are rounded to 3 decimal places (~100 m). That is ample
+--     for "nearest first" ranking, and stops a world-readable table from
+--     pinpointing the house a worker lives in.
+-- ============================================================
+
+create or replace function public.delete_worker(p_phone text, p_pin text)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wid uuid;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then
+    raise exception 'Wrong phone number or PIN';
+  end if;
+  -- worker_secrets cascades on the foreign key
+  delete from workers where id = wid;
+end;
+$$;
+
+-- round anything already stored
+update public.workers
+   set lat = round(lat::numeric, 3)::double precision,
+       lng = round(lng::numeric, 3)::double precision
+ where lat is not null or lng is not null;
+
+create or replace function public.workers_coarse_location()
+returns trigger
+language plpgsql set search_path = public as $$
+begin
+  if new.lat is not null then new.lat := round(new.lat::numeric, 3)::double precision; end if;
+  if new.lng is not null then new.lng := round(new.lng::numeric, 3)::double precision; end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists workers_coarse_location_trg on public.workers;
+create trigger workers_coarse_location_trg
+  before insert or update of lat, lng on public.workers
+  for each row execute function public.workers_coarse_location();

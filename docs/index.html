@@ -124,6 +124,14 @@ h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.15;font-weight:700}
 .btn-outline:hover{border-color:var(--ink);background:var(--surface)}
 .btn-quiet{background:var(--surface-2);color:var(--ink-2);border-color:transparent}
 .btn-quiet:hover{background:var(--surface-2)}
+.btn-danger{background:transparent;color:var(--danger);border-color:rgba(232,110,138,.42)}
+.btn-danger:hover{background:rgba(232,110,138,.12);border-color:var(--danger)}
+.danger-zone{
+  margin-top:26px;padding:16px;border:1px solid rgba(232,110,138,.24);
+  border-radius:var(--r);background:rgba(232,110,138,.05);
+}
+.danger-zone b{display:block;font-size:.92rem;color:var(--ink);margin-bottom:3px}
+.danger-zone span{display:block;color:var(--muted);font-size:.82rem;line-height:1.55;margin-bottom:12px}
 .btn-block{width:100%}
 .btn-sm{padding:9px 15px;font-size:.87rem}
 .btn:disabled{opacity:.55;cursor:not-allowed}
@@ -722,9 +730,13 @@ header{
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 footer{border-top:1px solid var(--line);padding:26px 0 34px;margin-top:auto}
 footer .wrap{
-  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  display:flex;flex-direction:column;gap:14px;
   color:var(--muted);font-size:.83rem;
 }
+.foot-top,.foot-bottom{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
+.foot-bottom{padding-top:13px;border-top:1px solid var(--line)}
+.foot-links{display:flex;gap:18px;flex-wrap:wrap}
+.foot-beta{color:var(--brand-quiet);font-weight:600}
 footer a{color:var(--ink-2);font-weight:600}
 footer a:hover{color:var(--brand)}
 
@@ -970,7 +982,9 @@ footer a:hover{color:var(--brand)}
     </div>
 
     <button class="btn btn-brand btn-block" id="regSaveBtn" onclick="saveProfile()" style="padding:14px;margin-top:6px">Publish my profile</button>
-    <p class="hint" style="margin-top:12px">By publishing, you agree that your name, photo, services, rates, area and WhatsApp number are shown to customers.</p>
+    <p class="hint" style="margin-top:12px">By publishing, you agree that your name, photo, services, rates, area and WhatsApp number are shown to customers,
+      and you accept our <a href="terms/" target="_blank" rel="noopener">terms of use</a> and
+      <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>. You can delete your profile at any time.</p>
   </div>
 </section>
 
@@ -1047,8 +1061,19 @@ footer a:hover{color:var(--brand)}
 
 <footer>
   <div class="wrap">
-    <span>© <span id="year"></span> Nearse · Local services, done right</span>
-    <span>Guwahati, Assam</span>
+    <div class="foot-top">
+      <span>© <span id="year"></span> Nearse · Local services, done right</span>
+      <nav class="foot-links">
+        <a href="about/">About us</a>
+        <a href="privacy/">Privacy policy</a>
+        <a href="terms/">Terms of use</a>
+        <a href="about/#contact">Contact</a>
+      </nav>
+    </div>
+    <div class="foot-bottom">
+      <span>Guwahati, Assam</span>
+      <span class="foot-beta">Experimental launch — we are just getting started</span>
+    </div>
   </div>
 </footer>
 
@@ -1091,7 +1116,9 @@ footer a:hover{color:var(--brand)}
 
     <div class="quote" id="bookQuote"></div>
     <button class="btn btn-brand btn-block" id="confirmBookBtn" onclick="confirmBooking()" style="padding:14px">Send request on WhatsApp</button>
-    <p class="hint" style="margin-top:11px;text-align:center">Goes straight to the worker. Nearse takes no commission.</p>
+    <p class="hint" style="margin-top:11px;text-align:center">Goes straight to the worker. Nearse takes no commission.<br>
+      Your name and number are shared with the worker so they can reply, and we keep a record of the request —
+      see our <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>.</p>
   </div>
 </div>
 
@@ -1401,6 +1428,13 @@ const api = {
     const i = all.findIndex(x => x.phone === phone && x.pin === pin);
     if(i < 0) throw new Error("Session expired — please sign in again");
     all[i] = {...all[i], ...data}; demoSave(all); return all[i];
+  },
+  async remove(phone, pin){
+    if(LIVE) return await sb("rpc/delete_worker", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})});
+    const all = demoAll();
+    const i = all.findIndex(x => x.phone === phone && x.pin === pin);
+    if(i < 0) throw new Error("Wrong phone number or PIN");
+    all.splice(i, 1); demoSave(all);
   },
   async rate(id, s){
     if(LIVE) return await sb("rpc/rate_worker", {method:"POST", body:JSON.stringify({p_id:id, p_stars:s})});
@@ -1947,7 +1981,26 @@ function renderMe(){
     <div style="display:flex;gap:10px;margin-top:22px">
       <button class="btn btn-outline btn-sm" style="flex:1" onclick="go('register')">Edit profile</button>
       <button class="btn btn-quiet btn-sm" style="flex:1" onclick="signOut()">Sign out</button>
+    </div>
+    <div class="danger-zone">
+      <b>Delete my profile</b>
+      <span>Removes your profile, photo, rates and contact details from Nearse for good. This cannot be undone.</span>
+      <button class="btn btn-danger btn-sm" onclick="deleteProfile()">Delete my profile</button>
     </div>`;
+}
+async function deleteProfile(){
+  if(!session || !session.registered) return;
+  if(!confirm("Delete your Nearse profile?\n\nYour photo, rates and contact details are removed for good. Customers will no longer find you. This cannot be undone.")) return;
+  const typed = prompt("To confirm, type DELETE");
+  if(typed === null) return;
+  if(typed.trim().toUpperCase() !== "DELETE"){ toast("Not deleted — the word didn't match"); return; }
+  try{
+    await api.remove(session.phone, session.pin);
+    session = null;
+    try{ localStorage.removeItem(SSTORE); }catch(e){}
+    toast("Your profile has been deleted");
+    go("home");
+  }catch(e){ toast(e.message); }
 }
 async function toggleAvailable(v){
   try{
