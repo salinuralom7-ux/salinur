@@ -13,8 +13,11 @@
 <meta property="og:title" content="Nearse — Trusted local workers, booked directly">
 <meta property="og:description" content="Verified local workers near you. Nearest first, community rated, prices set by the workers.">
 <meta property="og:url" content="https://nearse.in/">
+<meta property="og:image" content="https://nearse.in/icons/icon-512.png">
+<meta property="og:image:alt" content="Nearse logo — a worker inside a location pin">
 <meta name="twitter:card" content="summary">
-<meta name="theme-color" content="#0F1418">
+<meta name="twitter:image" content="https://nearse.in/icons/icon-512.png">
+<meta name="theme-color" content="#0B0F1E">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,7 +25,7 @@
 <meta name="apple-mobile-web-app-title" content="Nearse">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232FA37C'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='38' font-weight='700' fill='%2306130E' text-anchor='middle'%3EN%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
@@ -46,24 +49,30 @@
    paper ground · petrol green brand · ink type · sand accents
    ========================================================================== */
 :root{
-  --bg:#0F1418;
-  --bg-2:#0B1013;
-  --surface:#161C21;
-  --surface-2:#1D242A;
-  --raise:#232B32;
-  --ink:#EDF1F3;
-  --ink-2:#C4CDD3;
-  --muted:#8A97A0;
-  --line:rgba(237,241,243,.10);
-  --line-strong:rgba(237,241,243,.19);
-  --brand:#2FA37C;
-  --brand-2:#3BBB90;
-  --brand-ink:#06130E;
-  --brand-soft:rgba(47,163,124,.13);
+  /* Base greys are the navy from the logo's worker silhouette (#0A102C),
+     so the whole surface sits in the same family as the mark. */
+  --bg:#0B0F1E;
+  --bg-2:#070A16;
+  --surface:#121729;
+  --surface-2:#191F34;
+  --raise:#212843;
+  --ink:#ECEEF7;
+  --ink-2:#C3C8DC;
+  --muted:#8990AC;
+  --line:rgba(236,238,247,.10);
+  --line-strong:rgba(236,238,247,.19);
+  /* --brand is the pin colour, exact. It carries white text at 7.5:1;
+     --brand-2 is the lighter tint that stays legible on the dark surfaces. */
+  --brand:#4420F8;
+  --brand-2:#8B72FF;
+  --brand-ink:#FFFFFF;
+  --brand-soft:rgba(68,32,248,.18);
+  /* muted member of the brand family, for supporting text that repeats */
+  --brand-quiet:#9C97D1;
   --gold:#D6A85C;
-  --ok:#3BBB90;
+  --ok:#39C48D;
   --warn:#D6A85C;
-  --danger:#E0685E;
+  --danger:#E86E8A;
   --r-sm:10px;
   --r:14px;
   --r-lg:20px;
@@ -77,8 +86,8 @@ html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
   font-family:var(--sans);
   background:
-    radial-gradient(1100px 520px at 82% -12%, rgba(47,163,124,.10), transparent 62%),
-    radial-gradient(760px 420px at -6% 12%, rgba(47,163,124,.05), transparent 58%),
+    radial-gradient(1100px 520px at 82% -12%, rgba(68,32,248,.16), transparent 62%),
+    radial-gradient(760px 420px at -6% 12%, rgba(68,32,248,.07), transparent 58%),
     var(--bg);
   color:var(--ink);
   font-size:16px;
@@ -121,14 +130,13 @@ h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.15;font-weight:700}
 
 /* ---------- header ---------- */
 header{
-  border-bottom:1px solid var(--line);background:rgba(15,20,24,.88);
+  border-bottom:1px solid var(--line);background:rgba(11,15,30,.88);
   backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;
 }
 .masthead{display:flex;align-items:center;justify-content:space-between;padding-top:16px;padding-bottom:16px;gap:12px}
 .brand{display:inline-flex;align-items:center;gap:10px}
 .brand .mark{
-  width:30px;height:30px;border-radius:8px;background:var(--brand);color:var(--brand-ink);
-  display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:1.05rem;line-height:1;
+  height:33px;width:auto;display:block;flex:0 0 auto;
 }
 .brand .name{font-weight:800;font-size:1.18rem;letter-spacing:-.03em}
 .header-link{font-size:.88rem;font-weight:600;color:var(--muted)}
@@ -189,9 +197,9 @@ header{
 .cta-text b{font-size:1.06rem;font-weight:700;letter-spacing:-.02em;line-height:1.25}
 .cta-text i{font-style:normal;font-size:.84rem;font-weight:500;opacity:.72}
 .cta-arrow{flex:0 0 auto;opacity:.55}
-.cta.primary{background:var(--brand);color:var(--brand-ink);box-shadow:0 12px 28px rgba(47,163,124,.22)}
+.cta.primary{background:var(--brand);color:var(--brand-ink);box-shadow:0 12px 28px rgba(68,32,248,.28)}
 .cta.primary .cta-ico{background:rgba(6,19,14,.14)}
-.cta.primary:hover{background:var(--brand-2);transform:translateY(-2px);box-shadow:0 16px 34px rgba(47,163,124,.3)}
+.cta.primary:hover{background:var(--brand-2);transform:translateY(-2px);box-shadow:0 16px 34px rgba(68,32,248,.36)}
 .cta.secondary{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
 .cta.secondary .cta-ico{background:var(--brand-soft);color:var(--brand-2)}
 .cta.secondary:hover{border-color:var(--brand);transform:translateY(-2px);box-shadow:var(--shadow)}
@@ -204,7 +212,7 @@ header{
 
 /* ---------- worker banner ---------- */
 .banner{
-  background:linear-gradient(160deg,#12332A,#0E2620);color:var(--ink);padding:clamp(44px,8vw,72px) 0;text-align:center;
+  background:linear-gradient(160deg,#241A6B,#141034);color:var(--ink);padding:clamp(44px,8vw,72px) 0;text-align:center;
   border-bottom:1px solid var(--line);
 }
 .banner h1{
@@ -233,9 +241,9 @@ header{
   transition:border-color .15s ease,box-shadow .15s ease;
 }
 .field input:focus,.field select:focus,.field textarea:focus{
-  border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,163,124,.22);
+  border-color:var(--brand);box-shadow:0 0 0 3px rgba(68,32,248,.28);
 }
-.field input::placeholder,.field textarea::placeholder{color:#6E7B84}
+.field input::placeholder,.field textarea::placeholder{color:#6C7391}
 .field input.locked{
   background:var(--surface-2);color:var(--muted);cursor:default;
   border-style:dashed;
@@ -302,7 +310,7 @@ header{
   width:100%;border:1px solid var(--line-strong);border-radius:var(--r-sm);
   padding:11px 13px;font-size:.92rem;outline:none;background:var(--surface);
 }
-.rate-row input:focus,.rate-row select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,163,124,.22)}
+.rate-row input:focus,.rate-row select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(68,32,248,.28)}
 .rupee{position:relative}
 .rupee input{padding-left:28px}
 .rupee span{
@@ -360,7 +368,7 @@ header{
 }
 .cam-oval::after{
   content:"";position:absolute;left:12%;top:8%;width:76%;height:76%;
-  border:2px dashed rgba(47,163,124,.8);border-radius:50%;
+  border:2px dashed rgba(139,114,255,.8);border-radius:50%;
 }
 .cam-tip{text-align:center;color:var(--muted);font-size:.84rem;margin-bottom:14px;line-height:1.5}
 
@@ -370,9 +378,9 @@ header{
   border:1px solid var(--line);background:var(--surface-2);
 }
 .vstatus.pending{border-color:rgba(214,168,92,.35);background:rgba(214,168,92,.08)}
-.vstatus.done{border-color:rgba(59,187,144,.32);background:rgba(59,187,144,.08)}
+.vstatus.done{border-color:rgba(57,196,141,.32);background:rgba(57,196,141,.08)}
 .vstatus.rejected{border-color:rgba(232,110,110,.35);background:rgba(232,110,110,.08)}
-.vstatus.rejected .dotmark{background:rgba(232,110,110,.2);color:#E86E6E}
+.vstatus.rejected .dotmark{background:rgba(232,110,138,.2);color:var(--danger)}
 .vstatus b{display:block;font-size:.92rem;margin-bottom:2px}
 .vstatus span{color:var(--muted);font-size:.81rem;line-height:1.5;display:block}
 .vstatus .dotmark{
@@ -380,7 +388,7 @@ header{
   font-size:.68rem;font-weight:800;margin-top:2px;
 }
 .vstatus.pending .dotmark{background:rgba(214,168,92,.2);color:var(--warn)}
-.vstatus.done .dotmark{background:rgba(59,187,144,.2);color:var(--ok)}
+.vstatus.done .dotmark{background:rgba(57,196,141,.2);color:var(--ok)}
 .verified-badge{
   display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;
   color:var(--brand-2);background:var(--brand-soft);padding:2px 8px;border-radius:999px;
@@ -461,7 +469,7 @@ header{
   padding:13px 15px;font-weight:600;font-size:.9rem;color:var(--ink-2);
 }
 .loc-btn:hover{border-color:var(--brand);color:var(--brand)}
-.loc-btn.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:rgba(59,187,144,.08)}
+.loc-btn.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:rgba(57,196,141,.08)}
 
 /* ---------- hire: search ---------- */
 .search-head{padding:34px 0 4px}
@@ -473,10 +481,10 @@ header{
   padding:14px 18px;margin-top:20px;box-shadow:var(--shadow-sm);
   transition:border-color .15s,box-shadow .15s;
 }
-.searchbar:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(47,163,124,.2)}
+.searchbar:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(68,32,248,.26)}
 .searchbar svg{color:var(--muted);flex:0 0 auto}
 .searchbar input{border:none;outline:none;background:transparent;width:100%;font-size:1.02rem}
-.searchbar input::placeholder{color:#6E7B84}
+.searchbar input::placeholder{color:#6C7391}
 .searchbar .clear{
   border:none;background:none;color:var(--muted);font-size:1rem;padding:2px 4px;display:none;
 }
@@ -599,7 +607,7 @@ header{
 .avatar img{width:100%;height:100%;object-fit:cover}
 .wcard .info{min-width:0;flex:1}
 .wcard h3{font-size:1.02rem;letter-spacing:-.02em;margin-bottom:2px}
-.wcard .trade{color:var(--brand);font-size:.85rem;font-weight:600;margin-bottom:6px}
+.wcard .trade{color:var(--brand-quiet);font-size:.85rem;font-weight:600;margin-bottom:6px}
 .wcard .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.8rem;font-weight:600}
 .wcard .where{color:var(--ink-2)}
 .wcard .where em{font-style:normal;color:var(--muted);font-weight:500}
@@ -624,7 +632,7 @@ header{
   text-decoration:underline;text-underline-offset:2px;padding:0;
 }
 .skeleton{
-  height:98px;border-radius:var(--r);background:linear-gradient(90deg,#161C21,#1F262C,#161C21);
+  height:98px;border-radius:var(--r);background:linear-gradient(90deg,#121729,#1D2440,#121729);
   background-size:200% 100%;animation:sk 1.3s ease-in-out infinite;
 }
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -701,7 +709,7 @@ header{
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
 }
 .rating-box .t{font-size:.85rem;color:var(--muted);font-weight:600}
-.pick-stars{display:flex;gap:4px;font-size:1.35rem;color:#3A444C;cursor:pointer;line-height:1}
+.pick-stars{display:flex;gap:4px;font-size:1.35rem;color:#39406B;cursor:pointer;line-height:1}
 .pick-stars span:hover,.pick-stars span.lit{color:var(--gold)}
 
 /* ---------- toast + footer ---------- */
@@ -730,7 +738,7 @@ footer a:hover{color:var(--brand)}
 <header>
   <div class="wrap masthead">
     <a class="brand" href="#" onclick="go('home');return false" aria-label="Nearse home">
-      <span class="mark">N</span><span class="name">Nearse</span>
+      <img class="mark" src="icons/logo.png" alt="" width="26" height="33"><span class="name">Nearse</span>
     </a>
     <div style="display:flex;align-items:center;gap:14px">
       <button class="install-btn" id="installBtn" onclick="installApp()" hidden>
@@ -1307,10 +1315,11 @@ function openModal(id){ $(id).classList.add("open"); }
 function closeModal(id){ $(id).classList.remove("open"); }
 function avatarOf(w){
   if(w.selfie) return w.selfie;
-  const hue = [...(w.name||"N")].reduce((a,c)=>(a*31+c.charCodeAt(0))%360, 0);
+  /* stay inside the brand's indigo–violet band so placeholders never clash */
+  const hue = 226 + ([...(w.name||"N")].reduce((a,c)=>(a*31+c.charCodeAt(0))%56, 0));
   const letter = (w.name||"N").trim().charAt(0).toUpperCase();
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="160" height="160" fill="hsl(${hue},22%,88%)"/><text x="80" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="72" fill="hsl(${hue},28%,38%)">${letter}</text></svg>`);
+    `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="160" height="160" fill="hsl(${hue},34%,84%)"/><text x="80" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="72" fill="hsl(${hue},44%,32%)">${letter}</text></svg>`);
 }
 function starsOf(w){
   const n = w.rating_count || 0;
