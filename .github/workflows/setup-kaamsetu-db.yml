@@ -62,6 +62,13 @@ jobs:
             -d '{"query":"select count(*)::int as n from public.workers"}')
           note "verify workers table: HTTP $code — $(head -c 200 /tmp/count.json)"
           [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
+
+          # confirm the migration actually shaped the schema, not just that the SQL parsed
+          q='select (select count(*)::int from information_schema.columns where table_schema=''public'' and table_name=''workers'' and column_name in (''status'',''phone_verified'',''review_note'')) as new_worker_cols, (select count(*)::int from information_schema.routines where routine_schema=''public'' and routine_name in (''admin_set_status'',''admin_set_require_otp'')) as new_functions, (select count(*)::int from information_schema.columns where table_schema=''public'' and table_name=''workers'' and column_name=''email'') as email_leaked_to_public, (select require_phone_otp from public.nearse_config where id=1) as require_phone_otp, (select count(*)::int from public.workers where status=''approved'') as approved_now'
+          printf '{"query":"%s"}' "$(echo "$q" | sed "s/''/'/g" | sed 's/"/\\"/g')" > /tmp/v.json
+          code=$(curl -sS -o /tmp/verify.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/v.json)
+          note "verify migration: HTTP $code — $(head -c 400 /tmp/verify.json)"
+          [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
           note "SUCCESS: Nearse database is live"
 
       - name: Commit status report
