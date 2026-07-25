@@ -371,6 +371,8 @@ header{
 }
 .vstatus.pending{border-color:rgba(214,168,92,.35);background:rgba(214,168,92,.08)}
 .vstatus.done{border-color:rgba(59,187,144,.32);background:rgba(59,187,144,.08)}
+.vstatus.rejected{border-color:rgba(232,110,110,.35);background:rgba(232,110,110,.08)}
+.vstatus.rejected .dotmark{background:rgba(232,110,110,.2);color:#E86E6E}
 .vstatus b{display:block;font-size:.92rem;margin-bottom:2px}
 .vstatus span{color:var(--muted);font-size:.81rem;line-height:1.5;display:block}
 .vstatus .dotmark{
@@ -383,6 +385,32 @@ header{
   display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;
   color:var(--brand-2);background:var(--brand-soft);padding:2px 8px;border-radius:999px;
 }
+.verified-badge.warn{color:var(--warn);background:rgba(214,168,92,.13)}
+
+/* ---------- phone + OTP ---------- */
+.phone-input{display:flex;align-items:stretch}
+.phone-input .cc{
+  display:grid;place-items:center;padding:0 13px;font-weight:700;font-size:.94rem;color:var(--muted);
+  background:var(--surface-2);border:1px solid var(--line-strong);border-right:none;
+  border-radius:var(--r-sm) 0 0 var(--r-sm);
+}
+.phone-input input{border-radius:0 var(--r-sm) var(--r-sm) 0!important}
+.otp-mark{
+  width:52px;height:52px;border-radius:15px;display:grid;place-items:center;margin-bottom:16px;
+  background:var(--brand-soft);color:var(--brand-2);
+}
+.otp-box{
+  text-align:center;font-size:1.6rem!important;font-weight:700;letter-spacing:.42em;
+  text-indent:.42em;font-variant-numeric:tabular-nums;padding:15px 14px!important;
+}
+.otp-foot{display:flex;justify-content:space-between;gap:12px;margin-top:15px}
+.otp-foot .linkish{font-size:.85rem}
+.otp-foot .linkish:disabled{color:var(--muted);text-decoration:none;cursor:default}
+.otp-preview{
+  border:1px dashed rgba(214,168,92,.4);background:rgba(214,168,92,.08);color:var(--warn);
+  border-radius:var(--r-sm);padding:12px 14px;margin-bottom:15px;font-size:.83rem;line-height:1.55;
+}
+.otp-preview b{display:block;font-size:1.25rem;letter-spacing:.3em;margin-top:5px;color:var(--ink)}
 
 /* ---------- admin review ---------- */
 .admin-card{
@@ -393,7 +421,7 @@ header{
 .admin-card h4{font-size:1rem;margin-bottom:2px}
 .admin-card .meta{color:var(--muted);font-size:.8rem;line-height:1.5}
 .admin-actions{display:flex;gap:8px;margin-top:11px}
-.admin-actions .btn{flex:1;padding:9px}
+.admin-actions .btn{flex:1;padding:9px;white-space:nowrap}
 
 /* ---------- selfie & location ---------- */
 .selfie-row{display:flex;align-items:center;gap:18px}
@@ -752,8 +780,11 @@ footer a:hover{color:var(--brand)}
 
       <div id="authIn">
         <div class="field">
-          <label for="inPhone">Mobile number</label>
-          <input type="tel" id="inPhone" placeholder="10-digit number" maxlength="10" inputmode="numeric" autocomplete="tel">
+          <label for="inPhone">WhatsApp number</label>
+          <div class="phone-input">
+            <span class="cc">+91</span>
+            <input type="tel" id="inPhone" placeholder="10-digit number" maxlength="10" inputmode="numeric" autocomplete="tel">
+          </div>
         </div>
         <div class="field">
           <label for="inPin">PIN</label>
@@ -768,15 +799,54 @@ footer a:hover{color:var(--brand)}
           <input type="text" id="upName" placeholder="As customers should see it" autocomplete="name">
         </div>
         <div class="field">
-          <label for="upPhone">Mobile number <span class="sublabel">— customers reach you here on WhatsApp</span></label>
-          <input type="tel" id="upPhone" placeholder="10-digit number" maxlength="10" inputmode="numeric" autocomplete="tel">
+          <label for="upPhone">WhatsApp number</label>
+          <div class="phone-input">
+            <span class="cc">+91</span>
+            <input type="tel" id="upPhone" placeholder="10-digit number" maxlength="10" inputmode="numeric" autocomplete="tel">
+          </div>
+          <p class="hint" style="margin-top:6px">Every booking arrives on WhatsApp, so this must be a number that has WhatsApp on it.</p>
+        </div>
+        <div class="field">
+          <label for="upEmail">Email <span class="sublabel">— optional</span></label>
+          <input type="email" id="upEmail" placeholder="Only if you want booking copies by email" autocomplete="email">
         </div>
         <div class="field">
           <label for="upPin">Create a 4-digit PIN</label>
           <input type="password" id="upPin" placeholder="You'll use this to sign in" maxlength="4" inputmode="numeric">
         </div>
-        <button class="btn btn-brand btn-block" id="signUpBtn" onclick="signUp()">Create account</button>
+        <button class="btn btn-brand btn-block" id="signUpBtn" onclick="signUp()">Send verification code</button>
         <p class="hint" style="margin-top:12px">Free to join. No commission on your earnings.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= WORKER: VERIFY WHATSAPP NUMBER ============================= -->
+<section class="screen" id="scr-otp">
+  <div class="wrap-sm">
+    <button class="back" onclick="go('work')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Back
+    </button>
+    <div class="panel">
+      <div class="otp-mark">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <h2>Verify your WhatsApp number</h2>
+      <p class="sub" id="otpSent">Sending a 6-digit code…</p>
+
+      <div class="field">
+        <label for="otpCode">Enter the 6-digit code</label>
+        <input type="text" id="otpCode" class="otp-box" placeholder="······" maxlength="6" inputmode="numeric"
+               autocomplete="one-time-code" oninput="onOtpInput()">
+      </div>
+
+      <div class="otp-preview" id="otpPreview" hidden></div>
+
+      <button class="btn btn-brand btn-block" id="otpVerifyBtn" onclick="verifyOtp()" style="padding:14px">Verify and continue</button>
+      <div class="otp-foot">
+        <button class="linkish" id="otpResend" onclick="resendOtp()">Resend code</button>
+        <button class="linkish" onclick="go('work')">Change number</button>
       </div>
     </div>
   </div>
@@ -1249,12 +1319,16 @@ const api = {
   },
   async register(phone, pin, data){
     if(LIVE){
-      const rows = await sb("rpc/register_worker", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin, p_data:data})});
+      const opts = {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin, p_data:data})};
+      /* the verified-number token, so the server can confirm the OTP was passed */
+      if(authToken) opts.headers = {Authorization: "Bearer " + authToken};
+      const rows = await sb("rpc/register_worker", opts);
       return Array.isArray(rows) ? rows[0] : rows;
     }
     const all = demoAll();
     if(all.some(w => w.phone === phone)) throw new Error("This number is already registered — please sign in");
-    const w = {id:"w"+Date.now(), created_at:new Date().toISOString(), phone, pin, rating_sum:0, rating_count:0, available:true, verified:false, ...data};
+    const w = {id:"w"+Date.now(), created_at:new Date().toISOString(), phone, pin, rating_sum:0, rating_count:0,
+      available:true, status:"pending", verified:false, phone_verified:!!(session && session.phoneVerified), ...data};
     all.unshift(w); demoSave(all); return w;
   },
   async login(phone, pin){
@@ -1296,7 +1370,8 @@ function demoSeed(){
   const mk = (name, area, skills, dLat, dLng, rs, rc) => ({
     id:"d"+name.replace(/\s/g,""), created_at:new Date().toISOString(),
     name, phone:"7086269537", pin:"0000", city:"Guwahati", area, about:"",
-    selfie:null, lat:base.lat+dLat, lng:base.lng+dLng, skills, available:true, verified:true, rating_sum:rs, rating_count:rc
+    selfie:null, lat:base.lat+dLat, lng:base.lng+dLng, skills, available:true,
+    status:"approved", verified:true, phone_verified:true, rating_sum:rs, rating_count:rc
   });
   return [
     mk("Rahim Ali","Six Mile",[{skill:"Electrician",price:400,unit:"per visit",exp:"9 years"},{skill:"Wi-Fi & Network Setup",price:500,unit:"per visit",exp:"4 years"}], .010,.008, 47,10),
@@ -1330,6 +1405,7 @@ function go(name){
   if(name === "hire") initHire();
   if(name === "me") renderMe();
   if(name === "register") initRegister();
+  if(name === "otp") initOtp(); else stopResendCooldown();
 }
 
 /* ---------- auth ---------- */
@@ -1342,9 +1418,13 @@ function authTab(which){
 function saveSession(){ try{ localStorage.setItem(SSTORE, JSON.stringify(session)); }catch(e){} }
 function loadSession(){ try{ session = JSON.parse(localStorage.getItem(SSTORE)); }catch(e){ session = null; } }
 async function signUp(){
-  const name = $("upName").value.trim(), phone = $("upPhone").value.trim(), pin = $("upPin").value.trim();
+  const name  = $("upName").value.trim();
+  const phone = $("upPhone").value.trim();
+  const email = $("upEmail").value.trim();
+  const pin   = $("upPin").value.trim();
   if(!name){ toast("Please enter your name"); return; }
-  if(!/^\d{10}$/.test(phone)){ toast("Enter a valid 10-digit mobile number"); return; }
+  if(!PHONE_RE.test(phone)){ toast("Enter a valid 10-digit WhatsApp number"); return; }
+  if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast("That email address doesn't look right"); return; }
   if(!/^\d{4}$/.test(pin)){ toast("PIN must be exactly 4 digits"); return; }
   const btn = $("signUpBtn"); btn.disabled = true;
   try{
@@ -1354,9 +1434,138 @@ async function signUp(){
       authTab("in"); $("inPhone").value = phone; btn.disabled = false; return;
     }
   }catch(e){}
-  session = {phone, pin, name, registered:false};
+  session = {phone, pin, name, email, registered:false};
   saveSession(); btn.disabled = false;
-  go("register");
+  go("otp");
+}
+
+/* ---------- WhatsApp number verification ----------
+   Codes are delivered by Supabase Auth. WhatsApp is tried first — a code that
+   arrives on WhatsApp is itself the proof that the number is on WhatsApp — and
+   SMS is the fallback. Until a provider is configured (REQUIRE_OTP off) the
+   code is generated here and shown on screen, clearly marked as preview. */
+const PHONE_RE = /^[6-9]\d{9}$/;
+let REQUIRE_OTP = false;
+let otpState = null;          /* {phone, channel, previewCode, sentAt} */
+let authToken = null;         /* Supabase session proving the number was verified */
+let resendTimer = null;
+
+async function sbAuth(path, body){
+  const res = await fetch(SUPABASE_URL + "/auth/v1/" + path, {
+    method: "POST",
+    headers: { apikey: SUPABASE_ANON_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const text = await res.text();
+  let data = null; try{ data = text ? JSON.parse(text) : null; }catch(e){}
+  if(!res.ok){
+    const msg = data && (data.msg || data.error_description || data.error || data.message);
+    throw new Error(msg || ("HTTP " + res.status));
+  }
+  return data;
+}
+
+function initOtp(){
+  $("otpCode").value = "";
+  $("otpPreview").hidden = true;
+  $("otpVerifyBtn").disabled = false;
+  sendOtp(false);
+}
+
+async function sendOtp(isResend){
+  if(!session || !session.phone){ go("work"); return; }
+  const phone = session.phone;
+  $("otpSent").textContent = "Sending a 6-digit code…";
+  startResendCooldown();
+
+  if(LIVE && REQUIRE_OTP){
+    try{
+      const channel = await deliverOtp(phone);
+      otpState = { phone, channel, previewCode:null, sentAt:Date.now() };
+      $("otpPreview").hidden = true;
+      $("otpSent").innerHTML = `We sent a 6-digit code ${channel === "whatsapp" ? "on <b>WhatsApp</b>" : "by <b>SMS</b>"} to <b>+91 ${esc(phone)}</b>.`;
+      if(isResend) toast("Code sent again");
+    }catch(e){
+      $("otpSent").textContent = "We couldn't send the code just now.";
+      toast(e.message || "Could not send the code — please try again");
+      stopResendCooldown();
+    }
+    return;
+  }
+
+  /* preview mode — no provider configured yet */
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  otpState = { phone, channel:"preview", previewCode:code, sentAt:Date.now() };
+  $("otpSent").innerHTML = `Confirming <b>+91 ${esc(phone)}</b> is your WhatsApp number.`;
+  const box = $("otpPreview");
+  box.innerHTML = `Preview mode — no SMS provider is connected yet, so your code is shown here instead of being sent.<b>${code}</b>`;
+  box.hidden = false;
+  if(isResend) toast("New preview code generated");
+}
+
+/* WhatsApp first, SMS second. Returns the channel that accepted the request. */
+async function deliverOtp(phone){
+  const e164 = "+91" + phone;
+  try{
+    await sbAuth("otp", { phone:e164, channel:"whatsapp" });
+    return "whatsapp";
+  }catch(e){
+    await sbAuth("otp", { phone:e164, channel:"sms" });
+    return "sms";
+  }
+}
+
+function onOtpInput(){
+  const el = $("otpCode");
+  el.value = el.value.replace(/\D/g, "").slice(0, 6);
+  if(el.value.length === 6) verifyOtp();
+}
+
+async function verifyOtp(){
+  const code = $("otpCode").value.trim();
+  if(!/^\d{6}$/.test(code)){ toast("Enter the 6-digit code"); return; }
+  if(!otpState){ toast("Please request a code first"); return; }
+  const btn = $("otpVerifyBtn"); btn.disabled = true; btn.textContent = "Verifying…";
+  try{
+    if(otpState.channel === "preview"){
+      if(code !== otpState.previewCode) throw new Error("That code doesn't match — please check and try again");
+      authToken = null;
+    }else{
+      const data = await sbAuth("verify", { phone:"+91" + otpState.phone, token:code, type:"sms" });
+      authToken = (data && data.access_token) || null;
+      if(!authToken) throw new Error("Could not verify that code — please try again");
+    }
+    /* a preview code was only ever shown on screen — it proves nothing, so it
+       must not earn the "number verified" badge in the admin queue */
+    session.phoneVerified = otpState.channel !== "preview";
+    saveSession();
+    stopResendCooldown();
+    toast("Number verified");
+    go("register");
+  }catch(e){
+    toast(e.message || "That code doesn't match");
+  }
+  btn.disabled = false; btn.textContent = "Verify and continue";
+}
+
+function resendOtp(){ if(!$("otpResend").disabled) sendOtp(true); }
+function startResendCooldown(){
+  const btn = $("otpResend");
+  let left = 30;
+  btn.disabled = true;
+  clearInterval(resendTimer);
+  const tick = () => {
+    btn.textContent = left > 0 ? `Resend in ${left}s` : "Resend code";
+    if(left <= 0){ btn.disabled = false; clearInterval(resendTimer); }
+    left--;
+  };
+  tick();
+  resendTimer = setInterval(tick, 1000);
+}
+function stopResendCooldown(){
+  clearInterval(resendTimer);
+  const btn = $("otpResend");
+  btn.disabled = false; btn.textContent = "Resend code";
 }
 async function signIn(){
   const phone = $("inPhone").value.trim(), pin = $("inPin").value.trim();
@@ -1589,6 +1798,7 @@ async function saveProfile(){
     lng: regLoc ? regLoc.lng : null,
     available: session.worker ? session.worker.available !== false : true
   };
+  if(session.email) data.email = session.email;
   const btn = $("regSaveBtn"); const label = btn.textContent;
   btn.disabled = true; btn.textContent = "Saving…";
   try{
@@ -1598,7 +1808,7 @@ async function saveProfile(){
     session.registered = true;
     session.worker = {...(session.worker||{}), ...w, ...data, phone:session.phone};
     saveSession();
-    toast(w && w.verified ? "Your profile is live" : "Submitted — our team reviews it shortly");
+    toast(w && statusOf(w) === "approved" ? "Your profile is live" : "Submitted — our team reviews it shortly");
     go("me");
   }catch(e){ toast(e.message); }
   btn.disabled = false; btn.textContent = label;
@@ -1616,13 +1826,22 @@ function renderMe(){
         <div style="margin-top:5px">${starsOf(w)}</div>
       </div>
     </div>
-    ${w.verified === false ? `<div class="vstatus pending">
-      <span class="dotmark">!</span>
-      <div><b>Profile under review</b><span>Our team is checking your photo and details. You'll appear in customer searches as soon as it's approved — usually within a day.</span></div>
-    </div>` : `<div class="vstatus done">
-      <span class="dotmark">✓</span>
-      <div><b>Verified profile</b><span>You're visible to customers searching near you.</span></div>
-    </div>`}
+    ${{
+      pending: `<div class="vstatus pending">
+        <span class="dotmark">!</span>
+        <div><b>Profile under review</b><span>Our team is checking your photo and details. You'll appear in customer searches as soon as it's approved — usually within a day.</span></div>
+      </div>`,
+      rejected: `<div class="vstatus rejected">
+        <span class="dotmark">✕</span>
+        <div><b>Profile not approved</b><span>${w.review_note
+          ? esc(w.review_note) + " — fix this and your profile goes back for review automatically."
+          : "Please check your photo and details, then edit and save your profile to send it back for review."}</span></div>
+      </div>`,
+      approved: `<div class="vstatus done">
+        <span class="dotmark">✓</span>
+        <div><b>Verified profile</b><span>You're visible to customers searching near you.</span></div>
+      </div>`
+    }[statusOf(w)]}
     <div class="switch-row">
       <div><b>Available for work</b><span>Turn this off when you're busy — you won't appear in search.</span></div>
       <label class="switch"><input type="checkbox" id="avSwitch" ${w.available!==false?"checked":""} onchange="toggleAvailable(this.checked)"><span class="track"></span></label>
@@ -1699,7 +1918,7 @@ function renderTiles(){
 function renderAreaFilter(){
   const sel = $("areaFilter");
   const cur = sel.value;
-  const live = new Set(workers.filter(w=>w.verified!==false && w.available!==false && w.area).map(w=>w.area));
+  const live = new Set(workers.filter(w=>statusOf(w)==="approved" && w.available!==false && w.area).map(w=>w.area));
   const groups = AREA_GROUPS
     .map(([zone, list]) => [zone, list.filter(a=>live.has(a))])
     .filter(([, list]) => list.length);
@@ -1752,7 +1971,7 @@ function renderResults(){
   const q = $("hireSearch").value.trim().toLowerCase();
   const inCity = w => !w.city || w.city.toLowerCase().includes(CITY.toLowerCase());
   const areaPick = $("areaFilter") ? $("areaFilter").value : "";
-  const list = workers.filter(w => w.available !== false && w.verified !== false && inCity(w)
+  const list = workers.filter(w => w.available !== false && statusOf(w) === "approved" && inCity(w)
     && (!areaPick || w.area === areaPick) && matchesQuery(w, q));
   list.sort((a,b)=>{
     const da = distanceTo(a), db = distanceTo(b);
@@ -1973,58 +2192,96 @@ async function openAdmin(){
   go("admin");
   renderAdmin();
 }
+/* a profile's state, tolerant of rows written before `status` existed */
+function statusOf(w){
+  if(w.status) return w.status;
+  return w.verified === false ? "pending" : "approved";
+}
 async function renderAdmin(){
   const host = $("adminPanel");
   host.innerHTML = '<div class="skeleton"></div>';
   let all = [];
   try{ all = await api.list(); }catch(e){ host.innerHTML = '<p class="hint">Could not load profiles.</p>'; return; }
-  const pending  = all.filter(w => w.verified === false);
-  const approved = all.filter(w => w.verified !== false);
+  const pending  = all.filter(w => statusOf(w) === "pending");
+  const approved = all.filter(w => statusOf(w) === "approved");
+  const rejected = all.filter(w => statusOf(w) === "rejected");
+  const section = (label, list, hint) => list.length
+    ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px"><b>${label}</b>${hint ? " — " + hint : ""}</p>` +
+      list.map(adminCard).join("")
+    : "";
   host.innerHTML = `
     <h2>Profile review</h2>
-    <p class="hint">${pending.length} awaiting approval · ${approved.length} live</p>
-    <div class="divider"></div>
-    ${pending.length ? pending.map(adminCard).join("") :
-      '<div class="empty" style="margin:0"><b>Nothing to review</b>New profiles will appear here.</div>'}
-    ${approved.length ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px">Live profiles</p>` +
-      approved.map(w=>`<div class="admin-card">
-        <span class="avatar"><img src="${avatarOf(w)}" alt=""></span>
-        <div style="flex:1;min-width:0">
-          <h4>${esc(w.name)}</h4>
-          <p class="meta">${esc((w.skills||[]).map(x=>x.skill).join(" · "))}<br>${esc(w.area?w.area+", ":"")}${esc(w.city||"")} · ${esc(w.phone||"")}</p>
-          <div class="admin-actions"><button class="btn btn-outline btn-sm" onclick="adminSet('${jsq(w.id)}',false)">Hide profile</button></div>
-        </div>
-      </div>`).join("") : ""}
+    <p class="hint">${pending.length} awaiting approval · ${approved.length} live · ${rejected.length} rejected</p>
+
+    <div class="switch-row" style="margin-top:16px">
+      <div><b>Require WhatsApp verification</b><span>${LIVE
+        ? "Turn on once your SMS or WhatsApp provider is connected. Registration is blocked without a verified code."
+        : "Available when the live database is connected."}</span></div>
+      <label class="switch"><input type="checkbox" id="otpSwitch" ${REQUIRE_OTP?"checked":""}
+        ${LIVE?"":"disabled"} onchange="adminRequireOtp(this.checked)"><span class="track"></span></label>
+    </div>
+
+    ${pending.length
+      ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px"><b>Awaiting approval</b></p>` + pending.map(adminCard).join("")
+      : `<div class="divider"></div><div class="empty" style="margin:0"><b>Nothing to review</b>New profiles will appear here.</div>`}
+    ${section("Live profiles", approved)}
+    ${section("Rejected", rejected, "not visible to customers")}
     <button class="btn btn-quiet btn-block btn-sm" style="margin-top:18px" onclick="adminPin=null;go('home')">Exit admin</button>`;
 }
 function adminCard(w){
+  const st = statusOf(w);
+  const actions = {
+    pending: `<button class="btn btn-brand btn-sm" onclick="adminSet('${jsq(w.id)}','approved')">Approve</button>
+              <button class="btn btn-outline btn-sm" onclick="adminReject('${jsq(w.id)}')">Reject</button>`,
+    approved: `<button class="btn btn-outline btn-sm" onclick="adminSet('${jsq(w.id)}','pending')">Unpublish</button>
+               <button class="btn btn-outline btn-sm" onclick="adminReject('${jsq(w.id)}')">Reject</button>`,
+    rejected: `<button class="btn btn-brand btn-sm" onclick="adminSet('${jsq(w.id)}','approved')">Approve</button>
+               <button class="btn btn-outline btn-sm" onclick="adminSet('${jsq(w.id)}','pending')">To review</button>`
+  }[st];
   return `<div class="admin-card">
     <span class="avatar"><img src="${avatarOf(w)}" alt=""></span>
     <div style="flex:1;min-width:0">
-      <h4>${esc(w.name)}</h4>
+      <h4>${esc(w.name)} ${w.phone_verified
+        ? '<span class="verified-badge">✓ Number verified</span>'
+        : '<span class="verified-badge warn">Number not verified</span>'}</h4>
       <p class="meta">
         ${esc((w.skills||[]).map(x=>x.skill + " — ₹" + x.price + " " + x.unit).join(" · "))}<br>
         ${esc(w.area ? w.area + ", " : "")}${esc(w.city||"")} · ${esc(w.phone||"")}
         ${w.about ? "<br>" + esc(w.about) : ""}
+        ${w.review_note ? `<br><em>Reason given: ${esc(w.review_note)}</em>` : ""}
       </p>
-      <div class="admin-actions">
-        <button class="btn btn-brand btn-sm" onclick="adminSet('${jsq(w.id)}',true)">Approve</button>
-        <button class="btn btn-outline btn-sm" onclick="adminSet('${jsq(w.id)}',false)">Keep hidden</button>
-      </div>
+      <div class="admin-actions">${actions}</div>
     </div>
   </div>`;
 }
-async function adminSet(id, verified){
+function adminReject(id){
+  const note = prompt("Why is this profile being rejected?\nThe worker will see this, so keep it clear and factual.");
+  if(note === null) return;
+  adminSet(id, "rejected", note);
+}
+async function adminSet(id, status, note){
   try{
     if(LIVE){
-      await sb("rpc/admin_set_verified", {method:"POST", body:JSON.stringify({p_pin:adminPin, p_id:id, p_verified:verified})});
+      await sb("rpc/admin_set_status", {method:"POST",
+        body:JSON.stringify({p_pin:adminPin, p_id:id, p_status:status, p_note:note || null})});
     }else{
       const all = demoAll();
-      const w = all.find(x=>x.id===id); if(w){ w.verified = verified; demoSave(all); }
+      const w = all.find(x=>x.id===id);
+      if(w){ w.status = status; w.verified = (status === "approved"); w.review_note = (note||"").trim() || null; demoSave(all); }
     }
-    toast(verified ? "Profile approved" : "Profile hidden");
+    toast({approved:"Profile approved", rejected:"Profile rejected", pending:"Moved back to review"}[status]);
     renderAdmin();
   }catch(e){ toast(e.message); }
+}
+async function adminRequireOtp(on){
+  try{
+    await sb("rpc/admin_set_require_otp", {method:"POST", body:JSON.stringify({p_pin:adminPin, p_require:on})});
+    REQUIRE_OTP = on;
+    toast(on ? "WhatsApp verification is now required" : "WhatsApp verification turned off");
+  }catch(e){
+    toast(e.message);
+    $("otpSwitch").checked = REQUIRE_OTP;
+  }
 }
 
 /* ---------- install as an app ---------- */
@@ -2077,6 +2334,13 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
   loadSession();
   try{ await sb("workers?select=id&limit=1"); LIVE = true; }
   catch(e){ LIVE = false; $("demoNote").classList.add("on"); }
+  if(LIVE){
+    /* off until an SMS/WhatsApp provider is connected — see the admin panel */
+    try{
+      const rows = await sb("nearse_config?select=require_phone_otp&limit=1");
+      REQUIRE_OTP = !!(rows && rows[0] && rows[0].require_phone_otp);
+    }catch(e){ REQUIRE_OTP = false; }
+  }
   if(session && session.registered){
     try{ session.worker = await api.login(session.phone, session.pin); saveSession(); }catch(e){}
   }

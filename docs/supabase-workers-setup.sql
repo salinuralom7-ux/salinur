@@ -202,3 +202,240 @@ begin
   update workers set verified = p_verified where id = p_id;
 end;
 $$;
+
+-- ============================================================
+-- MIGRATION 3 — phone OTP + approve / reject
+--   * phone_verified records that the number passed an OTP check
+--   * status replaces the plain verified flag with pending/approved/rejected
+--     (verified is kept in sync so nothing that reads it breaks)
+--   * require_phone_otp is OFF until an SMS/WhatsApp provider is configured,
+--     so registration keeps working in the meantime
+-- ============================================================
+
+alter table public.workers add column if not exists phone_verified boolean not null default false;
+alter table public.workers add column if not exists status text;
+alter table public.workers add column if not exists review_note text;
+alter table public.workers add column if not exists reviewed_at timestamptz;
+
+-- derive status from the old verified flag, once
+update public.workers
+   set status = case when verified then 'approved' else 'pending' end
+ where status is null;
+
+alter table public.workers alter column status set default 'pending';
+alter table public.workers alter column status set not null;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'workers_status_chk') then
+    alter table public.workers
+      add constraint workers_status_chk check (status in ('pending','approved','rejected'));
+  end if;
+end $$;
+
+-- keep the older `verified` column truthful for any cached client
+create or replace function public.workers_sync_verified()
+returns trigger
+language plpgsql set search_path = public as $$
+begin
+  new.verified := (new.status = 'approved');
+  return new;
+end;
+$$;
+
+drop trigger if exists workers_sync_verified_trg on public.workers;
+create trigger workers_sync_verified_trg
+  before insert or update of status on public.workers
+  for each row execute function public.workers_sync_verified();
+
+create table if not exists public.nearse_config (
+  id                int primary key default 1,
+  require_phone_otp boolean not null default false
+);
+alter table public.nearse_config enable row level security;
+insert into public.nearse_config (id) values (1) on conflict (id) do nothing;
+
+-- readable by anyone: the app needs to know whether to demand an OTP
+drop policy if exists "config is public" on public.nearse_config;
+create policy "config is public" on public.nearse_config for select using (true);
+
+-- ---------- registration now checks the OTP ----------
+-- When a verified Supabase auth session is present its phone claim must match
+-- the number being registered, so the OTP cannot be skipped by calling the RPC
+-- directly. When require_phone_otp is on, a session is mandatory.
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  new_id     uuid;
+  jwt_phone  text;
+  need_otp   boolean;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then
+    raise exception 'PIN must be exactly 4 digits';
+  end if;
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit Indian mobile number';
+  end if;
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  -- Supabase puts the verified number in the JWT as E.164 digits, e.g. 917086269537.
+  -- Keep the last 10 digits so it lines up with what the form collects.
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''),
+    '\D', '', 'g');
+  if length(jwt_phone) > 10 then
+    jwt_phone := right(jwt_phone, 10);
+  end if;
+
+  if coalesce(need_otp, false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, city, area, about, lat, lng, skills, available, phone_verified)
+  values (
+    coalesce(p_data->>'name',''),
+    p_phone,
+    p_data->>'selfie',
+    p_data->>'city',
+    p_data->>'area',
+    p_data->>'about',
+    (p_data->>'lat')::double precision,
+    (p_data->>'lng')::double precision,
+    coalesce(p_data->'skills','[]'::jsonb),
+    coalesce((p_data->>'available')::boolean, true),
+    jwt_phone <> ''
+  ) returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash) values (new_id, crypt(p_pin, gen_salt('bf')));
+  return query select * from workers where id = new_id;
+end;
+$$;
+
+-- ---------- admin: approve / reject / restore ----------
+create or replace function public.admin_set_status(p_pin text, p_id uuid, p_status text, p_note text default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  if p_status not in ('pending','approved','rejected') then
+    raise exception 'Unknown status: %', p_status;
+  end if;
+  update workers
+     set status      = p_status,
+         review_note = nullif(btrim(coalesce(p_note,'')), ''),
+         reviewed_at = now()
+   where id = p_id;
+end;
+$$;
+
+create or replace function public.admin_set_require_otp(p_pin text, p_require boolean)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  update nearse_config set require_phone_otp = p_require where id = 1;
+end;
+$$;
+
+-- A rejected worker who fixes their profile goes back into the review queue.
+-- Toggling availability alone must not do that, so only a real edit counts.
+create or replace function public.update_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wid       uuid;
+  is_edit   boolean;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then
+    raise exception 'Wrong phone number or PIN';
+  end if;
+
+  is_edit := (p_data ?| array['name','selfie','area','about','skills']);
+
+  update workers set
+    name      = coalesce(p_data->>'name', name),
+    selfie    = coalesce(p_data->>'selfie', selfie),
+    city      = coalesce(p_data->>'city', city),
+    area      = coalesce(p_data->>'area', area),
+    about     = coalesce(p_data->>'about', about),
+    lat       = coalesce((p_data->>'lat')::double precision, lat),
+    lng       = coalesce((p_data->>'lng')::double precision, lng),
+    skills    = coalesce(p_data->'skills', skills),
+    available = coalesce((p_data->>'available')::boolean, available),
+    status    = case when is_edit and status = 'rejected' then 'pending' else status end,
+    review_note = case when is_edit and status = 'rejected' then null else review_note end
+  where id = wid;
+  return query select * from workers where id = wid;
+end;
+$$;
+
+-- Optional email. It lives in worker_secrets, which has no RLS policy at all,
+-- because unlike the WhatsApp number a customer never needs it — putting it on
+-- the publicly readable workers table would just hand out a scrapable list.
+alter table public.worker_secrets add column if not exists email text;
+
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  new_id     uuid;
+  jwt_phone  text;
+  need_otp   boolean;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then
+    raise exception 'PIN must be exactly 4 digits';
+  end if;
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit Indian mobile number';
+  end if;
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''),
+    '\D', '', 'g');
+  if length(jwt_phone) > 10 then
+    jwt_phone := right(jwt_phone, 10);
+  end if;
+
+  if coalesce(need_otp, false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, city, area, about, lat, lng, skills, available, phone_verified)
+  values (
+    coalesce(p_data->>'name',''),
+    p_phone,
+    p_data->>'selfie',
+    p_data->>'city',
+    p_data->>'area',
+    p_data->>'about',
+    (p_data->>'lat')::double precision,
+    (p_data->>'lng')::double precision,
+    coalesce(p_data->'skills','[]'::jsonb),
+    coalesce((p_data->>'available')::boolean, true),
+    jwt_phone <> ''
+  ) returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash, email)
+    values (new_id, crypt(p_pin, gen_salt('bf')), nullif(btrim(coalesce(p_data->>'email','')), ''));
+  return query select * from workers where id = new_id;
+end;
+$$;

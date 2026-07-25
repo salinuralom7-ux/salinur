@@ -1,7 +1,7 @@
 /* Nearse service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls and the separate /cars/ site always go to the network. */
-const CACHE = "nearse-shell-v2";
+const CACHE = "nearse-shell-v3";
 const SHELL = [
   "./",
   "./index.html",
