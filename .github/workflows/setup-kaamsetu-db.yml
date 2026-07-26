@@ -102,7 +102,11 @@ jobs:
             (select count(*)::int from public.search_workers(26.1445, 91.7362, null, null, null, 'Guwahati', 20, 0)) as search_page_rows,
             (select count(*)::int from public.workers where status='approved' and available) as approved_and_available,
             (select coalesce(string_agg(distinct encode(convert_to(coalesce(city,'~NULL~'),'UTF8'),'hex'), ' | '), '(none)')
-               from public.workers) as cities_hex
+               from public.workers) as cities_hex,
+            (select count(*)::int from information_schema.columns
+              where table_schema='public' and table_name='workers' and column_name='thumb') as thumb_col,
+            (select count(*)::int from information_schema.columns
+              where table_schema='public' and table_name='workers' and column_name in ('thumb','selfie')) as photo_cols
           VSQL
           jq -Rs '{query: .}' /tmp/verify.sql > /tmp/v.json
           code=$(curl -sS -o /tmp/verify.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/v.json)
