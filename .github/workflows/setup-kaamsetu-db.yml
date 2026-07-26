@@ -105,7 +105,7 @@ jobs:
           VSQL
           jq -Rs '{query: .}' /tmp/verify.sql > /tmp/v.json
           code=$(curl -sS -o /tmp/verify.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/v.json)
-          note "verify migration: HTTP $code — $(head -c 400 /tmp/verify.json)"
+          note "verify migration: HTTP $code — $(head -c 900 /tmp/verify.json)"
           [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
           # End-to-end photo upload, using the public anon key exactly as the
           # browser does — proves the bucket, its policies and public read all work.
