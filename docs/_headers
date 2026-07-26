@@ -1,0 +1,13 @@
+# Cloudflare Pages headers.
+# The app shell must revalidate so a deploy reaches people immediately;
+# fingerprinted assets and icons can be cached hard.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+/icons/*
+  Cache-Control: public, max-age=31536000, immutable
+/page.css
+  Cache-Control: public, max-age=86400

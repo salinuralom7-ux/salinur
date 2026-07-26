@@ -461,6 +461,18 @@ header{
 .admin-card .meta{color:var(--muted);font-size:.8rem;line-height:1.5}
 .admin-actions{display:flex;gap:8px;margin-top:11px}
 .admin-actions .btn{flex:1;padding:9px;white-space:nowrap}
+.bulk{
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r);
+  padding:16px;margin:16px 0 4px;
+}
+.bulk b{display:block;font-size:.94rem;margin-bottom:3px}
+.bulk span{display:block;color:var(--muted);font-size:.82rem;line-height:1.55;margin-bottom:11px}
+.bulk textarea{
+  width:100%;background:var(--surface-2);border:1px solid var(--line-strong);
+  border-radius:var(--r-sm);padding:11px 13px;font-size:.9rem;resize:vertical;
+}
+.bulk-row{display:flex;align-items:center;gap:12px;margin-top:11px;flex-wrap:wrap}
+.bulk-row .hint{margin:0}
 
 /* ---------- selfie & location ---------- */
 .selfie-row{display:flex;align-items:center;gap:18px}
@@ -1958,9 +1970,23 @@ function dataUrlToBlob(dataUrl){
   return new Blob([bytes], {type: mime});
 }
 
+/* Photos go to R2 through our own /upload endpoint when the site is hosted on
+   Cloudflare Pages. R2 never charges for egress, and photo downloads are the
+   single largest cost at launch volumes. Supabase Storage stays as the
+   fallback so the app keeps working wherever it is served from. */
 async function uploadSelfie(dataUrl, phone){
   if(!LIVE || !dataUrl || !dataUrl.startsWith("data:")) return dataUrl;
   const blob = dataUrlToBlob(dataUrl);
+
+  try{
+    const r2 = await fetch("/upload", { method:"POST", headers:{"Content-Type":blob.type}, body:blob });
+    if(r2.ok){
+      const out = await r2.json();
+      if(out && out.url) return out.url;
+    }
+    /* 404 simply means this deployment has no upload endpoint — fall through */
+  }catch(e){ /* offline or blocked: try Supabase before giving up */ }
+
   const path = `${phone}-${Date.now()}.jpg`;
   const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${SELFIE_BUCKET}/${path}`, {
     method: "POST",
@@ -2488,6 +2514,16 @@ async function renderAdmin(){
     : "";
   host.innerHTML = `
     <h2>Profile review</h2>
+    ${pending.length ? `<div class="bulk">
+      <b>Approve in bulk</b>
+      <span>Open WhatsApp, select the verification messages you have received and paste them here —
+        or just type the codes. Every pending profile whose code appears gets approved at once.</span>
+      <textarea id="bulkCodes" rows="3" placeholder="Paste the WhatsApp messages, or type codes: 482913 771204 …"></textarea>
+      <div class="bulk-row">
+        <button class="btn btn-brand btn-sm" onclick="bulkApprove()">Approve matching codes</button>
+        <span class="hint" id="bulkHint">${pending.length} waiting</span>
+      </div>
+    </div>` : ""}
     <p class="hint">${pending.length} awaiting approval · ${approved.length} live · ${rejected.length} rejected</p>
 
     <div class="switch-row" style="margin-top:16px">
@@ -2537,6 +2573,46 @@ function adminCard(w){
     </div>
   </div>`;
 }
+/* Pasting the WhatsApp thread is enough: any 6-digit run in the text is
+   treated as a code, matched against the pending queue, and approved. At a
+   thousand registrations a day, clicking Approve one at a time is not a job
+   a person can do. */
+async function bulkApprove(){
+  const raw = $("bulkCodes").value;
+  const codes = new Set((raw.match(/\b\d{6}\b/g) || []));
+  if(!codes.size){ toast("No 6-digit codes found in that text"); return; }
+
+  let all = [];
+  try{ all = await api.reviewQueue(); }catch(e){ toast(e.message); return; }
+  await loadWaCodes();
+  const hits = all.filter(w => statusOf(w) === "pending" && waCodes[w.id] && codes.has(waCodes[w.id]));
+  if(!hits.length){ toast("None of those codes match a profile awaiting review"); return; }
+  if(!confirm(`Approve ${hits.length} profile${hits.length>1?"s":""}?\n\n` +
+              hits.slice(0,12).map(w=>"· " + w.name + " (" + w.phone + ")").join("\n") +
+              (hits.length>12 ? `\n…and ${hits.length-12} more` : ""))) return;
+
+  const hint = $("bulkHint");
+  let done = 0, failed = 0;
+  for(const w of hits){
+    try{
+      if(LIVE){
+        await sb("rpc/admin_set_status", {method:"POST",
+          body:JSON.stringify({p_pin:adminPin, p_id:w.id, p_status:"approved", p_note:null})});
+      }else{
+        const store = demoAll();
+        const row = store.find(x=>x.id===w.id);
+        if(row){ row.status = "approved"; row.verified = true; row.phone_verified = true; demoSave(store); }
+      }
+      done++;
+    }catch(e){ failed++; }
+    if(hint) hint.textContent = `Approving… ${done + failed} of ${hits.length}`;
+  }
+  const unmatched = codes.size - done - failed;
+  toast(`Approved ${done}` + (failed ? `, ${failed} failed` : "") +
+        (unmatched > 0 ? `, ${unmatched} code${unmatched>1?"s":""} matched nothing` : ""));
+  renderAdmin();
+}
+
 function adminReject(id){
   const note = prompt("Why is this profile being rejected?\nThe worker will see this, so keep it clear and factual.");
   if(note === null) return;
