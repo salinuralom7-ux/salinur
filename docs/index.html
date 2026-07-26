@@ -461,6 +461,18 @@ header{
 .admin-card .meta{color:var(--muted);font-size:.8rem;line-height:1.5}
 .admin-actions{display:flex;gap:8px;margin-top:11px}
 .admin-actions .btn{flex:1;padding:9px;white-space:nowrap}
+.bulk{
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r);
+  padding:16px;margin:16px 0 4px;
+}
+.bulk b{display:block;font-size:.94rem;margin-bottom:3px}
+.bulk span{display:block;color:var(--muted);font-size:.82rem;line-height:1.55;margin-bottom:11px}
+.bulk textarea{
+  width:100%;background:var(--surface-2);border:1px solid var(--line-strong);
+  border-radius:var(--r-sm);padding:11px 13px;font-size:.9rem;resize:vertical;
+}
+.bulk-row{display:flex;align-items:center;gap:12px;margin-top:11px;flex-wrap:wrap}
+.bulk-row .hint{margin:0}
 
 /* ---------- selfie & location ---------- */
 .selfie-row{display:flex;align-items:center;gap:18px}
@@ -635,6 +647,8 @@ header{
   border:1px dashed var(--line-strong);border-radius:var(--r);margin-top:14px;
 }
 .empty b{display:block;color:var(--ink);font-size:1.02rem;margin-bottom:6px}
+.more-btn{grid-column:1/-1;margin-top:6px;padding:14px;flex-direction:column;gap:2px}
+.more-btn small{display:block;font-weight:500;color:var(--muted);font-size:.78rem}
 .linkish{
   border:none;background:none;color:var(--brand);font-weight:700;font-size:inherit;
   text-decoration:underline;text-underline-offset:2px;padding:0;
@@ -1429,6 +1443,55 @@ const api = {
     if(i < 0) throw new Error("Session expired — please sign in again");
     all[i] = {...all[i], ...data}; demoSave(all); return all[i];
   },
+  /* One page of approved workers, filtered and distance-ranked in the database.
+     The browse screen used to pull the whole table and filter in the browser,
+     which is ~37 MB per visit at 30,000 workers. */
+  async search(o){
+    if(LIVE){
+      const rows = await sb("rpc/search_workers", {method:"POST", body:JSON.stringify({
+        p_lat: o.lat ?? null, p_lng: o.lng ?? null,
+        p_q: o.q || null,
+        p_cat_skills: o.catSkills && o.catSkills.length ? o.catSkills : null,
+        p_area: o.area || null, p_city: CITY,
+        p_limit: o.limit, p_offset: o.offset
+      })});
+      const list = (rows || []).map(r => ({...r, verified:true, status:"approved", available:true,
+        skills: typeof r.skills === "string" ? JSON.parse(r.skills) : (r.skills || [])}));
+      return { list, total: list.length ? Number(list[0].total_count) : 0 };
+    }
+    /* preview mode does the same work locally so the flow is identical */
+    let all = demoAll().filter(w => w.available !== false && statusOf(w) === "approved"
+      && (!w.city || w.city.toLowerCase().includes(CITY.toLowerCase()))
+      && (!o.area || w.area === o.area)
+      && (!o.catSkills || !o.catSkills.length || (w.skills||[]).some(s => o.catSkills.includes(s.skill)))
+      && matchesQueryText(w, o.q));
+    all.forEach(w => { w.distance_km = distanceTo(w); });
+    all.sort((a,b)=>{
+      const da = a.distance_km, db = b.distance_km;
+      if(da != null && db != null && Math.abs(da-db) > 0.4) return da - db;
+      if(da != null && db == null) return -1;
+      if(da == null && db != null) return 1;
+      return score(b) - score(a);
+    });
+    return { list: all.slice(o.offset, o.offset + o.limit), total: all.length };
+  },
+  /* One row, not the whole table — this runs on every sign-up attempt. */
+  async phoneTaken(phone){
+    if(LIVE){
+      const rows = await sb("workers?select=id&limit=1&phone=eq." + encodeURIComponent(phone));
+      return !!(rows && rows.length);
+    }
+    return demoAll().some(w => w.phone === phone);
+  },
+  /* The review queue is one person's screen, but it must not pull 30,000 rows
+     either. Pending first, then a slice of the rest. */
+  async reviewQueue(){
+    if(LIVE){
+      const rows = await sb("workers?select=*&order=created_at.desc&limit=" + ADMIN_PAGE);
+      return rows.map(r => ({...r, skills: typeof r.skills === "string" ? JSON.parse(r.skills) : (r.skills||[])}));
+    }
+    return demoAll();
+  },
   async remove(phone, pin){
     if(LIVE) return await sb("rpc/delete_worker", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})});
     const all = demoAll();
@@ -1512,8 +1575,7 @@ async function signUp(){
   if(!/^\d{4}$/.test(pin)){ toast("PIN must be exactly 4 digits"); return; }
   const btn = $("signUpBtn"); btn.disabled = true;
   try{
-    const all = await api.list();
-    if(all.some(w=>w.phone === phone)){
+    if(await api.phoneTaken(phone)){
       toast("This number is already registered — please sign in");
       authTab("in"); $("inPhone").value = phone; btn.disabled = false; return;
     }
@@ -1908,9 +1970,23 @@ function dataUrlToBlob(dataUrl){
   return new Blob([bytes], {type: mime});
 }
 
+/* Photos go to R2 through our own /upload endpoint when the site is hosted on
+   Cloudflare Pages. R2 never charges for egress, and photo downloads are the
+   single largest cost at launch volumes. Supabase Storage stays as the
+   fallback so the app keeps working wherever it is served from. */
 async function uploadSelfie(dataUrl, phone){
   if(!LIVE || !dataUrl || !dataUrl.startsWith("data:")) return dataUrl;
   const blob = dataUrlToBlob(dataUrl);
+
+  try{
+    const r2 = await fetch("/upload", { method:"POST", headers:{"Content-Type":blob.type}, body:blob });
+    if(r2.ok){
+      const out = await r2.json();
+      if(out && out.url) return out.url;
+    }
+    /* 404 simply means this deployment has no upload endpoint — fall through */
+  }catch(e){ /* offline or blocked: try Supabase before giving up */ }
+
   const path = `${phone}-${Date.now()}.jpg`;
   const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${SELFIE_BUCKET}/${path}`, {
     method: "POST",
@@ -2084,15 +2160,16 @@ const TILE_LABEL = {
 };
 const SLOTS = [["morning","Morning","8 am – 12 pm"],["afternoon","Afternoon","12 – 4 pm"],["evening","Evening","4 – 8 pm"],["any","Anytime",""]];
 const WHENS = [["today","Today",""],["tomorrow","Tomorrow",""],["pick","Pick a date",""]];
+const PAGE_SIZE = 20;
+const ADMIN_PAGE = 200;
+let pageOffset = 0, resultTotal = 0, loadingPage = false, searchSeq = 0;
+
 async function initHire(){
   renderTiles();
   renderCats();
   renderSuggests();
-  if(!myLoc) requestLocation(false);
-  $("results").innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
-  try{ workers = await api.list(); }
-  catch(e){ console.error(e); workers = []; toast("Couldn't load workers — check your connection"); }
   renderAreaFilter();
+  if(!myLoc) requestLocation(false);
   renderResults();
 }
 function renderTiles(){
@@ -2105,22 +2182,13 @@ function renderTiles(){
     </button>`;
   }).join("");
 }
-/* Only offer localities that actually have someone available, grouped by zone
-   so a long list stays scannable. */
+/* Now that results are paged, the browser never sees the whole worker list, so
+   the filter offers every locality and the query decides what actually exists. */
 function renderAreaFilter(){
   const sel = $("areaFilter");
   const cur = sel.value;
-  const live = new Set(workers.filter(w=>statusOf(w)==="approved" && w.available!==false && w.area).map(w=>w.area));
-  const groups = AREA_GROUPS
-    .map(([zone, list]) => [zone, list.filter(a=>live.has(a))])
-    .filter(([, list]) => list.length);
-  const extra = [...live].filter(a=>!AREAS.includes(a)).sort();
-  if(extra.length) groups.push(["Other", extra]);
-  sel.innerHTML = '<option value="">All localities</option>' + groups.map(([zone, list]) =>
-    `<optgroup label="${esc(zone)}">` +
-    list.map(a=>`<option${a===cur?" selected":""}>${esc(a)}</option>`).join("") +
-    `</optgroup>`).join("");
-  if(cur && !live.has(cur)) sel.value = "";
+  sel.innerHTML = '<option value="">All localities</option>' + areaOptions(cur);
+  sel.value = cur || "";
 }
 function renderCats(){
   $("catRow").innerHTML =
@@ -2147,11 +2215,9 @@ function requestLocation(loud){
     {enableHighAccuracy:true, timeout:10000}
   );
 }
-function matchesQuery(w, q){
-  if(hireCat){
-    const catSkills = SKILLS.filter(s=>s.c===hireCat).map(s=>s.n);
-    if(!(w.skills||[]).some(s=>catSkills.includes(s.skill))) return false;
-  }
+function catSkillNames(){ return hireCat ? SKILLS.filter(s=>s.c===hireCat).map(s=>s.n) : []; }
+function matchesQueryText(w, q){
+  q = (q || "").trim().toLowerCase();
   if(!q) return true;
   const hay = (w.name + " " + (w.city||"") + " " + (w.area||"") + " " +
     (w.skills||[]).map(s=>s.skill).join(" ") + " " +
@@ -2159,22 +2225,44 @@ function matchesQuery(w, q){
   return q.split(/\s+/).every(word => hay.includes(word));
 }
 function score(w){ const n = w.rating_count||0; return n ? (w.rating_sum/n) : 3.4; }
-function renderResults(){
-  const q = $("hireSearch").value.trim().toLowerCase();
-  const inCity = w => !w.city || w.city.toLowerCase().includes(CITY.toLowerCase());
+/* A new search resets to page 0; "Load more" appends the next page. Every
+   request carries a sequence number so a slow earlier reply cannot overwrite
+   the results of a newer search. */
+function renderResults(){ loadPage(true); }
+
+async function loadPage(reset){
+  if(loadingPage) return;
+  const seq = ++searchSeq;
+  loadingPage = true;
+  if(reset){ pageOffset = 0; workers = []; $("results").innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>'; }
+
+  const q = $("hireSearch").value.trim();
   const areaPick = $("areaFilter") ? $("areaFilter").value : "";
-  const list = workers.filter(w => w.available !== false && statusOf(w) === "approved" && inCity(w)
-    && (!areaPick || w.area === areaPick) && matchesQuery(w, q));
-  list.sort((a,b)=>{
-    const da = distanceTo(a), db = distanceTo(b);
-    if(da != null && db != null && Math.abs(da-db) > 0.4) return da - db;
-    if(da != null && db == null) return -1;
-    if(da == null && db != null) return 1;
-    return score(b) - score(a);
-  });
+  let page;
+  try{
+    page = await api.search({ lat: myLoc && myLoc.lat, lng: myLoc && myLoc.lng, q,
+      catSkills: catSkillNames(), area: areaPick, limit: PAGE_SIZE, offset: pageOffset });
+  }catch(e){
+    console.error(e);
+    loadingPage = false;
+    if(seq === searchSeq) $("results").innerHTML =
+      `<div class="empty" style="grid-column:1/-1"><b>Couldn't load workers</b>Check your connection and try again.</div>`;
+    return;
+  }
+  loadingPage = false;
+  if(seq !== searchSeq) return;          /* a newer search has already run */
+
+  workers = reset ? page.list : workers.concat(page.list);
+  resultTotal = page.total;
+  pageOffset = workers.length;
+  paintResults(q, areaPick);
+}
+
+function paintResults(q, areaPick){
+  const list = workers;
 
   $("resultMeta").innerHTML = list.length
-    ? `<span>${list.length} ${list.length===1?"worker":"workers"} available${hireCat?" in "+esc(CAT_LABEL[hireCat]):""}` +
+    ? `<span>${resultTotal.toLocaleString("en-IN")} ${resultTotal===1?"worker":"workers"} available${hireCat?" in "+esc(CAT_LABEL[hireCat]):""}` +
       `${areaPick?" · "+esc(areaPick):""}</span>` +
       (myLoc ? `<span>Sorted by distance</span>` : `<button onclick="requestLocation(true)">Show nearest to me</button>`)
     : "";
@@ -2188,7 +2276,7 @@ function renderResults(){
     return;
   }
   $("results").innerHTML = list.map(w=>{
-    const d = distanceTo(w);
+    const d = w.distance_km != null ? w.distance_km : distanceTo(w);
     const s0 = (w.skills||[])[0] || {};
     const trades = (w.skills||[]).map(s=>esc(s.skill)).join(" · ");
     return `<button class="wcard" onclick="openWorker('${jsq(w.id)}')">
@@ -2203,12 +2291,19 @@ function renderResults(){
         <div class="price">${money(s0.price||0)} <small>${esc(s0.unit||"")}</small></div>
       </span>
     </button>`;
-  }).join("");
+  }).join("") + (list.length < resultTotal
+    ? `<button class="btn btn-outline btn-block more-btn" id="moreBtn" onclick="loadPage(false)">
+         Show more workers <small>${(resultTotal - list.length).toLocaleString("en-IN")} more</small>
+       </button>`
+    : "");
 }
 
 /* ---------- worker detail, rating, booking ---------- */
 function openWorker(id){
-  const w = workers.find(x=>x.id===id); if(!w) return;
+  /* the visible page can be replaced while the modal is open (e.g. after a
+     rating refreshes the list), so fall back to the worker already in hand */
+  const w = workers.find(x=>x.id===id) || (currentWorker && currentWorker.id === id ? currentWorker : null);
+  if(!w) return;
   currentWorker = w; pendingStars = 0;
   const d = distanceTo(w);
   $("wDetail").innerHTML = `
@@ -2246,7 +2341,8 @@ async function submitRating(){
     currentWorker.rating_sum = (currentWorker.rating_sum||0) + pendingStars;
     currentWorker.rating_count = (currentWorker.rating_count||0) + 1;
     toast("Thank you for rating");
-    renderResults(); openWorker(currentWorker.id);
+    openWorker(currentWorker.id);   /* redraw the stars first */
+    renderResults();                /* then refresh the list underneath */
   }catch(e){ toast(e.message); }
 }
 let bookPick = { svc:0, when:"today", slot:"any", date:"" };
@@ -2406,7 +2502,8 @@ async function renderAdmin(){
   const host = $("adminPanel");
   host.innerHTML = '<div class="skeleton"></div>';
   let all = [];
-  try{ all = await api.list(); }catch(e){ host.innerHTML = '<p class="hint">Could not load profiles.</p>'; return; }
+  try{ all = await api.reviewQueue(); }
+  catch(e){ host.innerHTML = '<p class="hint">Could not load profiles.</p>'; return; }
   await loadWaCodes();
   const pending  = all.filter(w => statusOf(w) === "pending");
   const approved = all.filter(w => statusOf(w) === "approved");
@@ -2417,6 +2514,16 @@ async function renderAdmin(){
     : "";
   host.innerHTML = `
     <h2>Profile review</h2>
+    ${pending.length ? `<div class="bulk">
+      <b>Approve in bulk</b>
+      <span>Open WhatsApp, select the verification messages you have received and paste them here —
+        or just type the codes. Every pending profile whose code appears gets approved at once.</span>
+      <textarea id="bulkCodes" rows="3" placeholder="Paste the WhatsApp messages, or type codes: 482913 771204 …"></textarea>
+      <div class="bulk-row">
+        <button class="btn btn-brand btn-sm" onclick="bulkApprove()">Approve matching codes</button>
+        <span class="hint" id="bulkHint">${pending.length} waiting</span>
+      </div>
+    </div>` : ""}
     <p class="hint">${pending.length} awaiting approval · ${approved.length} live · ${rejected.length} rejected</p>
 
     <div class="switch-row" style="margin-top:16px">
@@ -2466,6 +2573,46 @@ function adminCard(w){
     </div>
   </div>`;
 }
+/* Pasting the WhatsApp thread is enough: any 6-digit run in the text is
+   treated as a code, matched against the pending queue, and approved. At a
+   thousand registrations a day, clicking Approve one at a time is not a job
+   a person can do. */
+async function bulkApprove(){
+  const raw = $("bulkCodes").value;
+  const codes = new Set((raw.match(/\b\d{6}\b/g) || []));
+  if(!codes.size){ toast("No 6-digit codes found in that text"); return; }
+
+  let all = [];
+  try{ all = await api.reviewQueue(); }catch(e){ toast(e.message); return; }
+  await loadWaCodes();
+  const hits = all.filter(w => statusOf(w) === "pending" && waCodes[w.id] && codes.has(waCodes[w.id]));
+  if(!hits.length){ toast("None of those codes match a profile awaiting review"); return; }
+  if(!confirm(`Approve ${hits.length} profile${hits.length>1?"s":""}?\n\n` +
+              hits.slice(0,12).map(w=>"· " + w.name + " (" + w.phone + ")").join("\n") +
+              (hits.length>12 ? `\n…and ${hits.length-12} more` : ""))) return;
+
+  const hint = $("bulkHint");
+  let done = 0, failed = 0;
+  for(const w of hits){
+    try{
+      if(LIVE){
+        await sb("rpc/admin_set_status", {method:"POST",
+          body:JSON.stringify({p_pin:adminPin, p_id:w.id, p_status:"approved", p_note:null})});
+      }else{
+        const store = demoAll();
+        const row = store.find(x=>x.id===w.id);
+        if(row){ row.status = "approved"; row.verified = true; row.phone_verified = true; demoSave(store); }
+      }
+      done++;
+    }catch(e){ failed++; }
+    if(hint) hint.textContent = `Approving… ${done + failed} of ${hits.length}`;
+  }
+  const unmatched = codes.size - done - failed;
+  toast(`Approved ${done}` + (failed ? `, ${failed} failed` : "") +
+        (unmatched > 0 ? `, ${unmatched} code${unmatched>1?"s":""} matched nothing` : ""));
+  renderAdmin();
+}
+
 function adminReject(id){
   const note = prompt("Why is this profile being rejected?\nThe worker will see this, so keep it clear and factual.");
   if(note === null) return;
