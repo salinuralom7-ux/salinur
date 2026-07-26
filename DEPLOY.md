@@ -3,6 +3,9 @@
 Two jobs. Job A takes about 20 minutes and should be done before you launch.
 Job B is the domain, and should be done on a quiet day.
 
+**Use a laptop or desktop if you have one.** It all works on a phone, but the
+form in Step 4 has several boxes and is fiddly on a small screen.
+
 Everything else is already built and running. These are the only two things
 that need you.
 
@@ -40,16 +43,21 @@ Done. You are in the Cloudflare dashboard.
 
 ## Step 2 — Create the photo storage
 
-1. On the left-hand menu, click **R2 Object Storage**
-2. Click the blue **Create bucket** button
-3. In *Bucket name*, type exactly:
+1. Open the left-hand menu (the ☰ icon on a phone)
+2. Under the **Build** heading, tap **Storage & databases**
+3. Tap **R2 Object Storage**
+4. Click the blue **Create bucket** button
+
+> Cloudflare groups things under headings now. R2 is not on the top level —
+> it is inside **Storage & databases**.
+5. In *Bucket name*, type exactly:
 
    ```
    nearse-photos
    ```
 
-4. Under *Location*, choose **Asia-Pacific (APAC)** — it is nearest to Guwahati
-5. Click **Create bucket**
+6. Under *Location*, choose **Asia-Pacific (APAC)** — it is nearest to Guwahati
+7. Click **Create bucket**
 
 (This is where Cloudflare asks for a card, if it hasn't already.)
 
@@ -72,14 +80,19 @@ Photos have to be public, or customers cannot see faces.
 
 ## Step 4 — Connect your website
 
-1. On the left-hand menu, click **Workers & Pages**
-2. Click **Create**
-3. Choose the **Pages** tab
-4. Click **Connect to Git**
-5. Click **Connect GitHub** and sign in to GitHub when asked
-6. Allow Cloudflare to see your repositories
-7. In the list, choose **salinuralom7-ux / salinur**
-8. Click **Begin setup**
+1. Open the left-hand menu again
+2. Under the **Build** heading, tap **Compute**
+3. Tap **Workers & Pages**
+4. Click **Create**
+
+> Same as before: **Workers & Pages** is inside **Compute**, not on the top
+> level.
+5. Choose the **Pages** tab
+6. Click **Connect to Git**
+7. Click **Connect GitHub** and sign in to GitHub when asked
+8. Allow Cloudflare to see your repositories
+9. In the list, choose **salinuralom7-ux / salinur**
+10. Click **Begin setup**
 
 Now a settings page appears. Fill it in exactly like this:
 
@@ -91,7 +104,7 @@ Now a settings page appears. Fill it in exactly like this:
 | Build command | **leave completely empty** |
 | Build output directory | `docs` |
 
-9. Click **Save and Deploy**
+11. Click **Save and Deploy**
 
 Wait about a minute. It will give you a web address like
 `https://nearse.pages.dev`. Open it — your site should be there.
