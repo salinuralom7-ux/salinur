@@ -658,7 +658,9 @@ end $$;
 create index if not exists workers_browse_idx
   on public.workers (status, available, city);
 
-create or replace function public.search_workers(
+drop function if exists public.search_workers(double precision, double precision, text, text[], text, text, int, int);
+
+create function public.search_workers(
   p_lat        double precision default null,
   p_lng        double precision default null,
   p_q          text             default null,
@@ -829,7 +831,7 @@ $$;
 -- the return type gains a column, so the old signature must go first
 drop function if exists public.search_workers(double precision, double precision, text, text[], text, text, int, int);
 
-create or replace function public.search_workers(
+create function public.search_workers(
   p_lat        double precision default null,
   p_lng        double precision default null,
   p_q          text             default null,
