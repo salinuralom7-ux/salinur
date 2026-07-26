@@ -23,11 +23,26 @@ Right now your site is on GitHub Pages and your photos go to Supabase. Both
 work. We are moving so the launch stays free and does not break GitHub's rules
 about running a business on their free hosting.
 
-**One warning before you begin:** when you switch on R2, Cloudflare will ask
-for a debit or credit card. You will *not* be charged — the free allowance is
-huge and you are far below it — but it will ask. If you would rather not add a
-card right now, skip Job A entirely. The site keeps working exactly as it does
-today; you would just need to revisit this in about a month.
+## Important: R2 needs a card, the website hosting does not
+
+Job A has two halves, and they are independent:
+
+- **The website hosting (Pages) is free and asks for nothing.** No card, no
+  billing details. This is the part that matters most — it removes the problem
+  with GitHub's rules about running a business on their free hosting, and it
+  has no traffic limit.
+- **The photo storage (R2) requires a card on file.** There is no way to skip
+  it. You would not be charged within the free allowance, but Cloudflare does
+  not offer a hard spending cap, and the authorisation you tick is open-ended.
+  That is a fair reason to wait.
+
+**If you do not want to add a card:** skip Steps 2, 3, 5 and 6. Do Steps 1, 4,
+7 and 8 only. Photos keep going to Supabase exactly as they do today — the app
+falls back on its own and nothing breaks.
+
+The only thing you give up is headroom: Supabase's free photo storage is 1 GB,
+which is about 35 days at a thousand registrations a day, and considerably
+longer at realistic early numbers. There is no rush.
 
 ---
 
@@ -41,7 +56,7 @@ today; you would just need to revisit this in about a month.
 
 Done. You are in the Cloudflare dashboard.
 
-## Step 2 — Create the photo storage
+## Step 2 — Create the photo storage  *(skip if you are not adding a card)*
 
 1. Open the left-hand menu (the ☰ icon on a phone)
 2. Under the **Build** heading, tap **Storage & databases**
@@ -61,7 +76,7 @@ Done. You are in the Cloudflare dashboard.
 
 (This is where Cloudflare asks for a card, if it hasn't already.)
 
-## Step 3 — Make the photos viewable
+## Step 3 — Make the photos viewable  *(skip if you skipped Step 2)*
 
 Photos have to be public, or customers cannot see faces.
 
@@ -109,7 +124,7 @@ Now a settings page appears. Fill it in exactly like this:
 Wait about a minute. It will give you a web address like
 `https://nearse.pages.dev`. Open it — your site should be there.
 
-## Step 5 — Connect the storage to the website
+## Step 5 — Connect the storage to the website  *(skip if you skipped Step 2)*
 
 The website needs permission to put photos into the bucket.
 
@@ -129,7 +144,7 @@ The website needs permission to put photos into the bucket.
 > The variable name must be exactly `PHOTOS` — capital letters, no spaces.
 > This is the one thing that must be typed perfectly.
 
-## Step 6 — Tell it where the photos live
+## Step 6 — Tell it where the photos live  *(skip if you skipped Step 2)*
 
 1. Still in **Settings**, click **Environment variables**
 2. Under *Production*, click **Add variable**
@@ -170,6 +185,10 @@ Now check where the photo went:
 7. You should see a folder called `p` with your photo inside it
 
 **If the photo is there — Job A is done.** 🎉
+
+**If you skipped R2:** there is no bucket to check. Instead, just confirm the
+test worker's photo shows up on their profile. It will have gone to Supabase,
+which is correct and expected.
 
 **If the bucket is empty**, the photo went to Supabase instead. That means
 Step 5, 6 or 7 didn't take. Go back and check the variable is spelled
