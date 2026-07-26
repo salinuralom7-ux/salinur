@@ -1,10 +1,10 @@
-run: 2026-07-26T01:09:31Z
+run: 2026-07-26T01:13:25Z
 secret: present (44 chars)
 list projects: HTTP 200
 project: mpufunsitqtdkqlibxof
 run SQL: HTTP 201
 verify workers table: HTTP 201 — [{"n":2}]
-verify migration: HTTP 201 — [{"new_worker_cols":3,"new_functions":2,"email_leaked_to_public":0,"require_phone_otp":false,"approved_now":2,"private_cols":2,"wa_fn":1,"wa_code_leaked":0,"delete_fn":1,"coarse_loc_trigger":1,"precise_coords_left":0,"selfie_bucket":1,"selfie_size_cap":400000,"selfie_policies":2,"photos_still_in_db":2}]
+verify migration: HTTP 201 — [{"new_worker_cols":3,"new_functions":2,"email_leaked_to_public":0,"require_phone_otp":false,"approved_now":2,"private_cols":2,"wa_fn":1,"wa_code_leaked":0,"delete_fn":1,"coarse_loc_trigger":1,"precise_coords_left":0,"selfie_bucket":1,"selfie_size_cap":400000,"selfie_policies":2,"photos_still_in_db":2,"search_fn":1,"browse_index":1,"search_page_rows":0}]
 upload photo as anon: HTTP 200
 read it back publicly: HTTP 200 — byte-identical: yes
 non-image upload refused (want 4xx): HTTP 400
