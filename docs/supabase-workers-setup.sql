@@ -641,3 +641,85 @@ begin
   -- no update or delete policy: an uploaded photo cannot be overwritten or
   -- removed by a visitor, only replaced by a new upload under a new name
 end $$;
+
+-- ============================================================
+-- MIGRATION 7 — paged, server-side search
+--
+-- The browse screen fetched every worker and filtered in the browser. At
+-- 30,000 workers that is ~37 MB per visit, which no plan makes affordable and
+-- no phone renders. Filtering, distance ranking and paging now happen in the
+-- database, and the client receives one page at a time.
+--
+-- Distance is haversine in SQL. Guwahati is small enough that a planar
+-- approximation would do, but haversine costs nothing here and stays correct
+-- when more cities are added.
+-- ============================================================
+
+create index if not exists workers_browse_idx
+  on public.workers (status, available, city);
+
+create or replace function public.search_workers(
+  p_lat        double precision default null,
+  p_lng        double precision default null,
+  p_q          text             default null,
+  p_cat_skills text[]           default null,
+  p_area       text             default null,
+  p_city       text             default 'Guwahati',
+  p_limit      int              default 20,
+  p_offset     int              default 0
+)
+returns table (
+  id           uuid,
+  name         text,
+  phone        text,
+  selfie       text,
+  city         text,
+  area         text,
+  about        text,
+  skills       jsonb,
+  rating_sum   int,
+  rating_count int,
+  distance_km  double precision,
+  total_count  bigint
+)
+language sql stable security definer set search_path = public, extensions as $$
+  with base as (
+    select w.*,
+           lower(w.name || ' ' || coalesce(w.area,'') || ' ' || coalesce(w.city,'') || ' ' ||
+                 coalesce(w.skills::text,'')) as hay,
+           case when p_lat is null or w.lat is null then null else
+             6371 * 2 * asin(sqrt(
+               power(sin(radians(w.lat - p_lat) / 2), 2) +
+               cos(radians(p_lat)) * cos(radians(w.lat)) *
+               power(sin(radians(w.lng - p_lng) / 2), 2)))
+           end as dist
+      from workers w
+     where w.status = 'approved'
+       and w.available
+       and (p_city is null or w.city = p_city)
+       and (p_area is null or w.area = p_area)
+       and (p_cat_skills is null or exists (
+             select 1 from jsonb_array_elements(w.skills) s
+              where s->>'skill' = any(p_cat_skills)))
+  ),
+  hit as (
+    select * from base b
+     where p_q is null or btrim(p_q) = '' or (
+       select bool_and(b.hay like '%' || word || '%')
+         from unnest(string_to_array(lower(btrim(p_q)), ' ')) word
+        where word <> '')
+  )
+  select h.id, h.name, h.phone, h.selfie, h.city, h.area, h.about, h.skills,
+         h.rating_sum, h.rating_count, h.dist,
+         count(*) over () as total_count
+    from hit h
+   order by
+     -- nearest first when we know where the customer is, then best rated
+     case when h.dist is null then 1 else 0 end,
+     round(coalesce(h.dist, 0)::numeric, 1),
+     case when h.rating_count = 0 then 3.4
+          else h.rating_sum::numeric / h.rating_count end desc,
+     h.created_at desc
+   limit greatest(1, least(p_limit, 50))
+  offset greatest(0, p_offset);
+$$;
