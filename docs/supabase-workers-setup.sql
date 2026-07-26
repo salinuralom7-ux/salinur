@@ -723,3 +723,174 @@ language sql stable security definer set search_path = public, extensions as $$
    limit greatest(1, least(p_limit, 50))
   offset greatest(0, p_offset);
 $$;
+
+-- ============================================================
+-- MIGRATION 8 — small thumbnail alongside the full photo
+--
+-- The browse list shows a 64px avatar but was loading the full photo. A
+-- separate 96px thumbnail costs ~1.9 KB and cuts what a customer downloads
+-- while scrolling by about eleven times, which is what keeps the free tier
+-- viable without a card on file.
+-- ============================================================
+
+alter table public.workers add column if not exists thumb text;
+
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  new_id     uuid;
+  jwt_phone  text;
+  need_otp   boolean;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then
+    raise exception 'PIN must be exactly 4 digits';
+  end if;
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit Indian mobile number';
+  end if;
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''),
+    '\D', '', 'g');
+  if length(jwt_phone) > 10 then
+    jwt_phone := right(jwt_phone, 10);
+  end if;
+
+  if coalesce(need_otp, false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, thumb, city, area, about, lat, lng, skills, available, phone_verified)
+  values (
+    coalesce(p_data->>'name',''),
+    p_phone,
+    p_data->>'selfie',
+    p_data->>'thumb',
+    p_data->>'city',
+    p_data->>'area',
+    p_data->>'about',
+    (p_data->>'lat')::double precision,
+    (p_data->>'lng')::double precision,
+    coalesce(p_data->'skills','[]'::jsonb),
+    coalesce((p_data->>'available')::boolean, true),
+    jwt_phone <> ''
+  ) returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash, email, wa_code)
+    values (new_id,
+            crypt(p_pin, gen_salt('bf')),
+            nullif(btrim(coalesce(p_data->>'email','')), ''),
+            nullif(btrim(coalesce(p_data->>'wa_code','')), ''));
+  return query select * from workers where id = new_id;
+end;
+$$;
+
+create or replace function public.update_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wid     uuid;
+  is_edit boolean;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then
+    raise exception 'Wrong phone number or PIN';
+  end if;
+
+  is_edit := (p_data ?| array['name','selfie','area','about','skills']);
+
+  update workers set
+    name      = coalesce(p_data->>'name', name),
+    selfie    = coalesce(p_data->>'selfie', selfie),
+    thumb     = coalesce(p_data->>'thumb', thumb),
+    city      = coalesce(p_data->>'city', city),
+    area      = coalesce(p_data->>'area', area),
+    about     = coalesce(p_data->>'about', about),
+    lat       = coalesce((p_data->>'lat')::double precision, lat),
+    lng       = coalesce((p_data->>'lng')::double precision, lng),
+    skills    = coalesce(p_data->'skills', skills),
+    available = coalesce((p_data->>'available')::boolean, available),
+    status    = case when is_edit and status = 'rejected' then 'pending' else status end,
+    review_note = case when is_edit and status = 'rejected' then null else review_note end
+  where id = wid;
+  return query select * from workers where id = wid;
+end;
+$$;
+
+-- the return type gains a column, so the old signature must go first
+drop function if exists public.search_workers(double precision, double precision, text, text[], text, text, int, int);
+
+create or replace function public.search_workers(
+  p_lat        double precision default null,
+  p_lng        double precision default null,
+  p_q          text             default null,
+  p_cat_skills text[]           default null,
+  p_area       text             default null,
+  p_city       text             default 'Guwahati',
+  p_limit      int              default 20,
+  p_offset     int              default 0
+)
+returns table (
+  id           uuid,
+  name         text,
+  phone        text,
+  selfie       text,
+  thumb        text,
+  city         text,
+  area         text,
+  about        text,
+  skills       jsonb,
+  rating_sum   int,
+  rating_count int,
+  distance_km  double precision,
+  total_count  bigint
+)
+language sql stable security definer set search_path = public, extensions as $$
+  with base as (
+    select w.*,
+           lower(w.name || ' ' || coalesce(w.area,'') || ' ' || coalesce(w.city,'') || ' ' ||
+                 coalesce(w.skills::text,'')) as hay,
+           case when p_lat is null or w.lat is null then null else
+             6371 * 2 * asin(sqrt(
+               power(sin(radians(w.lat - p_lat) / 2), 2) +
+               cos(radians(p_lat)) * cos(radians(w.lat)) *
+               power(sin(radians(w.lng - p_lng) / 2), 2)))
+           end as dist
+      from workers w
+     where w.status = 'approved'
+       and w.available
+       and (p_city is null or w.city = p_city)
+       and (p_area is null or w.area = p_area)
+       and (p_cat_skills is null or exists (
+             select 1 from jsonb_array_elements(w.skills) s
+              where s->>'skill' = any(p_cat_skills)))
+  ),
+  hit as (
+    select * from base b
+     where p_q is null or btrim(p_q) = '' or (
+       select bool_and(b.hay like '%' || word || '%')
+         from unnest(string_to_array(lower(btrim(p_q)), ' ')) word
+        where word <> '')
+  )
+  select h.id, h.name, h.phone, h.selfie, h.thumb, h.city, h.area, h.about, h.skills,
+         h.rating_sum, h.rating_count, h.dist,
+         count(*) over () as total_count
+    from hit h
+   order by
+     case when h.dist is null then 1 else 0 end,
+     round(coalesce(h.dist, 0)::numeric, 1),
+     case when h.rating_count = 0 then 3.4
+          else h.rating_sum::numeric / h.rating_count end desc,
+     h.created_at desc
+   limit greatest(1, least(p_limit, 50))
+  offset greatest(0, p_offset);
+$$;

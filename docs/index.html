@@ -1335,6 +1335,7 @@ let session = null;
 let myLoc = null;
 let regLoc = null;
 let selfieData = null;
+let thumbData = null;
 let selfieLive = false;
 let picked = [];             /* selected skill names, max 3 */
 let hireCat = "";
@@ -1354,7 +1355,8 @@ function toast(msg){
 }
 function openModal(id){ $(id).classList.add("open"); }
 function closeModal(id){ $(id).classList.remove("open"); }
-function avatarOf(w){
+function avatarOf(w, small){
+  if(small && w.thumb) return w.thumb;
   if(w.selfie) return w.selfie;
   /* stay inside the brand's indigo–violet band so placeholders never clash */
   const hue = 226 + ([...(w.name||"N")].reduce((a,c)=>(a*31+c.charCodeAt(0))%56, 0));
@@ -1782,6 +1784,7 @@ function initRegister(){
   $("regSaveBtn").textContent = editing ? "Save changes" : "Publish my profile";
   picked = w ? (w.skills||[]).map(s=>s.skill) : [];
   selfieData = w ? w.selfie : null;
+  thumbData  = w ? (w.thumb || null) : null;
   selfieLive = false;
   regLoc = (w && w.lat != null) ? {lat:w.lat, lng:w.lng} : null;
   $("regCity").value = CITY;
@@ -1913,7 +1916,7 @@ function stopCamera(){
 async function captureFrame(){
   const v = $("camVideo");
   if(!v || !v.videoWidth){ toast("Camera is still starting — try again"); return; }
-  const S = 460, side = Math.min(v.videoWidth, v.videoHeight);
+  const S = PHOTO_SIZE, side = Math.min(v.videoWidth, v.videoHeight);
   const cv = document.createElement("canvas"); cv.width = S; cv.height = S;
   const ctx = cv.getContext("2d");
   ctx.translate(S, 0); ctx.scale(-1, 1);   /* un-mirror */
@@ -1930,7 +1933,8 @@ async function captureFrame(){
       }
     }catch(e){}
   }
-  selfieData = cv.toDataURL("image/jpeg", .82);
+  selfieData = encodePhoto(cv, .78);
+  thumbData  = encodePhoto(squareCanvas(cv, THUMB_SIZE, 0, 0, S), .72);
   selfieLive = true;
   renderSelfie();
   stopCamera();
@@ -1942,10 +1946,11 @@ function handleSelfie(input){
   reader.onload = e => {
     const img = new Image();
     img.onload = () => {
-      const S = 420, side = Math.min(img.width, img.height);
-      const cv = document.createElement("canvas"); cv.width = S; cv.height = S;
-      cv.getContext("2d").drawImage(img, (img.width-side)/2, (img.height-side)/2, side, side, 0, 0, S, S);
-      selfieData = cv.toDataURL("image/jpeg", .82);
+      const side = Math.min(img.width, img.height);
+      const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+      const cv = squareCanvas(img, PHOTO_SIZE, sx, sy, side);
+      selfieData = encodePhoto(cv, .78);
+      thumbData  = encodePhoto(squareCanvas(img, THUMB_SIZE, sx, sy, side), .72);
       selfieLive = false;
       renderSelfie();
     };
@@ -1960,6 +1965,30 @@ function handleSelfie(input){
    Storage is served from a CDN, so a returning customer downloads a photo once
    instead of on every visit. */
 const SELFIE_BUCKET = "selfies";
+const PHOTO_SIZE = 400;      /* enough to see a face clearly on a profile */
+const THUMB_SIZE = 96;       /* the list only ever draws a 64px avatar */
+
+/* WebP is roughly half the size of JPEG at the same quality, but a browser
+   that cannot encode it returns a PNG without saying so — and a PNG of a
+   photo is far bigger than the JPEG we started with. So check what actually
+   came back rather than trusting the request. */
+let webpOk = null;
+function encodePhoto(canvas, quality){
+  if(webpOk !== false){
+    const webp = canvas.toDataURL("image/webp", quality);
+    if(webp.startsWith("data:image/webp")){ webpOk = true; return webp; }
+    webpOk = false;
+  }
+  return canvas.toDataURL("image/jpeg", quality + 0.04);
+}
+
+/* Draw a square, centre-cropped copy of a source at the given size. */
+function squareCanvas(src, size, sx, sy, side){
+  const cv = document.createElement("canvas");
+  cv.width = size; cv.height = size;
+  cv.getContext("2d").drawImage(src, sx, sy, side, side, 0, 0, size, size);
+  return cv;
+}
 
 function dataUrlToBlob(dataUrl){
   const [head, b64] = dataUrl.split(",");
@@ -1987,7 +2016,8 @@ async function uploadSelfie(dataUrl, phone){
     /* 404 simply means this deployment has no upload endpoint — fall through */
   }catch(e){ /* offline or blocked: try Supabase before giving up */ }
 
-  const path = `${phone}-${Date.now()}.jpg`;
+  const ext = { "image/webp":"webp", "image/png":"png" }[blob.type] || "jpg";
+  const path = `${phone}-${Date.now()}.${ext}`;
   const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${SELFIE_BUCKET}/${path}`, {
     method: "POST",
     headers: {
@@ -2029,11 +2059,14 @@ async function saveProfile(){
   const btn = $("regSaveBtn"); const label = btn.textContent;
   btn.disabled = true; btn.textContent = "Saving…";
 
-  let selfieUrl = selfieData;
+  let selfieUrl = selfieData, thumbUrl = thumbData;
   try{
     if(selfieData.startsWith("data:")){
       btn.textContent = "Uploading photo…";
       selfieUrl = await uploadSelfie(selfieData, session.phone);
+      if(thumbData && thumbData.startsWith("data:")){
+        thumbUrl = await uploadSelfie(thumbData, session.phone + "-t");
+      }
     }
   }catch(e){
     toast(e.message); btn.disabled = false; btn.textContent = label; return;
@@ -2041,7 +2074,7 @@ async function saveProfile(){
 
   const data = {
     name: session.name || (session.worker && session.worker.name),
-    skills, selfie:selfieUrl, city:CITY, area,
+    skills, selfie:selfieUrl, thumb:thumbUrl || null, city:CITY, area,
     about: $("regAbout").value.trim(),
     lat: regLoc ? regLoc.lat : null,
     lng: regLoc ? regLoc.lng : null,
@@ -2280,7 +2313,7 @@ function paintResults(q, areaPick){
     const s0 = (w.skills||[])[0] || {};
     const trades = (w.skills||[]).map(s=>esc(s.skill)).join(" · ");
     return `<button class="wcard" onclick="openWorker('${jsq(w.id)}')">
-      <span class="avatar"><img src="${avatarOf(w)}" alt="" loading="lazy"></span>
+      <span class="avatar"><img src="${avatarOf(w, true)}" alt="" loading="lazy" decoding="async"></span>
       <span class="info">
         <h3>${esc(w.name)} <span class="verified-badge">✓ Verified</span></h3>
         <div class="trade">${trades}</div>
