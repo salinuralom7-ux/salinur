@@ -1,108 +1,234 @@
-# Moving Nearse to Cloudflare — free, and it removes two risks
+# Nearse — setup steps, in plain language
 
-Two things to do before the launch. Neither costs money.
+Two jobs. Job A takes about 20 minutes and should be done before you launch.
+Job B is the domain, and should be done on a quiet day.
 
-1. **Host on Cloudflare Pages** instead of GitHub Pages. GitHub's terms say
-   Pages "is not intended for or allowed to be used as a free web-hosting
-   service to run your online business" — arguable for Nearse, but not
-   something to discover mid-campaign. Cloudflare allows commercial use and
-   has no bandwidth limit.
-2. **Store photos in R2.** R2 never charges for egress. Photo downloads are
-   the largest cost at launch volume (~17 GB/month at 1,000 registrations a
-   day), and moving them off Supabase is what keeps the free tier viable.
-
-The app already supports both. It posts photos to `/upload` and falls back to
-Supabase Storage automatically if that endpoint is not there, so nothing
-breaks at any point during the move.
+Everything else is already built and running. These are the only two things
+that need you.
 
 ---
 
-## 1. R2 bucket
+## Before you start: what these things are
 
-Cloudflare dashboard → **R2** → *Create bucket*
+- **Cloudflare** — a free company that will host your website and store your
+  photos. You do not have a Cloudflare account yet.
+- **R2** — Cloudflare's photo storage. Free for the first 10 GB, and it never
+  charges for people *viewing* the photos. That is why we are using it.
+- **Pages** — Cloudflare's website hosting. Free, no traffic limit.
 
-- Name: `nearse-photos`
-- Location: **Asia-Pacific** (closest to Guwahati)
+Right now your site is on GitHub Pages and your photos go to Supabase. Both
+work. We are moving so the launch stays free and does not break GitHub's rules
+about running a business on their free hosting.
 
-Then open the bucket → **Settings** → *Public access*:
+**One warning before you begin:** when you switch on R2, Cloudflare will ask
+for a debit or credit card. You will *not* be charged — the free allowance is
+huge and you are far below it — but it will ask. If you would rather not add a
+card right now, skip Job A entirely. The site keeps working exactly as it does
+today; you would just need to revisit this in about a month.
 
-- Either connect a custom domain — `img.nearse.in` is tidy, and needs a CNAME
-  in your DNS pointing at the bucket
-- Or enable the `r2.dev` development URL to start with
+---
 
-Copy whichever public URL you end up with; it goes in `PHOTO_BASE` below.
+# JOB A — Cloudflare (about 20 minutes)
 
-## 2. Cloudflare Pages
+## Step 1 — Make a free account
 
-Cloudflare dashboard → **Workers & Pages** → *Create* → **Pages** →
-*Connect to Git* → pick `salinuralom7-ux/salinur`.
+1. Go to **dash.cloudflare.com/sign-up**
+2. Enter your email and a password
+3. Confirm the email they send you
 
-| Setting | Value |
+Done. You are in the Cloudflare dashboard.
+
+## Step 2 — Create the photo storage
+
+1. On the left-hand menu, click **R2 Object Storage**
+2. Click the blue **Create bucket** button
+3. In *Bucket name*, type exactly:
+
+   ```
+   nearse-photos
+   ```
+
+4. Under *Location*, choose **Asia-Pacific (APAC)** — it is nearest to Guwahati
+5. Click **Create bucket**
+
+(This is where Cloudflare asks for a card, if it hasn't already.)
+
+## Step 3 — Make the photos viewable
+
+Photos have to be public, or customers cannot see faces.
+
+1. You should now be inside the `nearse-photos` bucket. Click the **Settings**
+   tab at the top
+2. Scroll to **Public access**
+3. Find **R2.dev subdomain** and click **Allow Access**
+4. Type `allow` when it asks you to confirm
+5. A web address appears, looking something like:
+
+   ```
+   https://pub-a1b2c3d4e5.r2.dev
+   ```
+
+6. **Copy that address and keep it somewhere.** You need it in Step 6.
+
+## Step 4 — Connect your website
+
+1. On the left-hand menu, click **Workers & Pages**
+2. Click **Create**
+3. Choose the **Pages** tab
+4. Click **Connect to Git**
+5. Click **Connect GitHub** and sign in to GitHub when asked
+6. Allow Cloudflare to see your repositories
+7. In the list, choose **salinuralom7-ux / salinur**
+8. Click **Begin setup**
+
+Now a settings page appears. Fill it in exactly like this:
+
+| Box | What to put |
 |---|---|
+| Project name | `nearse` |
 | Production branch | `main` |
-| Build command | *(leave empty)* |
+| Framework preset | **None** |
+| Build command | **leave completely empty** |
 | Build output directory | `docs` |
 
-The site is static, so there is nothing to build.
+9. Click **Save and Deploy**
 
-### Bind the bucket
+Wait about a minute. It will give you a web address like
+`https://nearse.pages.dev`. Open it — your site should be there.
 
-Pages project → **Settings** → *Functions* → **R2 bucket bindings**:
+## Step 5 — Connect the storage to the website
 
-| Variable name | Bucket |
-|---|---|
-| `PHOTOS` | `nearse-photos` |
+The website needs permission to put photos into the bucket.
 
-The variable **must** be called `PHOTOS` — `functions/upload.js` looks for
-exactly that name.
+1. In your `nearse` Pages project, click **Settings**
+2. Click **Functions** in the side menu
+3. Scroll to **R2 bucket bindings**
+4. Click **Add binding**
+5. Fill in:
 
-### Environment variable
+   | Box | What to put |
+   |---|---|
+   | Variable name | `PHOTOS` |
+   | R2 bucket | `nearse-photos` |
 
-Pages project → **Settings** → *Environment variables* → Production:
+6. Click **Save**
 
-| Name | Value |
-|---|---|
-| `PHOTO_BASE` | your bucket's public URL, e.g. `https://img.nearse.in` |
+> The variable name must be exactly `PHOTOS` — capital letters, no spaces.
+> This is the one thing that must be typed perfectly.
 
-No trailing slash.
+## Step 6 — Tell it where the photos live
 
-## 3. Point the domain over
+1. Still in **Settings**, click **Environment variables**
+2. Under *Production*, click **Add variable**
+3. Fill in:
 
-Only after the Pages deployment works on its `*.pages.dev` address.
+   | Box | What to put |
+   |---|---|
+   | Variable name | `PHOTO_BASE` |
+   | Value | the address you copied in Step 3 |
 
-Pages project → **Custom domains** → *Set up a custom domain* → `nearse.in`,
-and add `www.nearse.in` too.
+   For example: `https://pub-a1b2c3d4e5.r2.dev`
+   (no slash at the end)
 
-Cloudflare will ask you to move the domain's nameservers from Hostinger to
-Cloudflare. That is the part that takes a few hours to propagate, so do it on
-a quiet day, not the morning of the launch.
+4. Click **Save**
 
-Keep GitHub Pages running until the new site is confirmed live. Nothing is
-lost by having both up for a day.
+## Step 7 — Redeploy, or none of it takes effect
 
-## 4. Check it worked
+This step is easy to miss and nothing works without it.
 
-- Open the site on the `*.pages.dev` address and register a test worker with
-  a photo.
-- The photo URL on that profile should start with your `PHOTO_BASE`, not with
-  `supabase.co`. If it still says supabase.co, the binding is missing or
-  misnamed — the app fell back on purpose rather than failing.
-- Delete the test profile afterwards from inside the app.
+1. Click the **Deployments** tab
+2. Find the deployment at the top
+3. Click the **⋯** menu on its right
+4. Click **Retry deployment**
+
+Wait a minute for it to finish.
+
+## Step 8 — Check it actually worked
+
+1. Open your `https://nearse.pages.dev` address
+2. Tap **I am a worker** → **Create account**
+3. Register a test worker: any name, your own WhatsApp number, a 4-digit PIN
+4. Go through the steps and add a photo
+5. Publish the profile
+
+Now check where the photo went:
+
+6. Go back to Cloudflare → **R2 Object Storage** → **nearse-photos**
+7. You should see a folder called `p` with your photo inside it
+
+**If the photo is there — Job A is done.** 🎉
+
+**If the bucket is empty**, the photo went to Supabase instead. That means
+Step 5, 6 or 7 didn't take. Go back and check the variable is spelled
+`PHOTOS` exactly, then retry the deployment. Nothing is broken either way —
+the app falls back on purpose rather than losing the photo.
+
+8. Delete the test worker: open the profile, scroll down, **Delete my profile**
 
 ---
 
-## What this leaves you paying
+# JOB B — Move the domain (a quiet day, not launch day)
+
+Right now `nearse.in` points at GitHub. This points it at Cloudflare instead.
+It takes a few hours to spread across the internet, which is why it should not
+be done on the morning of your launch.
+
+**Do this only after Job A is working.**
+
+## Step 1 — Add your domain to Cloudflare
+
+1. Cloudflare dashboard → click **Add a site** (top of the page)
+2. Type `nearse.in`
+3. Choose the **Free** plan
+4. Cloudflare scans your existing settings — click **Continue**
+
+## Step 2 — Change the nameservers at Hostinger
+
+Cloudflare will now show you **two nameserver addresses**, something like:
+
+```
+gina.ns.cloudflare.com
+rick.ns.cloudflare.com
+```
+
+1. Copy both
+2. Open **Hostinger** in another tab and sign in
+3. Go to **Domains** → `nearse.in` → **DNS / Nameservers**
+4. Choose **Change nameservers** → **Use custom nameservers**
+5. Delete what is there, paste Cloudflare's two addresses
+6. Save
+
+## Step 3 — Point the domain at your site
+
+1. Back in Cloudflare, open your **nearse** Pages project
+2. Click **Custom domains**
+3. Click **Set up a custom domain**
+4. Type `nearse.in` → **Continue** → **Activate domain**
+5. Repeat for `www.nearse.in`
+
+## Step 4 — Wait, then check
+
+Give it a few hours. Then open `nearse.in` on your phone using mobile data
+(not wifi). If your site loads with a padlock in the address bar, it is done.
+
+**Leave GitHub Pages switched on until you have confirmed this.** Having both
+running for a day costs nothing and means you can never end up with no site.
+
+---
+
+# What this costs you
 
 Nothing.
 
-| | Free allowance | Your month-one load |
+| | Free allowance | What you will use in month one |
 |---|---|---|
-| Cloudflare Pages | unlimited bandwidth | ~1 GB |
-| Cloudflare R2 | 10 GB stored, **egress always free** | ~0.9 GB stored, ~17 GB out |
-| R2 writes | 1,000,000/month | ~30,000 |
-| Supabase database | 500 MB | ~40 MB |
-| Supabase egress | 5 GB/month | ~2 GB (paged search only) |
+| Website hosting | unlimited | about 1 GB |
+| Photo storage | 10 GB | about 0.9 GB |
+| People viewing photos | **always free** | about 17 GB |
+| Photo uploads | 1,000,000/month | about 30,000 |
+| Database | 500 MB | about 40 MB |
+| Database traffic | 5 GB/month | about 2 GB |
 
-The binding limit becomes R2 storage at 10 GB — roughly **345,000 photos**,
-about a year at 1,000 registrations a day. Past that R2 is $0.015/GB/month,
-so the eleventh gigabyte costs about one and a half US cents.
+Your first real limit is 10 GB of photo storage — roughly **345,000 photos**,
+about a year at a thousand registrations a day. After that it costs about one
+and a half US cents per extra gigabyte per month.
