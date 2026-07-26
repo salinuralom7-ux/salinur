@@ -180,12 +180,116 @@ header{
 .back:hover{color:var(--ink)}
 
 /* ---------- landing: two doors ---------- */
-.landing{padding:clamp(56px,11vw,104px) 0 0;text-align:center}
+/* ---------- hero ----------
+   The depth comes from three cheap layers: a slow aurora, a fine grain, and
+   one hairline highlight on the primary card. No images, nothing to download. */
+.hero{position:relative;overflow:hidden;isolation:isolate}
+.aurora{
+  position:absolute;inset:-30% -10% auto -10%;height:150%;z-index:-1;
+  background:
+    radial-gradient(34% 40% at 16% 30%, rgba(68,32,248,.16), transparent 72%),
+    radial-gradient(30% 34% at 84% 16%, rgba(139,114,255,.10), transparent 72%),
+    radial-gradient(44% 36% at 55% 98%, rgba(36,26,107,.20), transparent 74%);
+  filter:blur(38px);
+  animation:drift 26s ease-in-out infinite alternate;
+}
+@keyframes drift{
+  0%  {transform:translate3d(0,0,0) scale(1)}
+  50% {transform:translate3d(-2.5%,1.5%,0) scale(1.06)}
+  100%{transform:translate3d(2%,-2%,0) scale(1.02)}
+}
+/* grain: the single detail that stops a flat dark page looking unfinished */
+.hero::after{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.landing{padding:clamp(52px,10vw,96px) 0 clamp(44px,7vw,68px);text-align:center}
 .landing h1{
   font-family:var(--serif);font-weight:600;
-  font-size:clamp(1.95rem,4.6vw,2.85rem);letter-spacing:-.03em;text-wrap:balance;
+  font-size:clamp(2.05rem,5.4vw,3.35rem);letter-spacing:-.035em;line-height:1.08;
+  text-wrap:balance;margin-top:20px;
 }
-.landing .sub{color:var(--muted);margin-top:14px;font-size:1.02rem}
+.landing h1 em{
+  font-style:normal;
+  background:linear-gradient(100deg,var(--brand-2) 12%,#C6B8FF 88%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.landing .sub{
+  color:var(--ink-2);margin:18px auto 0;font-size:1.01rem;line-height:1.65;
+  max-width:44ch;text-wrap:pretty;
+}
+/* the live-in-Guwahati pill gets a real pulse, not a static dot */
+.pulse{position:relative;width:7px;height:7px;flex:0 0 auto}
+.pulse::before,.pulse::after{
+  content:"";position:absolute;inset:0;border-radius:50%;background:var(--brand-2);
+}
+.pulse::after{animation:ping 2.4s cubic-bezier(0,0,.2,1) infinite}
+@keyframes ping{0%{transform:scale(1);opacity:.75}70%,100%{transform:scale(3.2);opacity:0}}
+
+/* ---------- figures ---------- */
+.figures{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  max-width:520px;margin:clamp(34px,6vw,50px) auto 0;padding:0 2px;
+}
+.fig{display:flex;flex-direction:column;gap:4px;padding:0 6px;position:relative}
+.fig+.fig::before{
+  content:"";position:absolute;left:0;top:12%;height:76%;width:1px;background:var(--line);
+}
+.fig b{
+  font-family:var(--serif);font-weight:600;font-size:clamp(1.45rem,5vw,1.9rem);
+  letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums;
+}
+.fig span{
+  color:var(--muted);font-size:.73rem;font-weight:600;line-height:1.35;
+  text-wrap:balance;
+}
+
+/* ---------- service ticker ---------- */
+.ticker{
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  padding:16px 0;display:flex;flex-direction:column;gap:11px;overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);
+          mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);
+}
+.ticker-row{display:flex;gap:11px;width:max-content;animation:slide 64s linear infinite}
+.ticker-row.rev{animation-direction:reverse;animation-duration:78s}
+@keyframes slide{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+.tick{
+  border:1px solid var(--line);border-radius:999px;padding:7px 15px;
+  font-size:.82rem;font-weight:600;color:var(--muted);white-space:nowrap;
+  background:var(--surface);
+}
+
+/* ---------- how it works ---------- */
+.steps{padding:clamp(40px,6vw,62px) 0 0}
+.steplist{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.steplist li{display:flex;gap:18px;padding:20px 0;position:relative}
+.steplist li+li{border-top:1px solid var(--line)}
+/* three abreast once there is room, so the section stops looking half-empty */
+@media(min-width:820px){
+  .steps .row-label{margin-bottom:18px}
+  .steplist{grid-template-columns:repeat(3,1fr);gap:0 34px}
+  .steplist li{padding:24px 0 0;border-top:1px solid var(--line)}
+  .steplist li+li{border-top:1px solid var(--line)}
+  .steplist p{max-width:none}
+}
+.steplist .sn{
+  width:30px;height:30px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  border:1px solid var(--line-strong);background:var(--surface);
+  font-size:.8rem;font-weight:800;color:var(--brand-2);
+  font-variant-numeric:tabular-nums;margin-top:1px;
+}
+.steplist b{display:block;font-size:1.02rem;letter-spacing:-.02em;margin-bottom:5px}
+.steplist p{color:var(--muted);font-size:.9rem;line-height:1.62;max-width:56ch}
+
+/* ---------- staggered entrance ---------- */
+.reveal{opacity:0;transform:translate3d(0,14px,0);animation:rise .68s cubic-bezier(.22,1,.36,1) forwards}
+.reveal[data-r="1"]{animation-delay:.04s}
+.reveal[data-r="2"]{animation-delay:.12s}
+.reveal[data-r="3"]{animation-delay:.20s}
+.reveal[data-r="4"]{animation-delay:.28s}
+.reveal[data-r="5"]{animation-delay:.38s}
+@keyframes rise{to{opacity:1;transform:none}}
 .doors{
   display:flex;flex-direction:column;gap:14px;
   max-width:520px;margin:clamp(32px,6vw,46px) auto 0;
@@ -205,17 +309,37 @@ header{
 .cta-text b{font-size:1.06rem;font-weight:700;letter-spacing:-.02em;line-height:1.25}
 .cta-text i{font-style:normal;font-size:.84rem;font-weight:500;opacity:.72}
 .cta-arrow{flex:0 0 auto;opacity:.55}
-.cta.primary{background:var(--brand);color:var(--brand-ink);box-shadow:0 12px 28px rgba(68,32,248,.28)}
-.cta.primary .cta-ico{background:rgba(6,19,14,.14)}
-.cta.primary:hover{background:var(--brand-2);transform:translateY(-2px);box-shadow:0 16px 34px rgba(68,32,248,.36)}
-.cta.secondary{background:var(--surface);color:var(--ink);border-color:var(--line-strong)}
+.cta.primary{
+  position:relative;color:var(--brand-ink);
+  background:linear-gradient(168deg,#5B3BFF 0%,var(--brand) 52%,#3A17D8 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.20) inset, 0 14px 34px -6px rgba(68,32,248,.55),
+             0 2px 8px rgba(0,0,0,.35);
+}
+.cta.primary::before{   /* hairline sheen along the top edge */
+  content:"";position:absolute;inset:0 0 auto;height:1px;border-radius:inherit;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
+}
+.cta.primary .cta-ico{background:rgba(255,255,255,.16);backdrop-filter:blur(2px)}
+.cta.primary .cta-arrow{opacity:.8}
+.cta.primary:hover{transform:translateY(-2px);box-shadow:0 1px 0 rgba(255,255,255,.24) inset,
+  0 20px 44px -8px rgba(68,32,248,.65), 0 3px 10px rgba(0,0,0,.4)}
+.cta.primary:hover .cta-arrow{transform:translateX(3px)}
+.cta.secondary{
+  background:linear-gradient(168deg,rgba(25,31,52,.9),rgba(18,23,41,.9));
+  color:var(--ink);border-color:var(--line-strong);
+  box-shadow:0 1px 0 rgba(255,255,255,.05) inset;
+}
 .cta.secondary .cta-ico{background:var(--brand-soft);color:var(--brand-2)}
 .cta.secondary:hover{border-color:var(--brand);transform:translateY(-2px);box-shadow:var(--shadow)}
+.cta.secondary:hover .cta-arrow{transform:translateX(3px)}
+.cta-arrow{transition:transform .18s cubic-bezier(.22,1,.36,1)}
 .assure{
-  display:flex;gap:26px;justify-content:center;flex-wrap:wrap;
-  margin:clamp(34px,6vw,50px) 0 0;color:var(--muted);font-size:.83rem;font-weight:600;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px 26px;margin:clamp(34px,5vw,44px) 0 clamp(30px,4vw,40px);
+  padding-top:clamp(24px,3.5vw,30px);border-top:1px solid var(--line);
+  color:var(--muted);font-size:.83rem;font-weight:600;
 }
-.assure span{display:inline-flex;align-items:center;gap:7px}
+.assure span{display:inline-flex;align-items:center;gap:9px}
 .assure .dot{width:5px;height:5px;border-radius:50%;background:var(--brand);opacity:.55}
 
 /* ---------- worker banner ---------- */
@@ -257,7 +381,7 @@ header{
   border-style:dashed;
 }
 .city-pill{
-  display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);
+  display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line-strong);
   background:var(--surface);border-radius:999px;padding:6px 14px;
   font-size:.78rem;font-weight:700;color:var(--ink-2);letter-spacing:-.01em;
 }
@@ -756,6 +880,9 @@ footer a:hover{color:var(--brand)}
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important}
+  .reveal{opacity:1 !important;transform:none !important}
+  .ticker-row{animation:none !important}
+  .aurora{animation:none !important}
 }
 </style>
 </head>
@@ -780,36 +907,62 @@ footer a:hover{color:var(--brand)}
 
 <!-- ============================= LANDING ============================= -->
 <section class="screen on" id="scr-home">
-  <div class="wrap landing">
-    <span class="city-pill" style="margin-bottom:18px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      Now live in Guwahati
-    </span>
-    <h1>Trusted people for every job,<br>right where you are.</h1>
-    <p class="sub">Choose how you'd like to begin.</p>
+  <div class="hero">
+    <div class="aurora" aria-hidden="true"></div>
+    <div class="wrap landing">
+      <span class="city-pill reveal" data-r="1">
+        <span class="pulse" aria-hidden="true"></span>
+        Now live in Guwahati
+      </span>
+      <h1 class="reveal" data-r="2">Trusted people for every job,<br><em>right where you are.</em></h1>
+      <p class="sub reveal" data-r="3">Real people from your own locality. They set their price, you keep the whole conversation, and we take nothing from either side.</p>
 
-    <div class="doors">
-      <button class="cta primary" id="ctaHire" onclick="go('hire')">
-        <span class="cta-ico" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        </span>
-        <span class="cta-text"><b>I am looking for a worker</b><i>Search verified people near you</i></span>
-        <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </button>
+      <div class="doors reveal" data-r="4">
+        <button class="cta primary" id="ctaHire" onclick="go('hire')">
+          <span class="cta-ico" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          </span>
+          <span class="cta-text"><b>I am looking for a worker</b><i>Search verified people near you</i></span>
+          <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
 
-      <button class="cta secondary" id="ctaWork" onclick="go('work')">
-        <span class="cta-ico" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        </span>
-        <span class="cta-text"><b>I am a worker</b><i>Register and receive bookings</i></span>
-        <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </button>
+        <button class="cta secondary" id="ctaWork" onclick="go('work')">
+          <span class="cta-ico" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </span>
+          <span class="cta-text"><b>I am a worker</b><i>Register and receive bookings</i></span>
+          <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <div class="figures reveal" data-r="5">
+        <div class="fig"><b id="figServices">—</b><span>services you can book</span></div>
+        <div class="fig"><b id="figAreas">—</b><span>localities covered</span></div>
+        <div class="fig"><b>0%</b><span>commission, ever</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- a live band of what is actually in the catalogue: breadth, shown not claimed -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-row" id="tickA"></div>
+    <div class="ticker-row rev" id="tickB"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="steps">
+      <div class="row-label">How it works</div>
+      <ol class="steplist">
+        <li><span class="sn">1</span><div><b>Search what you need</b><p>Browse by trade or type it in. Workers closest to you come first, with their own rates already on the card.</p></div></li>
+        <li><span class="sn">2</span><div><b>Send the request</b><p>Pick the service, the day and the time. It arrives on the worker's WhatsApp with everything they need to know.</p></div></li>
+        <li><span class="sn">3</span><div><b>Agree it directly</b><p>You settle the final amount with them. No middleman, no platform fee, no commission taken from their earnings.</p></div></li>
+      </ol>
     </div>
 
     <div class="assure">
-      <span><i class="dot"></i>Verified profiles</span>
-      <span><i class="dot"></i>Nearest first</span>
-      <span><i class="dot"></i>Rates set by workers</span>
+      <span><i class="dot"></i>Every profile checked by a person</span>
+      <span><i class="dot"></i>Nearest to you first</span>
+      <span><i class="dot"></i>Rates set by the worker</span>
       <span><i class="dot"></i>No commission</span>
     </div>
   </div>
@@ -1555,6 +1708,31 @@ function go(name){
   if(name === "me") renderMe();
   if(name === "register") initRegister();
   if(name === "otp") initOtp(); else stopResendCooldown();
+  if(name === "home") initHome();
+}
+
+/* ---------- landing ----------
+   The figures and the ticker are read from the real catalogue, so the page is
+   describing itself rather than showing decoration. */
+let homeReady = false;
+function initHome(){
+  if(homeReady) return;
+  homeReady = true;
+  $("figServices").textContent = SKILLS.length;
+  $("figAreas").textContent = AREAS.length - 1;   /* "Other area" is not a locality */
+
+  /* two rows of real service names, evenly split, each duplicated so the
+     translate(-50%) loop is seamless */
+  const pool = SKILLS.map(s => s.n).filter(n => n.length < 26);
+  const pick = (start) => {
+    const out = [];
+    for(let i = start; i < pool.length; i += 2) out.push(pool[i]);
+    return out.slice(0, 34);
+  };
+  const row = list => (list.concat(list))
+    .map(n => `<span class="tick">${esc(n)}</span>`).join("");
+  $("tickA").innerHTML = row(pick(0));
+  $("tickB").innerHTML = row(pick(1));
 }
 
 /* ---------- auth ---------- */
@@ -2741,6 +2919,7 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
   if(session && session.registered){
     try{ session.worker = await api.login(session.phone, session.pin); saveSession(); }catch(e){}
   }
+  initHome();
   checkAdminHash();
 })();
 </script>
