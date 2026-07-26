@@ -1,0 +1,4 @@
+# SPA fallback for Netlify and Cloudflare Pages.
+# API routes must be excluded so serverless functions still resolve.
+/api/*  /api/:splat  200
+/*      /index.html  200
