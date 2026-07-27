@@ -17,7 +17,7 @@
 <meta property="og:image:alt" content="Nearse logo — a worker inside a location pin">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://nearse.in/icons/icon-512.png">
-<meta name="theme-color" content="#0B0F1E">
+<meta name="theme-color" content="#0C0A07">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -49,30 +49,32 @@
    paper ground · petrol green brand · ink type · sand accents
    ========================================================================== */
 :root{
-  /* Base greys are the navy from the logo's worker silhouette (#0A102C),
-     so the whole surface sits in the same family as the mark. */
-  --bg:#0B0F1E;
-  --bg-2:#070A16;
-  --surface:#121729;
-  --surface-2:#191F34;
-  --raise:#212843;
-  --ink:#ECEEF7;
-  --ink-2:#C3C8DC;
-  --muted:#8990AC;
-  --line:rgba(236,238,247,.10);
-  --line-strong:rgba(236,238,247,.19);
-  /* --brand is the pin colour, exact. It carries white text at 7.5:1;
-     --brand-2 is the lighter tint that stays legible on the dark surfaces. */
-  --brand:#4420F8;
-  --brand-2:#8B72FF;
-  --brand-ink:#FFFFFF;
-  --brand-soft:rgba(68,32,248,.18);
+  /* The mark is gold on black, so the surfaces are a warm charcoal ramp
+     rather than a neutral grey — the whole interface sits in the same
+     family as the logo instead of merely carrying it. */
+  --bg:#0C0A07;
+  --bg-2:#080603;
+  --surface:#151109;
+  --surface-2:#1D1810;
+  --raise:#272117;
+  --ink:#F6F2E8;
+  --ink-2:#D8D0BE;
+  --muted:#978D79;
+  --line:rgba(246,242,232,.10);
+  --line-strong:rgba(246,242,232,.19);
+  /* --brand is the pin's body gold, sampled from the artwork. Gold is bright,
+     so buttons carry near-black text at 10.3:1; --brand-2 is the lighter tint
+     that stays legible as text on the dark surfaces. */
+  --brand:#EABB51;
+  --brand-2:#F3D07C;
+  --brand-ink:#14100A;
+  --brand-soft:rgba(234,187,81,.15);
   /* muted member of the brand family, for supporting text that repeats */
-  --brand-quiet:#9C97D1;
-  --gold:#D6A85C;
-  --ok:#39C48D;
-  --warn:#D6A85C;
-  --danger:#E86E8A;
+  --brand-quiet:#C4B48C;
+  --gold:#EABB51;
+  --ok:#4FC98D;
+  --warn:#E8924A;
+  --danger:#E8707F;
   --r-sm:10px;
   --r:14px;
   --r-lg:20px;
@@ -86,8 +88,8 @@ html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
   font-family:var(--sans);
   background:
-    radial-gradient(1100px 520px at 82% -12%, rgba(68,32,248,.16), transparent 62%),
-    radial-gradient(760px 420px at -6% 12%, rgba(68,32,248,.07), transparent 58%),
+    radial-gradient(1100px 520px at 82% -12%, rgba(234,187,81,.13), transparent 62%),
+    radial-gradient(760px 420px at -6% 12%, rgba(234,187,81,.06), transparent 58%),
     var(--bg);
   color:var(--ink);
   font-size:16px;
@@ -124,11 +126,11 @@ h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.15;font-weight:700}
 .btn-outline:hover{border-color:var(--ink);background:var(--surface)}
 .btn-quiet{background:var(--surface-2);color:var(--ink-2);border-color:transparent}
 .btn-quiet:hover{background:var(--surface-2)}
-.btn-danger{background:transparent;color:var(--danger);border-color:rgba(232,110,138,.42)}
-.btn-danger:hover{background:rgba(232,110,138,.12);border-color:var(--danger)}
+.btn-danger{background:transparent;color:var(--danger);border-color:rgba(232,112,127,.42)}
+.btn-danger:hover{background:rgba(232,112,127,.12);border-color:var(--danger)}
 .danger-zone{
-  margin-top:26px;padding:16px;border:1px solid rgba(232,110,138,.24);
-  border-radius:var(--r);background:rgba(232,110,138,.05);
+  margin-top:26px;padding:16px;border:1px solid rgba(232,112,127,.24);
+  border-radius:var(--r);background:rgba(232,112,127,.05);
 }
 .danger-zone b{display:block;font-size:.92rem;color:var(--ink);margin-bottom:3px}
 .danger-zone span{display:block;color:var(--muted);font-size:.82rem;line-height:1.55;margin-bottom:12px}
@@ -138,7 +140,7 @@ h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.15;font-weight:700}
 
 /* ---------- header ---------- */
 header{
-  border-bottom:1px solid var(--line);background:rgba(11,15,30,.88);
+  border-bottom:1px solid var(--line);background:rgba(12,10,7,.88);
   backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;
 }
 .masthead{display:flex;align-items:center;justify-content:space-between;padding-top:16px;padding-bottom:16px;gap:12px}
@@ -164,8 +166,8 @@ header{
 .ios-step p{font-size:.9rem;color:var(--ink-2);line-height:1.5}
 .header-link:hover{color:var(--ink)}
 .demo-note{
-  display:none;font-size:.78rem;font-weight:600;color:var(--warn);background:rgba(214,168,92,.10);
-  border-bottom:1px solid rgba(214,168,92,.22);padding:8px 20px;text-align:center;
+  display:none;font-size:.78rem;font-weight:600;color:var(--warn);background:rgba(232,146,74,.10);
+  border-bottom:1px solid rgba(232,146,74,.22);padding:8px 20px;text-align:center;
 }
 .demo-note.on{display:block}
 
@@ -187,9 +189,9 @@ header{
 .aurora{
   position:absolute;inset:-30% -10% auto -10%;height:150%;z-index:-1;
   background:
-    radial-gradient(34% 40% at 16% 30%, rgba(68,32,248,.16), transparent 72%),
-    radial-gradient(30% 34% at 84% 16%, rgba(139,114,255,.10), transparent 72%),
-    radial-gradient(44% 36% at 55% 98%, rgba(36,26,107,.20), transparent 74%);
+    radial-gradient(34% 40% at 16% 30%, rgba(234,187,81,.13), transparent 72%),
+    radial-gradient(30% 34% at 84% 16%, rgba(243,208,124,.09), transparent 72%),
+    radial-gradient(44% 36% at 55% 98%, rgba(90,66,20,.18), transparent 74%);
   filter:blur(38px);
   animation:drift 26s ease-in-out infinite alternate;
 }
@@ -211,7 +213,7 @@ header{
 }
 .landing h1 em{
   font-style:normal;
-  background:linear-gradient(100deg,var(--brand-2) 12%,#C6B8FF 88%);
+  background:linear-gradient(100deg,var(--brand-2) 12%,#FBEBC0 88%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .landing .sub{
@@ -311,8 +313,8 @@ header{
 .cta-arrow{flex:0 0 auto;opacity:.55}
 .cta.primary{
   position:relative;color:var(--brand-ink);
-  background:linear-gradient(168deg,#5B3BFF 0%,var(--brand) 52%,#3A17D8 100%);
-  box-shadow:0 1px 0 rgba(255,255,255,.20) inset, 0 14px 34px -6px rgba(68,32,248,.55),
+  background:linear-gradient(168deg,#F2CE79 0%,var(--brand) 52%,#D2A337 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,.20) inset, 0 14px 34px -6px rgba(234,187,81,.30),
              0 2px 8px rgba(0,0,0,.35);
 }
 .cta.primary::before{   /* hairline sheen along the top edge */
@@ -322,10 +324,10 @@ header{
 .cta.primary .cta-ico{background:rgba(255,255,255,.16);backdrop-filter:blur(2px)}
 .cta.primary .cta-arrow{opacity:.8}
 .cta.primary:hover{transform:translateY(-2px);box-shadow:0 1px 0 rgba(255,255,255,.24) inset,
-  0 20px 44px -8px rgba(68,32,248,.65), 0 3px 10px rgba(0,0,0,.4)}
+  0 20px 44px -8px rgba(234,187,81,.40), 0 3px 10px rgba(0,0,0,.4)}
 .cta.primary:hover .cta-arrow{transform:translateX(3px)}
 .cta.secondary{
-  background:linear-gradient(168deg,rgba(25,31,52,.9),rgba(18,23,41,.9));
+  background:linear-gradient(168deg,rgba(29,24,16,.9),rgba(21,17,9,.9));
   color:var(--ink);border-color:var(--line-strong);
   box-shadow:0 1px 0 rgba(255,255,255,.05) inset;
 }
@@ -344,12 +346,22 @@ header{
 
 /* ---------- worker banner ---------- */
 .banner{
-  background:linear-gradient(160deg,#241A6B,#141034);color:var(--ink);padding:clamp(44px,8vw,72px) 0;text-align:center;
+  background:linear-gradient(160deg,#2A2010,#151007);color:var(--ink);padding:clamp(44px,8vw,72px) 0;text-align:center;
   border-bottom:1px solid var(--line);
 }
 .banner h1{
   font-family:var(--serif);font-weight:600;letter-spacing:-.02em;
   font-size:clamp(1.9rem,6.2vw,3.15rem);text-wrap:balance;
+}
+.trial-badge{
+  display:inline-flex;align-items:center;gap:8px;margin-top:18px;
+  border:1px solid rgba(234,187,81,.42);background:rgba(234,187,81,.12);
+  color:var(--brand-2);border-radius:999px;padding:8px 16px;
+  font-size:.85rem;font-weight:700;letter-spacing:-.01em;
+}
+.trial-note{
+  margin-top:10px !important;font-size:.82rem !important;
+  color:var(--muted) !important;max-width:42ch;margin-left:auto;margin-right:auto;
 }
 .banner p{color:var(--ink-2);margin-top:14px;font-size:1rem}
 .banner .eyebrow{color:var(--brand-2);margin-bottom:16px}
@@ -373,9 +385,9 @@ header{
   transition:border-color .15s ease,box-shadow .15s ease;
 }
 .field input:focus,.field select:focus,.field textarea:focus{
-  border-color:var(--brand);box-shadow:0 0 0 3px rgba(68,32,248,.28);
+  border-color:var(--brand);box-shadow:0 0 0 3px rgba(234,187,81,.26);
 }
-.field input::placeholder,.field textarea::placeholder{color:#6C7391}
+.field input::placeholder,.field textarea::placeholder{color:#7B7360}
 .field input.locked{
   background:var(--surface-2);color:var(--muted);cursor:default;
   border-style:dashed;
@@ -442,7 +454,11 @@ header{
   width:100%;border:1px solid var(--line-strong);border-radius:var(--r-sm);
   padding:11px 13px;font-size:.92rem;outline:none;background:var(--surface);
 }
-.rate-row input:focus,.rate-row select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(68,32,248,.28)}
+.rate-row input:focus,.rate-row select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(234,187,81,.26)}
+.band{margin-top:9px;font-size:.79rem;color:var(--muted);line-height:1.5}
+.band b{color:var(--ink-2);font-weight:700;font-variant-numeric:tabular-nums}
+.band.over{color:var(--danger);font-weight:600}
+.rate-row input.bad{border-color:var(--danger)}
 .rupee{position:relative}
 .rupee input{padding-left:28px}
 .rupee span{
@@ -500,7 +516,7 @@ header{
 }
 .cam-oval::after{
   content:"";position:absolute;left:12%;top:8%;width:76%;height:76%;
-  border:2px dashed rgba(139,114,255,.8);border-radius:50%;
+  border:2px dashed rgba(243,208,124,.8);border-radius:50%;
 }
 .cam-tip{text-align:center;color:var(--muted);font-size:.84rem;margin-bottom:14px;line-height:1.5}
 
@@ -509,23 +525,42 @@ header{
   display:flex;align-items:flex-start;gap:11px;border-radius:var(--r);padding:14px 16px;margin-top:18px;
   border:1px solid var(--line);background:var(--surface-2);
 }
-.vstatus.pending{border-color:rgba(214,168,92,.35);background:rgba(214,168,92,.08)}
-.vstatus.done{border-color:rgba(57,196,141,.32);background:rgba(57,196,141,.08)}
-.vstatus.rejected{border-color:rgba(232,110,110,.35);background:rgba(232,110,110,.08)}
-.vstatus.rejected .dotmark{background:rgba(232,110,138,.2);color:var(--danger)}
+.vstatus.pending{border-color:rgba(232,146,74,.35);background:rgba(232,146,74,.08)}
+.vstatus.done{border-color:rgba(79,201,141,.32);background:rgba(79,201,141,.08)}
+.done-panel{text-align:center}
+.done-mark{
+  width:64px;height:64px;border-radius:50%;margin:4px auto 18px;display:grid;place-items:center;
+  background:rgba(79,201,141,.14);color:var(--ok);border:1px solid rgba(79,201,141,.3);
+  animation:pop .5s cubic-bezier(.22,1.4,.36,1) both;
+}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+.done-panel h2{font-size:1.5rem;letter-spacing:-.03em}
+.done-panel .sub{margin:8px auto 0;max-width:34ch;color:var(--ink-2)}
+.done-steps{text-align:left;margin:26px 0 22px;display:flex;flex-direction:column;gap:2px}
+.ds{display:flex;gap:14px;padding:15px 0}
+.ds+.ds{border-top:1px solid var(--line)}
+.dsn{
+  width:26px;height:26px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  border:1px solid var(--line-strong);background:var(--surface-2);
+  font-size:.76rem;font-weight:800;color:var(--brand-2);margin-top:1px;
+}
+.ds b{display:block;font-size:.95rem;margin-bottom:3px}
+.ds span{display:block;color:var(--muted);font-size:.84rem;line-height:1.55}
+.vstatus.rejected{border-color:rgba(232,110,110,.35);background:rgba(232,112,127,.08)}
+.vstatus.rejected .dotmark{background:rgba(232,112,127,.2);color:var(--danger)}
 .vstatus b{display:block;font-size:.92rem;margin-bottom:2px}
 .vstatus span{color:var(--muted);font-size:.81rem;line-height:1.5;display:block}
 .vstatus .dotmark{
   width:20px;height:20px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
   font-size:.68rem;font-weight:800;margin-top:2px;
 }
-.vstatus.pending .dotmark{background:rgba(214,168,92,.2);color:var(--warn)}
-.vstatus.done .dotmark{background:rgba(57,196,141,.2);color:var(--ok)}
+.vstatus.pending .dotmark{background:rgba(232,146,74,.2);color:var(--warn)}
+.vstatus.done .dotmark{background:rgba(79,201,141,.2);color:var(--ok)}
 .verified-badge{
   display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;
   color:var(--brand-2);background:var(--brand-soft);padding:2px 8px;border-radius:999px;
 }
-.verified-badge.warn{color:var(--warn);background:rgba(214,168,92,.13)}
+.verified-badge.warn{color:var(--warn);background:rgba(232,146,74,.13)}
 
 /* ---------- phone + OTP ---------- */
 .phone-input{display:flex;align-items:stretch}
@@ -547,7 +582,7 @@ header{
 .otp-foot .linkish{font-size:.85rem}
 .otp-foot .linkish:disabled{color:var(--muted);text-decoration:none;cursor:default}
 .otp-preview{
-  border:1px dashed rgba(214,168,92,.4);background:rgba(214,168,92,.08);color:var(--warn);
+  border:1px dashed rgba(232,146,74,.4);background:rgba(232,146,74,.08);color:var(--warn);
   border-radius:var(--r-sm);padding:12px 14px;margin-bottom:15px;font-size:.83rem;line-height:1.55;
 }
 .otp-preview b{display:block;font-size:1.25rem;letter-spacing:.3em;margin-top:5px;color:var(--ink)}
@@ -613,7 +648,7 @@ header{
   padding:13px 15px;font-weight:600;font-size:.9rem;color:var(--ink-2);
 }
 .loc-btn:hover{border-color:var(--brand);color:var(--brand)}
-.loc-btn.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:rgba(57,196,141,.08)}
+.loc-btn.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:rgba(79,201,141,.08)}
 
 /* ---------- hire: search ---------- */
 .search-head{padding:34px 0 4px}
@@ -625,10 +660,10 @@ header{
   padding:14px 18px;margin-top:20px;box-shadow:var(--shadow-sm);
   transition:border-color .15s,box-shadow .15s;
 }
-.searchbar:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(68,32,248,.26)}
+.searchbar:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(234,187,81,.24)}
 .searchbar svg{color:var(--muted);flex:0 0 auto}
 .searchbar input{border:none;outline:none;background:transparent;width:100%;font-size:1.02rem}
-.searchbar input::placeholder{color:#6C7391}
+.searchbar input::placeholder{color:#7B7360}
 .searchbar .clear{
   border:none;background:none;color:var(--muted);font-size:1rem;padding:2px 4px;display:none;
 }
@@ -778,7 +813,7 @@ header{
   text-decoration:underline;text-underline-offset:2px;padding:0;
 }
 .skeleton{
-  height:98px;border-radius:var(--r);background:linear-gradient(90deg,#121729,#1D2440,#121729);
+  height:98px;border-radius:var(--r);background:linear-gradient(90deg,#151109,#241E13,#151109);
   background-size:200% 100%;animation:sk 1.3s ease-in-out infinite;
 }
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -855,7 +890,7 @@ header{
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
 }
 .rating-box .t{font-size:.85rem;color:var(--muted);font-weight:600}
-.pick-stars{display:flex;gap:4px;font-size:1.35rem;color:#39406B;cursor:pointer;line-height:1}
+.pick-stars{display:flex;gap:4px;font-size:1.35rem;color:#3E3728;cursor:pointer;line-height:1}
 .pick-stars span:hover,.pick-stars span.lit{color:var(--gold)}
 
 /* ---------- toast + footer ---------- */
@@ -974,7 +1009,12 @@ footer a:hover{color:var(--brand)}
     <div class="wrap">
       <div class="eyebrow">For workers</div>
       <h1>Every Skill Deserves an Earning</h1>
-      <p>Create your free profile in two minutes and start receiving work near you.</p>
+      <p>Create your profile in two minutes and start receiving work near you.</p>
+      <span class="trial-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Start your 3 months free trial
+      </span>
+      <p class="trial-note">No card, no UPI, no payment details of any kind. We do not ask for them and there is nothing to cancel.</p>
     </div>
   </div>
   <div class="wrap-sm">
@@ -1024,8 +1064,8 @@ footer a:hover{color:var(--brand)}
           <label for="upPin">Create a 4-digit PIN</label>
           <input type="password" id="upPin" placeholder="You'll use this to sign in" maxlength="4" inputmode="numeric">
         </div>
-        <button class="btn btn-brand btn-block" id="signUpBtn" onclick="signUp()">Send verification code</button>
-        <p class="hint" style="margin-top:12px">Free to join. No commission on your earnings.</p>
+        <button class="btn btn-brand btn-block" id="signUpBtn" onclick="signUp()">Start my 3 months free trial</button>
+        <p class="hint" style="margin-top:12px">Free for 3 months, then we will tell you the price before anything changes. No commission on your earnings, ever.</p>
       </div>
     </div>
   </div>
@@ -1075,6 +1115,29 @@ footer a:hover{color:var(--brand)}
           <button class="linkish" onclick="go('work')">Change number</button>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= WORKER: SUBMITTED ============================= -->
+<section class="screen" id="scr-done">
+  <div class="wrap-sm">
+    <div class="panel done-panel">
+      <div class="done-mark" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5.2 5.2L20 7"/></svg>
+      </div>
+      <h2>Congratulations!</h2>
+      <p class="sub">You have submitted your registration request. Please wait for the approval.</p>
+
+      <div class="done-steps">
+        <div class="ds"><span class="dsn">1</span><div><b>We check your profile</b><span>A person from our team looks at your photo, your details and your WhatsApp code. Usually within a day.</span></div></div>
+        <div class="ds"><span class="dsn">2</span><div><b>You go live</b><span>Once approved, customers near you start seeing you in search straight away.</span></div></div>
+        <div class="ds"><span class="dsn">3</span><div><b>Your free trial begins</b><span>3 months free from the day you are approved. No payment details needed, nothing to cancel.</span></div></div>
+      </div>
+
+      <p class="hint" id="donePhone"></p>
+      <button class="btn btn-brand btn-block" style="padding:14px" onclick="go('me')">View my profile</button>
+      <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="go('home')">Back to home</button>
     </div>
   </div>
 </section>
@@ -1149,7 +1212,7 @@ footer a:hover{color:var(--brand)}
     </div>
 
     <button class="btn btn-brand btn-block" id="regSaveBtn" onclick="saveProfile()" style="padding:14px;margin-top:6px">Publish my profile</button>
-    <p class="hint" style="margin-top:12px">By publishing, you agree that your name, photo, services, rates, area and WhatsApp number are shown to customers,
+    <p class="hint" style="margin-top:12px">Your 3 months free trial starts the day we approve your profile. By publishing, you agree that your name, photo, services, rates, area and WhatsApp number are shown to customers,
       and you accept our <a href="terms/" target="_blank" rel="noopener">terms of use</a> and
       <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>. You can delete your profile at any time.</p>
   </div>
@@ -1372,6 +1435,169 @@ function areaOptions(selected){
 }
 const WSTORE = "nearse_workers_v1";
 const SSTORE = "nearse_session_v1";
+/* What each trade actually charges in Guwahati. Workers still set their own
+   rate — this only stops the nonsense listings that make a marketplace
+   untrustworthy, the same way OLX will not let you list a phone for a rupee.
+   The database enforces the same numbers, so the limit cannot be bypassed. */
+const RATE_BAND = {
+  "Housemaid (Daily)":[2000,12000],
+  "Part-time Maid":[1500,10000],
+  "Deep House Cleaning":[800,6000],
+  "Bathroom Cleaning":[200,4000],
+  "Kitchen Deep Cleaning":[200,4000],
+  "Sofa & Carpet Cleaning":[200,4000],
+  "Water Tank Cleaning":[200,4000],
+  "Window & Glass Cleaning":[200,4000],
+  "Pest Control":[200,4000],
+  "Laundry & Ironing":[1500,20000],
+  "Home Cook (Daily Meals)":[2500,18000],
+  "Party Cook":[300,3000],
+  "Assamese Cuisine Cook":[300,3000],
+  "Tiffin Service":[2500,30000],
+  "Event Catering":[50,2000],
+  "Halwai (Sweets & Snacks)":[300,3000],
+  "Home Baker (Cakes)":[200,25000],
+  "Serving Staff / Waiter":[300,3000],
+  "Babysitter":[4000,20000],
+  "Nanny (Full-time)":[4000,45000],
+  "Newborn & Mother Care":[4000,45000],
+  "Elderly Caretaker":[6000,30000],
+  "Patient Attendant":[400,3000],
+  "Home Nurse":[400,3000],
+  "Physiotherapist (Home Visit)":[200,4000],
+  "Electrician":[200,1500],
+  "Plumber":[200,1500],
+  "AC Service & Repair":[300,2500],
+  "AC Installation":[200,15000],
+  "Refrigerator Repair":[250,2500],
+  "Washing Machine Repair":[250,2500],
+  "Microwave & Oven Repair":[150,2500],
+  "Geyser Repair":[150,2500],
+  "Water Purifier Service":[150,2500],
+  "Chimney Cleaning & Repair":[150,2500],
+  "Gas Stove Repair":[150,2500],
+  "Inverter & Battery Service":[150,2500],
+  "TV Installation & Repair":[150,2500],
+  "Mobile Phone Repair":[200,15000],
+  "Laptop & Computer Repair":[200,15000],
+  "CCTV Installation":[200,15000],
+  "Wi-Fi & Network Setup":[150,2500],
+  "Water Pump Repair":[150,2500],
+  "Solar Panel Installation":[200,15000],
+  "Mason (Raj Mistri)":[400,2500],
+  "Carpenter":[400,2500],
+  "House Painter":[5,250],
+  "Tile & Marble Fitter":[500,2500],
+  "Waterproofing Specialist":[5,250],
+  "POP & False Ceiling Worker":[5,250],
+  "Welder & Fabricator":[400,2500],
+  "Grill & Gate Fitting":[200,25000],
+  "Aluminium & Glass Fitter":[200,25000],
+  "Modular Kitchen Fitter":[200,25000],
+  "Furniture Assembly":[200,25000],
+  "Civil Contractor":[3000,300000],
+  "Interior Designer":[3000,300000],
+  "Daily Wage Helper":[400,2500],
+  "Personal Driver (Monthly)":[8000,25000],
+  "Driver (Per Day)":[300,3000],
+  "Outstation Driver":[300,3000],
+  "Car Mechanic (Home Visit)":[150,3000],
+  "Two-Wheeler Mechanic":[150,3000],
+  "Car AC Repair":[200,25000],
+  "Car Washing (At Home)":[6000,40000],
+  "Doorstep Puncture Repair":[200,25000],
+  "Battery Jump-start & Replacement":[150,3000],
+  "Car Denting & Painting":[200,25000],
+  "Driving Instructor":[6000,40000],
+  "Beautician (At Home)":[300,3000],
+  "Bridal Makeup Artist":[3000,40000],
+  "Party Makeup Artist":[500,40000],
+  "Hair Stylist (At Home)":[200,5000],
+  "Barber (At Home)":[200,5000],
+  "Mehendi Artist":[500,40000],
+  "Nail Artist":[200,5000],
+  "Massage Therapist":[200,4000],
+  "Yoga Trainer":[1500,45000],
+  "Fitness Trainer (At Home)":[1500,45000],
+  "Dietician & Nutritionist":[200,4000],
+  "Home Tutor (Class 1\u20135)":[1000,25000],
+  "Home Tutor (Class 6\u201310)":[1000,25000],
+  "Tutor \u2014 Science (11\u201312)":[1000,25000],
+  "Tutor \u2014 Commerce (11\u201312)":[1000,25000],
+  "Tutor \u2014 Mathematics":[1000,25000],
+  "Spoken English Trainer":[1000,25000],
+  "Competitive Exam Coach":[1000,25000],
+  "Computer Basics Trainer":[1000,25000],
+  "Coding Teacher (Kids)":[1000,25000],
+  "Guitar Teacher":[1000,25000],
+  "Keyboard & Piano Teacher":[1000,25000],
+  "Vocal & Singing Teacher":[1000,25000],
+  "Tabla & Drums Teacher":[1000,25000],
+  "Classical Dance Teacher":[1000,25000],
+  "Western Dance Teacher":[1000,25000],
+  "Art & Drawing Teacher":[1000,25000],
+  "Religious Studies Teacher":[1000,25000],
+  "Cricket / Football Coach":[1000,25000],
+  "Swimming Coach":[1000,25000],
+  "Event Photographer":[2500,40000],
+  "Wedding Photographer":[1500,40000],
+  "Videographer":[3000,50000],
+  "Drone Operator":[1500,40000],
+  "DJ & Sound System":[1500,40000],
+  "Anchor / Emcee":[1500,40000],
+  "Event Decorator":[1000,80000],
+  "Birthday & Balloon Decorator":[1000,80000],
+  "Tent & Furniture Setup":[1000,80000],
+  "Wedding Planner":[3000,300000],
+  "Priest / Pandit":[1000,80000],
+  "Maulvi (Religious Ceremony)":[1000,80000],
+  "Live Singer / Band":[1500,40000],
+  "Accountant / Bookkeeper":[1500,45000],
+  "GST & Tax Consultant":[300,50000],
+  "Chartered Accountant":[300,50000],
+  "Advocate / Lawyer":[200,4000],
+  "Document & Affidavit Agent":[300,50000],
+  "Insurance Advisor":[200,4000],
+  "Property Agent":[300,50000],
+  "Architect":[3000,300000],
+  "Civil Engineer (Consultation)":[150,2500],
+  "Vastu Consultant":[150,2500],
+  "Web Developer":[3000,300000],
+  "Mobile App Developer":[3000,300000],
+  "Graphic Designer":[500,60000],
+  "Logo & Branding Designer":[500,60000],
+  "Video Editor":[500,60000],
+  "Social Media Manager":[1500,45000],
+  "Digital Marketing Specialist":[1500,45000],
+  "Content Writer":[500,60000],
+  "Data Entry Operator":[1500,45000],
+  "Gardener (Regular)":[1500,15000],
+  "Garden Setup & Landscaping":[3000,300000],
+  "Lawn Mowing":[200,3000],
+  "Tree Cutting & Pruning":[200,25000],
+  "Pet Groomer":[150,2500],
+  "Dog Trainer":[1500,15000],
+  "Pet Sitter":[300,3000],
+  "Dog Walker":[1500,15000],
+  "Veterinary Doctor (Home Visit)":[150,2500],
+  "Ladies Tailor":[30,3000],
+  "Gents Tailor":[30,3000],
+  "Blouse & Boutique Stitching":[30,3000],
+  "Embroidery Work":[30,3000],
+  "Curtain & Sofa Cover Stitching":[30,3000],
+  "Cobbler (Shoe Repair)":[30,3000],
+  "Packers & Movers":[1500,30000],
+  "Loading & Unloading Helper":[300,3000],
+  "Goods Transport (Tempo)":[300,8000],
+  "Local Courier & Delivery":[300,8000],
+  "Grocery & Errand Helper":[300,3000],
+  "Security Guard":[8000,25000],
+  "Office Assistant":[6000,30000],
+  "Office Housekeeping Staff":[6000,30000],
+  "Building Caretaker":[6000,30000],
+};
+const money0 = n => "₹" + Number(n).toLocaleString("en-IN");
+
 const UNITS  = ["per hour","per visit","per day","per week","per month","per job","per project","per piece","per session","per trip","per sq ft","per plate"];
 
 /* ---------- service catalogue: only work that can actually be booked ------
@@ -2047,12 +2273,40 @@ function renderPicked(){
         <button onclick="toggleSkill('${jsq(name)}')">Remove</button>
       </div>
       <div class="rate-row">
-        <label class="rupee"><span>₹</span><input class="sd-price" type="number" min="1" inputmode="numeric" placeholder="Your rate" value="${known.price ?? ""}"></label>
+        <label class="rupee"><span>₹</span><input class="sd-price" type="number" min="1" inputmode="numeric"
+          placeholder="Your rate" value="${known.price ? known.price : ""}" oninput="checkRate(this)"></label>
         <select class="sd-unit">${units.map(u=>`<option${u===unit?" selected":""}>${u}</option>`).join("")}</select>
         <input class="sd-exp exp" type="text" placeholder="Experience — e.g. 5 years" value="${esc(known.exp||"")}">
       </div>
+      ${RATE_BAND[name] ? `<p class="band">Usual range in Guwahati: <b>${money0(RATE_BAND[name][0])} – ${money0(RATE_BAND[name][1])}</b> ${esc(unit)}</p>` : ""}
     </div>`;
   }).join("");
+  host.querySelectorAll(".sd-price").forEach(checkRate);
+}
+
+/* live feedback while typing, so nobody meets the limit only on submit */
+function checkRate(input){
+  const card = input.closest(".picked-card");
+  const band = RATE_BAND[card.dataset.skill];
+  const note = card.querySelector(".band");
+  if(!band || !note) return;
+  const v = +input.value;
+  const bad = input.value !== "" && (v < band[0] || v > band[1]);
+  note.classList.toggle("over", bad);
+  input.classList.toggle("bad", bad);
+  note.textContent = bad
+    ? (v < band[0] ? `Too low — the lowest allowed is ${money0(band[0])}`
+                   : `Too high — the highest allowed is ${money0(band[1])}`)
+    : `Usual range in Guwahati: ${money0(band[0])} – ${money0(band[1])}`;
+}
+function rateOutOfBand(skills){
+  for(const s of skills){
+    const b = RATE_BAND[s.skill];
+    if(!b) continue;
+    if(s.price < b[0]) return `${s.skill}: the lowest allowed rate is ${money0(b[0])} ${s.unit}`;
+    if(s.price > b[1]) return `${s.skill}: the highest allowed rate is ${money0(b[1])} ${s.unit}`;
+  }
+  return null;
 }
 function collectSkills(){
   return [...document.querySelectorAll(".picked-card")].map(d=>({
@@ -2230,10 +2484,13 @@ async function saveProfile(){
   if(!skills.length){ toast("Choose at least one service"); return; }
   const missing = skills.find(s => !s.price || s.price < 1);
   if(missing){ toast("Set your rate for " + missing.skill); return; }
+  const badRate = rateOutOfBand(skills);
+  if(badRate){ toast(badRate); return; }
   if(!selfieData){ toast("Please take your verification photo"); return; }
   const area = $("regArea").value.trim();
   if(!area){ toast("Please choose your area in Guwahati"); return; }
 
+  const firstTime = !session.registered;
   const btn = $("regSaveBtn"); const label = btn.textContent;
   btn.disabled = true; btn.textContent = "Saving…";
 
@@ -2268,8 +2525,13 @@ async function saveProfile(){
     session.registered = true;
     session.worker = {...(session.worker||{}), ...w, ...data, phone:session.phone};
     saveSession();
-    toast(w && statusOf(w) === "approved" ? "Your profile is live" : "Submitted — our team reviews it shortly");
-    go("me");
+    if(firstTime && statusOf(w || {}) !== "approved"){
+      $("donePhone").textContent = "We will message you on +91 " + session.phone + " when it is done.";
+      go("done");
+    }else{
+      toast(statusOf(w || {}) === "approved" ? "Your profile is live" : "Saved — our team reviews it shortly");
+      go("me");
+    }
   }catch(e){ toast(e.message); }
   btn.disabled = false; btn.textContent = label;
 }
