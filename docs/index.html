@@ -13,19 +13,19 @@
 <meta property="og:title" content="Nearse — Trusted local workers, booked directly">
 <meta property="og:description" content="Verified local workers near you. Nearest first, community rated, prices set by the workers.">
 <meta property="og:url" content="https://nearse.in/">
-<meta property="og:image" content="https://nearse.in/icons/icon-512.png">
+<meta property="og:image" content="https://nearse.in/icons/icon-512.png?v=2">
 <meta property="og:image:alt" content="Nearse logo — a worker inside a location pin">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://nearse.in/icons/icon-512.png">
+<meta name="twitter:image" content="https://nearse.in/icons/icon-512.png?v=2">
 <meta name="theme-color" content="#0C0A07">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Nearse">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=2">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
@@ -926,7 +926,7 @@ footer a:hover{color:var(--brand)}
 <header>
   <div class="wrap masthead">
     <a class="brand" href="#" onclick="go('home');return false" aria-label="Nearse home">
-      <img class="mark" src="icons/logo.png" alt="" width="26" height="33"><span class="name">Nearse</span>
+      <img class="mark" src="icons/logo.png?v=2" alt="" width="26" height="33"><span class="name">Nearse</span>
     </a>
     <div style="display:flex;align-items:center;gap:14px">
       <button class="install-btn" id="installBtn" onclick="installApp()" hidden>
@@ -1897,7 +1897,7 @@ function demoSeed(){
   const base = {lat:26.1445, lng:91.7362};
   const mk = (name, area, skills, dLat, dLng, rs, rc) => ({
     id:"d"+name.replace(/\s/g,""), created_at:new Date().toISOString(),
-    name, phone:"7086269537", pin:"0000", city:"Guwahati", area, about:"",
+    name, phone:"7086599367", pin:"0000", city:"Guwahati", area, about:"",
     selfie:null, lat:base.lat+dLat, lng:base.lng+dLng, skills, available:true,
     status:"approved", verified:true, phone_verified:true, rating_sum:rs, rating_count:rc
   });
@@ -2017,7 +2017,7 @@ async function sbAuth(path, body){
   return data;
 }
 
-const NEARSE_WA = "917086269537";   /* the Nearse business WhatsApp number */
+const NEARSE_WA = "917086599367";   /* the Nearse business WhatsApp number */
 
 function initOtp(){
   if(!session || !session.phone){ go("work"); return; }

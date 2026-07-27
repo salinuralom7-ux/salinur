@@ -282,7 +282,7 @@ begin
   end if;
 
   select require_phone_otp into need_otp from nearse_config where id = 1;
-  -- Supabase puts the verified number in the JWT as E.164 digits, e.g. 917086269537.
+  -- Supabase puts the verified number in the JWT as E.164 digits, e.g. 917086599367.
   -- Keep the last 10 digits so it lines up with what the form collects.
   jwt_phone := regexp_replace(
     coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''),
