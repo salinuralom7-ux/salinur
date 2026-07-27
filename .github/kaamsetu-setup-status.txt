@@ -1,10 +1,13 @@
-run: 2026-07-27T15:32:41Z
+run: 2026-07-27T15:41:13Z
 secret: present (44 chars)
 list projects: HTTP 200
 project: mpufunsitqtdkqlibxof
 run SQL: HTTP 201
 verify workers table: HTTP 201 — [{"n":3}]
 verify migration: HTTP 201 — [{"new_worker_cols":3,"new_functions":2,"email_leaked_to_public":0,"require_phone_otp":false,"approved_now":2,"private_cols":2,"wa_fn":1,"wa_code_leaked":0,"delete_fn":1,"coarse_loc_trigger":1,"precise_coords_left":0,"selfie_bucket":1,"selfie_size_cap":400000,"selfie_policies":2,"photos_still_in_db":1,"search_fn":1,"browse_index":1,"search_page_rows":1,"approved_and_available":2,"cities_hex":"476f7373616967616f6e | 4775776168617469","thumb_col":1,"photo_cols":2,"rate_bands":155,"carpenter_band":"400-2500","band_fn":1,"live_rates_out_of_band":1}]
+verify hardening: HTTP 201 — [{"admin_pin_still_published_change_it":true,"cars_pin_still_published_change_it":true,"workers_policy_approved_only":1,"workers_policy_wide_open":0,"anon_can_read_phone":false,"anon_can_read_name":true,"consent_cols":3,"new_tables":3,"new_functions":6,"old_unlimited_rate_fn":0,"search_still_returns_phone":0,"open_reports":0}]
+WARNING: the admin PIN is still the one published in this repo. See DEPLOY.md, Job 0.
+WARNING: the Budget Cars owner PIN is still the published one. See DEPLOY.md, Job 0.
 upload photo as anon: HTTP 200
 read it back publicly: HTTP 200 — byte-identical: yes
 non-image upload refused (want 4xx): HTTP 400
