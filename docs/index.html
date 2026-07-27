@@ -200,6 +200,33 @@ header{
   50% {transform:translate3d(-2.5%,1.5%,0) scale(1.06)}
   100%{transform:translate3d(2%,-2%,0) scale(1.02)}
 }
+/* Embers: a few soft gold motes drifting up behind the headline. Continuous
+   but slow — 20 to 34 seconds each, so it reads as atmosphere rather than
+   something demanding attention. They are the only thing in the hero that
+   moves the whole time. */
+.motes{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.motes span{
+  position:absolute;bottom:-10%;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,240,200,.95),rgba(234,187,81,.35) 42%,rgba(234,187,81,0) 70%);
+  filter:blur(1px);opacity:0;
+  animation:ember linear infinite;
+}
+@keyframes ember{
+  /* the rise is in vh, not %: a percentage in a transform is a share of the
+     element's own size, so a 16px mote would travel 18px and never leave the
+     bottom edge */
+  0%  {transform:translate3d(0,0,0) scale(.6);opacity:0}
+  14% {opacity:.62}
+  70% {opacity:.36}
+  100%{transform:translate3d(var(--dx),-108vh,0) scale(1.2);opacity:0}
+}
+.motes span:nth-child(1){left:9%; width:16px;height:16px;--dx:22px;  animation-duration:26s; animation-delay:-3s}
+.motes span:nth-child(2){left:24%;width:11px;height:11px;--dx:-16px; animation-duration:34s; animation-delay:-14s}
+.motes span:nth-child(3){left:47%;width:20px;height:20px;--dx:14px;  animation-duration:22s; animation-delay:-8s}
+.motes span:nth-child(4){left:68%;width:13px;height:13px;--dx:-24px; animation-duration:30s; animation-delay:-20s}
+.motes span:nth-child(5){left:83%;width:24px;height:24px;--dx:18px;  animation-duration:24s; animation-delay:-11s}
+.motes span:nth-child(6){left:57%;width:10px;height:10px;--dx:-12px; animation-duration:36s; animation-delay:-27s}
+
 /* grain: the single detail that stops a flat dark page looking unfinished */
 .hero::after{
   content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.045;
@@ -207,14 +234,42 @@ header{
 }
 .landing{padding:clamp(52px,10vw,96px) 0 clamp(44px,7vw,68px);text-align:center}
 .landing h1{
+  position:relative;
   font-family:var(--serif);font-weight:600;
   font-size:clamp(2.05rem,5.4vw,3.35rem);letter-spacing:-.035em;line-height:1.08;
   text-wrap:balance;margin-top:20px;
 }
+/* A warm halo sitting behind the words, breathing slowly. It is what stops
+   the headline reading as text pasted onto a flat dark rectangle. */
+.landing h1::before{
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  left:50%;top:50%;width:min(150%,880px);aspect-ratio:2.1/1;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(50% 50% at 50% 50%,
+    rgba(234,187,81,.20), rgba(234,187,81,.07) 46%, transparent 72%);
+  filter:blur(26px);
+  animation:halo 11s ease-in-out infinite;
+}
+@keyframes halo{
+  0%,100%{transform:translate(-50%,-50%) scale(1);   opacity:.72}
+  50%    {transform:translate(-52%,-49%) scale(1.13); opacity:1}
+}
+/* The gold line catches the light every few seconds, the way gold leaf does
+   when you move past it. Long hold, quick sweep — a constant shimmer would
+   read as a broken loading state. */
 .landing h1 em{
   font-style:normal;
-  background:linear-gradient(100deg,var(--brand-2) 12%,#FBEBC0 88%);
+  background:linear-gradient(100deg,
+    var(--brand-2) 0%, var(--brand-2) 30%,
+    #FFF4D4 44%, #FFFDF6 50%, #FFF4D4 56%,
+    var(--brand-2) 70%, var(--brand-2) 100%);
+  background-size:300% 100%;
   -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:sheen 8s cubic-bezier(.5,0,.4,1) infinite;
+}
+@keyframes sheen{
+  0%,30%  {background-position:118% 0}
+  72%,100%{background-position:-18% 0}
 }
 .landing .sub{
   color:var(--ink-2);margin:18px auto 0;font-size:1.01rem;line-height:1.65;
@@ -1010,6 +1065,14 @@ footer a:hover{color:var(--brand)}
   .reveal{opacity:1 !important;transform:none !important}
   .ticker-row{animation:none !important}
   .aurora{animation:none !important}
+  /* the headline keeps its gold, it just stops moving */
+  .landing h1::before{animation:none !important;opacity:.85}
+  .motes{display:none}
+  .landing h1 em{
+    animation:none !important;
+    background:linear-gradient(100deg,var(--brand-2) 12%,#FBEBC0 88%);
+    -webkit-background-clip:text;background-clip:text;
+  }
 }
 </style>
 </head>
@@ -1036,6 +1099,7 @@ footer a:hover{color:var(--brand)}
 <section class="screen on" id="scr-home">
   <div class="hero">
     <div class="aurora" aria-hidden="true"></div>
+    <div class="motes" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="wrap landing">
       <span class="city-pill reveal" data-r="1">
         <span class="pulse" aria-hidden="true"></span>
