@@ -38,7 +38,7 @@ That's it. The site now loads cars from Supabase, and owner mode adds/deletes th
 
 - **Car listings** with photo, year, km driven, fuel, transmission, owners, insurance, location, price and description
 - **Search, fuel filter and price sorting** for customers
-- **Book Now** on every car — customer picks a token amount between **₹10,000 and ₹1,00,000** with a slider; the booking is sent to your WhatsApp (70862 69537) with all details
+- **Book Now** on every car — customer picks a token amount between **₹10,000 and ₹1,00,000** with a slider; the booking is sent to your WhatsApp (70865 99367) with all details
 - **Owner mode** (tap 🔐 Owner, enter your PIN) to **add cars** (with photo upload) and **delete cars** — changes go live for everyone instantly
 - Contact section with call button, WhatsApp button and Instagram link (@budgetcars.insta)
 
