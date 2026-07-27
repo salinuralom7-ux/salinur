@@ -1,12 +1,20 @@
 -- ============================================================
--- KAAMSETU — Supabase setup (runs in the same project as Budget Cars)
+-- NEARSE — Supabase setup (runs in the same project as Budget Cars)
 --
--- Security model:
---   * Anyone can READ workers (that's the marketplace).
---   * Sign-up / sign-in / profile edits go through functions that
---     verify the worker's PIN on the server (bcrypt-hashed, stored
---     in a table no visitor can read).
---   * Bookings are insert-only for visitors (nobody can read them).
+-- This file is applied whole on every deploy, so every statement in it has
+-- to be safe to run again. Later sections deliberately replace earlier ones;
+-- read it top to bottom and the last definition of anything wins.
+--
+-- Security model (as it stands after Migration 10):
+--   * Anyone can read APPROVED profiles — that is the marketplace. Pending
+--     and rejected ones are not public.
+--   * The WhatsApp number is not readable in bulk. It is handed out one
+--     worker at a time by request_worker_contact, which records the request.
+--   * Sign-up / sign-in / profile edits go through functions that verify the
+--     worker's PIN on the server (bcrypt-hashed, in a table with no policies).
+--   * Bookings are insert-only for visitors, and nobody can read them back.
+--   * Admin actions need a PIN checked on the server. The PIN committed to
+--     this repository is refused; see Migration 10.1.
 -- ============================================================
 
 create extension if not exists pgcrypto;
@@ -142,10 +150,14 @@ $$;
 -- against the hash.
 -- ============================================================
 alter table public.owner_settings add column if not exists pin_hash text;
+-- Seed a hash only if there is none. This used to assign the hash
+-- unconditionally, and because CI re-runs this whole file on every push, any
+-- PIN the owner set by hand was silently reset to the committed one on the
+-- next deploy. Migration 10 disables the committed hash outright.
 update public.owner_settings
   set pin_hash = '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea',
       pin = ''
-  where id = 1;
+  where id = 1 and coalesce(pin_hash, '') = '';
 
 create or replace function public.check_pin(p_pin text)
 returns boolean
@@ -182,9 +194,11 @@ create table if not exists public.nearse_admin (
 );
 alter table public.nearse_admin enable row level security;
 
+-- Same story as the owner PIN above: `do update` here meant every CI run put
+-- the committed hash back, so rotating the admin PIN never stuck.
 insert into public.nearse_admin (id, pin_hash)
 values (1, '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1MvfFFRq56oyGoPkG')
-on conflict (id) do update set pin_hash = excluded.pin_hash;
+on conflict (id) do nothing;
 
 create or replace function public.admin_check(p_pin text)
 returns boolean
@@ -921,7 +935,7 @@ create policy "rates are public" on public.service_rates for select using (true)
 insert into public.service_rates (skill, min_price, max_price) values
   ($q$Housemaid (Daily)$q$,2000,12000),
   ($q$Part-time Maid$q$,1500,10000),
-  ($q$Deep House Cleaning$q$,800,6000),
+  ($q$Deep House Cleaning$q$,400,6000),
   ($q$Bathroom Cleaning$q$,200,4000),
   ($q$Kitchen Deep Cleaning$q$,200,4000),
   ($q$Sofa & Carpet Cleaning$q$,200,4000),
@@ -966,7 +980,7 @@ insert into public.service_rates (skill, min_price, max_price) values
   ($q$Mason (Raj Mistri)$q$,400,2500),
   ($q$Carpenter$q$,400,2500),
   ($q$House Painter$q$,5,250),
-  ($q$Tile & Marble Fitter$q$,500,2500),
+  ($q$Tile & Marble Fitter$q$,5,250),
   ($q$Waterproofing Specialist$q$,5,250),
   ($q$POP & False Ceiling Worker$q$,5,250),
   ($q$Welder & Fabricator$q$,400,2500),
@@ -977,17 +991,17 @@ insert into public.service_rates (skill, min_price, max_price) values
   ($q$Civil Contractor$q$,3000,300000),
   ($q$Interior Designer$q$,3000,300000),
   ($q$Daily Wage Helper$q$,400,2500),
-  ($q$Personal Driver (Monthly)$q$,8000,25000),
+  ($q$Personal Driver (Monthly)$q$,6000,30000),
   ($q$Driver (Per Day)$q$,300,3000),
   ($q$Outstation Driver$q$,300,3000),
   ($q$Car Mechanic (Home Visit)$q$,150,3000),
   ($q$Two-Wheeler Mechanic$q$,150,3000),
   ($q$Car AC Repair$q$,200,25000),
-  ($q$Car Washing (At Home)$q$,6000,40000),
+  ($q$Car Washing (At Home)$q$,300,4000),
   ($q$Doorstep Puncture Repair$q$,200,25000),
   ($q$Battery Jump-start & Replacement$q$,150,3000),
   ($q$Car Denting & Painting$q$,200,25000),
-  ($q$Driving Instructor$q$,6000,40000),
+  ($q$Driving Instructor$q$,2000,15000),
   ($q$Beautician (At Home)$q$,300,3000),
   ($q$Bridal Makeup Artist$q$,3000,40000),
   ($q$Party Makeup Artist$q$,500,40000),
@@ -1034,7 +1048,7 @@ insert into public.service_rates (skill, min_price, max_price) values
   ($q$Accountant / Bookkeeper$q$,1500,45000),
   ($q$GST & Tax Consultant$q$,300,50000),
   ($q$Chartered Accountant$q$,300,50000),
-  ($q$Advocate / Lawyer$q$,200,4000),
+  ($q$Advocate / Lawyer$q$,300,25000),
   ($q$Document & Affidavit Agent$q$,300,50000),
   ($q$Insurance Advisor$q$,200,4000),
   ($q$Property Agent$q$,300,50000),
@@ -1174,5 +1188,512 @@ begin
     review_note = case when is_edit and status = 'rejected' then null else review_note end
   where id = wid;
   return query select * from workers where id = wid;
+end;
+$$;
+
+-- ============================================================
+-- MIGRATION 10 — pre-launch hardening
+--
+-- Found while auditing the whole app for launch. In order of severity:
+--
+--   1. The admin PIN was public. Its bcrypt hash is committed in this file,
+--      the repository is public, and the same PIN was shipped verbatim in
+--      index.html as DEMO_ADMIN_PIN. Cost factor 6 means a four-character
+--      guess space falls in seconds anyway. Anyone could approve profiles,
+--      unpublish every worker, and read the WhatsApp verification codes.
+--   2. Every profile was world-readable, including pending and rejected
+--      ones, and a single request returned every worker's WhatsApp number.
+--   3. Ratings were unlimited and anonymous, so one person could bury a
+--      competitor from a loop.
+--   4. An approved worker could swap their photo and name and stay live,
+--      which defeats the point of reviewing photos at all.
+--   5. Deleting a profile left the photo in Storage for good, while the
+--      privacy policy promised erasure.
+--   6. The retention periods in the privacy policy had nothing enforcing
+--      them.
+-- ============================================================
+
+-- ---------- 10.1 the published PINs are refused ----------
+-- The hashes below are the ones committed to this repository. They cannot be
+-- un-published, so they are rejected outright rather than merely discouraged.
+-- To set a real one, in Supabase → SQL editor:
+--   update nearse_admin  set pin_hash = crypt('your new pin', gen_salt('bf', 12)) where id = 1;
+--   update owner_settings set pin_hash = crypt('your new pin', gen_salt('bf', 12)) where id = 1;
+create or replace function public.pin_is_published(p_hash text)
+returns boolean
+language sql immutable set search_path = public as $$
+  select p_hash in (
+    '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1MvfFFRq56oyGoPkG',  -- Nearse admin
+    '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea'   -- Budget Cars owner
+  );
+$$;
+
+create or replace function public.admin_check(p_pin text)
+returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare h text;
+begin
+  select pin_hash into h from nearse_admin where id = 1;
+  if h is null then
+    raise exception 'No admin PIN is set.';
+  end if;
+  if public.pin_is_published(h) then
+    raise exception 'This admin PIN is published in the public repository and has been disabled. Set a new one in Supabase, SQL editor: update nearse_admin set pin_hash = crypt(''your new pin'', gen_salt(''bf'', 12)) where id = 1;';
+  end if;
+  return h = crypt(p_pin, h);
+end;
+$$;
+
+create or replace function public.check_pin(p_pin text)
+returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare h text;
+begin
+  select pin_hash into h from owner_settings where id = 1;
+  if h is null or public.pin_is_published(h) then
+    return false;
+  end if;
+  return h = crypt(p_pin, h);
+end;
+$$;
+
+-- ---------- 10.2 only approved profiles are public ----------
+-- `using (true)` published pending and rejected profiles too: a rejected
+-- applicant's photo, locality and number stayed readable by anyone who asked
+-- the REST API for them.
+drop policy if exists "public can view workers" on public.workers;
+drop policy if exists "public can view approved workers" on public.workers;
+create policy "public can view approved workers"
+  on public.workers for select using (status = 'approved');
+
+-- ---------- 10.3 the phone column is no longer bulk-readable ----------
+-- One request returned every WhatsApp number on the platform — a ready-made
+-- calling list, and exactly the kind of thing the DPDP Act's "reasonable
+-- security safeguards" is about. A table-level grant makes a column-level
+-- revoke a no-op, so the grant is replaced with an explicit column list.
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke select on public.workers from %I', r);
+      execute format(
+        'grant select (id, created_at, name, selfie, thumb, city, area, about, lat, lng,
+                       skills, available, rating_sum, rating_count, status, verified,
+                       phone_verified) on public.workers to %I', r);
+    end if;
+  end loop;
+end $$;
+
+-- Sign-up needs to know whether a number is taken without being able to read
+-- the column back.
+create or replace function public.phone_taken(p_phone text)
+returns boolean
+language sql security definer set search_path = public, extensions as $$
+  select exists (select 1 from workers where phone = p_phone);
+$$;
+
+-- A number is handed out one booking at a time, and the request is recorded.
+-- Harvesting the platform now means placing a booking per worker, under a
+-- rate limit, leaving a row behind each time.
+create table if not exists public.contact_requests (
+  id         bigserial primary key,
+  created_at timestamptz not null default now(),
+  worker_id  uuid,
+  requester  text
+);
+create index if not exists contact_requests_recent_idx
+  on public.contact_requests (requester, created_at desc);
+alter table public.contact_requests enable row level security;
+-- no policies: reachable only through the function below
+
+create or replace function public.request_worker_contact(p_id uuid, p_requester text default null)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  num    text;
+  recent int;
+begin
+  if p_requester is not null then
+    select count(*) into recent from contact_requests
+     where requester = p_requester and created_at > now() - interval '1 hour';
+    if recent >= 40 then
+      raise exception 'Too many booking requests from this device. Please try again later.';
+    end if;
+  end if;
+
+  select phone into num from workers where id = p_id and status = 'approved' and available;
+  if num is null then
+    raise exception 'That worker is no longer available';
+  end if;
+  insert into contact_requests (worker_id, requester) values (p_id, p_requester);
+  return num;
+end;
+$$;
+
+-- ---------- 10.4 the review queue is PIN-gated ----------
+-- The admin screen used to read the workers table directly, which is the only
+-- reason it needed pending rows to be public.
+create or replace function public.admin_queue(p_pin text, p_limit int default 200)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  return query
+    select * from workers
+     order by case status when 'pending' then 0 when 'rejected' then 1 else 2 end,
+              created_at desc
+     limit greatest(1, least(p_limit, 500));
+end;
+$$;
+
+-- ---------- 10.5 one rating per person per worker ----------
+-- rate_worker took an unlimited number of anonymous stars. The running totals
+-- are kept (they carry ratings collected before this existed) and adjusted by
+-- the difference when somebody changes their mind.
+create table if not exists public.worker_ratings (
+  worker_id  uuid not null references public.workers(id) on delete cascade,
+  rater      text not null,
+  stars      int  not null check (stars between 1 and 5),
+  created_at timestamptz not null default now(),
+  primary key (worker_id, rater)
+);
+alter table public.worker_ratings enable row level security;
+-- no policies: reachable only through rate_worker
+
+create or replace function public.rate_worker(p_id uuid, p_stars int, p_rater text default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare prev int;
+begin
+  if p_stars < 1 or p_stars > 5 then
+    raise exception 'Rating must be between 1 and 5';
+  end if;
+  if not exists (select 1 from workers where id = p_id and status = 'approved') then
+    raise exception 'That worker is no longer available';
+  end if;
+
+  -- no rater token (an old client): fall back to the previous behaviour
+  if p_rater is null or btrim(p_rater) = '' then
+    update workers set rating_sum = rating_sum + p_stars, rating_count = rating_count + 1
+     where id = p_id;
+    return;
+  end if;
+
+  select stars into prev from worker_ratings where worker_id = p_id and rater = p_rater;
+  if prev is null then
+    insert into worker_ratings (worker_id, rater, stars) values (p_id, p_rater, p_stars);
+    update workers set rating_sum = rating_sum + p_stars, rating_count = rating_count + 1
+     where id = p_id;
+  elsif prev <> p_stars then
+    update worker_ratings set stars = p_stars, created_at = now()
+     where worker_id = p_id and rater = p_rater;
+    update workers set rating_sum = rating_sum - prev + p_stars where id = p_id;
+  end if;
+end;
+$$;
+-- the old two-argument version would otherwise still be callable, unguarded
+drop function if exists public.rate_worker(uuid, int);
+
+-- ---------- 10.6 changing your photo or name sends you back for review ----------
+-- Approval means a person looked at that photo next to that name. Letting
+-- either change afterwards while the profile stays live makes the review
+-- decorative — and it is the obvious way to get a fake profile past it.
+create or replace function public.update_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wid       uuid;
+  is_edit   boolean;
+  identity_changed boolean;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then raise exception 'Wrong phone number or PIN'; end if;
+  if p_data ? 'skills' then perform check_rate_bands(p_data->'skills'); end if;
+
+  is_edit := (p_data ?| array['name','selfie','area','about','skills']);
+
+  select (p_data->>'name'   is not null and p_data->>'name'   is distinct from w.name)
+      or (p_data->>'selfie' is not null and p_data->>'selfie' is distinct from w.selfie)
+    into identity_changed
+    from workers w where w.id = wid;
+
+  update workers set
+    name = coalesce(p_data->>'name', name),
+    selfie = coalesce(p_data->>'selfie', selfie),
+    thumb = coalesce(p_data->>'thumb', thumb),
+    city = coalesce(p_data->>'city', city),
+    area = coalesce(p_data->>'area', area),
+    about = coalesce(p_data->>'about', about),
+    lat = coalesce((p_data->>'lat')::double precision, lat),
+    lng = coalesce((p_data->>'lng')::double precision, lng),
+    skills = coalesce(p_data->'skills', skills),
+    available = coalesce((p_data->>'available')::boolean, available),
+    status = case
+               when identity_changed then 'pending'
+               when is_edit and status = 'rejected' then 'pending'
+               else status
+             end,
+    review_note = case
+               when identity_changed then null
+               when is_edit and status = 'rejected' then null
+               else review_note
+             end
+  where id = wid;
+  return query select * from workers where id = wid;
+end;
+$$;
+
+-- ---------- 10.7 deleting a profile deletes the photo ----------
+-- "Deletion is immediate and permanent" was not true of the photo: the row
+-- went, the image stayed public in Storage for ever. Removing the row in
+-- storage.objects takes the object out of the API's reach.
+create or replace function public.delete_worker(p_phone text, p_pin text)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wid  uuid;
+  urls text[];
+  u    text;
+  obj  text;
+begin
+  select w.id, array_remove(array[w.selfie, w.thumb], null)
+    into wid, urls
+    from workers w
+    join worker_secrets s on s.worker_id = w.id
+   where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then
+    raise exception 'Wrong phone number or PIN';
+  end if;
+
+  if exists (select 1 from information_schema.tables
+              where table_schema = 'storage' and table_name = 'objects') then
+    foreach u in array coalesce(urls, '{}'::text[]) loop
+      obj := substring(u from '/object/public/selfies/(.+)$');
+      if obj is not null then
+        execute 'delete from storage.objects where bucket_id = ''selfies'' and name = $1'
+          using obj;
+      end if;
+    end loop;
+  end if;
+
+  -- worker_secrets, worker_ratings and worker_reports cascade
+  delete from workers where id = wid;
+end;
+$$;
+
+-- ---------- 10.8 reporting a profile ----------
+-- The IT Rules require a route for complaining about what is on the platform,
+-- and a marketplace that sends strangers to people's homes needs one whether
+-- the rules ask or not.
+create table if not exists public.worker_reports (
+  id         bigserial primary key,
+  created_at timestamptz not null default now(),
+  worker_id  uuid references public.workers(id) on delete cascade,
+  reason     text not null,
+  details    text,
+  contact    text,
+  handled    boolean not null default false
+);
+alter table public.worker_reports enable row level security;
+drop policy if exists "anyone can report a profile" on public.worker_reports;
+create policy "anyone can report a profile"
+  on public.worker_reports for insert with check (true);
+-- no select policy: reports are read through the PIN-gated function below
+
+create or replace function public.admin_reports(p_pin text)
+returns table (id bigint, created_at timestamptz, worker_id uuid, worker_name text,
+               worker_phone text, reason text, details text, contact text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  return query
+    select r.id, r.created_at, r.worker_id, w.name, w.phone, r.reason, r.details, r.contact
+      from worker_reports r
+      left join workers w on w.id = r.worker_id
+     where not r.handled
+     order by r.created_at desc
+     limit 200;
+end;
+$$;
+
+create or replace function public.admin_clear_report(p_pin text, p_id bigint)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  update worker_reports set handled = true where id = p_id;
+end;
+$$;
+
+-- ---------- 10.9 the consent the privacy policy describes is recorded ----------
+-- The DPDP Act wants consent that is specific, informed and demonstrable.
+-- "Demonstrable" means it has to be written down somewhere.
+alter table public.workers add column if not exists terms_version text;
+alter table public.workers add column if not exists consent_at    timestamptz;
+alter table public.workers add column if not exists age_confirmed boolean not null default false;
+
+-- ---------- 10.10 the retention periods are enforced ----------
+-- The privacy policy promises booking records for 12 months and rejected
+-- profiles for 90 days. Until now nothing deleted either.
+create or replace function public.purge_expired_data()
+returns table (bookings_removed bigint, rejected_removed bigint, contacts_removed bigint)
+language plpgsql security definer set search_path = public, extensions as $$
+declare b bigint; r bigint; c bigint;
+begin
+  delete from bookings where created_at < now() - interval '12 months';
+  get diagnostics b = row_count;
+
+  delete from workers
+   where status = 'rejected'
+     and coalesce(reviewed_at, created_at) < now() - interval '90 days';
+  get diagnostics r = row_count;
+
+  delete from contact_requests where created_at < now() - interval '90 days';
+  get diagnostics c = row_count;
+
+  return query select b, r, c;
+end;
+$$;
+revoke all on function public.purge_expired_data() from public;
+
+-- Run it nightly where pg_cron exists (it does on Supabase). Harmless
+-- elsewhere: the block simply reports that it skipped.
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    begin
+      create extension if not exists pg_cron;
+      perform cron.unschedule('nearse-retention')
+        where exists (select 1 from cron.job where jobname = 'nearse-retention');
+      perform cron.schedule('nearse-retention', '30 19 * * *', 'select public.purge_expired_data()');
+    exception when others then
+      raise notice 'pg_cron present but not schedulable here (%) — run purge_expired_data() by hand', sqlerrm;
+    end;
+  else
+    raise notice 'no pg_cron — call purge_expired_data() from a scheduled job instead';
+  end if;
+end $$;
+
+-- ---------- 10.11 search stops returning phone numbers ----------
+-- The browse list never displayed the number; it was only there so the
+-- WhatsApp link could be built. That now happens through
+-- request_worker_contact, one worker at a time.
+drop function if exists public.search_workers(double precision, double precision, text, text[], text, text, int, int);
+
+create function public.search_workers(
+  p_lat        double precision default null,
+  p_lng        double precision default null,
+  p_q          text             default null,
+  p_cat_skills text[]           default null,
+  p_area       text             default null,
+  p_city       text             default 'Guwahati',
+  p_limit      int              default 20,
+  p_offset     int              default 0
+)
+returns table (
+  id           uuid,
+  name         text,
+  selfie       text,
+  thumb        text,
+  city         text,
+  area         text,
+  about        text,
+  skills       jsonb,
+  rating_sum   int,
+  rating_count int,
+  distance_km  double precision,
+  total_count  bigint
+)
+language sql stable security definer set search_path = public, extensions as $$
+  with base as (
+    select w.*,
+           lower(w.name || ' ' || coalesce(w.area,'') || ' ' || coalesce(w.city,'') || ' ' ||
+                 coalesce(w.skills::text,'')) as hay,
+           case when p_lat is null or w.lat is null then null else
+             6371 * 2 * asin(sqrt(
+               power(sin(radians(w.lat - p_lat) / 2), 2) +
+               cos(radians(p_lat)) * cos(radians(w.lat)) *
+               power(sin(radians(w.lng - p_lng) / 2), 2)))
+           end as dist
+      from workers w
+     where w.status = 'approved'
+       and w.available
+       and (p_city is null or w.city = p_city)
+       and (p_area is null or w.area = p_area)
+       and (p_cat_skills is null or exists (
+             select 1 from jsonb_array_elements(w.skills) s
+              where s->>'skill' = any(p_cat_skills)))
+  ),
+  hit as (
+    select * from base b
+     where p_q is null or btrim(p_q) = '' or (
+       select bool_and(b.hay like '%' || word || '%')
+         from unnest(string_to_array(lower(btrim(p_q)), ' ')) word
+        where word <> '')
+  )
+  select h.id, h.name, h.selfie, h.thumb, h.city, h.area, h.about, h.skills,
+         h.rating_sum, h.rating_count, h.dist,
+         count(*) over () as total_count
+    from hit h
+   order by
+     case when h.dist is null then 1 else 0 end,
+     round(coalesce(h.dist, 0)::numeric, 1),
+     case when h.rating_count = 0 then 3.4
+          else h.rating_sum::numeric / h.rating_count end desc,
+     h.created_at desc
+   limit greatest(1, least(p_limit, 50))
+  offset greatest(0, p_offset);
+$$;
+
+-- ---------- 10.12 registration records consent ----------
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  new_id uuid; jwt_phone text; need_otp boolean;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then raise exception 'PIN must be exactly 4 digits'; end if;
+  if p_phone !~ '^[6-9]\d{9}$' then raise exception 'Enter a valid 10-digit Indian mobile number'; end if;
+  perform check_rate_bands(p_data->'skills');
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''), '\D', '', 'g');
+  if length(jwt_phone) > 10 then jwt_phone := right(jwt_phone, 10); end if;
+  if coalesce(need_otp,false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, thumb, city, area, about, lat, lng, skills,
+                       available, phone_verified, terms_version, consent_at, age_confirmed)
+  values (coalesce(p_data->>'name',''), p_phone, p_data->>'selfie', p_data->>'thumb',
+          p_data->>'city', p_data->>'area', p_data->>'about',
+          (p_data->>'lat')::double precision, (p_data->>'lng')::double precision,
+          coalesce(p_data->'skills','[]'::jsonb),
+          coalesce((p_data->>'available')::boolean, true), jwt_phone <> '',
+          nullif(p_data->>'terms_version',''),
+          case when coalesce((p_data->>'age_confirmed')::boolean, false) then now() end,
+          coalesce((p_data->>'age_confirmed')::boolean, false))
+  returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash, email, wa_code)
+    values (new_id, crypt(p_pin, gen_salt('bf')),
+            nullif(btrim(coalesce(p_data->>'email','')), ''),
+            nullif(btrim(coalesce(p_data->>'wa_code','')), ''));
+  return query select * from workers where id = new_id;
 end;
 $$;

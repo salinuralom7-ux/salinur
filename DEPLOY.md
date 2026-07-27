@@ -1,7 +1,48 @@
 # Nearse — setup steps, in plain language
 
-Two jobs. Job A takes about 20 minutes and should be done before you launch.
-Job B is the domain, and should be done on a quiet day.
+**Do Job 0 first. It takes two minutes and it is the only genuinely urgent
+thing in this file.** Then Job A (about 20 minutes, before launch) and Job B
+(the domain, on a quiet day).
+
+---
+
+# Job 0 — change the two PINs. Today.
+
+The admin PIN and the Budget Cars owner PIN were both stored in this
+repository, which is public. Anyone who reads the source can work them out.
+Until you change them, somebody else could approve worker profiles, take
+every live worker down, or read the WhatsApp verification codes.
+
+Both are now **refused by the database**, so nobody can use them — including
+you. Admin mode and Budget Cars owner mode stay locked until you do this.
+
+1. Open <https://supabase.com>, sign in, open your project.
+2. Click **SQL Editor** in the left sidebar, then **New query**.
+3. Paste this in, replacing the two words in quotes with PINs only you know:
+
+```sql
+update nearse_admin
+   set pin_hash = crypt('pick-a-strong-admin-pin', gen_salt('bf', 12))
+ where id = 1;
+
+update owner_settings
+   set pin_hash = crypt('pick-a-different-car-pin', gen_salt('bf', 12))
+ where id = 1;
+```
+
+4. Click **Run**. It should say `Success. No rows returned`.
+5. Test it: open <https://nearse.in/#admin> and enter the new admin PIN.
+
+Rules for choosing them: not `1234`, not your phone number, not the same as
+each other, and **never typed into a chat, an email, or a file in this
+repository**. The database only ever stores a bcrypt hash of a PIN, never the
+PIN itself, which is why nobody — including me — can read it back or recover
+it for you. Write it down somewhere physical.
+
+The old PINs cannot be un-published: they are in this repository's history for
+good. Changing them is the only fix.
+
+---
 
 **Use a laptop or desktop if you have one.** It all works on a phone, but the
 form in Step 4 has several boxes and is fiddly on a small screen.

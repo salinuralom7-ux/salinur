@@ -12,7 +12,7 @@ Until Supabase is connected, the site runs in demo mode (cars save only in your 
    (any name, e.g. "budget-cars"; choose a database password and save it somewhere).
 2. When the project opens, go to **SQL Editor → New query**.
 3. Copy the whole of [`supabase-setup.sql`](supabase-setup.sql), paste it in, and click **Run**.
-   *(Want a different owner PIN than `7086`? Change it in the marked line before running.)*
+   *(The owner PIN is set separately — see `DEPLOY.md`, Job 0. It is never written down in this repository.)*
 4. Go to **Settings → API** and copy two things:
    - **Project URL** (looks like `https://abcdxyz.supabase.co`)
    - **anon public** key (a long string)
@@ -45,6 +45,8 @@ That's it. The site now loads cars from Supabase, and owner mode adds/deletes th
 ## Security
 
 Visitors can only *read* the car list. Adding and deleting go through database functions
-that verify the owner PIN **on the server** — the PIN is stored in a table no visitor can
-read, so nobody can change your inventory without it. (Don't share the PIN; you can change
-it any time in Supabase → Table Editor → `owner_settings`.)
+that verify the owner PIN **on the server** — the PIN is stored only as a bcrypt hash, in
+a table no visitor can read.
+
+The PIN this project shipped with was committed to a public repository and is now refused
+by the database. Set your own before using owner mode: **`DEPLOY.md`, Job 0**.

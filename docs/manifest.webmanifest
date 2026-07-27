@@ -1,22 +1,31 @@
 {
+  "id": "/",
   "name": "Nearse — Local Workers in Guwahati",
   "short_name": "Nearse",
   "description": "Book verified local workers in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers and more. Or register your skills and receive bookings.",
   "start_url": "./?src=app",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "portrait",
   "background_color": "#0C0A07",
   "theme_color": "#0C0A07",
   "categories": ["business", "lifestyle", "productivity"],
   "lang": "en-IN",
+  "dir": "ltr",
   "icons": [
     { "src": "icons/icon-192.png?v=2", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icons/maskable-512.png?v=2", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
+  "screenshots": [
+    { "src": "store/screen-home.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "Find trusted local workers near you" },
+    { "src": "store/screen-browse.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "Search by trade, nearest to you first" },
+    { "src": "store/screen-worker.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "Rates are set by the worker, and we take no commission" },
+    { "src": "store/screen-register.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "Register your skills in two minutes" }
+  ],
   "shortcuts": [
-    { "name": "Find a worker", "url": "./?src=app#find", "icons": [{ "src": "icons/icon-192.png?v=2", "sizes": "192x192" }] },
-    { "name": "My worker profile", "url": "./?src=app#work", "icons": [{ "src": "icons/icon-192.png?v=2", "sizes": "192x192" }] }
+    { "name": "Find a worker", "short_name": "Find", "url": "./?src=app#find", "icons": [{ "src": "icons/icon-192.png?v=2", "sizes": "192x192" }] },
+    { "name": "Register as a worker", "short_name": "Register", "url": "./?src=app#work", "icons": [{ "src": "icons/icon-192.png?v=2", "sizes": "192x192" }] }
   ]
 }

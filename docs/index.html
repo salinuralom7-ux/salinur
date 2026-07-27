@@ -46,7 +46,7 @@
 <style>
 /* ==========================================================================
    NEARSE — design system
-   paper ground · petrol green brand · ink type · sand accents
+   warm charcoal ground · gold brand sampled from the mark · sand type
    ========================================================================== */
 :root{
   /* The mark is gold on black, so the surfaces are a warm charcoal ramp
@@ -679,6 +679,48 @@ header{
 }
 .bulk-row{display:flex;align-items:center;gap:12px;margin-top:11px;flex-wrap:wrap}
 .bulk-row .hint{margin:0}
+.reports{
+  border:1px solid rgba(232,112,127,.42);background:rgba(232,112,127,.07);
+  border-radius:var(--r);padding:16px;margin:16px 0 4px;
+}
+.reports > b{display:block;font-size:.94rem;color:var(--danger);margin-bottom:3px}
+.reports > span{display:block;color:var(--muted);font-size:.82rem;line-height:1.55;margin-bottom:12px}
+.report-item{
+  display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-top:1px solid var(--line);
+}
+.report-item > div{flex:1;min-width:0}
+.report-item b{font-size:.9rem}
+.report-item span{display:block;color:var(--muted);font-size:.79rem;line-height:1.5}
+.report-item .btn{flex:0 0 auto}
+
+/* the way out when a profile is wrong — quiet, but never hidden */
+.report-link{
+  display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
+  margin-top:12px;padding:9px;background:none;border:0;
+  color:var(--muted);font-size:.81rem;font-weight:600;
+}
+.report-link:hover{color:var(--danger)}
+
+/* ---------- consent ---------- */
+.consent{
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r);
+  padding:15px 16px;margin:18px 0 4px;
+}
+.consent-row{display:flex;gap:11px;align-items:flex-start;padding:5px 0;cursor:pointer}
+.consent-row input{
+  flex:0 0 auto;width:19px;height:19px;margin-top:1px;accent-color:var(--brand);cursor:pointer;
+}
+.consent-row span{font-size:.83rem;line-height:1.6;color:var(--ink-2)}
+.consent-row b{color:var(--ink);font-weight:700}
+.consent-row a{color:var(--brand-2);text-decoration:underline;text-underline-offset:2px}
+.consent-note{margin-top:7px;font-size:.78rem;color:var(--muted);line-height:1.55}
+
+/* preview-mode code box: no provider is connected, so it is shown not sent */
+.otp-preview{
+  border:1px dashed var(--line-strong);background:var(--surface-2);border-radius:var(--r-sm);
+  padding:11px 13px;margin-bottom:14px;font-size:.8rem;color:var(--muted);line-height:1.55;
+}
+.otp-preview b{display:block;margin-top:6px;color:var(--brand-2);font-size:1.5rem;letter-spacing:.3em}
 
 /* ---------- selfie & location ---------- */
 .selfie-row{display:flex;align-items:center;gap:18px}
@@ -1180,6 +1222,8 @@ footer a:hover{color:var(--brand)}
 
       <!-- code-entry flow, used once an SMS/WhatsApp provider is connected -->
       <div id="codeFlow" hidden>
+        <!-- shown only in preview, where no provider exists to send anything -->
+        <div class="otp-preview" id="otpPreview" hidden></div>
         <div class="field">
           <label for="otpCode">Enter the 6-digit code</label>
           <input type="text" id="otpCode" class="otp-box" placeholder="······" maxlength="6" inputmode="numeric"
@@ -1287,10 +1331,26 @@ footer a:hover{color:var(--brand)}
       </button>
     </div>
 
+    <!-- Consent has to be given, not assumed: the DPDP Act asks for it to be
+         specific, informed and demonstrable, so it is ticked here and the
+         moment it was given is written to the profile. -->
+    <div class="consent" id="consentBlock">
+      <label class="consent-row">
+        <input type="checkbox" id="consentPublish">
+        <span>I want my <b>name, photo, services, rates, locality and WhatsApp number</b> shown publicly to
+          customers on Nearse, and I accept the
+          <a href="terms/" target="_blank" rel="noopener">terms of use</a> and
+          <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>.</span>
+      </label>
+      <label class="consent-row">
+        <input type="checkbox" id="consentAge">
+        <span>I am <b>18 years or older</b>.</span>
+      </label>
+      <p class="consent-note">You can withdraw this at any time by deleting your profile, which erases it from Nearse for good.</p>
+    </div>
+
     <button class="btn btn-brand btn-block" id="regSaveBtn" onclick="saveProfile()" style="padding:14px;margin-top:6px">Publish my profile</button>
-    <p class="hint" style="margin-top:12px">Your 3 months free trial starts the day we approve your profile. By publishing, you agree that your name, photo, services, rates, area and WhatsApp number are shown to customers,
-      and you accept our <a href="terms/" target="_blank" rel="noopener">terms of use</a> and
-      <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>. You can delete your profile at any time.</p>
+    <p class="hint" style="margin-top:12px">Your 3 months free trial starts the day we approve your profile. No card, no UPI, nothing to cancel.</p>
   </div>
 </section>
 
@@ -1373,6 +1433,8 @@ footer a:hover{color:var(--brand)}
         <a href="about/">About us</a>
         <a href="privacy/">Privacy policy</a>
         <a href="terms/">Terms of use</a>
+        <a href="cancellation/">Cancellations</a>
+        <a href="delete-account/">Delete account</a>
         <a href="about/#contact">Contact</a>
       </nav>
     </div>
@@ -1424,7 +1486,31 @@ footer a:hover{color:var(--brand)}
     <button class="btn btn-brand btn-block" id="confirmBookBtn" onclick="confirmBooking()" style="padding:14px">Send request on WhatsApp</button>
     <p class="hint" style="margin-top:11px;text-align:center">Goes straight to the worker. Nearse takes no commission.<br>
       Your name and number are shared with the worker so they can reply, and we keep a record of the request —
-      see our <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>.</p>
+      see our <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>.
+      Cancelling is free and done straight with the worker: <a href="cancellation/" target="_blank" rel="noopener">how that works</a>.</p>
+  </div>
+</div>
+
+<div class="overlay" id="reportOverlay" onclick="if(event.target===this)closeModal('reportOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('reportOverlay')" aria-label="Close">✕</button>
+    <h3>Report a profile</h3>
+    <p class="sub" id="reportWho"></p>
+    <div class="field">
+      <label for="reportReason">What is wrong?</label>
+      <select id="reportReason"></select>
+    </div>
+    <div class="field">
+      <label for="reportDetails">Tell us what happened <span class="sublabel">— optional</span></label>
+      <textarea id="reportDetails" rows="3" placeholder="Anything that helps us check this."></textarea>
+    </div>
+    <div class="field">
+      <label for="reportContact">Your number or email <span class="sublabel">— optional</span></label>
+      <input type="text" id="reportContact" placeholder="Only if you want us to reply">
+    </div>
+    <button class="btn btn-brand btn-block" id="reportSendBtn" onclick="sendReport()" style="padding:14px">Send report</button>
+    <p class="hint" style="margin-top:11px;text-align:center">A person reads every report. If a profile is unsafe we take it down.
+      Serious matters can also go to our <a href="about/#contact" target="_blank" rel="noopener">Grievance Officer</a>.</p>
   </div>
 </div>
 
@@ -1511,6 +1597,9 @@ function areaOptions(selected){
 }
 const WSTORE = "nearse_workers_v1";
 const SSTORE = "nearse_session_v1";
+/* Which edition of the terms and privacy policy a worker agreed to. Bump it
+   whenever those pages change materially, so consent stays attributable. */
+const TERMS_VERSION = "2026-07-27";
 /* What each trade actually charges in Guwahati. Workers still set their own
    rate — this only stops the nonsense listings that make a marketplace
    untrustworthy, the same way OLX will not let you list a phone for a rupee.
@@ -1518,7 +1607,7 @@ const SSTORE = "nearse_session_v1";
 const RATE_BAND = {
   "Housemaid (Daily)":[2000,12000],
   "Part-time Maid":[1500,10000],
-  "Deep House Cleaning":[800,6000],
+  "Deep House Cleaning":[400,6000],
   "Bathroom Cleaning":[200,4000],
   "Kitchen Deep Cleaning":[200,4000],
   "Sofa & Carpet Cleaning":[200,4000],
@@ -1563,7 +1652,7 @@ const RATE_BAND = {
   "Mason (Raj Mistri)":[400,2500],
   "Carpenter":[400,2500],
   "House Painter":[5,250],
-  "Tile & Marble Fitter":[500,2500],
+  "Tile & Marble Fitter":[5,250],
   "Waterproofing Specialist":[5,250],
   "POP & False Ceiling Worker":[5,250],
   "Welder & Fabricator":[400,2500],
@@ -1574,17 +1663,17 @@ const RATE_BAND = {
   "Civil Contractor":[3000,300000],
   "Interior Designer":[3000,300000],
   "Daily Wage Helper":[400,2500],
-  "Personal Driver (Monthly)":[8000,25000],
+  "Personal Driver (Monthly)":[6000,30000],
   "Driver (Per Day)":[300,3000],
   "Outstation Driver":[300,3000],
   "Car Mechanic (Home Visit)":[150,3000],
   "Two-Wheeler Mechanic":[150,3000],
   "Car AC Repair":[200,25000],
-  "Car Washing (At Home)":[6000,40000],
+  "Car Washing (At Home)":[300,4000],
   "Doorstep Puncture Repair":[200,25000],
   "Battery Jump-start & Replacement":[150,3000],
   "Car Denting & Painting":[200,25000],
-  "Driving Instructor":[6000,40000],
+  "Driving Instructor":[2000,15000],
   "Beautician (At Home)":[300,3000],
   "Bridal Makeup Artist":[3000,40000],
   "Party Makeup Artist":[500,40000],
@@ -1631,7 +1720,7 @@ const RATE_BAND = {
   "Accountant / Bookkeeper":[1500,45000],
   "GST & Tax Consultant":[300,50000],
   "Chartered Accountant":[300,50000],
-  "Advocate / Lawyer":[200,4000],
+  "Advocate / Lawyer":[300,25000],
   "Document & Affidavit Agent":[300,50000],
   "Insurance Advisor":[200,4000],
   "Property Agent":[300,50000],
@@ -1674,7 +1763,7 @@ const RATE_BAND = {
 };
 const money0 = n => "₹" + Number(n).toLocaleString("en-IN");
 
-const UNITS  = ["per hour","per visit","per day","per week","per month","per job","per project","per piece","per session","per trip","per sq ft","per plate"];
+const UNITS  = ["per hour","per visit","per unit","per day","per week","per month","per job","per project","per piece","per session","per trip","per sq ft","per plate"];
 
 /* ---------- service catalogue: only work that can actually be booked ------
    Each entry: [name, default pricing unit]                                  */
@@ -1808,16 +1897,36 @@ function toast(msg){
   t.textContent = msg; t.classList.add("show");
   clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 3400);
 }
-function openModal(id){ $(id).classList.add("open"); }
-function closeModal(id){ $(id).classList.remove("open"); }
+/* Sheets get a history entry too, so back closes the sheet rather than
+   jumping a whole screen — the behaviour people expect on Android.
+   One entry covers the whole stack of sheets: opening a second one while a
+   first is up replaces the entry rather than adding to it, because
+   history.back() is asynchronous and a pushed entry would otherwise arrive
+   after the replacement sheet was already on screen and close it again. */
+function openModal(id){
+  const el = $(id); if(!el) return;
+  el.classList.add("open");
+  const cur = history.state && history.state.modal;
+  if(cur === id) return;                    /* already tracked — a redraw, not a new sheet */
+  try{
+    const st = {screen:currentScreen, modal:id};
+    if(cur) history.replaceState(st, ""); else history.pushState(st, "");
+  }catch(e){}
+}
+function hideModal(id){ const el = $(id); if(el) el.classList.remove("open"); }
+function closeModal(id){
+  hideModal(id);
+  if(history.state && history.state.modal === id){ try{ history.back(); }catch(e){} }
+}
 function avatarOf(w, small){
   if(small && w.thumb) return w.thumb;
   if(w.selfie) return w.selfie;
-  /* stay inside the brand's indigo–violet band so placeholders never clash */
-  const hue = 226 + ([...(w.name||"N")].reduce((a,c)=>(a*31+c.charCodeAt(0))%56, 0));
+  /* Warm sand through to gold, so a placeholder reads as part of the brand.
+     These used to be indigo, left over from the palette before the gold mark. */
+  const hue = 34 + ([...(w.name||"N")].reduce((a,c)=>(a*31+c.charCodeAt(0))%18, 0));
   const letter = (w.name||"N").trim().charAt(0).toUpperCase();
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="160" height="160" fill="hsl(${hue},34%,84%)"/><text x="80" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="72" fill="hsl(${hue},44%,32%)">${letter}</text></svg>`);
+    `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="160" height="160" fill="hsl(${hue},46%,26%)"/><text x="80" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="72" fill="hsl(${hue},72%,72%)">${letter}</text></svg>`);
 }
 function starsOf(w){
   const n = w.rating_count || 0;
@@ -1855,15 +1964,24 @@ async function sb(path, opts = {}){
   return text ? JSON.parse(text) : null;
 }
 
+/* An opaque per-device token. It says nothing about who you are; it exists so
+   that one phone cannot rate the same worker fifty times, and so that pulling
+   every WhatsApp number one booking at a time can be rate-limited. */
+const CLIENT_KEY = "nearse_client_v1";
+const CLIENT_ID = (function(){
+  try{
+    let v = localStorage.getItem(CLIENT_KEY);
+    if(!v){
+      v = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+        : Date.now().toString(36) + Math.random().toString(36).slice(2);
+      localStorage.setItem(CLIENT_KEY, v);
+    }
+    return v;
+  }catch(e){ return null; }
+})();
+
 /* ---------- data layer (live ⇄ preview) ---------- */
 const api = {
-  async list(){
-    if(LIVE){
-      const rows = await sb("workers?select=*&order=created_at.desc");
-      return rows.map(r => ({...r, skills: typeof r.skills === "string" ? JSON.parse(r.skills) : (r.skills||[])}));
-    }
-    return demoAll();
-  },
   async register(phone, pin, data){
     if(LIVE){
       const opts = {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin, p_data:data})};
@@ -1932,22 +2050,41 @@ const api = {
     });
     return { list: all.slice(o.offset, o.offset + o.limit), total: all.length };
   },
-  /* One row, not the whole table — this runs on every sign-up attempt. */
+  /* Asked on every sign-up. It goes through a function rather than a table
+     read because the phone column is no longer readable by the public. */
   async phoneTaken(phone){
-    if(LIVE){
-      const rows = await sb("workers?select=id&limit=1&phone=eq." + encodeURIComponent(phone));
-      return !!(rows && rows.length);
-    }
+    if(LIVE) return await sb("rpc/phone_taken", {method:"POST", body:JSON.stringify({p_phone:phone})}) === true;
     return demoAll().some(w => w.phone === phone);
   },
   /* The review queue is one person's screen, but it must not pull 30,000 rows
-     either. Pending first, then a slice of the rest. */
+     either. Pending first, rejected next, then a slice of the rest — and it is
+     PIN-gated, because profiles awaiting review are not public. */
   async reviewQueue(){
     if(LIVE){
-      const rows = await sb("workers?select=*&order=created_at.desc&limit=" + ADMIN_PAGE);
-      return rows.map(r => ({...r, skills: typeof r.skills === "string" ? JSON.parse(r.skills) : (r.skills||[])}));
+      const rows = await sb("rpc/admin_queue", {method:"POST",
+        body:JSON.stringify({p_pin:adminPin, p_limit:ADMIN_PAGE})});
+      return (rows||[]).map(r => ({...r, skills: typeof r.skills === "string" ? JSON.parse(r.skills) : (r.skills||[])}));
     }
     return demoAll();
+  },
+  /* A worker's number is handed over one booking at a time. It used to arrive
+     with every search result, which made the whole platform's contact list a
+     single request away. */
+  async contact(id){
+    if(LIVE) return await sb("rpc/request_worker_contact", {method:"POST",
+      body:JSON.stringify({p_id:id, p_requester:CLIENT_ID})});
+    const w = demoAll().find(x => x.id === id);
+    if(!w) throw new Error("That worker is no longer available");
+    return w.phone;
+  },
+  async report(id, reason, details, contact){
+    if(LIVE) return await sb("worker_reports", {method:"POST", headers:{Prefer:"return=minimal"},
+      body:JSON.stringify({worker_id:id, reason, details:details||null, contact:contact||null})});
+    const w = demoAll().find(x => x.id === id) || {};
+    const list = JSON.parse(localStorage.getItem("nearse_reports_v1") || "[]");
+    list.unshift({id:Date.now(), created_at:new Date().toISOString(), worker_id:id,
+      worker_name:w.name, worker_phone:w.phone, reason, details:details||null, contact:contact||null});
+    localStorage.setItem("nearse_reports_v1", JSON.stringify(list));
   },
   async remove(phone, pin){
     if(LIVE) return await sb("rpc/delete_worker", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})});
@@ -1956,11 +2093,19 @@ const api = {
     if(i < 0) throw new Error("Wrong phone number or PIN");
     all.splice(i, 1); demoSave(all);
   },
+  /* One rating per device per worker. Unlimited anonymous stars is how a
+     rival buries you, and a five-star profile nobody can trust. */
   async rate(id, s){
-    if(LIVE) return await sb("rpc/rate_worker", {method:"POST", body:JSON.stringify({p_id:id, p_stars:s})});
+    if(LIVE) return await sb("rpc/rate_worker", {method:"POST",
+      body:JSON.stringify({p_id:id, p_stars:s, p_rater:CLIENT_ID})});
     const all = demoAll();
     const w = all.find(x => x.id === id); if(!w) return;
-    w.rating_sum = (w.rating_sum||0) + s; w.rating_count = (w.rating_count||0) + 1;
+    w.ratings = w.ratings || {};
+    const prev = w.ratings[CLIENT_ID];
+    if(prev === s) return;
+    w.ratings[CLIENT_ID] = s;
+    if(prev == null){ w.rating_sum = (w.rating_sum||0) + s; w.rating_count = (w.rating_count||0) + 1; }
+    else w.rating_sum = (w.rating_sum||0) - prev + s;
     demoSave(all);
   },
   async book(rec){
@@ -1999,12 +2144,33 @@ function demoSave(all){
   catch(e){ toast("Storage full — please use a smaller photo"); }
 }
 
-/* ---------- router ---------- */
-function go(name){
+/* ---------- router ----------
+   Screens go onto the browser's history stack. Without that, Android's back
+   gesture closes the whole app from the second screen — which is both a poor
+   experience and something a Play Store review flags. It also makes the
+   manifest shortcuts (#find, #work) land where they claim to. */
+const SCREEN_ALIAS = { find:"hire", browse:"hire", search:"hire", worker:"work", register:"work" };
+function screenFromHash(){
+  const h = (location.hash || "").replace(/^#/, "").toLowerCase();
+  if(!h || h === "admin") return null;
+  const n = SCREEN_ALIAS[h] || h;
+  return $("scr-" + n) ? n : null;
+}
+let currentScreen = "home";
+function go(name, viaHistory){
   if(name === "work" && session && session.registered) name = "me";
+  if(!$("scr-" + name)) name = "home";
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
   $("scr-" + name).classList.add("on");
   window.scrollTo({top:0});
+  currentScreen = name;
+  if(!viaHistory){
+    /* admin is private — it gets a history entry but never a shareable URL */
+    const url = (name === "home" || name === "admin")
+      ? location.pathname + location.search
+      : "#" + name;
+    try{ history.pushState({screen:name}, "", url); }catch(e){}
+  }
   if(name === "work") authTab("in");
   if(name === "hire") initHire();
   if(name === "me") renderMe();
@@ -2012,6 +2178,18 @@ function go(name){
   if(name === "otp") initOtp(); else stopResendCooldown();
   if(name === "home") initHome();
 }
+
+window.addEventListener("popstate", e => {
+  const st = e.state || { screen: screenFromHash() || "home" };
+  /* back closes whatever sheet is up before it leaves the screen */
+  document.querySelectorAll(".overlay.open").forEach(o => {
+    if(o.id === st.modal) return;
+    if(o.id === "camOverlay") stopCamera(); else o.classList.remove("open");
+  });
+  if(st.modal && $(st.modal)) $(st.modal).classList.add("open");
+  const target = st.screen || "home";
+  if(target !== currentScreen) go(target, true);
+});
 
 /* ---------- landing ----------
    The figures and the ticker are read from the real catalogue, so the page is
@@ -2262,6 +2440,9 @@ function initRegister(){
   const w = editing ? session.worker : null;
   $("regTitle").textContent = editing ? "Edit your profile" : "Your worker profile";
   $("regSaveBtn").textContent = editing ? "Save changes" : "Publish my profile";
+  /* consent is recorded once, when the profile is first published */
+  $("consentBlock").hidden = !!editing;
+  if(!editing){ $("consentPublish").checked = false; $("consentAge").checked = false; }
   picked = w ? (w.skills||[]).map(s=>s.skill) : [];
   selfieData = w ? w.selfie : null;
   thumbData  = w ? (w.thumb || null) : null;
@@ -2448,19 +2629,33 @@ async function captureFrame(){
   stopCamera();
   toast("Photo captured");
 }
+const MAX_UPLOAD = 12 * 1024 * 1024;   /* a modern phone photo, before we shrink it */
 function handleSelfie(input){
-  const file = input.files && input.files[0]; if(!file) return;
+  const file = input.files && input.files[0];
+  input.value = "";                    /* so picking the same file twice still fires */
+  if(!file) return;
+  if(!/^image\//.test(file.type)){ toast("Please choose a photo, not a file"); return; }
+  if(file.size > MAX_UPLOAD){ toast("That photo is too large — please choose another"); return; }
+
   const reader = new FileReader();
+  /* every one of these paths used to fail silently, leaving the circle empty
+     with no explanation of why */
+  reader.onerror = () => toast("Could not read that photo — please try another");
   reader.onload = e => {
     const img = new Image();
+    img.onerror = () => toast("That image could not be opened — try a JPG or PNG");
     img.onload = () => {
-      const side = Math.min(img.width, img.height);
-      const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
-      const cv = squareCanvas(img, PHOTO_SIZE, sx, sy, side);
-      selfieData = encodePhoto(cv, .78);
-      thumbData  = encodePhoto(squareCanvas(img, THUMB_SIZE, sx, sy, side), .72);
-      selfieLive = false;
-      renderSelfie();
+      if(!img.width || !img.height){ toast("That image could not be opened"); return; }
+      try{
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+        const cv = squareCanvas(img, PHOTO_SIZE, sx, sy, side);
+        selfieData = encodePhoto(cv, .78);
+        thumbData  = encodePhoto(squareCanvas(img, THUMB_SIZE, sx, sy, side), .72);
+        selfieLive = false;
+        renderSelfie();
+        toast("Photo added");
+      }catch(err){ toast("Could not use that photo — please try another"); }
     };
     img.src = e.target.result;
   };
@@ -2567,6 +2762,10 @@ async function saveProfile(){
   if(!area){ toast("Please choose your area in Guwahati"); return; }
 
   const firstTime = !session.registered;
+  if(firstTime){
+    if(!$("consentPublish").checked){ toast("Please tick the box agreeing to show your profile publicly"); return; }
+    if(!$("consentAge").checked){ toast("Nearse is for adults — please confirm you are 18 or older"); return; }
+  }
   const btn = $("regSaveBtn"); const label = btn.textContent;
   btn.disabled = true; btn.textContent = "Saving…";
 
@@ -2593,6 +2792,7 @@ async function saveProfile(){
   };
   if(session.email) data.email = session.email;
   if(session.waCode) data.wa_code = session.waCode;
+  if(firstTime){ data.age_confirmed = true; data.terms_version = TERMS_VERSION; }
   btn.textContent = "Saving…";
   try{
     const w = session.registered
@@ -2656,7 +2856,7 @@ function renderMe(){
     </div>
     <div class="danger-zone">
       <b>Delete my profile</b>
-      <span>Removes your profile, photo, rates and contact details from Nearse for good. This cannot be undone.</span>
+      <span>Removes your profile, photo, rates and contact details from Nearse for good — the photo goes from our image storage too. This cannot be undone.</span>
       <button class="btn btn-danger btn-sm" onclick="deleteProfile()">Delete my profile</button>
     </div>`;
 }
@@ -2876,7 +3076,11 @@ function openWorker(id){
       <div class="pick-stars" id="rateStars">${[1,2,3,4,5].map(i=>`<span data-s="${i}" onclick="setStars(${i})">★</span>`).join("")}</div>
       <button class="btn btn-outline btn-sm" onclick="submitRating()">Submit</button>
     </div>
-    <button class="btn btn-brand btn-block" style="padding:14px" onclick="openBooking()">Request booking</button>`;
+    <button class="btn btn-brand btn-block" style="padding:14px" onclick="openBooking()">Request booking</button>
+    <button class="report-link" onclick="openReport()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4.5M12 17h.01"/><path d="M10.3 3.9 1.9 18.3A2 2 0 0 0 3.6 21.3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+      Report this profile
+    </button>`;
   openModal("wOverlay");
 }
 function setStars(n){
@@ -2897,7 +3101,7 @@ async function submitRating(){
 let bookPick = { svc:0, when:"today", slot:"any", date:"" };
 
 function openBooking(){
-  closeModal("wOverlay");
+  hideModal("wOverlay");   /* replaced by this sheet, not dismissed */
   const w = currentWorker;
   bookPick = { svc:0, when:"today", slot:"any", date:"" };
   $("bookWName").textContent = w.name + (w.area ? " · " + w.area : "");
@@ -2922,8 +3126,12 @@ function openBooking(){
   d.value = "";
   d.onchange = ()=>{ bookPick.date = d.value; renderQuote(); };
 
+  /* deliberately not pre-filled with the worker's locality — this asks where
+     the CUSTOMER is, and a silent default is how the wrong address ends up in
+     the request */
   const areaSel = $("bookArea");
-  areaSel.innerHTML = '<option value="">Select your locality</option>' + areaOptions(w.area);
+  areaSel.innerHTML = '<option value="">Select your locality</option>' + areaOptions(null);
+  areaSel.value = "";
   areaSel.onchange = renderQuote;
 
   renderQuote();
@@ -2976,7 +3184,7 @@ function renderQuote(){
      <div class="line" style="margin-top:9px"><span class="muted">Final amount is agreed with ${esc(w.name.split(" ")[0])} after seeing the job.</span></div>`;
   box.classList.add("on");
 }
-function confirmBooking(){
+async function confirmBooking(){
   const w = currentWorker;
   const s = (w.skills||[])[bookPick.svc];
   if(!s){ toast("Please choose a service"); return; }
@@ -2984,8 +3192,25 @@ function confirmBooking(){
   const name = $("bookName").value.trim(), phone = $("bookPhone").value.trim();
   const area = $("bookArea").value, note = $("bookNote").value.trim();
   if(!name){ toast("Please enter your name"); return; }
-  if(!/^\d{10}$/.test(phone)){ toast("Enter a valid 10-digit mobile number"); return; }
+  if(!/^[6-9]\d{9}$/.test(phone)){ toast("Enter a valid 10-digit mobile number"); return; }
   if(!area){ toast("Please choose your area"); return; }
+
+  /* The tab has to be opened inside the click, before any await, or the
+     browser treats it as an unsolicited pop-up and blocks it. */
+  const tab = window.open("", "_blank");
+  const btn = $("confirmBookBtn"); const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Opening WhatsApp…";
+
+  let workerPhone;
+  try{
+    workerPhone = w.phone || await api.contact(w.id);
+  }catch(e){
+    if(tab) tab.close();
+    btn.disabled = false; btn.textContent = label;
+    toast(e.message || "Could not reach that worker just now");
+    return;
+  }
+  btn.disabled = false; btn.textContent = label;
 
   const when = bookWhenText() + " · " + bookSlotText();
   api.book({ worker_id:w.id, worker_name:w.name, customer_name:name, customer_phone:phone,
@@ -3004,22 +3229,71 @@ Hello ${w.name.split(" ")[0]}, I found your profile on Nearse and would like to 
 *Mobile:* ${phone}
 
 Please reply to confirm. Thank you.`;
-  window.open("https://wa.me/91" + w.phone + "?text=" + encodeURIComponent(msg), "_blank");
+  const url = "https://wa.me/91" + workerPhone + "?text=" + encodeURIComponent(msg);
+  if(tab) tab.location.href = url; else window.location.href = url;
   closeModal("bookOverlay");
   toast("Request sent — " + w.name.split(" ")[0] + " will reply on WhatsApp");
 }
 
-/* ---------- admin review (private, PIN-gated) ---------- */
-const DEMO_ADMIN_PIN = "Nearse@20";
+/* ---------- reporting a profile ----------
+   A marketplace that sends strangers to people's homes needs somewhere to say
+   "this one is wrong", and the IT Rules require the route to exist. */
+const REPORT_REASONS = [
+  "The photo is not of this person",
+  "Fake or duplicate profile",
+  "Wrong number — someone else answered",
+  "Rude, unsafe or inappropriate behaviour",
+  "Charged far more than the listed rate",
+  "Something else"
+];
+function openReport(){
+  const w = currentWorker; if(!w) return;
+  hideModal("wOverlay");
+  $("reportWho").textContent = w.name + (w.area ? " · " + w.area : "");
+  $("reportReason").innerHTML = REPORT_REASONS
+    .map((r,i)=>`<option${i===0?" selected":""}>${esc(r)}</option>`).join("");
+  $("reportDetails").value = "";
+  $("reportContact").value = "";
+  openModal("reportOverlay");
+}
+async function sendReport(){
+  const w = currentWorker; if(!w) return;
+  const btn = $("reportSendBtn"); btn.disabled = true; btn.textContent = "Sending…";
+  try{
+    await api.report(w.id, $("reportReason").value,
+      $("reportDetails").value.trim(), $("reportContact").value.trim());
+    closeModal("reportOverlay");
+    toast("Thank you — we will look into this");
+  }catch(e){ toast(e.message || "Could not send that just now"); }
+  btn.disabled = false; btn.textContent = "Send report";
+}
+
+/* ---------- admin review (private, PIN-gated) ----------
+   No admin PIN is written down here. The previous one was, in a public
+   repository, which meant anyone who read the source could approve profiles
+   and read every pending worker's verification code. In preview mode — where
+   there is no database and nothing real to protect — a throwaway PIN is
+   generated per browser and printed to the console for whoever is testing. */
 let adminPin = null;
+function previewAdminPin(){
+  try{
+    let v = localStorage.getItem("nearse_preview_admin");
+    if(!v){
+      v = String(Math.floor(1000 + Math.random() * 9000));
+      localStorage.setItem("nearse_preview_admin", v);
+    }
+    console.info("[Nearse preview] admin PIN for this browser:", v);
+    return v;
+  }catch(e){ return null; }
+}
 async function adminAuth(){
   const pin = prompt("Admin PIN");
   if(pin === null) return false;
   let ok = false;
   if(LIVE){
     try{ ok = await sb("rpc/admin_check", {method:"POST", body:JSON.stringify({p_pin:pin})}) === true; }
-    catch(e){ toast("Could not verify — check your connection"); return false; }
-  }else ok = (pin === DEMO_ADMIN_PIN);
+    catch(e){ toast(e.message || "Could not verify — check your connection"); return false; }
+  }else ok = (pin === previewAdminPin());
   if(!ok){ toast("Wrong admin PIN"); return false; }
   adminPin = pin;
   return true;
@@ -3047,13 +3321,30 @@ async function loadWaCodes(){
     }
   }catch(e){ /* codes are a convenience — never block the queue on them */ }
 }
+async function loadReports(){
+  try{
+    if(LIVE) return await sb("rpc/admin_reports", {method:"POST", body:JSON.stringify({p_pin:adminPin})}) || [];
+    return JSON.parse(localStorage.getItem("nearse_reports_v1") || "[]");
+  }catch(e){ return []; }
+}
+async function clearReport(id){
+  try{
+    if(LIVE) await sb("rpc/admin_clear_report", {method:"POST", body:JSON.stringify({p_pin:adminPin, p_id:id})});
+    else{
+      const list = JSON.parse(localStorage.getItem("nearse_reports_v1") || "[]").filter(r => r.id !== id);
+      localStorage.setItem("nearse_reports_v1", JSON.stringify(list));
+    }
+    renderAdmin();
+  }catch(e){ toast(e.message); }
+}
 async function renderAdmin(){
   const host = $("adminPanel");
   host.innerHTML = '<div class="skeleton"></div>';
   let all = [];
   try{ all = await api.reviewQueue(); }
-  catch(e){ host.innerHTML = '<p class="hint">Could not load profiles.</p>'; return; }
+  catch(e){ host.innerHTML = `<p class="hint">Could not load profiles — ${esc(e.message||"")}</p>`; return; }
   await loadWaCodes();
+  const reports = await loadReports();
   const pending  = all.filter(w => statusOf(w) === "pending");
   const approved = all.filter(w => statusOf(w) === "approved");
   const rejected = all.filter(w => statusOf(w) === "rejected");
@@ -3063,6 +3354,17 @@ async function renderAdmin(){
     : "";
   host.innerHTML = `
     <h2>Profile review</h2>
+    ${reports.length ? `<div class="reports">
+      <b>${reports.length} open ${reports.length === 1 ? "report" : "reports"}</b>
+      <span>Someone has complained about these profiles. Look at each one before anything else.</span>
+      ${reports.map(r => `<div class="report-item">
+        <div><b>${esc(r.worker_name || "Profile removed")}</b>${r.worker_phone ? ` · ${esc(r.worker_phone)}` : ""}
+          <span>${esc(r.reason)}${r.details ? " — " + esc(r.details) : ""}</span>
+          ${r.contact ? `<span>Reported by: ${esc(r.contact)}</span>` : ""}
+          <span>${new Date(r.created_at).toLocaleString("en-IN")}</span></div>
+        <button class="btn btn-quiet btn-sm" onclick="clearReport(${Number(r.id)})">Done</button>
+      </div>`).join("")}
+    </div>` : ""}
     ${pending.length ? `<div class="bulk">
       <b>Approve in bulk</b>
       <span>Open WhatsApp, select the verification messages you have received and paste them here —
@@ -3234,7 +3536,7 @@ async function installApp(){
 /* ---------- init ---------- */
 $("year").textContent = new Date().getFullYear();
 document.addEventListener("keydown", e => {
-  if(e.key === "Escape") document.querySelectorAll(".overlay.open").forEach(o=>o.classList.remove("open"));
+  if(e.key === "Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id));
 });
 
 function checkAdminHash(){
@@ -3265,6 +3567,10 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
     try{ session.worker = await api.login(session.phone, session.pin); saveSession(); }catch(e){}
   }
   initHome();
+  /* the entry in the history stack the app started on */
+  try{ history.replaceState({screen:"home"}, ""); }catch(e){}
+  const start = screenFromHash();          /* manifest shortcuts land here */
+  if(start && start !== "home") go(start);
   checkAdminHash();
 })();
 </script>
