@@ -1697,3 +1697,31 @@ begin
   return query select * from workers where id = new_id;
 end;
 $$;
+
+-- ---------- 10.13 explicit grants for the tables added above ----------
+-- Supabase's default privileges usually cover a new table in `public`, but
+-- "usually" is not good enough for the one path a customer uses to report an
+-- unsafe profile: if the grant were missing, the report would fail with a
+-- permission error and nobody would find out. Stated outright instead.
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      -- reports are insert-only; reading them needs the admin function
+      execute format('grant insert on public.worker_reports to %I', r);
+      execute format('grant usage, select on sequence public.worker_reports_id_seq to %I', r);
+      -- everything else here is reachable only through security-definer
+      -- functions, so the tables themselves stay closed
+      execute format('revoke select, update, delete on public.worker_reports from %I', r);
+      execute format('revoke all on public.contact_requests from %I', r);
+      execute format('revoke all on public.worker_ratings   from %I', r);
+      execute format('revoke all on public.worker_secrets   from %I', r);
+      execute format('revoke all on public.nearse_admin     from %I', r);
+      -- the functions the app calls
+      execute format('grant execute on function public.phone_taken(text) to %I', r);
+      execute format('grant execute on function public.request_worker_contact(uuid, text) to %I', r);
+      execute format('grant execute on function public.rate_worker(uuid, int, text) to %I', r);
+    end if;
+  end loop;
+end $$;
