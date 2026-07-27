@@ -228,10 +228,13 @@ header{
 .pulse::after{animation:ping 2.4s cubic-bezier(0,0,.2,1) infinite}
 @keyframes ping{0%{transform:scale(1);opacity:.75}70%,100%{transform:scale(3.2);opacity:0}}
 
-/* ---------- figures ---------- */
+/* ---------- figures ----------
+   These sit below the ticker rather than inside the hero, so they carry
+   their own centring — .landing's text-align does not reach them here. */
 .figures{
   display:grid;grid-template-columns:repeat(3,1fr);
-  max-width:520px;margin:clamp(34px,6vw,50px) auto 0;padding:0 2px;
+  max-width:520px;margin:clamp(30px,5vw,42px) auto 0;padding:0 2px;
+  text-align:center;
 }
 .fig{display:flex;flex-direction:column;gap:4px;padding:0 6px;position:relative}
 .fig+.fig::before{
@@ -1088,18 +1091,23 @@ footer a:hover{color:var(--brand)}
         </button>
       </div>
 
-      <div class="figures reveal" data-r="5">
-        <div class="fig"><b id="figServices">—</b><span>services you can book</span></div>
-        <div class="fig"><b id="figAreas">—</b><span>localities covered</span></div>
-        <div class="fig"><b>0%</b><span>commission, ever</span></div>
-      </div>
     </div>
   </div>
 
-  <!-- a live band of what is actually in the catalogue: breadth, shown not claimed -->
+  <!-- a live band of what is actually in the catalogue: breadth, shown not
+       claimed. It sits directly under the two doors so the first thing after
+       the choice is evidence of how much there is. -->
   <div class="ticker" aria-hidden="true">
     <div class="ticker-row" id="tickA"></div>
     <div class="ticker-row rev" id="tickB"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="figures reveal" data-r="5">
+      <div class="fig"><b id="figServices">—</b><span>services you can book</span></div>
+      <div class="fig"><b id="figAreas">—</b><span>localities covered</span></div>
+      <div class="fig"><b>0%</b><span>commission, ever</span></div>
+    </div>
   </div>
 
   <div class="wrap">
