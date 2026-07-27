@@ -1,7 +1,7 @@
 /* Nearse service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls and the separate /cars/ site always go to the network. */
-const CACHE = "nearse-shell-v16";
+const CACHE = "nearse-shell-v17";
 const SHELL = [
   "./",
   "./index.html",
@@ -48,11 +48,11 @@ self.addEventListener("fetch", e => {
 
   if (req.mode === "navigate") {
     // Only the app itself is the shell. The standalone pages (about, privacy,
-    // terms) are cached under their own URL — caching them as "./index.html"
-    // would serve a policy page when someone opens the app offline.
-    const isApp = url.pathname === "/" || url.pathname.endsWith("/index.html")
-                  ? !url.pathname.includes("/about") && !url.pathname.includes("/privacy") && !url.pathname.includes("/terms")
-                  : false;
+    // terms, cancellations, account deletion) are cached under their own URL —
+    // caching one as "./index.html" would serve a policy page when somebody
+    // opens the app offline. Matching the root exactly means a page added
+    // later is handled correctly without anyone remembering to list it.
+    const isApp = url.pathname === "/" || url.pathname === "/index.html";
     e.respondWith(
       fetch(req)
         .then(res => {

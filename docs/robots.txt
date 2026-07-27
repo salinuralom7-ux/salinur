@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
 
+# Profiles are published so customers can book, not so they can be collected
+# in bulk. Nothing here is a substitute for the server-side limits, it just
+# saves well-behaved crawlers the trip.
+Disallow: /functions/
+Disallow: /store/
+
 Sitemap: https://nearse.in/sitemap.xml

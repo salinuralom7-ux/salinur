@@ -1,0 +1,43 @@
+{
+  "packageId": "in.nearse.app",
+  "host": "nearse.in",
+  "name": "Nearse — Local Workers in Guwahati",
+  "launcherName": "Nearse",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#0C0A07",
+  "themeColorDark": "#0C0A07",
+  "navigationColor": "#0C0A07",
+  "navigationColorDark": "#0C0A07",
+  "navigationDividerColor": "#0C0A07",
+  "navigationDividerColorDark": "#0C0A07",
+  "backgroundColor": "#0C0A07",
+  "enableNotifications": false,
+  "startUrl": "/?src=app",
+  "iconUrl": "https://nearse.in/icons/icon-512.png?v=2",
+  "maskableIconUrl": "https://nearse.in/icons/maskable-512.png?v=2",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "nearse"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    { "name": "Find a worker", "shortName": "Find", "url": "/?src=app#find", "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=2" },
+    { "name": "Register as a worker", "shortName": "Register", "url": "/?src=app#work", "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=2" }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://nearse.in/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://nearse.in/",
+  "minSdkVersion": 23,
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "appVersion": "1.0.0"
+}
