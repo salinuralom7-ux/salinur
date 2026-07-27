@@ -119,6 +119,62 @@ jobs:
           code=$(curl -sS -o /tmp/verify.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/v.json)
           note "verify migration: HTTP $code — $(head -c 900 /tmp/verify.json)"
           [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
+
+          # Migration 10, checked against the real database rather than a
+          # local copy. Every one of these was a way in before it was closed.
+          cat > /tmp/harden.sql <<'HSQL'
+          select
+            (select public.pin_is_published(pin_hash) from public.nearse_admin where id=1)
+              as admin_pin_STILL_PUBLISHED_change_it,
+            (select public.pin_is_published(pin_hash) from public.owner_settings where id=1)
+              as cars_pin_STILL_PUBLISHED_change_it,
+            (select count(*)::int from pg_policies
+              where schemaname='public' and tablename='workers'
+                and qual like '%approved%') as workers_policy_approved_only,
+            (select count(*)::int from pg_policies
+              where schemaname='public' and tablename='workers'
+                and qual = 'true') as workers_policy_wide_open,
+            has_column_privilege('anon','public.workers','phone','select')
+              as anon_can_read_phone,
+            has_column_privilege('anon','public.workers','name','select')
+              as anon_can_read_name,
+            (select count(*)::int from information_schema.columns
+              where table_schema='public' and table_name='workers'
+                and column_name in ('terms_version','consent_at','age_confirmed')) as consent_cols,
+            (select count(*)::int from information_schema.tables
+              where table_schema='public'
+                and table_name in ('worker_ratings','worker_reports','contact_requests')) as new_tables,
+            (select count(*)::int from information_schema.routines
+              where routine_schema='public'
+                and routine_name in ('phone_taken','request_worker_contact','admin_queue',
+                                     'admin_reports','purge_expired_data','pin_is_published')) as new_functions,
+            (select count(*)::int from pg_proc p
+              join pg_namespace n on n.oid=p.pronamespace
+             where n.nspname='public' and p.proname='rate_worker' and p.pronargs=2) as old_unlimited_rate_fn,
+            (select count(*)::int from information_schema.routines r
+              join information_schema.parameters pa
+                on pa.specific_name = r.specific_name
+             where r.routine_schema='public' and r.routine_name='search_workers'
+               and pa.parameter_mode='OUT' and pa.parameter_name='phone') as search_still_returns_phone,
+            (select count(*)::int from public.worker_reports where not handled) as open_reports
+          HSQL
+          jq -Rs '{query: .}' /tmp/harden.sql > /tmp/h.json
+          code=$(curl -sS -o /tmp/harden.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/h.json)
+          note "verify hardening: HTTP $code — $(head -c 1200 /tmp/harden.json)"
+          [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
+          # these two are warnings, not failures: only the owner can fix them
+          if grep -q '"admin_pin_still_published_change_it":true' /tmp/harden.json; then
+            note "WARNING: the admin PIN is still the one published in this repo. See DEPLOY.md, Job 0."
+          fi
+          if grep -q '"cars_pin_still_published_change_it":true' /tmp/harden.json; then
+            note "WARNING: the Budget Cars owner PIN is still the published one. See DEPLOY.md, Job 0."
+          fi
+          # these are failures: they mean the migration did not take
+          for bad in '"anon_can_read_phone":true' '"workers_policy_wide_open":1' '"search_still_returns_phone":1' '"old_unlimited_rate_fn":1'; do
+            if grep -q "$bad" /tmp/harden.json; then
+              note "ERROR: hardening not applied — $bad"; exit 1
+            fi
+          done
           # End-to-end photo upload, using the public anon key exactly as the
           # browser does — proves the bucket, its policies and public read all work.
           anon=$(grep -oP 'SUPABASE_ANON_KEY\s*=\s*"\K[^"]+' docs/index.html | head -1)
