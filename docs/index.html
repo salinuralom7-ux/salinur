@@ -3038,6 +3038,13 @@ function adminCard(w){
         ${w.about ? "<br>" + esc(w.about) : ""}
         ${w.review_note ? `<br><em>Reason given: ${esc(w.review_note)}</em>` : ""}
       </p>
+      ${(w.skills||[]).filter(x => RATE_BAND[x.skill] &&
+            (x.price < RATE_BAND[x.skill][0] || x.price > RATE_BAND[x.skill][1]))
+          .map(x => `<div class="wa-expect" style="border-color:rgba(232,112,127,.4)">
+            Rate outside the usual range — <b>${esc(x.skill)}</b> at ${money(x.price)} ${esc(x.unit||"")},
+            allowed ${money(RATE_BAND[x.skill][0])}–${money(RATE_BAND[x.skill][1])}.
+            Profiles saved before the limits existed keep their old rate until the worker edits.
+          </div>`).join("")}
       ${waCodes[w.id] && st === "pending" ? `<div class="wa-expect">
         Check WhatsApp for <b>${esc(waCodes[w.id])}</b> from <b>${esc(w.phone||"")}</b>.
         Approve only if both match.
