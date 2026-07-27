@@ -106,7 +106,14 @@ jobs:
             (select count(*)::int from information_schema.columns
               where table_schema='public' and table_name='workers' and column_name='thumb') as thumb_col,
             (select count(*)::int from information_schema.columns
-              where table_schema='public' and table_name='workers' and column_name in ('thumb','selfie')) as photo_cols
+              where table_schema='public' and table_name='workers' and column_name in ('thumb','selfie')) as photo_cols,
+            (select count(*)::int from public.service_rates) as rate_bands,
+            (select min_price || '-' || max_price from public.service_rates where skill='Carpenter') as carpenter_band,
+            (select count(*)::int from information_schema.routines
+              where routine_schema='public' and routine_name='check_rate_bands') as band_fn,
+            (select count(*)::int from public.workers w, jsonb_array_elements(w.skills) s
+               join public.service_rates r on r.skill = s->>'skill'
+              where (s->>'price')::numeric < r.min_price or (s->>'price')::numeric > r.max_price) as live_rates_out_of_band
           VSQL
           jq -Rs '{query: .}' /tmp/verify.sql > /tmp/v.json
           code=$(curl -sS -o /tmp/verify.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/v.json)
