@@ -2,19 +2,19 @@
    These are plain HTML on purpose: they must render with no JavaScript, and
    the Play Store and search engines need to reach them at a stable URL. */
 :root{
-  --bg:#0B0F1E;
-  --surface:#121729;
-  --surface-2:#191F34;
-  --ink:#ECEEF7;
-  --ink-2:#C3C8DC;
-  --muted:#8990AC;
-  --line:rgba(236,238,247,.10);
-  --line-strong:rgba(236,238,247,.19);
-  --brand:#4420F8;
-  --brand-2:#8B72FF;
-  --brand-quiet:#9C97D1;
-  --brand-soft:rgba(68,32,248,.18);
-  --warn:#D6A85C;
+  --bg:#0C0A07;
+  --surface:#151109;
+  --surface-2:#1D1810;
+  --ink:#F6F2E8;
+  --ink-2:#D8D0BE;
+  --muted:#978D79;
+  --line:rgba(246,242,232,.10);
+  --line-strong:rgba(246,242,232,.19);
+  --brand:#EABB51;
+  --brand-2:#F3D07C;
+  --brand-quiet:#C4B48C;
+  --brand-soft:rgba(234,187,81,.15);
+  --warn:#E8924A;
   --r-sm:10px;
   --r:14px;
   --sans:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-serif;
@@ -25,7 +25,7 @@ html{-webkit-text-size-adjust:100%}
 body{
   font-family:var(--sans);
   background:
-    radial-gradient(1100px 520px at 82% -12%, rgba(68,32,248,.16), transparent 62%),
+    radial-gradient(1100px 520px at 82% -12%, rgba(234,187,81,.13), transparent 62%),
     var(--bg);
   color:var(--ink);
   line-height:1.65;
@@ -39,7 +39,7 @@ a:hover{text-decoration:underline;text-underline-offset:3px}
 .wrap{max-width:760px;margin:0 auto;padding:0 20px;width:100%}
 
 header{
-  border-bottom:1px solid var(--line);background:rgba(11,15,30,.88);
+  border-bottom:1px solid var(--line);background:rgba(12,10,7,.88);
   backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;
 }
 .masthead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;padding-bottom:16px}
@@ -73,7 +73,7 @@ li{margin-bottom:7px}
 strong{color:var(--ink);font-weight:700}
 
 .callout{
-  border:1px solid rgba(214,168,92,.32);background:rgba(214,168,92,.08);
+  border:1px solid rgba(232,146,74,.32);background:rgba(232,146,74,.08);
   border-radius:var(--r);padding:17px 19px;margin:0 0 30px;
 }
 .callout b{display:block;color:var(--warn);margin-bottom:5px;font-size:.95rem}

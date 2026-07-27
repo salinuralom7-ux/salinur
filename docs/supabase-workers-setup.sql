@@ -896,3 +896,283 @@ language sql stable security definer set search_path = public, extensions as $$
    limit greatest(1, least(p_limit, 50))
   offset greatest(0, p_offset);
 $$;
+
+-- ============================================================
+-- MIGRATION 9 — sensible price bands per service
+--
+-- Workers set their own rate, which is the point of Nearse, but an
+-- unbounded number invites nonsense listings and makes the marketplace
+-- untrustworthy — the same reason OLX will not let you list a phone for
+-- one rupee. Each service gets a floor and a ceiling drawn from what that
+-- trade actually charges in Guwahati, and the rate is checked on the
+-- server so the limit cannot be bypassed by calling the API directly.
+-- ============================================================
+
+create table if not exists public.service_rates (
+  skill     text primary key,
+  min_price int not null,
+  max_price int not null,
+  check (min_price > 0 and max_price >= min_price)
+);
+alter table public.service_rates enable row level security;
+drop policy if exists "rates are public" on public.service_rates;
+create policy "rates are public" on public.service_rates for select using (true);
+
+insert into public.service_rates (skill, min_price, max_price) values
+  ($q$Housemaid (Daily)$q$,2000,12000),
+  ($q$Part-time Maid$q$,1500,10000),
+  ($q$Deep House Cleaning$q$,800,6000),
+  ($q$Bathroom Cleaning$q$,200,4000),
+  ($q$Kitchen Deep Cleaning$q$,200,4000),
+  ($q$Sofa & Carpet Cleaning$q$,200,4000),
+  ($q$Water Tank Cleaning$q$,200,4000),
+  ($q$Window & Glass Cleaning$q$,200,4000),
+  ($q$Pest Control$q$,200,4000),
+  ($q$Laundry & Ironing$q$,1500,20000),
+  ($q$Home Cook (Daily Meals)$q$,2500,18000),
+  ($q$Party Cook$q$,300,3000),
+  ($q$Assamese Cuisine Cook$q$,300,3000),
+  ($q$Tiffin Service$q$,2500,30000),
+  ($q$Event Catering$q$,50,2000),
+  ($q$Halwai (Sweets & Snacks)$q$,300,3000),
+  ($q$Home Baker (Cakes)$q$,200,25000),
+  ($q$Serving Staff / Waiter$q$,300,3000),
+  ($q$Babysitter$q$,4000,20000),
+  ($q$Nanny (Full-time)$q$,4000,45000),
+  ($q$Newborn & Mother Care$q$,4000,45000),
+  ($q$Elderly Caretaker$q$,6000,30000),
+  ($q$Patient Attendant$q$,400,3000),
+  ($q$Home Nurse$q$,400,3000),
+  ($q$Physiotherapist (Home Visit)$q$,200,4000),
+  ($q$Electrician$q$,200,1500),
+  ($q$Plumber$q$,200,1500),
+  ($q$AC Service & Repair$q$,300,2500),
+  ($q$AC Installation$q$,200,15000),
+  ($q$Refrigerator Repair$q$,250,2500),
+  ($q$Washing Machine Repair$q$,250,2500),
+  ($q$Microwave & Oven Repair$q$,150,2500),
+  ($q$Geyser Repair$q$,150,2500),
+  ($q$Water Purifier Service$q$,150,2500),
+  ($q$Chimney Cleaning & Repair$q$,150,2500),
+  ($q$Gas Stove Repair$q$,150,2500),
+  ($q$Inverter & Battery Service$q$,150,2500),
+  ($q$TV Installation & Repair$q$,150,2500),
+  ($q$Mobile Phone Repair$q$,200,15000),
+  ($q$Laptop & Computer Repair$q$,200,15000),
+  ($q$CCTV Installation$q$,200,15000),
+  ($q$Wi-Fi & Network Setup$q$,150,2500),
+  ($q$Water Pump Repair$q$,150,2500),
+  ($q$Solar Panel Installation$q$,200,15000),
+  ($q$Mason (Raj Mistri)$q$,400,2500),
+  ($q$Carpenter$q$,400,2500),
+  ($q$House Painter$q$,5,250),
+  ($q$Tile & Marble Fitter$q$,500,2500),
+  ($q$Waterproofing Specialist$q$,5,250),
+  ($q$POP & False Ceiling Worker$q$,5,250),
+  ($q$Welder & Fabricator$q$,400,2500),
+  ($q$Grill & Gate Fitting$q$,200,25000),
+  ($q$Aluminium & Glass Fitter$q$,200,25000),
+  ($q$Modular Kitchen Fitter$q$,200,25000),
+  ($q$Furniture Assembly$q$,200,25000),
+  ($q$Civil Contractor$q$,3000,300000),
+  ($q$Interior Designer$q$,3000,300000),
+  ($q$Daily Wage Helper$q$,400,2500),
+  ($q$Personal Driver (Monthly)$q$,8000,25000),
+  ($q$Driver (Per Day)$q$,300,3000),
+  ($q$Outstation Driver$q$,300,3000),
+  ($q$Car Mechanic (Home Visit)$q$,150,3000),
+  ($q$Two-Wheeler Mechanic$q$,150,3000),
+  ($q$Car AC Repair$q$,200,25000),
+  ($q$Car Washing (At Home)$q$,6000,40000),
+  ($q$Doorstep Puncture Repair$q$,200,25000),
+  ($q$Battery Jump-start & Replacement$q$,150,3000),
+  ($q$Car Denting & Painting$q$,200,25000),
+  ($q$Driving Instructor$q$,6000,40000),
+  ($q$Beautician (At Home)$q$,300,3000),
+  ($q$Bridal Makeup Artist$q$,3000,40000),
+  ($q$Party Makeup Artist$q$,500,40000),
+  ($q$Hair Stylist (At Home)$q$,200,5000),
+  ($q$Barber (At Home)$q$,200,5000),
+  ($q$Mehendi Artist$q$,500,40000),
+  ($q$Nail Artist$q$,200,5000),
+  ($q$Massage Therapist$q$,200,4000),
+  ($q$Yoga Trainer$q$,1500,45000),
+  ($q$Fitness Trainer (At Home)$q$,1500,45000),
+  ($q$Dietician & Nutritionist$q$,200,4000),
+  ($q$Home Tutor (Class 1–5)$q$,1000,25000),
+  ($q$Home Tutor (Class 6–10)$q$,1000,25000),
+  ($q$Tutor — Science (11–12)$q$,1000,25000),
+  ($q$Tutor — Commerce (11–12)$q$,1000,25000),
+  ($q$Tutor — Mathematics$q$,1000,25000),
+  ($q$Spoken English Trainer$q$,1000,25000),
+  ($q$Competitive Exam Coach$q$,1000,25000),
+  ($q$Computer Basics Trainer$q$,1000,25000),
+  ($q$Coding Teacher (Kids)$q$,1000,25000),
+  ($q$Guitar Teacher$q$,1000,25000),
+  ($q$Keyboard & Piano Teacher$q$,1000,25000),
+  ($q$Vocal & Singing Teacher$q$,1000,25000),
+  ($q$Tabla & Drums Teacher$q$,1000,25000),
+  ($q$Classical Dance Teacher$q$,1000,25000),
+  ($q$Western Dance Teacher$q$,1000,25000),
+  ($q$Art & Drawing Teacher$q$,1000,25000),
+  ($q$Religious Studies Teacher$q$,1000,25000),
+  ($q$Cricket / Football Coach$q$,1000,25000),
+  ($q$Swimming Coach$q$,1000,25000),
+  ($q$Event Photographer$q$,2500,40000),
+  ($q$Wedding Photographer$q$,1500,40000),
+  ($q$Videographer$q$,3000,50000),
+  ($q$Drone Operator$q$,1500,40000),
+  ($q$DJ & Sound System$q$,1500,40000),
+  ($q$Anchor / Emcee$q$,1500,40000),
+  ($q$Event Decorator$q$,1000,80000),
+  ($q$Birthday & Balloon Decorator$q$,1000,80000),
+  ($q$Tent & Furniture Setup$q$,1000,80000),
+  ($q$Wedding Planner$q$,3000,300000),
+  ($q$Priest / Pandit$q$,1000,80000),
+  ($q$Maulvi (Religious Ceremony)$q$,1000,80000),
+  ($q$Live Singer / Band$q$,1500,40000),
+  ($q$Accountant / Bookkeeper$q$,1500,45000),
+  ($q$GST & Tax Consultant$q$,300,50000),
+  ($q$Chartered Accountant$q$,300,50000),
+  ($q$Advocate / Lawyer$q$,200,4000),
+  ($q$Document & Affidavit Agent$q$,300,50000),
+  ($q$Insurance Advisor$q$,200,4000),
+  ($q$Property Agent$q$,300,50000),
+  ($q$Architect$q$,3000,300000),
+  ($q$Civil Engineer (Consultation)$q$,150,2500),
+  ($q$Vastu Consultant$q$,150,2500),
+  ($q$Web Developer$q$,3000,300000),
+  ($q$Mobile App Developer$q$,3000,300000),
+  ($q$Graphic Designer$q$,500,60000),
+  ($q$Logo & Branding Designer$q$,500,60000),
+  ($q$Video Editor$q$,500,60000),
+  ($q$Social Media Manager$q$,1500,45000),
+  ($q$Digital Marketing Specialist$q$,1500,45000),
+  ($q$Content Writer$q$,500,60000),
+  ($q$Data Entry Operator$q$,1500,45000),
+  ($q$Gardener (Regular)$q$,1500,15000),
+  ($q$Garden Setup & Landscaping$q$,3000,300000),
+  ($q$Lawn Mowing$q$,200,3000),
+  ($q$Tree Cutting & Pruning$q$,200,25000),
+  ($q$Pet Groomer$q$,150,2500),
+  ($q$Dog Trainer$q$,1500,15000),
+  ($q$Pet Sitter$q$,300,3000),
+  ($q$Dog Walker$q$,1500,15000),
+  ($q$Veterinary Doctor (Home Visit)$q$,150,2500),
+  ($q$Ladies Tailor$q$,30,3000),
+  ($q$Gents Tailor$q$,30,3000),
+  ($q$Blouse & Boutique Stitching$q$,30,3000),
+  ($q$Embroidery Work$q$,30,3000),
+  ($q$Curtain & Sofa Cover Stitching$q$,30,3000),
+  ($q$Cobbler (Shoe Repair)$q$,30,3000),
+  ($q$Packers & Movers$q$,1500,30000),
+  ($q$Loading & Unloading Helper$q$,300,3000),
+  ($q$Goods Transport (Tempo)$q$,300,8000),
+  ($q$Local Courier & Delivery$q$,300,8000),
+  ($q$Grocery & Errand Helper$q$,300,3000),
+  ($q$Security Guard$q$,8000,25000),
+  ($q$Office Assistant$q$,6000,30000),
+  ($q$Office Housekeeping Staff$q$,6000,30000),
+  ($q$Building Caretaker$q$,6000,30000)
+on conflict (skill) do update
+  set min_price = excluded.min_price, max_price = excluded.max_price;
+
+-- Raises if any skill in the payload is priced outside its band.
+create or replace function public.check_rate_bands(p_skills jsonb)
+returns void
+language plpgsql stable set search_path = public as $fn$
+declare
+  s     jsonb;
+  band  public.service_rates%rowtype;
+  price numeric;
+begin
+  for s in select * from jsonb_array_elements(coalesce(p_skills,'[]'::jsonb)) loop
+    select * into band from service_rates where skill = s->>'skill';
+    if not found then continue;            -- a service with no band is unrestricted
+    end if;
+    price := nullif(s->>'price','')::numeric;
+    if price is null then
+      raise exception 'Set a rate for %', s->>'skill';
+    end if;
+    if price < band.min_price then
+      raise exception '% is too low. The lowest allowed is Rs % %',
+        s->>'skill', band.min_price, coalesce(s->>'unit','');
+    end if;
+    if price > band.max_price then
+      raise exception '% is too high. The highest allowed is Rs % %',
+        s->>'skill', band.max_price, coalesce(s->>'unit','');
+    end if;
+  end loop;
+end;
+$fn$;
+
+-- register and update now enforce the bands
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  new_id uuid; jwt_phone text; need_otp boolean;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then raise exception 'PIN must be exactly 4 digits'; end if;
+  if p_phone !~ '^[6-9]\d{9}$' then raise exception 'Enter a valid 10-digit Indian mobile number'; end if;
+  perform check_rate_bands(p_data->'skills');
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''), '\D', '', 'g');
+  if length(jwt_phone) > 10 then jwt_phone := right(jwt_phone, 10); end if;
+  if coalesce(need_otp,false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, thumb, city, area, about, lat, lng, skills, available, phone_verified)
+  values (coalesce(p_data->>'name',''), p_phone, p_data->>'selfie', p_data->>'thumb',
+          p_data->>'city', p_data->>'area', p_data->>'about',
+          (p_data->>'lat')::double precision, (p_data->>'lng')::double precision,
+          coalesce(p_data->'skills','[]'::jsonb),
+          coalesce((p_data->>'available')::boolean, true), jwt_phone <> '')
+  returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash, email, wa_code)
+    values (new_id, crypt(p_pin, gen_salt('bf')),
+            nullif(btrim(coalesce(p_data->>'email','')), ''),
+            nullif(btrim(coalesce(p_data->>'wa_code','')), ''));
+  return query select * from workers where id = new_id;
+end;
+$$;
+
+create or replace function public.update_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wid uuid; is_edit boolean;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then raise exception 'Wrong phone number or PIN'; end if;
+  if p_data ? 'skills' then perform check_rate_bands(p_data->'skills'); end if;
+
+  is_edit := (p_data ?| array['name','selfie','area','about','skills']);
+  update workers set
+    name = coalesce(p_data->>'name', name),
+    selfie = coalesce(p_data->>'selfie', selfie),
+    thumb = coalesce(p_data->>'thumb', thumb),
+    city = coalesce(p_data->>'city', city),
+    area = coalesce(p_data->>'area', area),
+    about = coalesce(p_data->>'about', about),
+    lat = coalesce((p_data->>'lat')::double precision, lat),
+    lng = coalesce((p_data->>'lng')::double precision, lng),
+    skills = coalesce(p_data->'skills', skills),
+    available = coalesce((p_data->>'available')::boolean, available),
+    status = case when is_edit and status = 'rejected' then 'pending' else status end,
+    review_note = case when is_edit and status = 'rejected' then null else review_note end
+  where id = wid;
+  return query select * from workers where id = wid;
+end;
+$$;
