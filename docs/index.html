@@ -305,51 +305,39 @@ header{
 .cta:active{transform:scale(.99)}
 .cta:focus-visible{outline:2px solid var(--brand-2);outline-offset:3px}
 .cta-ico{
-  width:56px;height:56px;border-radius:16px;display:grid;place-items:center;flex:0 0 auto;
-  position:relative;overflow:hidden;
+  width:60px;height:60px;border-radius:17px;display:grid;place-items:center;flex:0 0 auto;
+  position:relative;
 }
-.art{width:30px;height:30px;overflow:visible}
+.art{width:34px;height:34px;overflow:visible}
 
-/* ---- "Find a worker": sonar rings pulse out of the lens ---- */
-.art-find .sonar{
-  transform-origin:21px 21px;opacity:0;
-  animation:sonar 2.8s cubic-bezier(.2,.6,.3,1) infinite;
+/* ---- "Find a worker": the head and binoculars sweep the horizon ---- */
+.art-find .scan{
+  transform-origin:22px 36px;        /* the neck, so the whole head turns */
+  animation:scan 5.2s cubic-bezier(.45,0,.55,1) infinite;
 }
-.art-find .s2{animation-delay:1.4s}
-@keyframes sonar{
-  0%  {transform:scale(.28);opacity:.85}
-  60% {opacity:.18}
-  100%{transform:scale(2.05);opacity:0}
+@keyframes scan{
+  0%,100%{transform:rotate(-10deg)}
+  46%,54%{transform:rotate(10deg)}   /* holds at each end, as if it spotted something */
 }
-.art-find .blip{
-  transform-origin:21px 21px;
-  animation:blip 2.8s cubic-bezier(.2,.6,.3,1) infinite;
-}
-@keyframes blip{0%,70%,100%{transform:scale(1);opacity:.9}12%{transform:scale(1.5);opacity:1}}
-.art-find .lens,.art-find .stem{
-  transform-origin:24px 24px;
-  animation:tilt 5.6s ease-in-out infinite;
-}
-@keyframes tilt{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
 
 /* ---- "I am a worker": the raised hand waves ---- */
 .art-worker .arm{
-  transform-origin:30.6px 37px;   /* the shoulder, so the whole arm swings */
-  animation:wave 3.2s cubic-bezier(.36,.07,.19,.97) infinite;
+  transform-origin:31.2px 34.6px;    /* the shoulder, so the whole arm swings */
+  animation:wave 3.4s cubic-bezier(.36,.07,.19,.97) infinite;
 }
 @keyframes wave{
-  0%,58%,100%{transform:rotate(0deg)}
-  64%{transform:rotate(-22deg)}
-  71%{transform:rotate(9deg)}
-  78%{transform:rotate(-16deg)}
-  85%{transform:rotate(5deg)}
-  92%{transform:rotate(-6deg)}
+  0%,52%,100%{transform:rotate(0deg)}
+  60%{transform:rotate(-15deg)}
+  68%{transform:rotate(9deg)}
+  76%{transform:rotate(-12deg)}
+  84%{transform:rotate(6deg)}
+  92%{transform:rotate(-5deg)}
 }
-.art-worker .hat,.art-worker .brim,.art-worker .peak,.art-worker .head{
-  transform-origin:22px 26px;
-  animation:nod 3.2s cubic-bezier(.36,.07,.19,.97) infinite;
+.art-worker .figure{
+  transform-origin:22px 30px;
+  animation:nod 3.4s cubic-bezier(.36,.07,.19,.97) infinite;
 }
-@keyframes nod{0%,58%,100%{transform:translateY(0)}70%{transform:translateY(-1.1px)}}
+@keyframes nod{0%,52%,100%{transform:translateY(0) rotate(0deg)}70%{transform:translateY(-1px) rotate(-2.5deg)}}
 .cta-text{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
 .cta-text b{font-size:1.12rem;font-weight:700;letter-spacing:-.02em;line-height:1.25}
 .cta-text i{font-style:normal;font-size:.84rem;font-weight:500;opacity:.72}
@@ -391,10 +379,8 @@ header{
 .cta:active{transform:scale(.985)}
 .cta-text b{transition:none}
 @media (prefers-reduced-motion: reduce){
-  .art-find .sonar,.art-find .blip,.art-find .lens,.art-find .stem,
-  .art-worker .arm,.art-worker .hat,.art-worker .brim,.art-worker .peak,.art-worker .head,
+  .art-find .scan,.art-worker .arm,.art-worker .figure,
   .cta.primary::after{animation:none !important}
-  .art-find .sonar{opacity:.25}
 }
 .assure{
   display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
@@ -1016,14 +1002,19 @@ footer a:hover{color:var(--brand)}
       <div class="doors reveal" data-r="4">
         <button class="cta primary" id="ctaHire" onclick="go('hire')">
           <span class="cta-ico" aria-hidden="true">
-            <!-- a search that keeps looking: sonar rings pulse out of the lens -->
+            <!-- a worker scanning the horizon through binoculars -->
             <svg class="art art-find" viewBox="0 0 48 48" fill="none" stroke="currentColor"
-                 stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-              <circle class="sonar s1" cx="21" cy="21" r="8"/>
-              <circle class="sonar s2" cx="21" cy="21" r="8"/>
-              <circle class="lens" cx="21" cy="21" r="10.5"/>
-              <path class="stem" d="M28.7 28.7 36 36"/>
-              <circle class="blip" cx="21" cy="21" r="2.6" fill="currentColor" stroke="none"/>
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <g class="scan">
+                <path d="M12.6 17.2a9.4 9.4 0 0 1 18.8 0"/>
+                <path d="M9.8 17.2h24.4"/>
+                <path d="M22 8.8v2.8"/>
+                <circle cx="16.5" cy="25.8" r="4.7"/>
+                <circle cx="27.5" cy="25.8" r="4.7"/>
+                <path d="M21.2 25.8h1.6"/>
+              </g>
+              <path d="M10.8 45v-3.8a11.2 11.2 0 0 1 22.4 0V45"/>
+              <path d="M17.6 35 22 39.4 26.4 35"/>
             </svg>
           </span>
           <span class="cta-text"><b>Find a worker</b><i>Search verified people near you</i></span>
@@ -1032,18 +1023,21 @@ footer a:hover{color:var(--brand)}
 
         <button class="cta secondary" id="ctaWork" onclick="go('work')">
           <span class="cta-ico" aria-hidden="true">
-            <!-- a worker in a hard hat, raising a hand -->
+            <!-- a worker with a hand raised high: I am here -->
             <svg class="art art-worker" viewBox="0 0 48 48" fill="none" stroke="currentColor"
-                 stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-              <path class="hat" d="M14 19.5a8 8 0 0 1 16 0"/>
-              <path class="brim" d="M11.8 19.5h20.4"/>
-              <path class="peak" d="M22 11.6v2.6"/>
-              <circle class="head" cx="22" cy="26" r="5.4"/>
-              <path class="body" d="M12.6 44v-3.4A9.4 9.4 0 0 1 22 31.2a9.4 9.4 0 0 1 9.4 9.4V44"/>
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <g class="figure">
+                <path d="M13.4 17a8.6 8.6 0 0 1 17.2 0"/>
+                <path d="M10.8 17h23.2"/>
+                <path d="M22 9v2.6"/>
+                <circle cx="22" cy="23.6" r="5.4"/>
+              </g>
+              <path d="M11.6 45v-4a10.4 10.4 0 0 1 20.8 0V45"/>
+              <path d="M17.8 31.6 22 35.8 26.2 31.6"/>
               <g class="arm">
-                <path d="M30.6 37 35.6 32 37 27.4"/>
-                <path class="fingers" d="M35 26.6v-3.1M37.4 26.2v-3.6M39.7 26.9v-2.9" stroke-width="1.9"/>
-                <path d="M34.2 28.4a3.3 3.3 0 0 0 6.3-.6"/>
+                <path d="M31.2 34.6 36.4 25.4 37.8 18"/>
+                <path d="M35.4 17.1v-3.8M38 16.7v-4.4M40.4 17.6v-3.6" stroke-width="2"/>
+                <path d="M34.6 19.3a3.6 3.6 0 0 0 6.8-.9"/>
               </g>
             </svg>
           </span>
