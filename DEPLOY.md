@@ -174,7 +174,7 @@ Wait a minute for it to finish.
 ## Step 8 — Check it actually worked
 
 1. Open your `https://nearse.pages.dev` address
-2. Tap **I am a worker** → **Create account**
+2. Tap **Register as a worker** → **Create account**
 3. Register a test worker: any name, your own WhatsApp number, a 4-digit PIN
 4. Go through the steps and add a photo
 5. Publish the profile
