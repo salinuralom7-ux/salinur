@@ -51,7 +51,7 @@ Nearse reviews every profile before it goes live.
    Not an algorithm.
 4. **The booking goes straight to WhatsApp.** No app to learn, no chat system
    to sign up for. Every worker in Guwahati already uses WhatsApp.
-5. **Three months free for workers**, with no card, no UPI mandate, no payment
+5. **Thirty days free for workers**, with no card, no UPI mandate, no payment
    details of any kind asked for. Nothing that can auto-charge, nothing to
    cancel.
 6. **Hyper-local.** Guwahati only, by choice. Locality by locality — Jalukbari,

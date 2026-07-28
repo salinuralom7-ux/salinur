@@ -187,7 +187,7 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(900);
   console.log('Congratulations screen shown:', await page.locator('#scr-done.on').count() === 1);
   console.log('  message:', (await page.locator('#scr-done .sub').innerText()).trim());
-  console.log('  mentions the free trial:', (await page.locator('#scr-done').innerText()).includes('3 months free'));
+  console.log('  mentions the free trial:', (await page.locator('#scr-done').innerText()).includes('30 days free'));
   console.log('  names the number to expect a reply on:', (await page.locator('#donePhone').innerText()).includes('9435012345'));
   await page.locator('#scr-done .btn-brand').click();
   await page.waitForTimeout(500);
