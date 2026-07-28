@@ -1821,11 +1821,8 @@ footer a:hover{color:var(--brand)}
       <div class="field full"><label for="nowArea">Where are you?</label><select id="nowArea"></select></div>
       <div class="field full"><label for="nowNote">What is the problem? <span class="sublabel">— optional</span></label><textarea id="nowNote" rows="2" placeholder="e.g. Two ceiling fans not working."></textarea></div>
     </div>
-    <div class="now-explain">
-      <b>We ask the nearest available worker first.</b>
-      <span>They have 60 seconds to accept. If they cannot come, we ask the next one, and the next — you do not have to chase anybody. You only see a name once somebody has actually said yes.</span>
-    </div>
-    <button class="btn btn-brand btn-block" id="nowGoBtn" onclick="startNowJob()" style="padding:14px">Find someone now</button>
+    <div class="now-explain" id="nowExplain"></div>
+    <button class="btn btn-brand btn-block" id="nowGoBtn" onclick="startNowJob()" style="padding:14px">Send the request</button>
   </div>
 </div>
 
@@ -2587,10 +2584,19 @@ const api = {
     if(LIVE){
       const rows = await sb("rpc/create_job", {method:"POST", body:JSON.stringify({
         p_skill:o.skill, p_name:o.name, p_phone:o.phone, p_area:o.area,
-        p_note:o.note || null, p_lat:o.lat ?? null, p_lng:o.lng ?? null, p_city:CITY })});
+        p_note:o.note || null, p_lat:o.lat ?? null, p_lng:o.lng ?? null, p_city:CITY,
+        p_worker:o.workerId || null })});
       return Array.isArray(rows) ? rows[0] : rows;
     }
     return demoCreateJob(o);
+  },
+  /* only ever called because the customer asked for it */
+  async widenJob(code){
+    if(LIVE){
+      const rows = await sb("rpc/widen_job", {method:"POST", body:JSON.stringify({p_code:code})});
+      return Array.isArray(rows) ? rows[0] : rows;
+    }
+    return demoWidenJob(code);
   },
   async jobState(code){
     if(LIVE){
@@ -2747,34 +2753,55 @@ function demoRank(skill, lat, lng, asked){
     .map(x => x.w);
 }
 function demoOfferNext(j){
-  const next = demoRank(j.skill, j.lat, j.lng, j.asked)[0];
-  if(!next){ j.status = "nobody"; return null; }
+  /* a job that named somebody is theirs alone until the customer widens it */
+  const pool = demoRank(j.skill, j.lat, j.lng, j.asked)
+    .filter(w => !j.direct || w.id === j.requested);
+  const next = pool[0];
+  if(!next){ j.status = j.direct ? "no_answer" : "nobody"; return null; }
   j.asked.push(next.id);
   j.offer = { workerId: next.id, expires: Date.now() + OFFER_MS };
   return next;
 }
 function demoAdvance(j){
   if(j.status !== "searching") return j;
-  if(Date.now() > j.searchUntil){ j.status = "nobody"; return j; }
+  if(Date.now() > j.searchUntil){ j.status = j.direct ? "no_answer" : "nobody"; return j; }
   if(!j.offer || j.offer.expires <= Date.now()) demoOfferNext(j);
   return j;
 }
 function demoCreateJob(o){
   const list = jobsAll();
+  /* the named worker only counts if they actually offer this service */
+  const wanted = o.workerId && demoAll().find(w => w.id === o.workerId
+    && statusOf(w) === "approved" && w.available !== false
+    && (w.skills||[]).some(s => s.skill === o.skill));
   const j = { code: Math.random().toString(36).slice(2,8).toUpperCase(),
               skill:o.skill, name:o.name, phone:o.phone, area:o.area, note:o.note,
               lat:o.lat ?? null, lng:o.lng ?? null, status:"searching", asked:[], offer:null,
-              searchUntil: Date.now() + 20*60000, worker:null, eta:null };
+              searchUntil: Date.now() + 20*60000, worker:null, eta:null,
+              requested: wanted ? wanted.id : null, direct: !!wanted };
   demoOfferNext(j);
   list.unshift(j); jobsSave(list);
-  return { code: j.code, asked: j.asked.length };
+  return { code: j.code, asked: j.asked.length, direct: j.direct };
+}
+function demoWidenJob(code){
+  const list = jobsAll(); const j = list.find(x => x.code === code);
+  if(!j) throw new Error("That search cannot be reopened");
+  j.direct = false;
+  j.status = "searching";
+  j.searchUntil = Math.max(j.searchUntil, Date.now() + 15*60000);
+  j.offer = null;
+  demoOfferNext(j);
+  jobsSave(list);
+  return { status: j.status, asked: j.asked.length };
 }
 function demoJobState(code){
   const list = jobsAll(); const j = list.find(x => x.code === code);
   if(!j) return null;
   demoAdvance(j); jobsSave(list);
   const w = j.worker ? demoAll().find(x => x.id === j.worker) : null;
+  const req = j.requested ? demoAll().find(x => x.id === j.requested) : null;
   return { status:j.status, asked:j.asked.length, skill:j.skill,
+           direct: !!j.direct, requested_name: req ? req.name : null,
            worker_name: w ? w.name : null,
            worker_phone: (j.status === "accepted" && w) ? w.phone : null,
            worker_area: w ? w.area : null, eta_minutes: j.eta,
@@ -4215,8 +4242,17 @@ function openNowBooking(){
   const w = currentWorker;
   const s = (w.skills||[])[bookPick.svc] || {};
   hideModal("wOverlay");
-  $("nowTitle").textContent = "Get a " + (s.skill || "worker").toLowerCase() + " now";
-  $("nowSub").innerHTML = `Around <b>${esc(money(s.price||0))} ${esc(s.unit||"")}</b> — the final amount is agreed after they see the job.`;
+  /* This sheet is reached by tapping one person's profile. It used to say
+     "Get a plumber now" and then broadcast to whoever answered — so the
+     customer thought they had booked the face they were looking at. */
+  const first = (w.name || "").split(" ")[0] || "them";
+  $("nowTitle").textContent = "Ask " + esc(w.name || "this worker") + " to come now";
+  $("nowSub").innerHTML = `<b>${esc(s.skill||"")}</b> · around <b>${esc(money(s.price||0))} ${esc(s.unit||"")}</b> — the final amount is agreed after ${esc(first)} sees the job.`;
+  const ex = $("nowExplain");
+  if(ex) ex.innerHTML =
+    `<b>This request goes to ${esc(w.name || "them")}, and nobody else.</b>
+     <span>${esc(first)} has 60 seconds to accept. If ${esc(first)} cannot come, we will tell you —
+       and it is then your choice whether we look for somebody else nearby.</span>`;
   const sel = $("nowArea");
   sel.innerHTML = '<option value="">Select your locality</option>' + areaOptions(null);
   sel.value = "";
@@ -4235,14 +4271,19 @@ async function startNowJob(){
   const btn = $("nowGoBtn"); btn.disabled = true; btn.textContent = "Looking…";
   try{
     const res = await api.createJob({ skill:s.skill, name, phone, area, note,
+                                      workerId: w && w.id,
                                       lat: myLoc && myLoc.lat, lng: myLoc && myLoc.lng });
-    nowJob = { code: res.code, skill: s.skill, name, phone, area, note };
+    nowJob = { code: res.code, skill: s.skill, name, phone, area, note,
+               askedFor: (res && res.direct === false) ? null : (w && w.name) };
+    if(res && res.direct === false && w){
+      toast(w.name.split(" ")[0] + " is not available for that service — looking more widely");
+    }
     try{ localStorage.setItem("nearse_job_v1", JSON.stringify(nowJob)); }catch(e){}
     hideModal("nowOverlay");
     openModal("searchOverlay");
     pollJob();
-  }catch(e){ toast(e.message || "Could not start the search"); }
-  btn.disabled = false; btn.textContent = "Find someone now";
+  }catch(e){ toast(e.message || "Could not send the request"); }
+  btn.disabled = false; btn.textContent = "Send the request";
 }
 
 async function pollJob(){
@@ -4265,12 +4306,15 @@ async function pollJob(){
 function renderSearch(st){
   const host = $("searchBody");
   if(st.status === "searching"){
+    const who = st.direct ? (st.requested_name || nowJob && nowJob.askedFor) : null;
     host.innerHTML = `
       <div class="finding">
         <div class="radar" aria-hidden="true"><span></span><span></span><span></span></div>
-        <h3>Finding a ${esc((st.skill||"worker").toLowerCase())} near you</h3>
-        <p class="sub">Asked <b>${st.asked}</b> ${st.asked === 1 ? "worker" : "workers"} so far.
-          Each one gets 60 seconds before we move to the next.</p>
+        <h3>${who ? "Waiting for " + esc(who) : "Finding a " + esc((st.skill||"worker").toLowerCase()) + " near you"}</h3>
+        <p class="sub">${who
+          ? "Your request has gone to " + esc(who) + " and nobody else. They have 60 seconds to accept."
+          : `Asked <b>${st.asked}</b> ${st.asked === 1 ? "worker" : "workers"} so far.
+             Each one gets 60 seconds before we move to the next.`}</p>
         <div class="tick-left">${Math.max(0, st.seconds_left|0)}s</div>
         <button class="btn btn-quiet btn-block btn-sm" onclick="cancelNowJob()">Stop looking</button>
       </div>`;
@@ -4288,6 +4332,18 @@ function renderSearch(st){
           Message them on WhatsApp
         </a>
         <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="closeSearch()">Done</button>
+      </div>`;
+  }else if(st.status === "no_answer"){
+    const who = st.requested_name || (nowJob && nowJob.askedFor) || "That worker";
+    host.innerHTML = `
+      <div class="finding">
+        <h3>${esc(who)} did not answer</h3>
+        <p class="sub">They may be on another job, or away from their phone. Nothing has been booked,
+          and we have not passed your request to anybody else — you chose ${esc(who.split(" ")[0])},
+          so that is your decision to make.</p>
+        <button class="btn btn-brand btn-block" onclick="widenSearch()">Find someone else nearby</button>
+        <button class="btn btn-outline btn-block btn-sm" style="margin-top:10px" onclick="closeSearch();go('hire')">Pick somebody myself</button>
+        <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="closeSearch()">Leave it</button>
       </div>`;
   }else if(st.status === "nobody"){
     host.innerHTML = `
@@ -4319,6 +4375,20 @@ Hello ${(st.worker_name||"").split(" ")[0]}, thank you for accepting.
   const btn = $("jobWaBtn");
   if(btn) btn.href = "https://wa.me/91" + st.worker_phone + "?text=" + encodeURIComponent(msg);
   try{ localStorage.setItem("nearse_job_done_v1", j.code); }catch(e){}
+}
+
+/* Only ever reached by the customer tapping "Find someone else nearby".
+   Nothing widens a search on its own — that is the whole point of the fix. */
+async function widenSearch(){
+  if(!nowJob) return closeSearch();
+  try{
+    await api.widenJob(nowJob.code);
+    nowJob.askedFor = null;
+    $("searchBody").innerHTML = `<div class="finding">
+      <div class="radar" aria-hidden="true"><span></span><span></span><span></span></div>
+      <h3>Looking for someone else</h3><p class="sub">Asking the nearest available worker now.</p></div>`;
+    pollJob();
+  }catch(e){ toast(e.message || "Could not reopen the search"); }
 }
 
 async function cancelNowJob(){

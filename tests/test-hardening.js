@@ -63,7 +63,13 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
     const hash = sc.url.split('#')[1];
     const p = await ctx.newPage();
     await p.goto('http://localhost:8811/#' + hash);
-    await p.waitForTimeout(900);
+    // wait for the router to settle rather than guessing at a timeout: the
+    // boot path probes Supabase first, and under load 900ms was not always
+    // enough, which made this assertion flap
+    await p.waitForFunction(
+      () => document.querySelector('.screen.on') &&
+            document.querySelector('.screen.on').id !== 'scr-home',
+      null, { timeout: 8000 }).catch(() => {});
     const id = await p.evaluate(() => (document.querySelector('.screen.on') || {}).id);
     ok(`Shortcut "${sc.name}" (#${hash}) opens a real screen`, id !== 'scr-home', id);
     await p.close();

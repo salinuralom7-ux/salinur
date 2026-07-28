@@ -1910,7 +1910,11 @@ $$;
 
 -- What the customer's screen polls. The code is the only thing that opens it,
 -- which is why it is six characters of randomness and the job dies in an hour.
-create or replace function public.job_state(p_code text)
+-- Migration 13 widens this return type, and the whole file is re-applied on
+-- every deploy, so the old shape has to go before it is written back.
+drop function if exists public.job_state(text);
+
+create function public.job_state(p_code text)
 returns table (status text, asked int, worker_name text, worker_phone text,
                worker_area text, eta_minutes int, seconds_left int, skill text)
 language sql stable security definer set search_path = public, extensions as $$
@@ -2632,4 +2636,197 @@ begin
     order by x.at desc
     limit greatest(1, least(p_limit, 50));
 end;
+$$;
+
+-- ============================================================
+-- MIGRATION 13 — booking a named worker means that worker
+--
+-- The bug: tapping Book on a profile started an open search. The customer
+-- had just looked at that person's photo, rating and rate, and the sheet
+-- said "Get a plumber now" while the job went to whoever answered first.
+-- The person they chose might never even have been asked.
+--
+-- That is a bait and switch, and it is the fastest way to lose the trust
+-- the review queue exists to build. A job that starts from a profile is now
+-- reserved for that profile. If they do not answer, the customer is told
+-- whose answer is missing and asked whether to look wider — the platform
+-- never decides that on their behalf.
+-- ============================================================
+
+alter table public.jobs add column if not exists requested_worker uuid references public.workers(id) on delete set null;
+alter table public.jobs add column if not exists direct boolean not null default false;
+-- statuses gain 'no_answer': the named worker did not reply, which is not
+-- the same as nobody in the city being free
+
+-- Only the requested worker is a candidate while a job is reserved.
+create or replace function public.next_job_candidate(p_job uuid)
+returns uuid
+language sql stable security definer set search_path = public, extensions as $$
+  select w.id
+    from workers w, jobs j
+   where j.id = p_job
+     and w.status = 'approved'
+     and w.available
+     and (not j.direct or w.id = j.requested_worker)
+     and (j.city is null or w.city = j.city)
+     and exists (select 1 from jsonb_array_elements(w.skills) s
+                  where s->>'skill' = j.skill)
+     and not exists (select 1 from job_offers o
+                      where o.job_id = j.id and o.worker_id = w.id)
+   order by
+     -- the person actually chosen always goes first, even once the search
+     -- has been widened: they may still be the best answer
+     (w.id = j.requested_worker) desc,
+     (w.online_until is not null and w.online_until > now()) desc,
+     case when j.lat is null or w.lat is null then 1e6 else
+       6371 * 2 * asin(sqrt(
+         power(sin(radians(w.lat - j.lat) / 2), 2) +
+         cos(radians(j.lat)) * cos(radians(w.lat)) *
+         power(sin(radians(w.lng - j.lng) / 2), 2)))
+     end,
+     case when w.rating_count = 0 then 3.4
+          else w.rating_sum::numeric / w.rating_count end desc,
+     w.created_at
+   limit 1;
+$$;
+
+-- Running out of candidates means two different things now.
+create or replace function public.offer_next(p_job uuid, p_seconds int default 60)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare cand uuid; n int; is_direct boolean;
+begin
+  select next_job_candidate(p_job) into cand;
+  if cand is null then
+    select direct into is_direct from jobs where id = p_job;
+    update jobs
+       set status = case when coalesce(is_direct, false) then 'no_answer' else 'nobody' end
+     where id = p_job and status = 'searching';
+    return null;
+  end if;
+  select count(*) into n from job_offers where job_id = p_job;
+  insert into job_offers (job_id, worker_id, rank, expires_at)
+    values (p_job, cand, n + 1, now() + make_interval(secs => greatest(20, least(p_seconds, 300))));
+  update jobs set asked_count = n + 1 where id = p_job;
+  return cand;
+end;
+$$;
+
+-- A reserved job that runs out of time is waiting on one person, not on the
+-- whole city, so it stops as 'no_answer' too.
+create or replace function public.advance_jobs()
+returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare j record; moved int := 0;
+begin
+  update job_offers set status = 'expired'
+   where status = 'pending' and expires_at <= now();
+
+  for j in select id from jobs
+            where status = 'searching' and search_until > now()
+              and not exists (select 1 from job_offers o
+                               where o.job_id = jobs.id and o.status = 'pending')
+  loop
+    perform offer_next(j.id, 60);
+    moved := moved + 1;
+  end loop;
+
+  update jobs
+     set status = case when direct then 'no_answer' else 'nobody' end
+   where status = 'searching' and search_until <= now();
+  return moved;
+end;
+$$;
+
+-- the nine-argument version from Migration 11 has to go; the ten-argument
+-- one below is replaced in place on every later run
+drop function if exists public.create_job(text, text, text, text, text, double precision, double precision, text, int);
+
+create or replace function public.create_job(
+  p_skill text, p_name text, p_phone text, p_area text, p_note text default null,
+  p_lat double precision default null, p_lng double precision default null,
+  p_city text default 'Guwahati', p_minutes int default 20,
+  p_worker uuid default null)
+returns table (code text, worker_id uuid, asked int, direct boolean)
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid; c text; cand uuid; wanted uuid; is_direct boolean := false;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit mobile number';
+  end if;
+  if btrim(coalesce(p_name,'')) = '' then
+    raise exception 'Please enter your name';
+  end if;
+
+  -- A named worker only counts if they are actually bookable for this trade.
+  -- Otherwise the job falls back to an open search, and the customer is told.
+  if p_worker is not null then
+    select w.id into wanted from workers w
+     where w.id = p_worker and w.status = 'approved' and w.available
+       and exists (select 1 from jsonb_array_elements(w.skills) s where s->>'skill' = p_skill);
+    is_direct := wanted is not null;
+  end if;
+
+  loop
+    c := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+    exit when not exists (select 1 from jobs where jobs.code = c);
+  end loop;
+
+  insert into jobs (code, skill, city, area, lat, lng, customer_name, customer_phone, note,
+                    search_until, requested_worker, direct)
+  values (c, p_skill, p_city, p_area, p_lat, p_lng, btrim(p_name), p_phone,
+          nullif(btrim(coalesce(p_note,'')),''),
+          now() + make_interval(mins => greatest(2, least(p_minutes, 60))),
+          wanted, is_direct)
+  returning id into jid;
+
+  cand := offer_next(jid, 60);
+  return query select c, cand, (select asked_count from jobs where id = jid), is_direct;
+end;
+$$;
+
+-- The customer, and only the customer, decides to look beyond the person
+-- they picked. Nothing widens a search on its own.
+create or replace function public.widen_job(p_code text, p_minutes int default 15)
+returns table (status text, asked int)
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid;
+begin
+  -- every column is qualified: the OUT parameters are called status and asked,
+  -- and an unqualified `status` here resolves to the parameter, not the column
+  select j.id into jid from jobs j
+   where j.code = upper(btrim(p_code)) and j.status in ('no_answer', 'searching');
+  if jid is null then
+    raise exception 'That search cannot be reopened';
+  end if;
+  update jobs j
+     set direct = false,
+         status = 'searching',
+         search_until = greatest(j.search_until, now() + make_interval(mins => greatest(2, least(p_minutes, 60))))
+   where j.id = jid;
+  perform offer_next(jid, 60);
+  return query select j.status, j.asked_count from jobs j where j.id = jid;
+end;
+$$;
+
+-- The customer's screen has to be able to say whose answer it is waiting for.
+drop function if exists public.job_state(text);
+
+create function public.job_state(p_code text)
+returns table (status text, asked int, worker_name text, worker_phone text,
+               worker_area text, eta_minutes int, seconds_left int, skill text,
+               direct boolean, requested_name text)
+language sql stable security definer set search_path = public, extensions as $$
+  select j.status, j.asked_count, w.name,
+         case when j.status = 'accepted' then w.phone else null end,
+         w.area, j.eta_minutes,
+         greatest(0, extract(epoch from (
+           coalesce((select o.expires_at from job_offers o
+                      where o.job_id = j.id and o.status = 'pending'
+                      order by o.rank desc limit 1), j.search_until) - now()))::int),
+         j.skill,
+         j.direct,
+         (select rw.name from workers rw where rw.id = j.requested_worker)
+    from jobs j left join workers w on w.id = j.worker_id
+   where j.code = upper(btrim(p_code));
 $$;
