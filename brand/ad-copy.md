@@ -25,7 +25,7 @@ meaning is right but a native ear should pick the phrasing.
 | 3 | 9–15s. He opens Nearse, picks Carpenter, types his own rate: ₹900 per day. | *He sets the price. Not us.* | You choose the work. You choose the price. |
 | 4 | 15–20s. His phone lights up — a WhatsApp booking. He smiles and stands. | — | Bookings come straight to your WhatsApp. |
 | 5 | 20–26s. Working in a customer's flat, the customer bringing him tea. | *0% commission* | Whatever you charge, you keep. Every rupee. Nearse takes nothing. |
-| 6 | 26–30s. Logo on near-black. | **Nearse** · Every skill deserves an earning · nearse.in | **[AS]** গুৱাহাটীত এতিয়া। Free for three months. No card needed. |
+| 6 | 26–30s. Logo on near-black. | **Nearse** · Every skill deserves an earning · nearse.in | **[AS]** গুৱাহাটীত এতিয়া। Free for 30 days. No card needed. |
 
 **End card:** `nearse.in` · Register free · WhatsApp 70865 99367
 
@@ -62,7 +62,7 @@ labour chowks, tailoring shops, beauty parlours, driving schools.
 > ✓ You set your own price
 > ✓ Bookings come to your WhatsApp
 > ✓ **We take 0% commission — you keep everything you earn**
-> ✓ Free for 3 months. No card, no UPI, no payment details asked for.
+> ✓ Free for 30 days. No card, no UPI, no payment details asked for.
 >
 > Electrician · Plumber · Carpenter · Mason · Cook · Maid · Driver · Tutor ·
 > Beautician · Tailor · AC repair · Painter · and 140 more
@@ -108,7 +108,7 @@ Primary text:
 > Every carpenter in Guwahati knows what a day's work is worth. On Nearse you
 > put that number on your own profile, and you keep all of it. No commission,
 > not now, not later.
-> Free for 3 months. We do not ask for a card.
+> Free for 30 days. We do not ask for a card.
 > nearse.in
 
 **B — being found**
@@ -120,7 +120,7 @@ Primary text:
 > Two minutes to join. nearse.in
 
 **C — the trial**
-Headline: `3 months free. No card. Nothing to cancel.`
+Headline: `30 days free. No card. Nothing to cancel.`
 Primary text:
 > Most apps want your card before they show you anything. We do not ask for a
 > card, a UPI mandate, or any payment detail — there is nothing that can
@@ -167,7 +167,7 @@ Short enough to read without tapping "read more".
 > • You set your own rate
 > • Bookings come to your WhatsApp
 > • 0% commission, we take nothing
-> • Free 3 months, no card
+> • Free 30 days, no card
 >
 > 👉 nearse.in
 

@@ -1,50 +1,54 @@
-# Budget Phone Store 📱
+# Nearse
 
-An online marketplace for refurbished smartphones — built for Budget Phone Store, Bongaigaon, Assam. Customers buy quality refurbished phones at 40–65% below retail price with transparent grading, warranty assurance, and a 15-day money-back guarantee.
+A marketplace for booking local skilled workers in Guwahati — maids, cooks,
+electricians, plumbers, tutors, drivers, doctors and 160 other trades. Workers
+set their own price and Nearse takes no commission.
 
-This is the **Phase 1 MVP** web app: full storefront with the 5-grade system, search & filtering, product detail pages with quality-check transparency, cart, promo codes, and a complete checkout flow.
+Live at **[nearse.in](https://nearse.in)**.
 
-## The 5-Grade System
+## What is in here
 
-| Grade | Label | Battery | Warranty | Discount |
-|-------|-------|---------|----------|----------|
-| 🟢 A | Unboxed Like New | 95%+ | 12 months | 25–35% off MRP |
-| 🔵 B | Excellent Condition | 85–95% | 6 months | 35–45% off MRP |
-| 🟡 C | Very Good Condition (repaired) | 75–85% | 6 months | 45–55% off MRP |
-| 🟠 D | Good — Major Parts Replaced | 60–75% | 3 months | 55–65% off MRP |
-| 🔴 E | Fair — Needs Repair | <60% | 1 month (repair only) | 65–75% off MRP |
+| Path | What it is |
+|---|---|
+| `docs/index.html` | The whole Nearse app. One file, no build step. |
+| `docs/supabase-workers-setup.sql` | The database. Applied whole on every deploy, so every statement has to be safe to run again. |
+| `docs/about/`, `privacy/`, `terms/`, `cancellation/`, `delete-account/` | The legal pages. Plain HTML, no JavaScript, stable URLs. |
+| `docs/cars/` | Budget Cars — a separate showroom site sharing the same hosting. |
+| `docs/functions/upload.js` | Cloudflare Pages Function that stores profile photos in R2. |
+| `tests/` | Playwright harnesses and SQL checks. See [`tests/README.md`](tests/README.md). |
+| `store/` | Play Store and App Store submission package. See [`store/README.md`](store/README.md). |
+| `brand/` | Advertising copy and prompts. |
+| `DEPLOY.md` | Setup steps in plain language. **Start with Job 0.** |
 
-Grade E orders require an explicit "I understand this phone needs repair" confirmation at checkout.
+## How it is built
 
-## What's included (Phase 1)
+No framework and no build step — the app is a single HTML file served by
+GitHub Pages from `docs/`, talking to Supabase over its REST API. That is a
+deliberate choice: it stays free at launch volumes, there is nothing to
+break between writing a change and shipping it, and the whole thing can be
+read top to bottom.
 
-- **Home page** — hero, shop-by-grade cards, featured deals, trust section
-- **Shop page** — filter by grade / brand / price / category / stock, sort, full-text search
-- **Product pages** — color-coded grade badges, price vs MRP with savings, battery health, condition notes & repair history, specs table, expandable 32-point quality check, reviews with verified-purchase badges, "grade up" suggestions, similar products, video placeholder ("Dekho Aur Khareedo")
-- **Cart** — quantity controls capped at stock, move-to-wishlist, low-stock warnings
-- **Checkout** — 4-step flow (address → shipping → payment → review), promo codes (`WELCOME50`, `FIRST500`, `GRAD20`), EMI gating above ₹10,000, Grade E acknowledgment, COD/UPI/card/net-banking options
-- **Orders & warranties** — order history with per-device warranty cards and live expiry status
-- **Wishlist** — persisted locally, synced across pages
+Data lives in Postgres behind row level security, and anything that changes
+data goes through a `SECURITY DEFINER` function that checks a bcrypt-hashed
+PIN on the server. Nothing sensitive is readable by the public: approved
+profiles are, WhatsApp numbers are handed out one booking at a time, and
+everything else is closed.
 
-Cart, wishlist and orders persist in the browser via `localStorage` (no backend needed for the MVP).
-
-## Run it
+## Working on it
 
 ```bash
-npm install
-npm run dev      # local development at http://localhost:5173
-npm run build    # production build into dist/
-npm run preview  # serve the production build
+npm i playwright        # once
+node tests/test-ks.js   # the whole worker and customer journey
 ```
 
-The build uses a relative base path and hash routing, so the `dist/` folder deploys as-is to GitHub Pages, Netlify, Vercel or any static host.
+Two things to remember when changing the app:
 
-## Tech
+1. **Bump `CACHE` in `docs/sw.js`** whenever `docs/index.html` changes, or
+   phones that already installed Nearse keep serving the old version.
+2. **The SQL file is re-applied on every push.** Test it by applying it three
+   times in a row before you push.
 
-Vite + React 19 + TypeScript, React Router (hash routing), no UI framework — hand-rolled responsive CSS. Product catalog is seed data in `src/data/products.ts`; edit that file to add or update listings.
+## Security
 
-## Next phases (per product roadmap)
-
-- **Phase 2:** real product photos & unit videos, live reviews, warranty claim flow, Razorpay payment integration (needs merchant keys)
-- **Phase 3:** backend with real inventory, user accounts (phone OTP), trade-in program, Assamese language support
-- **Phase 4:** B2B/bulk portal, analytics dashboard, referral program
+No password, PIN or key belongs in this repository. If you find one, treat it
+as compromised, rotate it, and check `DEPLOY.md` — this has happened before.

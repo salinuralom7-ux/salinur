@@ -2,7 +2,7 @@
   "name": "nearse-tests",
   "private": true,
   "type": "commonjs",
-  "description": "Playwright harnesses for docs/index.html. CommonJS on purpose: the package.json at the repo root belongs to an unrelated Vite project and declares type=module.",
+  "description": "Playwright harnesses for docs/index.html. Kept separate from the app, which has no build step and no dependencies at all.",
   "devDependencies": {
     "playwright": "^1.49.0"
   }
