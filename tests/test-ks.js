@@ -316,13 +316,29 @@ const srv = http.createServer((req, res) => {
   await page.locator('.rating-box button').click();
   await page.waitForTimeout(500);
   console.log('Rating applied:', (await page.locator('#wDetail .stars').first().textContent()).trim());
-  await page.locator('#wDetail .btn-brand').click();
+  // an electrician is dispatched instantly now, so this door opens the NOW sheet
+  console.log('Detail CTA reflects the mode:', (await page.locator('#bookCta').textContent()).trim(),
+              '|', (await page.locator('#bookCtaNote').textContent()).trim());
+  await page.locator('#bookCta').click();
+  await page.waitForTimeout(400);
+  console.log('Instant sheet opens for an electrician:', await page.locator('#nowOverlay.open').count() === 1);
+  console.log('Instant sheet never asks for a time:', await page.locator('#nowOverlay #bookWhen').count() === 0);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+
+  // a monthly tutor is an enquiry, and still uses the date-and-slot sheet
+  await page.evaluate(() => go('hire'));
+  await page.waitForTimeout(600);
+  await page.fill('#hireSearch', 'Priya');
+  await page.waitForTimeout(500);
+  await page.locator('.wcard').first().click();
+  await page.waitForTimeout(400);
+  console.log('Tutor CTA reflects the mode:', (await page.locator('#bookCta').textContent()).trim());
+  await page.locator('#bookCta').click();
   await page.waitForTimeout(400);
   console.log('Booking: service options:', await page.locator('#bookServices .opt').count(),
               '| first preselected:', await page.locator('#bookServices .opt.on').count() === 1);
-  console.log('Booking: service shows price:', (await page.locator('#bookServices .opt small').first().textContent()).trim());
   console.log('Booking: when options:', (await page.locator('#bookWhen .opt').allTextContents()).map(t=>t.trim().split('\n')[0]).join(' | '));
-  console.log('Booking: slot options:', await page.locator('#bookSlot .opt').count());
   console.log('Booking: area options:', await page.locator('#bookArea option').count());
   console.log('Booking: quote visible:', await page.locator('#bookQuote.on').count() === 1);
   await page.locator('#bookWhen .opt', { hasText: 'Pick a date' }).click();
@@ -331,15 +347,9 @@ const srv = http.createServer((req, res) => {
   await page.locator('#bookWhen .opt', { hasText: 'Tomorrow' }).click();
   await page.waitForTimeout(200);
   console.log('Booking: date input hidden again:', !(await page.locator('#bookDate').isVisible()));
-  await page.locator('#bookSlot .opt', { hasText: 'Morning' }).click();
-  await page.locator('#bookServices .opt').nth(1).click();
-  await page.waitForTimeout(200);
-  console.log('Booking: quote after choices:', (await page.locator('#bookQuote').innerText()).replace(/\n+/g, ' / '));
   await page.fill('#bookName', 'Test Customer');
   await page.fill('#bookPhone', '9876543210');
-  await page.fill('#bookNote', 'Two ceiling fans');
   await page.screenshot({ path: 'ks-booking.png' });
-  // validation: area still unset -> must block
   await page.selectOption('#bookArea', '');
   await page.locator('#confirmBookBtn').click();
   await page.waitForTimeout(300);

@@ -773,6 +773,138 @@ header{
 .consent-row a{color:var(--brand-2);text-decoration:underline;text-underline-offset:2px}
 .consent-note{margin-top:7px;font-size:.78rem;color:var(--muted);line-height:1.55}
 
+/* the rate rows double as the service picker when a worker offers several */
+.price-line.pick{
+  width:100%;text-align:left;border:1px solid transparent;border-radius:var(--r-sm);
+  transition:border-color .15s ease,background .15s ease;
+}
+.price-line.pick.on{border-color:var(--brand);background:var(--brand-soft)}
+
+/* ---------- instant booking, slots, punctuality ---------- */
+.mode-hint{margin-top:9px;text-align:center;font-size:.79rem;color:var(--muted)}
+.now-explain{
+  border:1px solid var(--line-strong);background:var(--surface-2);border-radius:var(--r);
+  padding:13px 15px;margin:4px 0 16px;
+}
+.now-explain b{display:block;font-size:.87rem;margin-bottom:4px}
+.now-explain span{display:block;color:var(--muted);font-size:.81rem;line-height:1.6}
+
+.finding{text-align:center;padding:12px 4px 4px}
+.finding h3{font-size:1.25rem;margin-bottom:7px}
+.finding .sub{color:var(--ink-2);font-size:.9rem;line-height:1.6;margin-bottom:20px}
+.finding .btn{margin-top:6px}
+.radar{position:relative;width:96px;height:96px;margin:6px auto 20px}
+.radar span{
+  position:absolute;inset:0;border:2px solid var(--brand);border-radius:50%;
+  opacity:0;animation:ping 2.4s cubic-bezier(.2,.6,.3,1) infinite;
+}
+.radar span:nth-child(2){animation-delay:.8s}
+.radar span:nth-child(3){animation-delay:1.6s}
+@keyframes ping{0%{transform:scale(.28);opacity:.9}80%{opacity:0}100%{transform:scale(1);opacity:0}}
+.tick-left{
+  font-family:var(--serif);font-size:2.1rem;color:var(--brand-2);
+  letter-spacing:-.02em;margin:-8px 0 18px;
+}
+.finding.done .done-mark{margin:0 auto 14px}
+
+.online-dot{
+  display:inline-flex;align-items:center;gap:3px;margin-left:6px;
+  color:var(--ok);font-size:.68rem;font-weight:800;letter-spacing:.04em;
+}
+.ontime{
+  display:inline-block;margin-left:8px;font-size:.72rem;font-weight:700;
+  padding:1px 7px;border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);
+}
+.ontime.good{color:var(--ok);border-color:rgba(79,201,141,.4)}
+.ontime.poor{color:var(--warn);border-color:rgba(232,146,74,.4)}
+.reg-line{font-size:.78rem;color:var(--brand-quiet);margin:2px 0 8px}
+
+.online-row.on{border-color:rgba(79,201,141,.4);background:rgba(79,201,141,.07)}
+.offer{
+  display:flex;gap:14px;align-items:flex-start;margin-top:12px;padding:14px;
+  border:1px solid var(--brand);border-radius:var(--r);background:var(--brand-soft);
+}
+.offer-clock{text-align:center;flex:0 0 auto;min-width:52px}
+.offer-clock b{display:block;font-family:var(--serif);font-size:1.7rem;color:var(--brand-2);line-height:1}
+.offer-clock span{font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.offer-body{flex:1;min-width:0}
+.offer-body > b{display:block;font-size:.98rem}
+.offer-body > span{display:block;color:var(--ink-2);font-size:.82rem;line-height:1.55}
+.offer-note{color:var(--muted) !important;font-style:italic;margin-top:3px}
+.offer-acts{display:flex;gap:8px;margin-top:11px}
+.offer-acts .btn{flex:1;padding:9px}
+
+.appt-box{
+  border:1px solid var(--line);border-radius:var(--r);padding:15px 16px;margin-top:14px;background:var(--surface);
+}
+.appt-box > b{display:block;font-size:.9rem;margin-bottom:10px}
+.appt{display:flex;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.appt-when{flex:0 0 auto;text-align:center;min-width:56px}
+.appt-when b{display:block;font-size:.94rem;color:var(--brand-2)}
+.appt-when{font-size:.7rem;color:var(--muted)}
+.appt-who{flex:1;min-width:0;font-size:.79rem;color:var(--muted);line-height:1.5}
+.appt-who b{display:block;font-size:.88rem;color:var(--ink)}
+.appt-wa{flex:0 0 auto;color:#25D366;padding:6px}
+.appt-none{color:var(--muted);font-size:.82rem;line-height:1.6}
+
+.reg-badge{
+  border:1px solid var(--line-strong);border-radius:var(--r);padding:12px 14px;margin-top:12px;
+  background:var(--surface-2);
+}
+.reg-badge.ok{border-color:rgba(79,201,141,.4);background:rgba(79,201,141,.07)}
+.reg-badge b{display:block;font-size:.86rem;margin-bottom:2px}
+.reg-badge span{display:block;color:var(--muted);font-size:.78rem;line-height:1.5}
+
+.day-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.dchip{
+  flex:0 0 auto;border:1px solid var(--line-strong);background:var(--surface-2);
+  border-radius:var(--r-sm);padding:9px 13px;text-align:center;color:var(--ink-2);
+}
+.dchip b{display:block;font-size:.82rem}
+.dchip span{display:block;font-size:.72rem;color:var(--muted)}
+.dchip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.dchip.on span{color:rgba(20,16,10,.72)}
+.time-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.tslot{
+  border:1px solid var(--line-strong);background:var(--surface-2);color:var(--ink-2);
+  border-radius:var(--r-sm);padding:10px 4px;font-size:.86rem;font-weight:600;
+}
+.tslot.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:800}
+
+/* ---------- booking modes: the extra questions a trade brings with it ---------- */
+.mode-note{
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r);
+  padding:14px 15px;
+}
+.mode-note > b{display:block;font-size:.9rem;margin-bottom:5px}
+.mode-note > span{display:block;color:var(--muted);font-size:.82rem;line-height:1.6}
+.mode-note > span b{color:var(--brand-2)}
+.mode-note .btn{margin-top:12px}
+.mode-note .hint{display:block}
+
+.slot-cfg{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:11px}
+.scf label{
+  display:block;font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:5px;
+}
+.scf input,.scf select{
+  width:100%;background:var(--surface-2);border:1px solid var(--line-strong);
+  border-radius:var(--r-sm);padding:10px 11px;font-size:.92rem;
+}
+.slot-days{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+.sday{
+  border:1px solid var(--line-strong);background:var(--surface-2);color:var(--muted);
+  border-radius:999px;padding:7px 14px;font-size:.82rem;font-weight:700;
+}
+.sday.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.slot-preview{
+  margin-top:12px;font-size:.82rem;color:var(--muted);line-height:1.6;
+  border-left:2px solid var(--brand);padding-left:11px;
+}
+.slot-preview b{color:var(--ink)}
+.slot-preview.bad{border-left-color:var(--danger);color:var(--danger)}
+.slot-preview.bad b{color:var(--danger)}
+
 /* preview-mode code box: no provider is connected, so it is shown not sent */
 .otp-preview{
   border:1px dashed var(--line-strong);background:var(--surface-2);border-radius:var(--r-sm);
@@ -1360,6 +1492,60 @@ footer a:hover{color:var(--brand)}
       <div class="picked" id="pickedSkills"></div>
     </div>
 
+    <!-- Only appears for trades where the law expects a registration number.
+         A patient has to be able to check it against the council's own
+         register, so it is published, and no such profile goes live until a
+         person here has actually looked it up. -->
+    <div id="regCredBlock" hidden>
+      <div class="divider"></div>
+      <div class="field">
+        <label>Your registration number <span class="sublabel">— required for this profession</span></label>
+        <p class="hint" style="margin:0 0 10px">We publish it so customers can verify you on the council's own register, and we check it ourselves before your profile goes live.</p>
+        <select id="regCouncil" style="margin-bottom:9px"></select>
+        <input type="text" id="regNumber" placeholder="Registration number exactly as issued">
+      </div>
+    </div>
+
+    <!-- Appears when a picked service is dispatched instantly. -->
+    <div id="regNowBlock" hidden>
+      <div class="divider"></div>
+      <div class="field">
+        <label>Instant jobs</label>
+        <div class="mode-note">
+          <b>You will be offered jobs that are needed straight away.</b>
+          <span>When a customer near you needs this work now, we alert you and you have <b>60 seconds</b> to accept. Miss it and it goes to the next worker — so turn yourself <b>Available now</b> only when you can actually leave.</span>
+          <button type="button" class="btn btn-outline btn-sm" id="pushOptIn" onclick="enablePush()">Turn on job alerts</button>
+          <span class="hint" id="pushState" style="margin-top:8px"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appears for appointment trades: the worker's own calendar. -->
+    <div id="regSlotBlock" hidden>
+      <div class="divider"></div>
+      <div class="field">
+        <label>Your appointment times</label>
+        <p class="hint" style="margin:0 0 11px">Customers book a slot from these. Change them whenever you like.</p>
+        <div class="slot-cfg" oninput="renderSlotPreview()" onchange="renderSlotPreview()">
+          <div class="scf"><label for="slotFrom">Start</label><input type="time" id="slotFrom" value="10:00"></div>
+          <div class="scf"><label for="slotTo">Finish</label><input type="time" id="slotTo" value="17:00"></div>
+          <div class="scf"><label for="slotLen">Each appointment</label>
+            <select id="slotLen">
+              <option value="15">15 minutes</option>
+              <option value="20">20 minutes</option>
+              <option value="30" selected>30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60">1 hour</option>
+            </select>
+          </div>
+          <div class="scf"><label for="slotBreakFrom">Break from</label><input type="time" id="slotBreakFrom" value="13:00"></div>
+          <div class="scf"><label for="slotBreakTo">Break until</label><input type="time" id="slotBreakTo" value="14:00"></div>
+        </div>
+        <div class="slot-days" id="slotDays"></div>
+        <p class="slot-preview" id="slotPreview"></p>
+      </div>
+    </div>
+
     <div class="divider"></div>
 
     <div class="field">
@@ -1522,6 +1708,59 @@ footer a:hover{color:var(--brand)}
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="closeModal('wOverlay')" aria-label="Close">✕</button>
     <div id="wDetail"></div>
+  </div>
+</div>
+
+<!-- Instant booking. The customer never picks a time here, because the whole
+     problem with picking a time is that nobody had agreed to it. -->
+<div class="overlay" id="nowOverlay" onclick="if(event.target===this)closeModal('nowOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('nowOverlay')" aria-label="Close">✕</button>
+    <h3 id="nowTitle">Get someone now</h3>
+    <p class="sub" id="nowSub"></p>
+    <div class="grid-2">
+      <div class="field"><label for="nowName">Your name</label><input type="text" id="nowName" placeholder="e.g. Priya Das"></div>
+      <div class="field"><label for="nowPhone">WhatsApp number</label><input type="tel" id="nowPhone" placeholder="10-digit number" maxlength="10" inputmode="numeric"></div>
+      <div class="field full"><label for="nowArea">Where are you?</label><select id="nowArea"></select></div>
+      <div class="field full"><label for="nowNote">What is the problem? <span class="sublabel">— optional</span></label><textarea id="nowNote" rows="2" placeholder="e.g. Two ceiling fans not working."></textarea></div>
+    </div>
+    <div class="now-explain">
+      <b>We ask the nearest available worker first.</b>
+      <span>They have 60 seconds to accept. If they cannot come, we ask the next one, and the next — you do not have to chase anybody. You only see a name once somebody has actually said yes.</span>
+    </div>
+    <button class="btn btn-brand btn-block" id="nowGoBtn" onclick="startNowJob()" style="padding:14px">Find someone now</button>
+  </div>
+</div>
+
+<!-- The live search. Deliberately honest: it names who is being asked and
+     how many have been tried, rather than a spinner that says nothing. -->
+<div class="overlay" id="searchOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div id="searchBody"></div>
+  </div>
+</div>
+
+<!-- Appointment booking for trades with a calendar. -->
+<div class="overlay" id="slotOverlay" onclick="if(event.target===this)closeModal('slotOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('slotOverlay')" aria-label="Close">✕</button>
+    <h3>Book an appointment</h3>
+    <p class="sub" id="slotWho"></p>
+    <div class="field">
+      <label>Which day?</label>
+      <div class="day-row" id="slotDayRow"></div>
+    </div>
+    <div class="field">
+      <label>Which time?</label>
+      <div class="time-grid" id="slotTimeGrid"></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label for="slotName">Your name</label><input type="text" id="slotName" placeholder="e.g. Priya Das"></div>
+      <div class="field"><label for="slotPhone">WhatsApp number</label><input type="tel" id="slotPhone" placeholder="10-digit number" maxlength="10" inputmode="numeric"></div>
+      <div class="field full"><label for="slotNote">Reason for the visit <span class="sublabel">— optional</span></label><textarea id="slotNote" rows="2" placeholder="e.g. Tooth pain on the left side."></textarea></div>
+    </div>
+    <button class="btn btn-brand btn-block" id="slotBookBtn" onclick="confirmSlot()" style="padding:14px">Confirm appointment</button>
+    <p class="hint" style="margin-top:11px;text-align:center">The time is held for you straight away. Nearse takes no commission.</p>
   </div>
 </div>
 
@@ -1832,6 +2071,18 @@ const RATE_BAND = {
   "Office Assistant":[6000,30000],
   "Office Housekeeping Staff":[6000,30000],
   "Building Caretaker":[6000,30000],
+  "General Physician":[200,1500],
+  "Dentist":[200,3000],
+  "Child Specialist (Paediatrician)":[200,1500],
+  "Gynaecologist":[200,1500],
+  "Orthopaedic Doctor":[200,1500],
+  "Skin & Hair Specialist":[200,2000],
+  "Eye Specialist":[200,1500],
+  "ENT Specialist":[200,1500],
+  "Ayurvedic Doctor":[150,1200],
+  "Homeopathic Doctor":[150,1200],
+  "Psychologist / Counsellor":[300,3000],
+  "Lab Sample Collection (At Home)":[50,1000],
 };
 const money0 = n => "₹" + Number(n).toLocaleString("en-IN");
 
@@ -1933,15 +2184,94 @@ const CATALOGUE = [
   ["facility","Security & Facility",[
     ["Security Guard","per month"],["Office Assistant","per month"],
     ["Office Housekeeping Staff","per month"],["Building Caretaker","per month"]
+  ]],
+  ["health","Health & Consultation",[
+    ["General Physician","per session"],["Dentist","per session"],
+    ["Child Specialist (Paediatrician)","per session"],["Gynaecologist","per session"],
+    ["Orthopaedic Doctor","per session"],["Skin & Hair Specialist","per session"],
+    ["Eye Specialist","per session"],["ENT Specialist","per session"],
+    ["Ayurvedic Doctor","per session"],["Homeopathic Doctor","per session"],
+    ["Psychologist / Counsellor","per session"],["Lab Sample Collection (At Home)","per visit"]
   ]]
 ];
+
+/* ---------- how a service is booked ---------------------------------------
+   One booking flow never fitted 155 trades. A monthly maid is a hiring
+   decision, an electrician is wanted this afternoon, and a dentist has a
+   calendar. Getting this wrong is what makes people give up on the app:
+   letting a customer pick "Monday 9 am" for a worker who never agreed to it
+   creates an appointment that exists only in the customer's head.
+
+     now    instant dispatch — offered to the nearest worker, then the next
+     slot   the worker's own calendar, in fixed appointments
+     sched  a date the customer proposes and the worker confirms
+     hire   not a booking at all — an enquiry about ongoing work
+   -------------------------------------------------------------------------- */
+const CAT_MODE = {
+  home:"now", cook:"sched", care:"hire", repair:"now", build:"sched", vehicle:"now",
+  beauty:"slot", tutor:"hire", event:"sched", prof:"slot", tech:"sched", garden:"now",
+  pet:"slot", tailor:"sched", move:"now", facility:"hire", health:"slot"
+};
+/* Where a service does not behave like the rest of its category. */
+const MODE_OVERRIDE = {
+  "Housemaid (Daily)":"hire", "Part-time Maid":"hire", "Laundry & Ironing":"hire",
+  "Home Cook (Daily Meals)":"hire", "Tiffin Service":"hire",
+  "Physiotherapist (Home Visit)":"slot",
+  "AC Installation":"sched", "CCTV Installation":"sched", "Solar Panel Installation":"sched",
+  "Mason (Raj Mistri)":"now", "Carpenter":"now", "Welder & Fabricator":"now",
+  "Daily Wage Helper":"now", "Furniture Assembly":"now",
+  "Personal Driver (Monthly)":"hire", "Driving Instructor":"hire", "Car Washing (At Home)":"hire",
+  "Outstation Driver":"sched", "Car Denting & Painting":"sched",
+  "Barber (At Home)":"now",
+  "Bridal Makeup Artist":"sched", "Party Makeup Artist":"sched", "Mehendi Artist":"sched",
+  "Yoga Trainer":"hire", "Fitness Trainer (At Home)":"hire",
+  "Accountant / Bookkeeper":"hire", "Property Agent":"sched", "Architect":"sched",
+  "Social Media Manager":"hire", "Digital Marketing Specialist":"hire", "Data Entry Operator":"hire",
+  "Gardener (Regular)":"hire", "Garden Setup & Landscaping":"sched", "Tree Cutting & Pruning":"sched",
+  "Dog Trainer":"hire", "Dog Walker":"hire", "Pet Sitter":"sched",
+  "Packers & Movers":"sched"
+};
+const MODE_LABEL = {
+  now:   { verb:"Book now",    note:"Someone comes today" },
+  slot:  { verb:"Book a slot", note:"Pick an appointment time" },
+  sched: { verb:"Request a date", note:"The worker confirms it with you" },
+  hire:  { verb:"Send an enquiry", note:"Ongoing work — agreed between you" }
+};
+
+/* Trades where the law expects a registration number, and Nearse should not
+   publish a profile without one. A patient must be able to check the number
+   against the council's own register — that is the whole point of it. */
+const COUNCILS = [
+  "National Medical Commission / State Medical Council",
+  "Dental Council of India / State Dental Council",
+  "National Commission for Indian System of Medicine (Ayurveda)",
+  "National Commission for Homoeopathy",
+  "Rehabilitation Council of India",
+  "Bar Council of India / State Bar Council",
+  "Institute of Chartered Accountants of India",
+  "State Physiotherapy Council"
+];
+const REG_REQUIRED = {
+  "General Physician":0, "Dentist":1, "Child Specialist (Paediatrician)":0, "Gynaecologist":0,
+  "Orthopaedic Doctor":0, "Skin & Hair Specialist":0, "Eye Specialist":0, "ENT Specialist":0,
+  "Ayurvedic Doctor":2, "Homeopathic Doctor":3, "Psychologist / Counsellor":4,
+  "Advocate / Lawyer":5, "Chartered Accountant":6, "Physiotherapist (Home Visit)":7
+};
+
 const CAT_LABEL = {};
 const SKILLS = [];           /* [{n, c, u}] */
 const SKILL_UNIT = {};
+const SKILL_MODE = {};
 CATALOGUE.forEach(([key,label,items])=>{
   CAT_LABEL[key] = label;
-  items.forEach(([n,u])=>{ SKILLS.push({n, c:key, u}); SKILL_UNIT[n] = u; });
+  items.forEach(([n,u])=>{
+    SKILLS.push({n, c:key, u});
+    SKILL_UNIT[n] = u;
+    SKILL_MODE[n] = MODE_OVERRIDE[n] || CAT_MODE[key] || "sched";
+  });
 });
+const modeOf = name => SKILL_MODE[name] || "sched";
+const needsRegistration = name => Object.prototype.hasOwnProperty.call(REG_REQUIRED, name);
 const POPULAR = ["Electrician","Plumber","Carpenter","Housemaid (Daily)","Home Cook (Daily Meals)","Home Tutor (Class 6–10)","AC Service & Repair","Beautician (At Home)","Personal Driver (Monthly)","Packers & Movers"];
 
 /* ---------- state ---------- */
@@ -2149,6 +2479,80 @@ const api = {
     if(!w) throw new Error("That worker is no longer available");
     return w.phone;
   },
+  /* the worker's push endpoint, so the dispatcher can reach them in seconds */
+  async savePush(phone, pin, sub){
+    if(LIVE) return await sb("rpc/save_push_subscription", {method:"POST",
+      body:JSON.stringify({p_phone:phone, p_pin:pin, p_endpoint:sub.endpoint,
+                           p_p256dh:sub.p256dh, p_auth:sub.auth})});
+  },
+  /* ---- instant dispatch ---- */
+  async createJob(o){
+    if(LIVE){
+      const rows = await sb("rpc/create_job", {method:"POST", body:JSON.stringify({
+        p_skill:o.skill, p_name:o.name, p_phone:o.phone, p_area:o.area,
+        p_note:o.note || null, p_lat:o.lat ?? null, p_lng:o.lng ?? null, p_city:CITY })});
+      return Array.isArray(rows) ? rows[0] : rows;
+    }
+    return demoCreateJob(o);
+  },
+  async jobState(code){
+    if(LIVE){
+      /* nudge the queue along as well: pg_cron runs once a minute, and the
+         customer is staring at a countdown that has to feel live */
+      sb("rpc/advance_jobs", {method:"POST", body:"{}"}).catch(()=>{});
+      const rows = await sb("rpc/job_state", {method:"POST", body:JSON.stringify({p_code:code})});
+      return Array.isArray(rows) ? rows[0] : rows;
+    }
+    return demoJobState(code);
+  },
+  async cancelJob(code){
+    if(LIVE) return await sb("rpc/cancel_job", {method:"POST", body:JSON.stringify({p_code:code})});
+    return demoCancelJob(code);
+  },
+  async myOffers(phone, pin){
+    if(LIVE) return await sb("rpc/my_offers", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})}) || [];
+    return demoMyOffers(phone);
+  },
+  async acceptOffer(phone, pin, code, eta){
+    if(LIVE){
+      const rows = await sb("rpc/accept_offer", {method:"POST",
+        body:JSON.stringify({p_phone:phone, p_pin:pin, p_code:code, p_eta:eta})});
+      return Array.isArray(rows) ? rows[0] : rows;
+    }
+    return demoAcceptOffer(phone, code, eta);
+  },
+  async declineOffer(phone, pin, code){
+    if(LIVE) return await sb("rpc/decline_offer", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin, p_code:code})});
+    return demoDeclineOffer(phone, code);
+  },
+  async setOnline(phone, pin, minutes){
+    if(LIVE) return await sb("rpc/set_online", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin, p_minutes:minutes})});
+    const all = demoAll(); const w = all.find(x=>x.phone===phone);
+    if(w){ w.online_until = minutes ? Date.now() + minutes*60000 : null; demoSave(all); }
+    return w && w.online_until;
+  },
+  async ratePunctuality(code, onTime){
+    if(LIVE) return await sb("rpc/rate_punctuality", {method:"POST", body:JSON.stringify({p_code:code, p_on_time:onTime})});
+    return demoRatePunctuality(code, onTime);
+  },
+  /* ---- appointments ---- */
+  async takenSlots(workerId, date){
+    if(LIVE){
+      const rows = await sb("rpc/taken_slots", {method:"POST", body:JSON.stringify({p_worker:workerId, p_date:date})});
+      return (rows||[]).map(r => r.slot_time);
+    }
+    return demoTakenSlots(workerId, date);
+  },
+  async bookSlot(workerId, skill, date, time, name, phone, note){
+    if(LIVE) return await sb("rpc/book_slot", {method:"POST", body:JSON.stringify({
+      p_worker:workerId, p_skill:skill, p_date:date, p_time:time,
+      p_name:name, p_phone:phone, p_note:note || null })});
+    return demoBookSlot(workerId, skill, date, time, name, phone, note);
+  },
+  async myAppointments(phone, pin){
+    if(LIVE) return await sb("rpc/my_appointments", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})}) || [];
+    return demoMyAppointments(phone);
+  },
   async report(id, reason, details, contact){
     if(LIVE) return await sb("worker_reports", {method:"POST", headers:{Prefer:"return=minimal"},
       body:JSON.stringify({worker_id:id, reason, details:details||null, contact:contact||null})});
@@ -2214,6 +2618,129 @@ function demoAll(){
 function demoSave(all){
   try{ localStorage.setItem(WSTORE, JSON.stringify(all)); }
   catch(e){ toast("Storage full — please use a smaller photo"); }
+}
+
+/* ---------- preview-mode dispatch ----------
+   The same state machine as the database, in one browser, so the whole flow
+   can be walked through and tested without a live project behind it. */
+const JSTORE = "nearse_jobs_v1", ASTORE = "nearse_appts_v1";
+const jobsAll  = () => { try{ return JSON.parse(localStorage.getItem(JSTORE) || "[]"); }catch(e){ return []; } };
+const jobsSave = l => { try{ localStorage.setItem(JSTORE, JSON.stringify(l)); }catch(e){} };
+const OFFER_MS = 60000;
+
+function demoRank(skill, lat, lng, asked){
+  return demoAll()
+    .filter(w => statusOf(w) === "approved" && w.available !== false
+              && (w.skills||[]).some(s => s.skill === skill)
+              && !asked.includes(w.id))
+    .map(w => ({ w, online: !!(w.online_until && w.online_until > Date.now()),
+                 d: (lat != null && w.lat != null)
+                    ? Math.hypot(w.lat - lat, w.lng - lng) : 9e9 }))
+    .sort((a,b) => (b.online - a.online) || (a.d - b.d) || (score(b.w) - score(a.w)))
+    .map(x => x.w);
+}
+function demoOfferNext(j){
+  const next = demoRank(j.skill, j.lat, j.lng, j.asked)[0];
+  if(!next){ j.status = "nobody"; return null; }
+  j.asked.push(next.id);
+  j.offer = { workerId: next.id, expires: Date.now() + OFFER_MS };
+  return next;
+}
+function demoAdvance(j){
+  if(j.status !== "searching") return j;
+  if(Date.now() > j.searchUntil){ j.status = "nobody"; return j; }
+  if(!j.offer || j.offer.expires <= Date.now()) demoOfferNext(j);
+  return j;
+}
+function demoCreateJob(o){
+  const list = jobsAll();
+  const j = { code: Math.random().toString(36).slice(2,8).toUpperCase(),
+              skill:o.skill, name:o.name, phone:o.phone, area:o.area, note:o.note,
+              lat:o.lat ?? null, lng:o.lng ?? null, status:"searching", asked:[], offer:null,
+              searchUntil: Date.now() + 20*60000, worker:null, eta:null };
+  demoOfferNext(j);
+  list.unshift(j); jobsSave(list);
+  return { code: j.code, asked: j.asked.length };
+}
+function demoJobState(code){
+  const list = jobsAll(); const j = list.find(x => x.code === code);
+  if(!j) return null;
+  demoAdvance(j); jobsSave(list);
+  const w = j.worker ? demoAll().find(x => x.id === j.worker) : null;
+  return { status:j.status, asked:j.asked.length, skill:j.skill,
+           worker_name: w ? w.name : null,
+           worker_phone: (j.status === "accepted" && w) ? w.phone : null,
+           worker_area: w ? w.area : null, eta_minutes: j.eta,
+           seconds_left: Math.max(0, Math.round(((j.offer && j.offer.expires) || j.searchUntil) - Date.now()) / 1000) | 0 };
+}
+function demoCancelJob(code){
+  const list = jobsAll(); const j = list.find(x => x.code === code);
+  if(j && j.status === "searching"){ j.status = "cancelled"; jobsSave(list); }
+}
+function demoMyOffers(phone){
+  const me = demoAll().find(w => w.phone === phone); if(!me) return [];
+  const list = jobsAll(); let dirty = false;
+  const out = [];
+  for(const j of list){
+    if(j.status !== "searching") continue;
+    const before = j.offer && j.offer.workerId;
+    demoAdvance(j);
+    if(before !== (j.offer && j.offer.workerId)) dirty = true;
+    if(j.offer && j.offer.workerId === me.id && j.offer.expires > Date.now()){
+      const sk = (me.skills||[]).find(s => s.skill === j.skill) || {};
+      out.push({ code:j.code, skill:j.skill, area:j.area, note:j.note, customer_name:j.name,
+                 distance_km: (j.lat != null && me.lat != null)
+                   ? Math.round(Math.hypot(j.lat-me.lat, j.lng-me.lng) * 111 * 10) / 10 : null,
+                 seconds_left: Math.max(0, Math.round((j.offer.expires - Date.now())/1000)),
+                 price: sk.price, unit: sk.unit });
+    }
+  }
+  if(dirty) jobsSave(list);
+  return out;
+}
+function demoAcceptOffer(phone, code, eta){
+  const me = demoAll().find(w => w.phone === phone);
+  const list = jobsAll(); const j = list.find(x => x.code === code);
+  if(!me || !j) throw new Error("That job no longer exists");
+  if(j.status !== "searching" || !j.offer || j.offer.workerId !== me.id || j.offer.expires <= Date.now())
+    throw new Error("That job has already gone to someone else");
+  j.status = "accepted"; j.worker = me.id; j.eta = eta; j.offer = null;
+  jobsSave(list);
+  return { customer_name:j.name, customer_phone:j.phone, area:j.area, note:j.note, skill:j.skill };
+}
+function demoDeclineOffer(phone, code){
+  const me = demoAll().find(w => w.phone === phone);
+  const list = jobsAll(); const j = list.find(x => x.code === code);
+  if(!me || !j || j.status !== "searching") return;
+  j.offer = null; demoOfferNext(j); jobsSave(list);
+}
+function demoRatePunctuality(code, onTime){
+  const list = jobsAll(); const j = list.find(x => x.code === code);
+  if(!j || !j.worker || j.rated) return;
+  j.rated = true; jobsSave(list);
+  const all = demoAll(); const w = all.find(x => x.id === j.worker);
+  if(w){ w.on_time_total = (w.on_time_total||0)+1; w.on_time_yes = (w.on_time_yes||0)+(onTime?1:0); demoSave(all); }
+}
+const apptAll  = () => { try{ return JSON.parse(localStorage.getItem(ASTORE) || "[]"); }catch(e){ return []; } };
+const apptSave = l => { try{ localStorage.setItem(ASTORE, JSON.stringify(l)); }catch(e){} };
+function demoTakenSlots(workerId, date){
+  return apptAll().filter(a => a.worker_id === workerId && a.slot_date === date && a.status !== "cancelled")
+                  .map(a => a.slot_time);
+}
+function demoBookSlot(workerId, skill, date, time, name, phone, note){
+  const list = apptAll();
+  if(list.some(a => a.worker_id === workerId && a.slot_date === date && a.slot_time === time && a.status !== "cancelled"))
+    throw new Error("Someone has just taken that time — please choose another");
+  list.push({ id:"a"+Date.now(), worker_id:workerId, skill, slot_date:date, slot_time:time,
+              customer_name:name, customer_phone:phone, note, status:"booked" });
+  apptSave(list);
+  const w = demoAll().find(x => x.id === workerId);
+  return w ? w.phone : "";
+}
+function demoMyAppointments(phone){
+  const me = demoAll().find(w => w.phone === phone); if(!me) return [];
+  return apptAll().filter(a => a.worker_id === me.id)
+                  .sort((a,b) => (a.slot_date+a.slot_time).localeCompare(b.slot_date+b.slot_time));
 }
 
 /* ---------- router ----------
@@ -2530,10 +3057,99 @@ function initRegister(){
   $("skillSearch").value = "";
   pickCat = "";
   window._existing = w ? (w.skills||[]) : [];
+
+  /* credentials */
+  $("regCouncil").innerHTML = COUNCILS.map((c,i)=>`<option value="${i}">${esc(c)}</option>`).join("");
+  $("regNumber").value = w ? (w.reg_number || "") : "";
+  if(w && w.reg_council != null) $("regCouncil").value = String(w.reg_council);
+
+  /* appointment calendar */
+  const av = (w && w.availability) || {};
+  $("slotFrom").value      = av.from  || "10:00";
+  $("slotTo").value        = av.to    || "17:00";
+  $("slotLen").value       = String(av.len || 30);
+  $("slotBreakFrom").value = av.breakFrom || "13:00";
+  $("slotBreakTo").value   = av.breakTo   || "14:00";
+  slotDays = av.days || [1,2,3,4,5,6];
+  renderSlotDays();
+
   renderSkillPicker();
   renderPicked();
   renderSelfie();
   renderLocBtn();
+  renderModeBlocks();
+}
+
+/* ---------- which extra questions this worker has to answer ----------
+   Driven entirely by the services they picked, so nobody is asked for a
+   medical registration number to fit a grill. */
+const DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+let slotDays = [1,2,3,4,5,6];
+function pickedModes(){ return new Set(picked.map(modeOf)); }
+function renderModeBlocks(){
+  const modes = pickedModes();
+  const needsReg = picked.filter(needsRegistration);
+  $("regCredBlock").hidden = !needsReg.length;
+  $("regNowBlock").hidden  = !modes.has("now");
+  $("regSlotBlock").hidden = !modes.has("slot");
+  if(needsReg.length){
+    /* pre-select the council the first regulated service points at */
+    const idx = REG_REQUIRED[needsReg[0]];
+    if($("regNumber").value === "") $("regCouncil").value = String(idx);
+  }
+  if(modes.has("now")) renderPushState();
+  if(modes.has("slot")) renderSlotPreview();
+}
+function renderSlotDays(){
+  $("slotDays").innerHTML = DAY_NAMES.map((d,i)=>
+    `<button type="button" class="sday${slotDays.includes(i)?" on":""}" onclick="toggleSlotDay(${i})">${d}</button>`).join("");
+}
+function toggleSlotDay(i){
+  slotDays = slotDays.includes(i) ? slotDays.filter(x=>x!==i) : slotDays.concat(i).sort();
+  renderSlotDays();
+  renderSlotPreview();
+}
+/* Turn the worker's working day into the actual list of times a customer
+   will see. Shown back to them immediately, because "10 to 5, half an hour
+   each, one hour break" is much easier to check as twelve times than as five
+   form fields. */
+function buildSlots(cfg){
+  const mins = t => { const [h,m] = String(t||"").split(":").map(Number); return (h||0)*60 + (m||0); };
+  const hhmm = v => String(Math.floor(v/60)).padStart(2,"0") + ":" + String(v%60).padStart(2,"0");
+  const from = mins(cfg.from), to = mins(cfg.to), len = +cfg.len || 30;
+  const bf = cfg.breakFrom ? mins(cfg.breakFrom) : null;
+  const bt = cfg.breakTo   ? mins(cfg.breakTo)   : null;
+  const out = [];
+  if(!(len > 0) || !(to > from)) return out;
+  for(let t = from; t + len <= to; t += len){
+    const overlapsBreak = bf != null && bt != null && bt > bf && t < bt && t + len > bf;
+    if(!overlapsBreak) out.push(hhmm(t));
+    if(out.length > 60) break;                /* a sane ceiling */
+  }
+  return out;
+}
+function slotConfig(){
+  return { from:$("slotFrom").value, to:$("slotTo").value, len:+$("slotLen").value,
+           breakFrom:$("slotBreakFrom").value, breakTo:$("slotBreakTo").value, days:slotDays };
+}
+function renderSlotPreview(){
+  const cfg = slotConfig();
+  const list = buildSlots(cfg);
+  const el = $("slotPreview");
+  if(!list.length){
+    el.className = "slot-preview bad";
+    el.textContent = "Those times do not make a working day — check the start, the finish and the break.";
+    return;
+  }
+  if(!cfg.days.length){
+    el.className = "slot-preview bad";
+    el.textContent = "Choose at least one day you work.";
+    return;
+  }
+  el.className = "slot-preview";
+  el.innerHTML = `<b>${list.length} appointment${list.length===1?"":"s"} a day</b> on ${
+    cfg.days.map(d=>DAY_NAMES[d]).join(", ")} — ${
+    list.slice(0,4).map(esc).join(", ")}${list.length>4 ? " … " + esc(list[list.length-1]) : ""}`;
 }
 let pickCat = "";
 function renderSkillPicker(){
@@ -2586,6 +3202,7 @@ function toggleSkill(name){
   window._existing = current.length ? current : window._existing;
   renderSkillPicker();
   renderPicked();
+  renderModeBlocks();
 }
 function renderPicked(){
   const prior = window._existing || [];
@@ -2833,6 +3450,28 @@ async function saveProfile(){
   const area = $("regArea").value.trim();
   if(!area){ toast("Please choose your area in Guwahati"); return; }
 
+  /* a regulated trade cannot be published without the number that proves it */
+  const modes = pickedModes();
+  const regulated = picked.filter(needsRegistration);
+  let regCouncil = null, regNumber = null;
+  if(regulated.length){
+    regNumber = $("regNumber").value.trim();
+    regCouncil = +$("regCouncil").value;
+    if(regNumber.length < 4){
+      toast(`${regulated[0]} needs your registration number — we check it before publishing`);
+      return;
+    }
+  }
+
+  /* an appointment trade needs a working day that actually contains slots */
+  let availability = null;
+  if(modes.has("slot")){
+    const cfg = slotConfig();
+    if(!cfg.days.length){ toast("Choose at least one day you work"); return; }
+    if(!buildSlots(cfg).length){ toast("Those appointment times leave no slots — check the start, finish and break"); return; }
+    availability = cfg;
+  }
+
   const firstTime = !session.registered;
   if(firstTime){
     if(!$("consentPublish").checked){ toast("Please tick the box agreeing to show your profile publicly"); return; }
@@ -2862,6 +3501,9 @@ async function saveProfile(){
     lng: regLoc ? regLoc.lng : null,
     available: session.worker ? session.worker.available !== false : true
   };
+  data.reg_council  = regCouncil;
+  data.reg_number   = regNumber;
+  data.availability = availability;
   if(session.email) data.email = session.email;
   if(session.waCode) data.wa_code = session.waCode;
   if(firstTime){ data.age_confirmed = true; data.terms_version = TERMS_VERSION; }
@@ -2916,6 +3558,19 @@ function renderMe(){
       <div><b>Available for work</b><span>Turn this off when you're busy — you won't appear in search.</span></div>
       <label class="switch"><input type="checkbox" id="avSwitch" ${w.available!==false?"checked":""} onchange="toggleAvailable(this.checked)"><span class="track"></span></label>
     </div>
+    ${workerModes(w).has("now") ? `
+    <div class="switch-row online-row${isOnlineNow(w) ? " on" : ""}">
+      <div><b>Available right now</b><span id="onlineNote">${isOnlineNow(w)
+        ? "You are first in line for instant jobs. Switches itself off after 4 hours."
+        : "Turn on when you can leave straight away. Instant jobs go to whoever is on."}</span></div>
+      <label class="switch"><input type="checkbox" id="onlineSwitch" ${isOnlineNow(w)?"checked":""} onchange="toggleOnline(this.checked)"><span class="track"></span></label>
+    </div>
+    <div id="offerBox"></div>` : ""}
+    ${workerModes(w).has("slot") ? `<div id="apptBox"></div>` : ""}
+    ${w.reg_number ? `<div class="reg-badge${w.reg_verified ? " ok" : ""}">
+      <b>${w.reg_verified ? "Registration verified" : "Registration awaiting check"}</b>
+      <span>${esc(COUNCILS[w.reg_council] || "Council")} · ${esc(w.reg_number)}</span>
+    </div>` : ""}
     <div class="rate-list">
       ${(w.skills||[]).map(s=>`<div class="rate-item">
         <div><b>${esc(s.skill)}</b>${s.exp?`<span class="exp">${esc(s.exp)} experience</span>`:""}</div>
@@ -2931,6 +3586,9 @@ function renderMe(){
       <span>Removes your profile, photo, rates and contact details from Nearse for good — the photo goes from our image storage too. This cannot be undone.</span>
       <button class="btn btn-danger btn-sm" onclick="deleteProfile()">Delete my profile</button>
     </div>`;
+  const modes = workerModes(w);
+  if(modes.has("now") && isOnlineNow(w)) pollOffers(); else clearTimeout(offerTimer);
+  if(modes.has("slot")) loadAppointments();
 }
 async function deleteProfile(){
   if(!session || !session.registered) return;
@@ -2946,6 +3604,103 @@ async function deleteProfile(){
     go("home");
   }catch(e){ toast(e.message); }
 }
+/* ---------- the worker's side of instant jobs ---------- */
+const workerModes = w => new Set((w.skills||[]).map(s => modeOf(s.skill)));
+const isOnlineNow = w => !!(w.online_until && new Date(w.online_until).getTime() > Date.now());
+let offerTimer = null;
+
+async function toggleOnline(on){
+  try{
+    const until = await api.setOnline(session.phone, session.pin, on ? 240 : 0);
+    session.worker.online_until = until || null;
+    saveSession();
+    $("onlineNote").textContent = on
+      ? "You are first in line for instant jobs. Switches itself off after 4 hours."
+      : "Turn on when you can leave straight away. Instant jobs go to whoever is on.";
+    document.querySelector(".online-row").classList.toggle("on", !!on);
+    toast(on ? "You're available right now" : "No longer taking instant jobs");
+    if(on){ pollOffers(); if(Notification && Notification.permission === "default") enablePush(); }
+    else { clearTimeout(offerTimer); const b = $("offerBox"); if(b) b.innerHTML = ""; }
+  }catch(e){
+    toast(e.message);
+    const el = $("onlineSwitch"); if(el) el.checked = !on;
+  }
+}
+
+/* The offer inbox. Push wakes the phone; this is what shows the job and the
+   clock once the app is open, and it is also the whole mechanism for a
+   worker who never allowed notifications. */
+async function pollOffers(){
+  const box = $("offerBox");
+  if(!box || !session || !session.registered){ clearTimeout(offerTimer); return; }
+  let offers = [];
+  try{ offers = await api.myOffers(session.phone, session.pin); }catch(e){}
+  renderOffers(offers);
+  clearTimeout(offerTimer);
+  offerTimer = setTimeout(pollOffers, offers.length ? 1000 : 5000);
+}
+function renderOffers(offers){
+  const box = $("offerBox"); if(!box) return;
+  if(!offers.length){ box.innerHTML = ""; return; }
+  box.innerHTML = offers.map(o => `
+    <div class="offer">
+      <div class="offer-clock"><b>${o.seconds_left}</b><span>seconds</span></div>
+      <div class="offer-body">
+        <b>${esc(o.skill)}</b>
+        <span>${esc(o.area || "")}${o.distance_km != null ? " · " + esc(showDist(o.distance_km)) : ""}${o.price ? " · " + esc(money(o.price)) + " " + esc(o.unit||"") : ""}</span>
+        ${o.note ? `<span class="offer-note">“${esc(o.note)}”</span>` : ""}
+        <div class="offer-acts">
+          <button class="btn btn-brand btn-sm" onclick="acceptOffer('${jsq(o.code)}')">Accept</button>
+          <button class="btn btn-quiet btn-sm" onclick="declineOffer('${jsq(o.code)}')">Can't go</button>
+        </div>
+      </div>
+    </div>`).join("");
+}
+async function acceptOffer(code){
+  const eta = prompt("How many minutes until you can be there?\n\nThe customer sees this as your own promise, and is asked afterwards whether you kept it.", "30");
+  if(eta === null) return;
+  const mins = Math.max(5, Math.min(240, parseInt(eta, 10) || 30));
+  try{
+    const j = await api.acceptOffer(session.phone, session.pin, code, mins);
+    toast("Accepted — message them now");
+    const msg =
+`*Nearse booking ${code}*
+
+Hello ${(j.customer_name||"").split(" ")[0]}, I have accepted your request on Nearse.
+
+*Service:* ${j.skill}
+*Where:* ${j.area}, Guwahati${j.note ? "\n*Details:* " + j.note : ""}
+
+I will be there in about ${mins} minutes.`;
+    window.open("https://wa.me/91" + j.customer_phone + "?text=" + encodeURIComponent(msg), "_blank");
+    pollOffers();
+  }catch(e){ toast(e.message); pollOffers(); }
+}
+async function declineOffer(code){
+  try{ await api.declineOffer(session.phone, session.pin, code); }catch(e){}
+  pollOffers();
+}
+
+/* ---------- the worker's appointment book ---------- */
+async function loadAppointments(){
+  const box = $("apptBox"); if(!box) return;
+  let list = [];
+  try{ list = await api.myAppointments(session.phone, session.pin); }catch(e){ return; }
+  const upcoming = list.filter(a => a.status === "booked");
+  box.innerHTML = `<div class="appt-box">
+    <b>Your appointments</b>
+    ${upcoming.length ? upcoming.slice(0,12).map(a => `
+      <div class="appt">
+        <span class="appt-when"><b>${esc(a.slot_time)}</b>${esc(new Date(a.slot_date + "T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"}))}</span>
+        <span class="appt-who"><b>${esc(a.customer_name)}</b>${esc(a.skill)}${a.note ? " — " + esc(a.note) : ""}</span>
+        <a class="appt-wa" href="https://wa.me/91${esc(a.customer_phone)}" target="_blank" rel="noopener" aria-label="Message on WhatsApp">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2"/></svg>
+        </a>
+      </div>`).join("")
+      : `<span class="appt-none">Nothing booked yet. Customers can pick any free time you published.</span>`}
+  </div>`;
+}
+
 async function toggleAvailable(v){
   try{
     await api.update(session.phone, session.pin, {available:v});
@@ -2971,13 +3726,15 @@ const CAT_ICON = {
   pet:'<circle cx="8" cy="9" r="2"/><circle cx="16" cy="9" r="2"/><circle cx="6" cy="15" r="1.8"/><circle cx="18" cy="15" r="1.8"/><path d="M12 13c2.5 0 4 2 4 4s-1.5 3-4 3-4-1.5-4-3 1.5-4 4-4z"/>',
   tailor:'<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M8.5 15 17 4"/><path d="M15.5 15 7 4"/>',
   move:'<path d="M3 8h11v8H3z"/><path d="M14 11h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17" cy="18" r="1.7"/>',
-  facility:'<path d="M12 3l8 3v6c0 4.5-3.2 8.5-8 9.5C7.2 20.5 4 16.5 4 12V6z"/>'
+  facility:'<path d="M12 3l8 3v6c0 4.5-3.2 8.5-8 9.5C7.2 20.5 4 16.5 4 12V6z"/>',
+  health:'<path d="M4.5 12.5h3l2-4 3 8 2-4h5"/><path d="M20.5 9.5a4.6 4.6 0 0 0-8.5-2.4A4.6 4.6 0 0 0 3.5 9.5c0 4.2 5.9 8 8.5 10.3 2.6-2.3 8.5-6.1 8.5-10.3z"/>'
 };
-const TILE_CATS = ["home","cook","repair","build","care","beauty","tutor","vehicle","event","tailor","move","tech"];
+const TILE_CATS = ["home","cook","repair","build","care","health","beauty","tutor","vehicle","event","move","tech"];
 const TILE_LABEL = {
   home:"Cleaning", cook:"Cooking", repair:"Repairs", build:"Building", care:"Care",
   beauty:"Beauty", tutor:"Tutors", vehicle:"Vehicle", event:"Events", tailor:"Tailoring",
-  move:"Moving", tech:"Tech", garden:"Gardening", pet:"Pet Care", prof:"Professional", facility:"Security"
+  move:"Moving", tech:"Tech", garden:"Gardening", pet:"Pet Care", prof:"Professional",
+  facility:"Security", health:"Doctors"
 };
 const SLOTS = [["morning","Morning","8 am – 12 pm"],["afternoon","Afternoon","12 – 4 pm"],["evening","Evening","4 – 8 pm"],["any","Anytime",""]];
 const WHENS = [["today","Today",""],["tomorrow","Tomorrow",""],["pick","Pick a date",""]];
@@ -3103,11 +3860,11 @@ function paintResults(q, areaPick){
     return `<button class="wcard" onclick="openWorker('${jsq(w.id)}')">
       <span class="avatar"><img src="${avatarOf(w, true)}" alt="" loading="lazy" decoding="async"></span>
       <span class="info">
-        <h3>${esc(w.name)} <span class="verified-badge">✓ Verified</span></h3>
+        <h3>${esc(w.name)} <span class="verified-badge">✓ Verified</span>${w.is_online ? '<span class="online-dot" title="Available right now">● Now</span>' : ""}</h3>
         <div class="trade">${trades}</div>
         <div class="row">
           <span class="where">${esc(w.area || w.city || "")}${d != null ? ' <em>· ' + esc(showDist(d)) + '</em>' : ""}</span>
-          <span>${starsOf(w)}</span>
+          <span>${starsOf(w)}${onTimeText(w)}</span>
         </div>
         <div class="price">${money(s0.price||0)} <small>${esc(s0.unit||"")}</small></div>
       </span>
@@ -3133,27 +3890,43 @@ function openWorker(id){
       <div>
         <h3>${esc(w.name)}</h3>
         <div class="sub" style="margin:0">${esc(w.area ? w.area + ", " : "")}${esc(w.city||"")}${d!=null ? " · " + showDist(d) : ""}</div>
-        <div style="margin-top:5px">${starsOf(w)}</div>
+        <div style="margin-top:5px">${starsOf(w)}${onTimeText(w)}</div>
       </div>
     </div>
+    ${w.reg_number ? `<p class="reg-line">${w.reg_verified ? "✓ Registration checked by Nearse" : "Registration"}: ${esc(w.reg_number)}</p>` : ""}
     ${w.about ? `<p class="hint" style="margin-bottom:6px">${esc(w.about)}</p>` : ""}
     <div class="price-list">
-      ${(w.skills||[]).map(s=>`<div class="price-line">
+      ${(w.skills||[]).map((s,i)=>`<button class="price-line pick${i===0?" on":""}" data-i="${i}" onclick="pickService(${i})">
         <div><b>${esc(s.skill)}</b>${s.exp?`<span>${esc(s.exp)} experience</span>`:""}</div>
         <span class="amt">${money(s.price)} <small>${esc(s.unit)}</small></span>
-      </div>`).join("")}
+      </button>`).join("")}
     </div>
     <div class="rating-box">
       <span class="t">Worked with ${esc(w.name.split(" ")[0])}?</span>
       <div class="pick-stars" id="rateStars">${[1,2,3,4,5].map(i=>`<span data-s="${i}" onclick="setStars(${i})">★</span>`).join("")}</div>
       <button class="btn btn-outline btn-sm" onclick="submitRating()">Submit</button>
     </div>
-    <button class="btn btn-brand btn-block" style="padding:14px" onclick="openBooking()">Request booking</button>
+    <button class="btn btn-brand btn-block" id="bookCta" style="padding:14px" onclick="openBookingFor(currentWorker, bookPick.svc)"></button>
+    <p class="mode-hint" id="bookCtaNote"></p>
     <button class="report-link" onclick="openReport()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4.5M12 17h.01"/><path d="M10.3 3.9 1.9 18.3A2 2 0 0 0 3.6 21.3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
       Report this profile
     </button>`;
+  pickService(0);
   openModal("wOverlay");
+}
+/* A worker can offer three trades that are booked three different ways, so
+   the service is chosen before the button can say what it does. */
+function pickService(i){
+  const w = currentWorker; if(!w) return;
+  bookPick.svc = i;
+  document.querySelectorAll("#wDetail .price-line.pick")
+    .forEach(el => el.classList.toggle("on", +el.dataset.i === i));
+  const skill = ((w.skills||[])[i] || {}).skill;
+  const m = MODE_LABEL[modeOf(skill)] || MODE_LABEL.sched;
+  const cta = $("bookCta"), note = $("bookCtaNote");
+  if(cta)  cta.textContent  = m.verb;
+  if(note) note.textContent = m.note;
 }
 function setStars(n){
   pendingStars = n;
@@ -3306,6 +4079,287 @@ Please reply to confirm. Thank you.`;
   closeModal("bookOverlay");
   toast("Request sent — " + w.name.split(" ")[0] + " will reply on WhatsApp");
 }
+
+/* =========================================================================
+   BOOKING MODES
+   The customer's side of the four flows. Which one opens is decided by the
+   service, never by the customer — asking somebody to choose between
+   "instant" and "scheduled" is asking them to understand our plumbing.
+   ========================================================================= */
+function bookingModeFor(w){
+  /* a worker offering several trades is booked the way the chosen one works */
+  const s = (w.skills||[])[bookPick.svc] || (w.skills||[])[0] || {};
+  return modeOf(s.skill);
+}
+function openBookingFor(w, skillIndex){
+  currentWorker = w;
+  bookPick = { svc: skillIndex || 0, when:"today", slot:"any", date:"" };
+  const mode = bookingModeFor(w);
+  if(mode === "now")  return openNowBooking();
+  if(mode === "slot") return openSlotBooking();
+  return openBooking();                       /* sched and hire share the sheet */
+}
+
+/* ---------- instant ---------- */
+let nowJob = null;          /* {code} while a search is running */
+let nowTimer = null;
+
+function openNowBooking(){
+  const w = currentWorker;
+  const s = (w.skills||[])[bookPick.svc] || {};
+  hideModal("wOverlay");
+  $("nowTitle").textContent = "Get a " + (s.skill || "worker").toLowerCase() + " now";
+  $("nowSub").innerHTML = `Around <b>${esc(money(s.price||0))} ${esc(s.unit||"")}</b> — the final amount is agreed after they see the job.`;
+  const sel = $("nowArea");
+  sel.innerHTML = '<option value="">Select your locality</option>' + areaOptions(null);
+  sel.value = "";
+  openModal("nowOverlay");
+}
+
+async function startNowJob(){
+  const w = currentWorker;
+  const s = (w.skills||[])[bookPick.svc] || {};
+  const name = $("nowName").value.trim(), phone = $("nowPhone").value.trim();
+  const area = $("nowArea").value, note = $("nowNote").value.trim();
+  if(!name){ toast("Please enter your name"); return; }
+  if(!/^[6-9]\d{9}$/.test(phone)){ toast("Enter a valid 10-digit mobile number"); return; }
+  if(!area){ toast("Please choose where you are"); return; }
+
+  const btn = $("nowGoBtn"); btn.disabled = true; btn.textContent = "Looking…";
+  try{
+    const res = await api.createJob({ skill:s.skill, name, phone, area, note,
+                                      lat: myLoc && myLoc.lat, lng: myLoc && myLoc.lng });
+    nowJob = { code: res.code, skill: s.skill, name, phone, area, note };
+    try{ localStorage.setItem("nearse_job_v1", JSON.stringify(nowJob)); }catch(e){}
+    hideModal("nowOverlay");
+    openModal("searchOverlay");
+    pollJob();
+  }catch(e){ toast(e.message || "Could not start the search"); }
+  btn.disabled = false; btn.textContent = "Find someone now";
+}
+
+async function pollJob(){
+  if(!nowJob){ return; }
+  let st;
+  try{ st = await api.jobState(nowJob.code); }
+  catch(e){ st = null; }
+  if(!st){ clearTimeout(nowTimer); nowTimer = setTimeout(pollJob, 3000); return; }
+  renderSearch(st);
+
+  if(st.status === "searching"){
+    clearTimeout(nowTimer);
+    nowTimer = setTimeout(pollJob, 2500);
+  }else{
+    clearTimeout(nowTimer);
+    if(st.status === "accepted") onJobAccepted(st);
+  }
+}
+
+function renderSearch(st){
+  const host = $("searchBody");
+  if(st.status === "searching"){
+    host.innerHTML = `
+      <div class="finding">
+        <div class="radar" aria-hidden="true"><span></span><span></span><span></span></div>
+        <h3>Finding a ${esc((st.skill||"worker").toLowerCase())} near you</h3>
+        <p class="sub">Asked <b>${st.asked}</b> ${st.asked === 1 ? "worker" : "workers"} so far.
+          Each one gets 60 seconds before we move to the next.</p>
+        <div class="tick-left">${Math.max(0, st.seconds_left|0)}s</div>
+        <button class="btn btn-quiet btn-block btn-sm" onclick="cancelNowJob()">Stop looking</button>
+      </div>`;
+  }else if(st.status === "accepted"){
+    host.innerHTML = `
+      <div class="finding done">
+        <div class="done-mark" aria-hidden="true">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5.2 5.2L20 7"/></svg>
+        </div>
+        <h3>${esc(st.worker_name || "A worker")} is coming</h3>
+        <p class="sub">They said <b>about ${st.eta_minutes} minutes</b>${st.worker_area ? ", from " + esc(st.worker_area) : ""}.
+          This is their own commitment, not an estimate we made up.</p>
+        <a class="btn btn-wa btn-block" id="jobWaBtn" href="#" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2"/></svg>
+          Message them on WhatsApp
+        </a>
+        <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="closeSearch()">Done</button>
+      </div>`;
+  }else if(st.status === "nobody"){
+    host.innerHTML = `
+      <div class="finding">
+        <h3>Nobody free right now</h3>
+        <p class="sub">We asked every ${esc((st.skill||"worker").toLowerCase())} we could reach and none of them can come at the moment.
+          This is honest rather than useful, and we would rather tell you than leave you waiting.</p>
+        <button class="btn btn-brand btn-block" onclick="closeSearch();go('hire')">Browse and book for later</button>
+        <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="closeSearch()">Close</button>
+      </div>`;
+  }else{
+    host.innerHTML = `<div class="finding"><h3>Search stopped</h3>
+      <button class="btn btn-quiet btn-block btn-sm" onclick="closeSearch()">Close</button></div>`;
+  }
+}
+
+function onJobAccepted(st){
+  const j = nowJob; if(!j || !st.worker_phone) return;
+  const msg =
+`*Nearse booking ${j.code}*
+
+Hello ${(st.worker_name||"").split(" ")[0]}, thank you for accepting.
+
+*Service:* ${j.skill}
+*Where:* ${j.area}, Guwahati${j.note ? "\n*Details:* " + j.note : ""}
+
+*Name:* ${j.name}
+*Mobile:* ${j.phone}`;
+  const btn = $("jobWaBtn");
+  if(btn) btn.href = "https://wa.me/91" + st.worker_phone + "?text=" + encodeURIComponent(msg);
+  try{ localStorage.setItem("nearse_job_done_v1", j.code); }catch(e){}
+}
+
+async function cancelNowJob(){
+  if(!nowJob) return closeSearch();
+  try{ await api.cancelJob(nowJob.code); }catch(e){}
+  closeSearch();
+  toast("Stopped looking");
+}
+function closeSearch(){
+  clearTimeout(nowTimer);
+  nowJob = null;
+  try{ localStorage.removeItem("nearse_job_v1"); }catch(e){}
+  closeModal("searchOverlay");
+  maybeAskPunctuality();
+}
+
+/* ---------- appointment slots ---------- */
+let slotPick = { date:null, time:null, taken:[] };
+
+async function openSlotBooking(){
+  const w = currentWorker;
+  const s = (w.skills||[])[bookPick.svc] || {};
+  hideModal("wOverlay");
+  $("slotWho").innerHTML = `${esc(w.name)} · ${esc(s.skill||"")} — <b>${esc(money(s.price||0))} ${esc(s.unit||"")}</b>` +
+    (w.reg_number ? `<br><span class="reg-line">${w.reg_verified ? "✓ Registration checked" : "Registration"}: ${esc(w.reg_number)}</span>` : "");
+  slotPick = { date:null, time:null, taken:[] };
+  renderSlotDayRow();
+  openModal("slotOverlay");
+  pickSlotDay(nextWorkingDay(w, 0));
+}
+/* the worker's own working days decide what a customer can even see */
+function nextWorkingDay(w, fromOffset){
+  const days = (w.availability && w.availability.days) || [1,2,3,4,5,6];
+  for(let i = fromOffset; i < fromOffset + 30; i++){
+    const d = new Date(); d.setDate(d.getDate() + i);
+    if(days.includes(d.getDay())) return i;
+  }
+  return fromOffset;
+}
+function renderSlotDayRow(){
+  const w = currentWorker;
+  const days = (w.availability && w.availability.days) || [1,2,3,4,5,6];
+  let html = "";
+  for(let i = 0; i < 14 && html.split("<button").length <= 7; i++){
+    const d = new Date(); d.setDate(d.getDate() + i);
+    if(!days.includes(d.getDay())) continue;
+    const iso = d.toISOString().slice(0,10);
+    html += `<button type="button" class="dchip" data-d="${iso}" onclick="pickSlotDay(${i})">
+      <b>${i === 0 ? "Today" : i === 1 ? "Tomorrow" : DAY_NAMES[d.getDay()]}</b>
+      <span>${d.getDate()} ${d.toLocaleDateString("en-IN",{month:"short"})}</span></button>`;
+  }
+  $("slotDayRow").innerHTML = html || `<p class="hint">This worker has not set any working days yet.</p>`;
+}
+async function pickSlotDay(offset){
+  const w = currentWorker;
+  const d = new Date(); d.setDate(d.getDate() + offset);
+  const iso = d.toISOString().slice(0,10);
+  slotPick.date = iso; slotPick.time = null;
+  document.querySelectorAll("#slotDayRow .dchip").forEach(b => b.classList.toggle("on", b.dataset.d === iso));
+  $("slotTimeGrid").innerHTML = `<p class="hint">Loading times…</p>`;
+  try{ slotPick.taken = await api.takenSlots(w.id, iso); }
+  catch(e){ slotPick.taken = []; }
+  renderSlotTimes();
+}
+function renderSlotTimes(){
+  const w = currentWorker;
+  const cfg = w.availability || { from:"10:00", to:"17:00", len:30 };
+  const all = buildSlots(cfg);
+  const taken = new Set(slotPick.taken || []);
+  /* a time that has already passed today is not a slot */
+  const today = new Date().toISOString().slice(0,10);
+  const nowMin = new Date().getHours()*60 + new Date().getMinutes();
+  const free = all.filter(t => {
+    if(taken.has(t)) return false;
+    if(slotPick.date !== today) return true;
+    const [h,m] = t.split(":").map(Number);
+    return h*60 + m > nowMin + 15;
+  });
+  $("slotTimeGrid").innerHTML = free.length
+    ? free.map(t => `<button type="button" class="tslot${slotPick.time===t?" on":""}" onclick="pickSlotTime('${t}')">${t}</button>`).join("")
+    : `<p class="hint">Nothing left on this day — try another.</p>`;
+}
+function pickSlotTime(t){
+  slotPick.time = t;
+  document.querySelectorAll("#slotTimeGrid .tslot").forEach(b => b.classList.toggle("on", b.textContent === t));
+}
+async function confirmSlot(){
+  const w = currentWorker;
+  const s = (w.skills||[])[bookPick.svc] || {};
+  if(!slotPick.date || !slotPick.time){ toast("Please choose a day and a time"); return; }
+  const name = $("slotName").value.trim(), phone = $("slotPhone").value.trim();
+  const note = $("slotNote").value.trim();
+  if(!name){ toast("Please enter your name"); return; }
+  if(!/^[6-9]\d{9}$/.test(phone)){ toast("Enter a valid 10-digit mobile number"); return; }
+
+  const tab = window.open("", "_blank");
+  const btn = $("slotBookBtn"); btn.disabled = true; btn.textContent = "Booking…";
+  let num;
+  try{
+    num = await api.bookSlot(w.id, s.skill, slotPick.date, slotPick.time, name, phone, note);
+  }catch(e){
+    if(tab) tab.close();
+    btn.disabled = false; btn.textContent = "Confirm appointment";
+    toast(e.message || "Could not book that time");
+    pickSlotDay(0);
+    return;
+  }
+  btn.disabled = false; btn.textContent = "Confirm appointment";
+  const when = new Date(slotPick.date + "T00:00:00")
+    .toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long" });
+  const msg =
+`*Nearse appointment*
+
+Hello ${w.name.split(" ")[0]}, I have booked an appointment.
+
+*For:* ${s.skill}
+*When:* ${when} at ${slotPick.time}${note ? "\n*Reason:* " + note : ""}
+
+*Name:* ${name}
+*Mobile:* ${phone}`;
+  const url = "https://wa.me/91" + num + "?text=" + encodeURIComponent(msg);
+  if(tab) tab.location.href = url; else window.location.href = url;
+  closeModal("slotOverlay");
+  toast(`Booked — ${when} at ${slotPick.time}`);
+}
+
+/* ---------- punctuality ----------
+   One question, asked once, about the thing customers actually complain
+   about. Kept apart from the quality stars because they are not the same
+   promise, and a worker's on-time figure is what makes the promise real. */
+function maybeAskPunctuality(){
+  let code = null;
+  try{ code = localStorage.getItem("nearse_job_done_v1"); }catch(e){}
+  if(!code) return;
+  setTimeout(() => {
+    if(!confirm("Did they arrive when they said they would?\n\nOK = yes, on time.\nCancel = no, they were late or did not come.")) {
+      api.ratePunctuality(code, false).catch(()=>{});
+      toast("Thank you — that counts against their on-time score");
+    }else{
+      api.ratePunctuality(code, true).catch(()=>{});
+      toast("Thank you");
+    }
+    try{ localStorage.removeItem("nearse_job_done_v1"); }catch(e){}
+  }, 1200);
+}
+const onTimeText = w => (w.on_time_total || 0) >= 3
+  ? `<span class="ontime${Math.round(100*w.on_time_yes/w.on_time_total) >= 80 ? " good" : " poor"}">On time ${Math.round(100*w.on_time_yes/w.on_time_total)}%</span>`
+  : "";
 
 /* ---------- reporting a profile ----------
    A marketplace that sends strangers to people's homes needs somewhere to say
@@ -3495,6 +4549,12 @@ function adminCard(w){
             allowed ${money(RATE_BAND[x.skill][0])}–${money(RATE_BAND[x.skill][1])}.
             Profiles saved before the limits existed keep their old rate until the worker edits.
           </div>`).join("")}
+      ${w.reg_number ? `<div class="wa-expect" style="border-color:${w.reg_verified ? "rgba(79,201,141,.45)" : "rgba(232,146,74,.5)"}">
+        ${w.reg_verified ? "✓ Registration checked" : "<b style='letter-spacing:0;font-size:.8rem'>Check this on the council register before approving</b>"}
+        <br>${esc(COUNCILS[w.reg_council] || "Council")}<br>
+        <b style="letter-spacing:.06em">${esc(w.reg_number)}</b>
+        ${w.reg_verified ? "" : `<br><button class="linkish" onclick="verifyReg('${jsq(w.id)}')">Mark as checked</button>`}
+      </div>` : ""}
       ${waCodes[w.id] && st === "pending" ? `<div class="wa-expect">
         Check WhatsApp for <b>${esc(waCodes[w.id])}</b> from <b>${esc(w.phone||"")}</b>.
         Approve only if both match.
@@ -3567,6 +4627,19 @@ async function adminSet(id, status, note){
     renderAdmin();
   }catch(e){ toast(e.message); }
 }
+async function verifyReg(id){
+  if(!confirm("Only tick this once you have looked the number up on the council's own register.\n\nApproving a medical profile without checking is the one mistake here that can hurt somebody.")) return;
+  try{
+    if(LIVE) await sb("rpc/admin_verify_registration", {method:"POST",
+      body:JSON.stringify({p_pin:adminPin, p_id:id, p_ok:true})});
+    else{
+      const all = demoAll(); const w = all.find(x=>x.id===id);
+      if(w){ w.reg_verified = true; demoSave(all); }
+    }
+    toast("Registration marked as checked");
+    renderAdmin();
+  }catch(e){ toast(e.message); }
+}
 async function adminRequireOtp(on){
   try{
     await sb("rpc/admin_set_require_otp", {method:"POST", body:JSON.stringify({p_pin:adminPin, p_require:on})});
@@ -3575,6 +4648,87 @@ async function adminRequireOtp(on){
   }catch(e){
     toast(e.message);
     $("otpSwitch").checked = REQUIRE_OTP;
+  }
+}
+
+/* ---------- job alerts (Web Push) ----------
+   A worker has 60 seconds to accept an instant job, which only works if the
+   alert actually reaches them. Push is the fast path. It is not the only
+   path: a worker with no subscription — no app installed, notifications
+   refused, or an iPhone on an older iOS — is still offered the job over
+   WhatsApp by the dispatcher. Push makes it quick; it is not a gate.
+
+   iOS only delivers Web Push to a PWA that has been added to the home
+   screen, so on iPhone the install prompt has to come first. */
+let VAPID_PUBLIC = null;      /* read from nearse_config at start-up */
+let pushSub = null;
+
+const pushSupported = () =>
+  "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+
+function urlBase64ToUint8Array(base64){
+  const pad = "=".repeat((4 - base64.length % 4) % 4);
+  const raw = atob((base64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function enablePush(){
+  if(!pushSupported()){
+    if(isIOS() && !isStandalone()){ openModal("iosOverlay"); return; }
+    toast("This browser cannot show job alerts — you will get offers on WhatsApp instead");
+    renderPushState(); return;
+  }
+  if(isIOS() && !isStandalone()){ openModal("iosOverlay"); return; }
+  if(!VAPID_PUBLIC){
+    toast("Alerts are not switched on yet — you will get offers on WhatsApp");
+    renderPushState(); return;
+  }
+  try{
+    const perm = await Notification.requestPermission();
+    if(perm !== "granted"){
+      toast("Alerts blocked — offers will come on WhatsApp instead");
+      renderPushState(); return;
+    }
+    const reg = await navigator.serviceWorker.ready;
+    pushSub = await reg.pushManager.getSubscription() ||
+      await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+      });
+    await savePushSubscription();
+    toast("Job alerts are on");
+  }catch(e){
+    toast("Could not turn on alerts — offers will come on WhatsApp");
+  }
+  renderPushState();
+}
+
+async function savePushSubscription(){
+  if(!pushSub || !session || !session.phone || !session.pin) return;
+  const j = pushSub.toJSON();
+  try{
+    await api.savePush(session.phone, session.pin, {
+      endpoint: j.endpoint, p256dh: j.keys && j.keys.p256dh, auth: j.keys && j.keys.auth
+    });
+  }catch(e){ /* the WhatsApp path still works, so never block on this */ }
+}
+
+function renderPushState(){
+  const el = $("pushState"), btn = $("pushOptIn");
+  if(!el) return;
+  const on = pushSupported() && Notification.permission === "granted";
+  if(on){
+    el.textContent = "Job alerts are on for this phone.";
+    if(btn) btn.hidden = true;
+  }else if(isIOS() && !isStandalone()){
+    el.textContent = "On iPhone, add Nearse to your home screen first — then alerts can reach you.";
+    if(btn){ btn.hidden = false; btn.textContent = "Add to home screen"; }
+  }else if(pushSupported() && Notification.permission === "denied"){
+    el.textContent = "Alerts are blocked in your browser settings. Offers will still reach you on WhatsApp.";
+    if(btn) btn.hidden = true;
+  }else{
+    el.textContent = "Without alerts we send offers on WhatsApp, which is slower — you may miss the 60 seconds.";
+    if(btn){ btn.hidden = false; btn.textContent = "Turn on job alerts"; }
   }
 }
 
@@ -3631,8 +4785,9 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
   if(LIVE){
     /* off until an SMS/WhatsApp provider is connected — see the admin panel */
     try{
-      const rows = await sb("nearse_config?select=require_phone_otp&limit=1");
-      REQUIRE_OTP = !!(rows && rows[0] && rows[0].require_phone_otp);
+      const rows = await sb("nearse_config?select=require_phone_otp,vapid_public&limit=1");
+      REQUIRE_OTP  = !!(rows && rows[0] && rows[0].require_phone_otp);
+      VAPID_PUBLIC = (rows && rows[0] && rows[0].vapid_public) || null;
     }catch(e){ REQUIRE_OTP = false; }
   }
   if(session && session.registered){

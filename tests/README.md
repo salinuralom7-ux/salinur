@@ -12,6 +12,8 @@ node tests/test-ks.js
 | File | What it covers |
 |---|---|
 | `test-ks.js` | The whole journey: register → verify → review → approve → search → book → rate → delete |
+| `test-modes.js` | The four booking modes: instant dispatch with auto-divert, appointment slots, punctuality, registration numbers |
+| `dispatch-verify.sql` | The same, against a real Postgres — offer rotation, double-accept, slot collisions, table privileges |
 | `test-hardening.js` | Back-button navigation, manifest shortcuts, rating limits, reporting, admin PIN |
 | `test-pages.js` | About, privacy, terms, cancellations, account deletion — links, styling, overflow |
 | `test-pwa.js` | Manifest, icons, offline shell, install prompt |

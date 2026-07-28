@@ -1,7 +1,7 @@
 /* Nearse service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls and the separate /cars/ site always go to the network. */
-const CACHE = "nearse-shell-v19";
+const CACHE = "nearse-shell-v20";
 const SHELL = [
   "./",
   "./index.html",
@@ -21,6 +21,44 @@ self.addEventListener("activate", e => {
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
+  );
+});
+
+/* ---------- job alerts ----------
+   A worker has 60 seconds to accept an instant job, so the notification has
+   to be loud and land straight on the job when tapped. requireInteraction
+   keeps it on screen rather than fading after a few seconds, and the tag
+   means a second offer replaces the first instead of stacking up. */
+self.addEventListener("push", e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data && e.data.text() }; }
+  const title = d.title || "New job on Nearse";
+  e.waitUntil(self.registration.showNotification(title, {
+    body: d.body || "A customer near you needs work done now.",
+    icon: "./icons/icon-192.png?v=2",
+    badge: "./icons/icon-192.png?v=2",
+    tag: d.tag || "nearse-job",
+    renotify: true,
+    requireInteraction: true,
+    vibrate: [200, 80, 200],
+    data: { url: d.url || "./?src=push#job" }
+  }));
+});
+
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const target = (e.notification.data && e.notification.data.url) || "./?src=push#job";
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+      // reuse a tab that already has Nearse open rather than piling up windows
+      for (const c of list) {
+        if (c.url.includes(self.registration.scope) && "focus" in c) {
+          c.navigate(target).catch(() => {});
+          return c.focus();
+        }
+      }
+      return self.clients.openWindow(target);
+    })
   );
 });
 

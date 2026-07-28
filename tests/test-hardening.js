@@ -47,9 +47,12 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   // a sheet that replaces another still only costs one back press
   await page.locator('#ctaHire').click(); await page.waitForTimeout(600);
   await page.locator('.wcard').first().click(); await page.waitForTimeout(400);
-  await page.locator('#wDetail .btn-brand').click(); await page.waitForTimeout(400);
+  await page.locator('#bookCta').click(); await page.waitForTimeout(400);
+  // which sheet opens depends on the service's booking mode; whichever it is,
+  // it must replace the worker sheet rather than stack on top of it
   ok('Booking sheet replaces the worker sheet',
-     await page.locator('#bookOverlay.open').count() === 1 && await page.locator('#wOverlay.open').count() === 0);
+     await page.locator('.overlay.open').count() === 1 && await page.locator('#wOverlay.open').count() === 0,
+     await page.evaluate(() => (document.querySelector('.overlay.open') || {}).id));
   await page.goBack(); await page.waitForTimeout(400);
   ok('One back press clears both sheets',
      await page.locator('.overlay.open').count() === 0 && await screen() === 'scr-hire');

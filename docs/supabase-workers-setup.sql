@@ -1087,7 +1087,19 @@ insert into public.service_rates (skill, min_price, max_price) values
   ($q$Security Guard$q$,8000,25000),
   ($q$Office Assistant$q$,6000,30000),
   ($q$Office Housekeeping Staff$q$,6000,30000),
-  ($q$Building Caretaker$q$,6000,30000)
+  ($q$Building Caretaker$q$,6000,30000),
+  ($q$General Physician$q$,200,1500),
+  ($q$Dentist$q$,200,3000),
+  ($q$Child Specialist (Paediatrician)$q$,200,1500),
+  ($q$Gynaecologist$q$,200,1500),
+  ($q$Orthopaedic Doctor$q$,200,1500),
+  ($q$Skin & Hair Specialist$q$,200,2000),
+  ($q$Eye Specialist$q$,200,1500),
+  ($q$ENT Specialist$q$,200,1500),
+  ($q$Ayurvedic Doctor$q$,150,1200),
+  ($q$Homeopathic Doctor$q$,150,1200),
+  ($q$Psychologist / Counsellor$q$,300,3000),
+  ($q$Lab Sample Collection (At Home)$q$,50,1000)
 on conflict (skill) do update
   set min_price = excluded.min_price, max_price = excluded.max_price;
 
@@ -1723,5 +1735,717 @@ begin
       execute format('grant execute on function public.request_worker_contact(uuid, text) to %I', r);
       execute format('grant execute on function public.rate_worker(uuid, int, text) to %I', r);
     end if;
+  end loop;
+end $$;
+
+-- ============================================================
+-- MIGRATION 11 — booking modes: instant dispatch, slots, punctuality
+--
+-- One booking flow never fitted 155 trades, and the mismatch was doing real
+-- damage. A customer could pick "Monday 9 am" for a worker who had never
+-- agreed to it, and nothing in the system ever asked the worker whether they
+-- were coming. The appointment existed only in the customer's head, and when
+-- nobody arrived it was the app that looked useless.
+--
+-- So a service now declares how it is booked:
+--
+--   now    offered to the nearest available worker, who has 60 seconds to
+--          accept before it moves to the next one, and the next
+--   slot    the worker publishes a working day and customers take a slot
+--   sched   a date the customer proposes and the worker confirms
+--   hire    an enquiry about ongoing work, with no arrival time at all
+--
+-- The important part is not the dispatch. It is that "accepted" now means a
+-- worker pressed a button, and punctuality is measured and published.
+-- ============================================================
+
+-- ---------- 11.1 what a worker brings to these modes ----------
+alter table public.workers add column if not exists reg_council   int;
+alter table public.workers add column if not exists reg_number    text;
+alter table public.workers add column if not exists reg_verified  boolean not null default false;
+alter table public.workers add column if not exists availability  jsonb;
+alter table public.workers add column if not exists online_until  timestamptz;
+alter table public.workers add column if not exists on_time_yes   int not null default 0;
+alter table public.workers add column if not exists on_time_total int not null default 0;
+
+-- Push endpoints are contact details, so they live where nothing public can
+-- reach them, same as the PIN hash.
+create table if not exists public.worker_push (
+  worker_id  uuid primary key references public.workers(id) on delete cascade,
+  endpoint   text not null,
+  p256dh     text not null,
+  auth       text not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.worker_push enable row level security;
+-- no policies: written through a PIN-checked function, read only by the dispatcher
+
+create or replace function public.save_push_subscription(
+  p_phone text, p_pin text, p_endpoint text, p_p256dh text, p_auth text)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then raise exception 'Wrong phone number or PIN'; end if;
+
+  insert into worker_push (worker_id, endpoint, p256dh, auth)
+  values (wid, p_endpoint, p_p256dh, p_auth)
+  on conflict (worker_id) do update
+    set endpoint = excluded.endpoint, p256dh = excluded.p256dh,
+        auth = excluded.auth, updated_at = now();
+end;
+$$;
+
+-- The VAPID public key is not a secret — the browser needs it to subscribe.
+-- The private half never comes near this repository; CI writes it straight
+-- into the Edge Function's own secrets.
+alter table public.nearse_config add column if not exists vapid_public text;
+
+-- "Available now" is deliberately short-lived. A worker who forgets to switch
+-- off would otherwise sit at the top of every instant search all week and
+-- decline everything, which is worse for customers than not being listed.
+create or replace function public.set_online(p_phone text, p_pin text, p_minutes int default 240)
+returns timestamptz
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; until timestamptz;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then raise exception 'Wrong phone number or PIN'; end if;
+
+  until := case when coalesce(p_minutes,0) <= 0 then null
+                else now() + make_interval(mins => least(p_minutes, 720)) end;
+  update workers set online_until = until where id = wid;
+  return until;
+end;
+$$;
+
+-- ---------- 11.2 instant jobs ----------
+create table if not exists public.jobs (
+  id             uuid primary key default gen_random_uuid(),
+  created_at     timestamptz not null default now(),
+  code           text not null unique,
+  skill          text not null,
+  city           text,
+  area           text,
+  lat            double precision,
+  lng            double precision,
+  customer_name  text not null,
+  customer_phone text not null,
+  note           text,
+  status         text not null default 'searching',   -- searching|accepted|nobody|cancelled|done
+  worker_id      uuid references public.workers(id) on delete set null,
+  accepted_at    timestamptz,
+  eta_minutes    int,
+  asked_count    int not null default 0,
+  search_until   timestamptz not null
+);
+create index if not exists jobs_open_idx on public.jobs (status, search_until);
+
+create table if not exists public.job_offers (
+  id         bigserial primary key,
+  job_id     uuid not null references public.jobs(id) on delete cascade,
+  worker_id  uuid not null references public.workers(id) on delete cascade,
+  rank       int  not null,
+  sent_at    timestamptz not null default now(),
+  expires_at timestamptz not null,
+  status     text not null default 'pending',         -- pending|accepted|declined|expired
+  notified   text,                                     -- push|whatsapp|none
+  unique (job_id, worker_id)
+);
+create index if not exists job_offers_pending_idx on public.job_offers (status, expires_at);
+
+alter table public.jobs       enable row level security;
+alter table public.job_offers enable row level security;
+-- no policies on either: everything goes through the functions below, so a
+-- customer's name and number are never sitting in a readable table
+
+-- Who to ask next. Online workers first — they are the ones who can actually
+-- leave now — then nearest, then best rated. Anyone already asked is skipped,
+-- so a search never loops back to someone who let it expire.
+create or replace function public.next_job_candidate(p_job uuid)
+returns uuid
+language sql stable security definer set search_path = public, extensions as $$
+  select w.id
+    from workers w, jobs j
+   where j.id = p_job
+     and w.status = 'approved'
+     and w.available
+     and (j.city is null or w.city = j.city)
+     and exists (select 1 from jsonb_array_elements(w.skills) s
+                  where s->>'skill' = j.skill)
+     and not exists (select 1 from job_offers o
+                      where o.job_id = j.id and o.worker_id = w.id)
+   order by
+     (w.online_until is not null and w.online_until > now()) desc,
+     case when j.lat is null or w.lat is null then 1e6 else
+       6371 * 2 * asin(sqrt(
+         power(sin(radians(w.lat - j.lat) / 2), 2) +
+         cos(radians(j.lat)) * cos(radians(w.lat)) *
+         power(sin(radians(w.lng - j.lng) / 2), 2)))
+     end,
+     case when w.rating_count = 0 then 3.4
+          else w.rating_sum::numeric / w.rating_count end desc,
+     w.created_at
+   limit 1;
+$$;
+
+-- Make the next offer, or close the job if nobody is left to ask.
+create or replace function public.offer_next(p_job uuid, p_seconds int default 60)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare cand uuid; n int;
+begin
+  select next_job_candidate(p_job) into cand;
+  if cand is null then
+    update jobs set status = 'nobody' where id = p_job and status = 'searching';
+    return null;
+  end if;
+  select count(*) into n from job_offers where job_id = p_job;
+  insert into job_offers (job_id, worker_id, rank, expires_at)
+    values (p_job, cand, n + 1, now() + make_interval(secs => greatest(20, least(p_seconds, 300))));
+  update jobs set asked_count = n + 1 where id = p_job;
+  return cand;
+end;
+$$;
+
+create or replace function public.create_job(
+  p_skill text, p_name text, p_phone text, p_area text, p_note text default null,
+  p_lat double precision default null, p_lng double precision default null,
+  p_city text default 'Guwahati', p_minutes int default 20)
+returns table (code text, worker_id uuid, asked int)
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid; c text; cand uuid;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit mobile number';
+  end if;
+  if btrim(coalesce(p_name,'')) = '' then
+    raise exception 'Please enter your name';
+  end if;
+
+  loop
+    c := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+    exit when not exists (select 1 from jobs where jobs.code = c);
+  end loop;
+
+  insert into jobs (code, skill, city, area, lat, lng, customer_name, customer_phone, note, search_until)
+  values (c, p_skill, p_city, p_area, p_lat, p_lng, btrim(p_name), p_phone, nullif(btrim(coalesce(p_note,'')),''),
+          now() + make_interval(mins => greatest(2, least(p_minutes, 60))))
+  returning id into jid;
+
+  cand := offer_next(jid, 60);
+  return query select c, cand, (select asked_count from jobs where id = jid);
+end;
+$$;
+
+-- What the customer's screen polls. The code is the only thing that opens it,
+-- which is why it is six characters of randomness and the job dies in an hour.
+create or replace function public.job_state(p_code text)
+returns table (status text, asked int, worker_name text, worker_phone text,
+               worker_area text, eta_minutes int, seconds_left int, skill text)
+language sql stable security definer set search_path = public, extensions as $$
+  select j.status, j.asked_count, w.name, 
+         case when j.status = 'accepted' then w.phone else null end,
+         w.area, j.eta_minutes,
+         greatest(0, extract(epoch from (
+           coalesce((select o.expires_at from job_offers o
+                      where o.job_id = j.id and o.status = 'pending'
+                      order by o.rank desc limit 1), j.search_until) - now()))::int),
+         j.skill
+    from jobs j left join workers w on w.id = j.worker_id
+   where j.code = upper(btrim(p_code));
+$$;
+
+create or replace function public.cancel_job(p_code text)
+returns void
+language sql security definer set search_path = public, extensions as $$
+  update jobs set status = 'cancelled'
+   where code = upper(btrim(p_code)) and status = 'searching';
+$$;
+
+-- The worker's side: what am I being offered right now?
+create or replace function public.my_offers(p_phone text, p_pin text)
+returns table (code text, skill text, area text, note text, customer_name text,
+               distance_km double precision, seconds_left int, price int, unit text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then raise exception 'Wrong phone number or PIN'; end if;
+
+  return query
+    select j.code, j.skill, j.area, j.note, j.customer_name,
+           case when j.lat is null or w.lat is null then null else
+             6371 * 2 * asin(sqrt(
+               power(sin(radians(w.lat - j.lat) / 2), 2) +
+               cos(radians(j.lat)) * cos(radians(w.lat)) *
+               power(sin(radians(w.lng - j.lng) / 2), 2)))
+           end,
+           greatest(0, extract(epoch from (o.expires_at - now()))::int),
+           (sk->>'price')::int, sk->>'unit'
+      from job_offers o
+      join jobs j on j.id = o.job_id
+      join workers w on w.id = o.worker_id
+      left join lateral (
+        select s from jsonb_array_elements(w.skills) s where s->>'skill' = j.skill limit 1
+      ) x(sk) on true
+     where o.worker_id = wid
+       and o.status = 'pending'
+       and o.expires_at > now()
+       and j.status = 'searching'
+     order by o.sent_at;
+end;
+$$;
+
+-- Accepting is the whole point: it is the first moment anybody has actually
+-- agreed to come. The worker commits to an arrival window at the same time.
+create or replace function public.accept_offer(p_phone text, p_pin text, p_code text, p_eta int default 30)
+returns table (customer_name text, customer_phone text, area text, note text, skill text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; jid uuid;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then raise exception 'Wrong phone number or PIN'; end if;
+
+  select j.id into jid from jobs j where j.code = upper(btrim(p_code)) for update;
+  if jid is null then raise exception 'That job no longer exists'; end if;
+
+  if not exists (select 1 from job_offers o
+                  where o.job_id = jid and o.worker_id = wid
+                    and o.status = 'pending' and o.expires_at > now()) then
+    raise exception 'That job has already gone to someone else';
+  end if;
+  if (select status from jobs where id = jid) <> 'searching' then
+    raise exception 'That job has already gone to someone else';
+  end if;
+
+  update job_offers set status = 'accepted' where job_id = jid and worker_id = wid;
+  update job_offers set status = 'expired'
+   where job_id = jid and worker_id <> wid and status = 'pending';
+  update jobs set status = 'accepted', worker_id = wid, accepted_at = now(),
+                  eta_minutes = greatest(5, least(coalesce(p_eta, 30), 240))
+   where id = jid;
+
+  return query select j.customer_name, j.customer_phone, j.area, j.note, j.skill
+                 from jobs j where j.id = jid;
+end;
+$$;
+
+create or replace function public.decline_offer(p_phone text, p_pin text, p_code text)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; jid uuid;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then raise exception 'Wrong phone number or PIN'; end if;
+
+  select id into jid from jobs where code = upper(btrim(p_code));
+  if jid is null then return; end if;
+
+  update job_offers set status = 'declined'
+   where job_id = jid and worker_id = wid and status = 'pending';
+  -- move straight on rather than making the customer wait out the 60 seconds
+  if (select status from jobs where id = jid) = 'searching' then
+    perform offer_next(jid, 60);
+  end if;
+end;
+$$;
+
+-- The clock. Runs every minute from pg_cron, and is also called by the
+-- customer's own screen while it waits, so a search advances promptly even
+-- if cron is a few seconds away.
+create or replace function public.advance_jobs()
+returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare j record; moved int := 0;
+begin
+  update job_offers set status = 'expired'
+   where status = 'pending' and expires_at <= now();
+
+  for j in select id from jobs
+            where status = 'searching' and search_until > now()
+              and not exists (select 1 from job_offers o
+                               where o.job_id = jobs.id and o.status = 'pending')
+  loop
+    perform offer_next(j.id, 60);
+    moved := moved + 1;
+  end loop;
+
+  update jobs set status = 'nobody'
+   where status = 'searching' and search_until <= now();
+  return moved;
+end;
+$$;
+
+-- ---------- 11.3 appointment slots ----------
+create table if not exists public.appointments (
+  id             uuid primary key default gen_random_uuid(),
+  created_at     timestamptz not null default now(),
+  worker_id      uuid not null references public.workers(id) on delete cascade,
+  skill          text not null,
+  slot_date      date not null,
+  slot_time      text not null,
+  customer_name  text not null,
+  customer_phone text not null,
+  note           text,
+  status         text not null default 'booked',       -- booked|cancelled|done
+  unique (worker_id, slot_date, slot_time)
+);
+alter table public.appointments enable row level security;
+-- no policies: booked times come back through the function below, which
+-- returns times only and never who booked them
+
+create or replace function public.taken_slots(p_worker uuid, p_date date)
+returns table (slot_time text)
+language sql stable security definer set search_path = public, extensions as $$
+  select a.slot_time from appointments a
+   where a.worker_id = p_worker and a.slot_date = p_date and a.status = 'booked';
+$$;
+
+create or replace function public.book_slot(
+  p_worker uuid, p_skill text, p_date date, p_time text,
+  p_name text, p_phone text, p_note text default null)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare num text;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit mobile number';
+  end if;
+  if p_date < current_date then
+    raise exception 'That day has already passed';
+  end if;
+  select phone into num from workers
+   where id = p_worker and status = 'approved' and available;
+  if num is null then raise exception 'That worker is not taking appointments'; end if;
+
+  begin
+    insert into appointments (worker_id, skill, slot_date, slot_time, customer_name, customer_phone, note)
+    values (p_worker, p_skill, p_date, p_time, btrim(p_name), p_phone,
+            nullif(btrim(coalesce(p_note,'')),''));
+  exception when unique_violation then
+    raise exception 'Someone has just taken that time — please choose another';
+  end;
+  return num;
+end;
+$$;
+
+create or replace function public.my_appointments(p_phone text, p_pin text)
+returns table (id uuid, skill text, slot_date date, slot_time text,
+               customer_name text, customer_phone text, note text, status text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then raise exception 'Wrong phone number or PIN'; end if;
+
+  return query
+    select a.id, a.skill, a.slot_date, a.slot_time, a.customer_name,
+           a.customer_phone, a.note, a.status
+      from appointments a
+     where a.worker_id = wid and a.slot_date >= current_date - 1
+     order by a.slot_date, a.slot_time;
+end;
+$$;
+
+-- ---------- 11.4 punctuality ----------
+-- Kept apart from the quality stars on purpose. "Good work" and "turned up
+-- when he said he would" are different promises, and in Guwahati it is the
+-- second one that decides whether somebody keeps the app.
+create table if not exists public.punctuality_votes (
+  job_code   text primary key,
+  worker_id  uuid not null references public.workers(id) on delete cascade,
+  on_time    boolean not null,
+  created_at timestamptz not null default now()
+);
+alter table public.punctuality_votes enable row level security;
+
+create or replace function public.rate_punctuality(p_code text, p_on_time boolean)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; c text;
+begin
+  c := upper(btrim(p_code));
+  select worker_id into wid from jobs where code = c and status in ('accepted','done');
+  if wid is null then raise exception 'That job cannot be rated'; end if;
+  if exists (select 1 from punctuality_votes where job_code = c) then return; end if;
+
+  insert into punctuality_votes (job_code, worker_id, on_time) values (c, wid, p_on_time);
+  update workers
+     set on_time_total = on_time_total + 1,
+         on_time_yes   = on_time_yes + case when p_on_time then 1 else 0 end,
+         status = status
+   where id = wid;
+  update jobs set status = 'done' where code = c and status = 'accepted';
+end;
+$$;
+
+-- ---------- 11.5 search carries what the new modes need ----------
+drop function if exists public.search_workers(double precision, double precision, text, text[], text, text, int, int);
+
+create function public.search_workers(
+  p_lat        double precision default null,
+  p_lng        double precision default null,
+  p_q          text             default null,
+  p_cat_skills text[]           default null,
+  p_area       text             default null,
+  p_city       text             default 'Guwahati',
+  p_limit      int              default 20,
+  p_offset     int              default 0
+)
+returns table (
+  id            uuid,
+  name          text,
+  selfie        text,
+  thumb         text,
+  city          text,
+  area          text,
+  about         text,
+  skills        jsonb,
+  rating_sum    int,
+  rating_count  int,
+  on_time_yes   int,
+  on_time_total int,
+  availability  jsonb,
+  is_online     boolean,
+  reg_number    text,
+  reg_verified  boolean,
+  distance_km   double precision,
+  total_count   bigint
+)
+language sql stable security definer set search_path = public, extensions as $$
+  with base as (
+    select w.*,
+           lower(w.name || ' ' || coalesce(w.area,'') || ' ' || coalesce(w.city,'') || ' ' ||
+                 coalesce(w.skills::text,'')) as hay,
+           case when p_lat is null or w.lat is null then null else
+             6371 * 2 * asin(sqrt(
+               power(sin(radians(w.lat - p_lat) / 2), 2) +
+               cos(radians(p_lat)) * cos(radians(w.lat)) *
+               power(sin(radians(w.lng - p_lng) / 2), 2)))
+           end as dist
+      from workers w
+     where w.status = 'approved'
+       and w.available
+       and (p_city is null or w.city = p_city)
+       and (p_area is null or w.area = p_area)
+       and (p_cat_skills is null or exists (
+             select 1 from jsonb_array_elements(w.skills) s
+              where s->>'skill' = any(p_cat_skills)))
+  ),
+  hit as (
+    select * from base b
+     where p_q is null or btrim(p_q) = '' or (
+       select bool_and(b.hay like '%' || word || '%')
+         from unnest(string_to_array(lower(btrim(p_q)), ' ')) word
+        where word <> '')
+  )
+  select h.id, h.name, h.selfie, h.thumb, h.city, h.area, h.about, h.skills,
+         h.rating_sum, h.rating_count, h.on_time_yes, h.on_time_total,
+         h.availability,
+         (h.online_until is not null and h.online_until > now()),
+         h.reg_number, h.reg_verified,
+         h.dist,
+         count(*) over () as total_count
+    from hit h
+   order by
+     (h.online_until is not null and h.online_until > now()) desc,
+     case when h.dist is null then 1 else 0 end,
+     round(coalesce(h.dist, 0)::numeric, 1),
+     case when h.rating_count = 0 then 3.4
+          else h.rating_sum::numeric / h.rating_count end desc,
+     h.created_at desc
+   limit greatest(1, least(p_limit, 50))
+  offset greatest(0, p_offset);
+$$;
+
+-- ---------- 11.6 registration numbers and calendars are saved ----------
+create or replace function public.update_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wid uuid; is_edit boolean; identity_changed boolean; reg_changed boolean;
+begin
+  select w.id into wid from workers w
+  join worker_secrets s on s.worker_id = w.id
+  where w.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if wid is null then raise exception 'Wrong phone number or PIN'; end if;
+  if p_data ? 'skills' then perform check_rate_bands(p_data->'skills'); end if;
+
+  is_edit := (p_data ?| array['name','selfie','area','about','skills']);
+
+  select (p_data->>'name'   is not null and p_data->>'name'   is distinct from w.name)
+      or (p_data->>'selfie' is not null and p_data->>'selfie' is distinct from w.selfie),
+         (p_data->>'reg_number' is not null and p_data->>'reg_number' is distinct from w.reg_number)
+    into identity_changed, reg_changed
+    from workers w where w.id = wid;
+
+  update workers set
+    name = coalesce(p_data->>'name', name),
+    selfie = coalesce(p_data->>'selfie', selfie),
+    thumb = coalesce(p_data->>'thumb', thumb),
+    city = coalesce(p_data->>'city', city),
+    area = coalesce(p_data->>'area', area),
+    about = coalesce(p_data->>'about', about),
+    lat = coalesce((p_data->>'lat')::double precision, lat),
+    lng = coalesce((p_data->>'lng')::double precision, lng),
+    skills = coalesce(p_data->'skills', skills),
+    available = coalesce((p_data->>'available')::boolean, available),
+    reg_council = case when p_data ? 'reg_council' then (p_data->>'reg_council')::int else reg_council end,
+    reg_number  = case when p_data ? 'reg_number'  then nullif(btrim(p_data->>'reg_number'),'') else reg_number end,
+    -- a changed registration number is unverified until a person checks it again
+    reg_verified = case when reg_changed then false else reg_verified end,
+    availability = case when p_data ? 'availability' then p_data->'availability' else availability end,
+    status = case
+               when identity_changed or reg_changed then 'pending'
+               when is_edit and status = 'rejected' then 'pending'
+               else status
+             end,
+    review_note = case
+               when identity_changed or reg_changed then null
+               when is_edit and status = 'rejected' then null
+               else review_note
+             end
+  where id = wid;
+  return query select * from workers where id = wid;
+end;
+$$;
+
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  new_id uuid; jwt_phone text; need_otp boolean;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then raise exception 'PIN must be exactly 4 digits'; end if;
+  if p_phone !~ '^[6-9]\d{9}$' then raise exception 'Enter a valid 10-digit Indian mobile number'; end if;
+  perform check_rate_bands(p_data->'skills');
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''), '\D', '', 'g');
+  if length(jwt_phone) > 10 then jwt_phone := right(jwt_phone, 10); end if;
+  if coalesce(need_otp,false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, thumb, city, area, about, lat, lng, skills,
+                       available, phone_verified, terms_version, consent_at, age_confirmed,
+                       reg_council, reg_number, availability)
+  values (coalesce(p_data->>'name',''), p_phone, p_data->>'selfie', p_data->>'thumb',
+          p_data->>'city', p_data->>'area', p_data->>'about',
+          (p_data->>'lat')::double precision, (p_data->>'lng')::double precision,
+          coalesce(p_data->'skills','[]'::jsonb),
+          coalesce((p_data->>'available')::boolean, true), jwt_phone <> '',
+          nullif(p_data->>'terms_version',''),
+          case when coalesce((p_data->>'age_confirmed')::boolean, false) then now() end,
+          coalesce((p_data->>'age_confirmed')::boolean, false),
+          (p_data->>'reg_council')::int,
+          nullif(btrim(coalesce(p_data->>'reg_number','')),''),
+          p_data->'availability')
+  returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash, email, wa_code)
+    values (new_id, crypt(p_pin, gen_salt('bf')),
+            nullif(btrim(coalesce(p_data->>'email','')), ''),
+            nullif(btrim(coalesce(p_data->>'wa_code','')), ''));
+  return query select * from workers where id = new_id;
+end;
+$$;
+
+-- The admin marks a registration number as actually checked against the
+-- council's register. Nothing else in the app can set this.
+create or replace function public.admin_verify_registration(p_pin text, p_id uuid, p_ok boolean)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then raise exception 'Wrong admin PIN'; end if;
+  update workers set reg_verified = p_ok where id = p_id;
+end;
+$$;
+
+-- ---------- 11.7 housekeeping ----------
+create or replace function public.purge_expired_data()
+returns table (bookings_removed bigint, rejected_removed bigint, contacts_removed bigint)
+language plpgsql security definer set search_path = public, extensions as $$
+declare b bigint; r bigint; c bigint;
+begin
+  delete from bookings where created_at < now() - interval '12 months';
+  get diagnostics b = row_count;
+
+  delete from workers
+   where status = 'rejected'
+     and coalesce(reviewed_at, created_at) < now() - interval '90 days';
+  get diagnostics r = row_count;
+
+  delete from contact_requests where created_at < now() - interval '90 days';
+  get diagnostics c = row_count;
+
+  -- instant jobs carry a customer's name and number and are worthless after
+  -- the job is over; appointments follow the same 12 months as bookings
+  delete from jobs where created_at < now() - interval '12 months';
+  delete from appointments where slot_date < current_date - 365;
+
+  -- a worker who stopped using the app should not stay "available now"
+  update workers set online_until = null
+   where online_until is not null and online_until < now() - interval '1 day';
+
+  return query select b, r, c;
+end;
+$$;
+revoke all on function public.purge_expired_data() from public;
+
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    begin
+      create extension if not exists pg_cron;
+      perform cron.unschedule('nearse-dispatch')
+        where exists (select 1 from cron.job where jobname = 'nearse-dispatch');
+      perform cron.schedule('nearse-dispatch', '* * * * *', 'select public.advance_jobs()');
+    exception when others then
+      raise notice 'pg_cron present but not schedulable here (%) — instant dispatch will rely on the customer''s screen to advance', sqlerrm;
+    end;
+  else
+    raise notice 'no pg_cron — instant dispatch advances from the customer''s open screen only';
+  end if;
+end $$;
+
+-- ---------- 11.8 the private tables are not merely empty to the public ----------
+-- Row level security with no policy already returns nothing, but the tables
+-- stay visible through the REST API, advertising their existence and column
+-- names. Nothing outside the functions above needs them at all, so the
+-- privilege goes too. worker_reports keeps INSERT: that is the report form.
+do $$
+declare r text; t text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+    foreach t in array array['jobs','job_offers','appointments','worker_push',
+                             'punctuality_votes','worker_ratings','contact_requests',
+                             'worker_secrets','nearse_admin'] loop
+      execute format('revoke all on public.%I from %I', t, r);
+    end loop;
+    execute format('revoke all on public.worker_reports from %I', r);
+    execute format('grant insert on public.worker_reports to %I', r);
+    execute format('grant usage, select on sequence public.worker_reports_id_seq to %I', r);
   end loop;
 end $$;
