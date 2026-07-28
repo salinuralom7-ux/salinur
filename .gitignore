@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Playwright harnesses write their screenshots next to wherever they are run
+ks-*.png
+pg-*.png
+tests/node_modules/
