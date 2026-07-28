@@ -4,7 +4,6 @@
 -- put the committed hash back first: an earlier run of this file rotates it,
 -- and the seed now leaves an existing PIN alone
 update nearse_admin set pin_hash = '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1MvfFFRq56oyGoPkG' where id = 1;
-update owner_settings set pin_hash = '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea' where id = 1;
 delete from workers where phone in ('9435012345','9435012346');
 do $$ begin
   begin
@@ -16,7 +15,6 @@ do $$ begin
     else raise; end if;
   end;
 end $$;
-select public.check_pin('7086') as budget_cars_published_pin_accepted;   -- expect f
 
 -- ---------- 2. after rotation the admin PIN works ----------
 update nearse_admin set pin_hash = crypt('a-real-secret-pin', gen_salt('bf', 12)) where id = 1;

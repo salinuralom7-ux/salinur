@@ -1,5 +1,5 @@
 -- ============================================================
--- NEARSE — Supabase setup (runs in the same project as Budget Cars)
+-- NEARSE — Supabase setup
 --
 -- This file is applied whole on every deploy, so every statement in it has
 -- to be safe to run again. Later sections deliberately replace earlier ones;
@@ -144,32 +144,11 @@ begin
 end;
 $$;
 
--- ============================================================
--- Budget Cars: owner PIN moved to a bcrypt hash (never stored in
--- plain text, never committed to the repo). check_pin now verifies
--- against the hash.
--- ============================================================
-alter table public.owner_settings add column if not exists pin_hash text;
--- Seed a hash only if there is none. This used to assign the hash
--- unconditionally, and because CI re-runs this whole file on every push, any
--- PIN the owner set by hand was silently reset to the committed one on the
--- next deploy. Migration 10 disables the committed hash outright.
-update public.owner_settings
-  set pin_hash = '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea',
-      pin = ''
-  where id = 1 and coalesce(pin_hash, '') = '';
-
-create or replace function public.check_pin(p_pin text)
-returns boolean
-language sql
-security definer
-set search_path = public, extensions
-as $$
-  select exists (
-    select 1 from owner_settings
-    where id = 1 and pin_hash is not null and pin_hash = crypt(p_pin, pin_hash)
-  );
-$$;
+-- Budget Cars was retired on 27 July 2026 and its setup moved out of this
+-- file. Its tables (cars, owner_settings) and its check_pin function are
+-- deliberately left in the database rather than dropped: the site can come
+-- back from git history, and dropping them would destroy the inventory.
+-- Nothing below maintains them any more.
 
 -- ============================================================
 -- Nearse: profile verification
@@ -1229,14 +1208,13 @@ $$;
 -- The hashes below are the ones committed to this repository. They cannot be
 -- un-published, so they are rejected outright rather than merely discouraged.
 -- To set a real one, in Supabase → SQL editor:
---   update nearse_admin  set pin_hash = crypt('your new pin', gen_salt('bf', 12)) where id = 1;
---   update owner_settings set pin_hash = crypt('your new pin', gen_salt('bf', 12)) where id = 1;
+--   update nearse_admin set pin_hash = crypt('your new pin', gen_salt('bf', 12)) where id = 1;
 create or replace function public.pin_is_published(p_hash text)
 returns boolean
 language sql immutable set search_path = public as $$
   select p_hash in (
     '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1MvfFFRq56oyGoPkG',  -- Nearse admin
-    '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea'   -- Budget Cars owner
+    '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea'   -- retired Budget Cars owner
   );
 $$;
 
@@ -1251,19 +1229,6 @@ begin
   end if;
   if public.pin_is_published(h) then
     raise exception 'This admin PIN is published in the public repository and has been disabled. Set a new one in Supabase, SQL editor: update nearse_admin set pin_hash = crypt(''your new pin'', gen_salt(''bf'', 12)) where id = 1;';
-  end if;
-  return h = crypt(p_pin, h);
-end;
-$$;
-
-create or replace function public.check_pin(p_pin text)
-returns boolean
-language plpgsql security definer set search_path = public, extensions as $$
-declare h text;
-begin
-  select pin_hash into h from owner_settings where id = 1;
-  if h is null or public.pin_is_published(h) then
-    return false;
   end if;
   return h = crypt(p_pin, h);
 end;

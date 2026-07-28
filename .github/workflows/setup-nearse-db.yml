@@ -1,4 +1,4 @@
-name: Setup KaamSetu database
+name: Set up the Nearse database
 # One-time: creates the Nearse tables/functions in the existing Supabase
 # project. Reads the Supabase access token from the repo secret
 # SUPABASE_TOKEN. Writes a sanitized status report to
@@ -126,8 +126,6 @@ jobs:
           select
             (select public.pin_is_published(pin_hash) from public.nearse_admin where id=1)
               as admin_pin_STILL_PUBLISHED_change_it,
-            (select public.pin_is_published(pin_hash) from public.owner_settings where id=1)
-              as cars_pin_STILL_PUBLISHED_change_it,
             (select count(*)::int from pg_policies
               where schemaname='public' and tablename='workers'
                 and qual like '%approved%') as workers_policy_approved_only,
@@ -165,9 +163,6 @@ jobs:
           # these two are warnings, not failures: only the owner can fix them
           if grep -q '"admin_pin_still_published_change_it":true' /tmp/harden.json; then
             note "WARNING: the admin PIN is still the one published in this repo. See DEPLOY.md, Job 0."
-          fi
-          if grep -q '"cars_pin_still_published_change_it":true' /tmp/harden.json; then
-            note "WARNING: the Budget Cars owner PIN is still the published one. See DEPLOY.md, Job 0."
           fi
           # these are failures: they mean the migration did not take
           for bad in '"anon_can_read_phone":true' '"workers_policy_wide_open":1' '"search_still_returns_phone":1' '"old_unlimited_rate_fn":1'; do

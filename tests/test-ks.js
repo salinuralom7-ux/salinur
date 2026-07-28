@@ -37,7 +37,6 @@ const srv = http.createServer((req, res) => {
   console.log('Card title and subtitle stack:', await page.evaluate(
     () => getComputedStyle(document.querySelector('.cta-text')).flexDirection));
   console.log('First is a real button:', await page.evaluate(() => document.querySelector('.cta').tagName));
-  console.log('Budget Cars strip gone:', await page.locator('#carsNote').count() === 0);
   console.log('Dark theme:', await page.evaluate(() => getComputedStyle(document.body).backgroundColor));
   console.log('Catalogue size:', await page.evaluate(() => SKILLS.length), 'services in',
               await page.evaluate(() => CATALOGUE.length), 'categories');

@@ -1,6 +1,6 @@
 /* Nearse service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
-   Supabase API calls and the separate /cars/ site always go to the network. */
+   Supabase API calls always go to the network. */
 const CACHE = "nearse-shell-v21";
 const SHELL = [
   "./",
@@ -82,7 +82,6 @@ self.addEventListener("fetch", e => {
     return;                                               // Supabase and everything else: live network
   }
 
-  if (url.pathname.includes("/cars")) return;             // Budget Cars is a separate site
 
   if (req.mode === "navigate") {
     // Only the app itself is the shell. The standalone pages (about, privacy,

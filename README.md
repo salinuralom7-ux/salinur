@@ -13,7 +13,6 @@ Live at **[nearse.in](https://nearse.in)**.
 | `docs/index.html` | The whole Nearse app. One file, no build step. |
 | `docs/supabase-workers-setup.sql` | The database. Applied whole on every deploy, so every statement has to be safe to run again. |
 | `docs/about/`, `privacy/`, `terms/`, `cancellation/`, `delete-account/` | The legal pages. Plain HTML, no JavaScript, stable URLs. |
-| `docs/cars/` | Budget Cars — a separate showroom site sharing the same hosting. |
 | `docs/functions/upload.js` | Cloudflare Pages Function that stores profile photos in R2. |
 | `tests/` | Playwright harnesses and SQL checks. See [`tests/README.md`](tests/README.md). |
 | `store/` | Play Store and App Store submission package. See [`store/README.md`](store/README.md). |
