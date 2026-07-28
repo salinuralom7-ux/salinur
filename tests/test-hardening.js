@@ -108,6 +108,9 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   await admin.goto('http://localhost:8811/#admin');
   await admin.waitForTimeout(1400);
   ok('Admin opens with the per-browser preview PIN', await admin.locator('#scr-admin.on').count() === 1);
+  ok('Dashboard flags the open report', (await admin.locator('.todo-bar').innerText()).includes('open report'));
+  await admin.locator('.admin-tabs .tab', { hasText: 'Review' }).click();
+  await admin.waitForTimeout(900);
   ok('Open report shown to the admin', await admin.locator('.report-item').count() === 1);
   await admin.locator('.report-item .btn').click();
   await admin.waitForTimeout(700);

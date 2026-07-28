@@ -2414,3 +2414,222 @@ begin
     execute format('grant usage, select on sequence public.worker_reports_id_seq to %I', r);
   end loop;
 end $$;
+
+-- ============================================================
+-- MIGRATION 12 — numbers for the admin screen
+--
+-- The admin screen could approve profiles and nothing else, so there was no
+-- way to answer "how is this going". Everything below is derived from rows
+-- that already exist; nothing new is recorded about anybody.
+--
+-- One honest limit, stated here because the screen states it too: a booking
+-- that goes out over WhatsApp leaves no completion signal. Nearse sees the
+-- request leave and never learns what happened. Only instant-dispatch jobs
+-- and appointments carry a real "done", so the screen reports those as
+-- completions and counts ratings separately as the softer evidence that a
+-- job actually happened.
+-- ============================================================
+
+create index if not exists bookings_created_idx     on public.bookings (created_at desc);
+create index if not exists workers_created_idx      on public.workers (created_at desc);
+create index if not exists jobs_created_idx         on public.jobs (created_at desc);
+create index if not exists appointments_created_idx on public.appointments (created_at desc);
+create index if not exists ratings_created_idx      on public.worker_ratings (created_at desc);
+
+create or replace function public.admin_stats(p_pin text)
+returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  -- everything is reported in Indian time; "today" means today in Guwahati,
+  -- not today in UTC, which is five and a half hours out and would make the
+  -- morning's numbers look like yesterday's
+  d0 timestamptz := date_trunc('day', now() at time zone 'Asia/Kolkata') at time zone 'Asia/Kolkata';
+  d7 timestamptz := d0 - interval '6 days';
+  d30 timestamptz := d0 - interval '29 days';
+  out jsonb;
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+
+  select jsonb_build_object(
+
+    'generated_at', now(),
+    'day_start', d0,
+
+    ---------------------------------------------------------------- people
+    'workers', (select jsonb_build_object(
+        'total',        count(*),
+        'approved',     count(*) filter (where status = 'approved'),
+        'pending',      count(*) filter (where status = 'pending'),
+        'rejected',     count(*) filter (where status = 'rejected'),
+        'available',    count(*) filter (where status = 'approved' and available),
+        'online',       count(*) filter (where status = 'approved' and online_until > now()),
+        'today',        count(*) filter (where created_at >= d0),
+        'last7',        count(*) filter (where created_at >= d7),
+        'last30',       count(*) filter (where created_at >= d30),
+        'verified',     count(*) filter (where phone_verified),
+        'with_photo',   count(*) filter (where selfie is not null),
+        'consented',    count(*) filter (where consent_at is not null)
+      ) from workers),
+
+    ---------------------------------------------------------------- demand
+    -- a "request" is any of the three ways a customer reaches a worker
+    'requests', (select jsonb_build_object(
+        'today',  (select count(*) from bookings     where created_at >= d0)
+                + (select count(*) from jobs         where created_at >= d0)
+                + (select count(*) from appointments where created_at >= d0),
+        'last7',  (select count(*) from bookings     where created_at >= d7)
+                + (select count(*) from jobs         where created_at >= d7)
+                + (select count(*) from appointments where created_at >= d7),
+        'last30', (select count(*) from bookings     where created_at >= d30)
+                + (select count(*) from jobs         where created_at >= d30)
+                + (select count(*) from appointments where created_at >= d30),
+        'total',  (select count(*) from bookings)
+                + (select count(*) from jobs)
+                + (select count(*) from appointments)
+      )),
+
+    'whatsapp_requests', (select jsonb_build_object(
+        'today', count(*) filter (where created_at >= d0),
+        'last7', count(*) filter (where created_at >= d7),
+        'last30', count(*) filter (where created_at >= d30),
+        'total', count(*)
+      ) from bookings),
+
+    'instant_jobs', (select jsonb_build_object(
+        'today',     count(*) filter (where created_at >= d0),
+        'last7',     count(*) filter (where created_at >= d7),
+        'last30',    count(*) filter (where created_at >= d30),
+        'total',     count(*),
+        'searching', count(*) filter (where status = 'searching' and search_until > now()),
+        'accepted',  count(*) filter (where status = 'accepted'),
+        'done',      count(*) filter (where status = 'done'),
+        'nobody',    count(*) filter (where status = 'nobody'),
+        'cancelled', count(*) filter (where status = 'cancelled'),
+        -- how long a customer waits before somebody says yes
+        'avg_accept_seconds', (select round(avg(extract(epoch from (accepted_at - created_at))))
+                                 from jobs
+                                where accepted_at is not null
+                                  and accepted_at >= created_at
+                                  and created_at >= d30)
+      ) from jobs),
+
+    'appointments', (select jsonb_build_object(
+        'today',     count(*) filter (where created_at >= d0),
+        'last7',     count(*) filter (where created_at >= d7),
+        'last30',    count(*) filter (where created_at >= d30),
+        'total',     count(*),
+        'booked',    count(*) filter (where status = 'booked'),
+        'done',      count(*) filter (where status = 'done'),
+        'cancelled', count(*) filter (where status = 'cancelled')
+      ) from appointments),
+
+    ------------------------------------------------------- jobs finished
+    -- the only completions Nearse can actually observe
+    'completed', jsonb_build_object(
+        'today',  (select count(*) from jobs where status='done' and created_at >= d0)
+                + (select count(*) from appointments where status='done' and created_at >= d0),
+        'last7',  (select count(*) from jobs where status='done' and created_at >= d7)
+                + (select count(*) from appointments where status='done' and created_at >= d7),
+        'last30', (select count(*) from jobs where status='done' and created_at >= d30)
+                + (select count(*) from appointments where status='done' and created_at >= d30),
+        'total',  (select count(*) from jobs where status='done')
+                + (select count(*) from appointments where status='done')
+      ),
+
+    -- softer evidence: somebody only leaves a rating after being worked with
+    'ratings', (select jsonb_build_object(
+        'today',  count(*) filter (where created_at >= d0),
+        'last7',  count(*) filter (where created_at >= d7),
+        'last30', count(*) filter (where created_at >= d30),
+        'total',  count(*)
+      ) from worker_ratings),
+
+    'quality', (select jsonb_build_object(
+        'avg_rating',  (select round(avg(rating_sum::numeric / nullif(rating_count,0)), 2)
+                          from workers where rating_count > 0),
+        'rated_workers', (select count(*) from workers where rating_count > 0),
+        'on_time_pct', (select case when sum(on_time_total) > 0
+                          then round(100.0 * sum(on_time_yes) / sum(on_time_total)) end
+                          from workers),
+        'open_reports', (select count(*) from worker_reports where not handled)
+      )),
+
+    ------------------------------------------------------- supply health
+    'supply', jsonb_build_object(
+        -- approved workers nobody has ever reached: supply going to waste
+        'never_booked', (select count(*) from workers w
+                          where w.status = 'approved'
+                            and not exists (select 1 from bookings b where b.worker_id = w.id)
+                            and not exists (select 1 from jobs j where j.worker_id = w.id)
+                            and not exists (select 1 from appointments a where a.worker_id = w.id)),
+        -- customers who wanted somebody now and got nobody
+        'unmet_last30', (select count(*) from jobs
+                          where status = 'nobody' and created_at >= d30),
+        'contact_requests_last30', (select count(*) from contact_requests where created_at >= d30)
+      ),
+
+    ------------------------------------------------------- what and where
+    'top_services', (select coalesce(jsonb_agg(t), '[]'::jsonb) from (
+        select skill, count(*) as n from (
+          select split_part(note, ' | ', 1) as skill from bookings where created_at >= d30
+          union all select skill from jobs         where created_at >= d30
+          union all select skill from appointments where created_at >= d30
+        ) x where skill is not null and btrim(skill) <> ''
+        group by skill order by n desc, skill limit 8) t),
+
+    'top_areas', (select coalesce(jsonb_agg(t), '[]'::jsonb) from (
+        select area, count(*) as n from workers
+         where status = 'approved' and area is not null
+         group by area order by n desc, area limit 8) t),
+
+    'pending_areas', (select coalesce(jsonb_agg(t), '[]'::jsonb) from (
+        select area, count(*) as n from workers
+         where status = 'pending' and area is not null
+         group by area order by n desc, area limit 5) t),
+
+    ------------------------------------------------------- last two weeks
+    'daily', (select coalesce(jsonb_agg(t order by t.d), '[]'::jsonb) from (
+        select (g.d at time zone 'Asia/Kolkata')::date as d,
+               (select count(*) from workers  w where w.created_at >= g.d and w.created_at < g.d + interval '1 day') as signups,
+               (select count(*) from bookings b where b.created_at >= g.d and b.created_at < g.d + interval '1 day')
+             + (select count(*) from jobs     j where j.created_at >= g.d and j.created_at < g.d + interval '1 day')
+             + (select count(*) from appointments a where a.created_at >= g.d and a.created_at < g.d + interval '1 day') as requests
+          from generate_series(d0 - interval '13 days', d0, interval '1 day') g(d)) t)
+
+  ) into out;
+
+  return out;
+end;
+$$;
+
+-- The ten most recent requests, so the admin can see actual activity rather
+-- than only counts. Customer numbers are included: this is the operator's own
+-- screen, behind the PIN, and following up on a complaint needs them.
+create or replace function public.admin_recent(p_pin text, p_limit int default 12)
+returns table (kind text, at timestamptz, worker_name text, skill text,
+               customer_name text, customer_phone text, status text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  return query
+    select * from (
+      select 'WhatsApp'::text, b.created_at, b.worker_name,
+             split_part(b.note, ' | ', 1), b.customer_name, b.customer_phone, 'sent'::text
+        from bookings b
+      union all
+      select 'Instant'::text, j.created_at, w.name, j.skill,
+             j.customer_name, j.customer_phone, j.status
+        from jobs j left join workers w on w.id = j.worker_id
+      union all
+      select 'Appointment'::text, a.created_at, w.name, a.skill,
+             a.customer_name, a.customer_phone, a.status
+        from appointments a left join workers w on w.id = a.worker_id
+    ) x
+    order by x.at desc
+    limit greatest(1, least(p_limit, 50));
+end;
+$$;

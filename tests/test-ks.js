@@ -209,6 +209,11 @@ const srv = http.createServer((req, res) => {
   await adminPage.goto('http://localhost:8777/#admin');
   await adminPage.waitForTimeout(1400);
   console.log('Admin screen opens with PIN:', await adminPage.locator('#scr-admin.on').count() === 1);
+  console.log('Dashboard is the landing tab:', await adminPage.locator('.stat-grid').count() > 0);
+  console.log('Dashboard flags what needs attention:',
+              (await adminPage.locator('.todo-bar').innerText()).replace(/\n/g, ' — '));
+  await adminPage.locator('.admin-tabs .tab', { hasText: 'Review' }).click();
+  await adminPage.waitForTimeout(900);
   console.log('Pending profile listed:', (await adminPage.locator('.admin-card').first().locator('h4').innerText()).replace(/\n/g,' '));
   console.log('Admin has OTP requirement toggle:', await adminPage.locator('#otpSwitch').count() === 1);
   const expect = (await adminPage.locator('.wa-expect').first().innerText()).replace(/\s+/g,' ').trim();
