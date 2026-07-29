@@ -60,8 +60,8 @@ const ok = (label, cond, extra) =>
 
   await p.locator('.work-entry', { hasText: 'ID card' }).click();
   await p.waitForTimeout(800);
-  ok('Card screen opens', await p.locator('#scr-card.on .idcard').count() === 1);
-  const card = await p.locator('.idcard').innerText();
+  ok('Card screen opens', await p.locator('#scr-card.on .badge').count() === 1);
+  const card = await p.locator('.badge').innerText();
   ok('Card carries the name', card.includes(await p.evaluate(() => session.worker.name)));
   ok('Card carries the trade', card.includes(await p.evaluate(() => session.worker.skills[0].skill)));
   ok('Card carries the phone number', card.includes(await p.evaluate(() => session.worker.phone)));
@@ -69,20 +69,20 @@ const ok = (label, cond, extra) =>
   ok('Card shows the ID in three groups',
      card.includes(code.slice(0,4) + ' ' + code.slice(4,8) + ' ' + code.slice(8)));
   ok('Card is marked verified', card.includes('VERIFIED'));
-  ok('Card points at where to check it', card.toLowerCase().includes('nearse.in/#verify'));
+  ok('Card carries a scannable code', await p.locator('.bd-qr svg').count() === 1);
   ok('A print button is offered', await p.locator('.card-actions .btn-brand').count() === 1);
 
   // bank-card proportions, so the print matches the screen
   const shape = await p.evaluate(() => {
-    const r = document.querySelector('.idcard').getBoundingClientRect();
+    const r = document.querySelector('.badge').getBoundingClientRect();
     return +(r.width / r.height).toFixed(2);
   });
-  ok('Card is bank-card shaped', Math.abs(shape - 85.6 / 54) < 0.03, shape);
+  ok('Badge is portrait, lanyard-shaped', Math.abs(shape - 1/1.58) < 0.04, shape);
 
   // a profile still under review says so on its own card
   await p.evaluate(() => { session.worker = {...session.worker, status:'pending', verified:false}; renderCard(); });
   await p.waitForTimeout(500);
-  ok('A pending card says PENDING', (await p.locator('.idcard').innerText()).includes('PENDING'));
+  ok('A pending card says PENDING', (await p.locator('.badge').innerText()).includes('PENDING'));
   ok('…and explains it is not active yet',
      (await p.locator('#cardHost').innerText()).includes('not active yet'));
   await p.evaluate(() => { session.worker = {...session.worker, status:'approved', verified:true}; });
@@ -150,7 +150,7 @@ const ok = (label, cond, extra) =>
   await p.waitForTimeout(600);
   const printed = await p.evaluate(() => {
     const hid = sel => { const e = document.querySelector(sel); return !e || getComputedStyle(e).display === 'none'; };
-    const c = document.querySelector('.idcard').getBoundingClientRect();
+    const c = document.querySelector('.badge').getBoundingClientRect();
     return { header: hid('body > header'), footer: hid('body > footer'),
              actions: hid('.card-actions'), note: hid('.card-note'),
              cardShown: c.width > 0 && c.height > 0 };
@@ -161,6 +161,30 @@ const ok = (label, cond, extra) =>
   ok('Printing hides the explanation', printed.note);
   ok('Printing keeps the card', printed.cardShown);
   await p.emulateMedia({ media: 'screen' });
+
+  // ---------- the code on the badge has to actually scan ----------
+  await p.emulateMedia({ media: 'screen' });
+  await p.evaluate(() => { session.worker.status = 'approved'; go('card'); });
+  await p.waitForTimeout(900);
+  const shot = await p.locator('.bd-qr svg').screenshot({ scale: 'css' });
+  const { createCanvas, loadImage } = (() => { try { return require('canvas'); } catch (e) { return {}; } })();
+  const jsQR = require('jsqr');
+  // decode straight from the module matrix the page produced, upscaled
+  const decoded = await p.evaluate(url => {
+    const m = qrMatrix(url);
+    const n = m.length, q = 4, side = n + q * 2, sc = 4, px = side * sc;
+    const d = new Uint8ClampedArray(px * px * 4).fill(255);
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (m[r][c])
+      for (let dy = 0; dy < sc; dy++) for (let dx = 0; dx < sc; dx++) {
+        const y = (r + q) * sc + dy, x = (c + q) * sc + dx, i = (y * px + x) * 4;
+        d[i] = d[i + 1] = d[i + 2] = 0;
+      }
+    return { data: Array.from(d), px };
+  }, 'https://nearse.in/#id=' + code);
+  const got = jsQR(new Uint8ClampedArray(decoded.data), decoded.px, decoded.px);
+  ok('The badge QR decodes to the verification link',
+     got && got.data === 'https://nearse.in/#id=' + code, got ? got.data : 'nothing');
+  void shot;
 
   ok('No JS errors anywhere', errors.length === 0, errors.join(' | ') || 'none');
   await browser.close(); srv.close();

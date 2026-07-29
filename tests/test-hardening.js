@@ -75,26 +75,15 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
     await p.close();
   }
 
-  // ---------- one rating per device ----------
+  // ---------- ratings cannot be stuffed ----------
+  // The old box took an anonymous, browser-supplied token to de-duplicate
+  // by, so a fresh one per request moved the score as far as you liked.
   await page.locator('.wcard').first().click(); await page.waitForTimeout(300);
-  const stars = () => page.evaluate(() => {
-    const w = JSON.parse(localStorage.getItem('nearse_workers_v1')).find(x => x.id === currentWorker.id);
-    return [w.rating_sum, w.rating_count];
-  });
-  const before = await stars();
-  for (let i = 0; i < 5; i++) {
-    await page.locator('#rateStars span[data-s="5"]').click();
-    await page.locator('.rating-box button').click();
-    await page.waitForTimeout(250);
-  }
-  const after = await stars();
-  ok('Five taps count as one rating', after[1] === before[1] + 1, `${before} → ${after}`);
-  await page.locator('#rateStars span[data-s="1"]').click();
-  await page.locator('.rating-box button').click();
-  await page.waitForTimeout(300);
-  const changed = await stars();
-  ok('Changing your mind replaces, never adds',
-     changed[1] === after[1] && changed[0] === before[0] + 1, `${after} → ${changed}`);
+  ok('No pass-by rating box on a profile', await page.locator('#rateStars').count() === 0);
+  ok('No unauthenticated rating call remains',
+     await page.evaluate(() => typeof api.rate === 'undefined'));
+  ok('Scores come only from a finished job',
+     await page.evaluate(() => typeof api.reviewThread === 'function'));
 
   // ---------- reporting ----------
   ok('Report link is on the worker sheet', await page.locator('.report-link').count() === 1);

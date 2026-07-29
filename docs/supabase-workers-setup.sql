@@ -553,7 +553,11 @@ $$;
 --     pinpointing the house a worker lives in.
 -- ============================================================
 
-create or replace function public.delete_worker(p_phone text, p_pin text)
+-- Dropped first every time: Migration 17 widens this to return boolean,
+-- and CREATE OR REPLACE cannot change a return type on a re-run.
+drop function if exists public.delete_worker(text, text);
+
+create function public.delete_worker(p_phone text, p_pin text)
 returns void
 language plpgsql security definer set search_path = public, extensions as $$
 declare
@@ -1429,7 +1433,11 @@ $$;
 -- "Deletion is immediate and permanent" was not true of the photo: the row
 -- went, the image stayed public in Storage for ever. Removing the row in
 -- storage.objects takes the object out of the API's reach.
-create or replace function public.delete_worker(p_phone text, p_pin text)
+-- Dropped first every time: Migration 17 widens this to return boolean,
+-- and CREATE OR REPLACE cannot change a return type on a re-run.
+drop function if exists public.delete_worker(text, text);
+
+create function public.delete_worker(p_phone text, p_pin text)
 returns void
 language plpgsql security definer set search_path = public, extensions as $$
 declare
@@ -3479,3 +3487,766 @@ begin
     end if;
   end loop;
 end $$;
+
+-- ============================================================
+-- MIGRATION 16 — holding up at Guwahati scale, and not being walked into
+--
+-- Measured against a seeded copy: 5,000 workers, 1,200 bookings, 9,600
+-- messages. Browsing was fine (13–31 ms). Three things were not.
+--
+--   1. A four-digit PIN with nothing counting the wrong guesses. Two
+--      hundred attempts took 861 ms, so the whole ten-thousand keyspace
+--      falls in about forty seconds. Any account whose phone number is
+--      known was one minute from being taken over. This is the important
+--      one.
+--   2. bcrypt on EVERY worker request. The chat polls every four seconds
+--      and each poll re-checked the PIN. It works at cost 6 — which is
+--      itself far too weak — and would collapse the moment the cost was
+--      raised to something respectable. The two problems were locked
+--      together: the hash could not be strengthened while it sat in the
+--      hot path.
+--   3. The admin screens took ~240 ms because nothing indexed the sort.
+--
+-- Also closed: three public inserts with no ceiling on them, which is a
+-- free way to fill a 500 MB database.
+-- ============================================================
+
+-- ---------- 16.1 counting the wrong guesses ----------
+create table if not exists public.auth_attempts (
+  id      bigserial primary key,
+  kind    text not null,             -- 'login' | 'admin'
+  subject text not null,             -- the phone number, or 'admin'
+  ok      boolean not null,
+  at      timestamptz not null default now()
+);
+create index if not exists auth_attempts_idx on public.auth_attempts (kind, subject, at desc);
+alter table public.auth_attempts enable row level security;   -- no policies
+
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on public.auth_attempts from %I', r);
+      execute format('revoke all on sequence public.auth_attempts_id_seq from %I', r);
+    end if;
+  end loop;
+end $$;
+
+-- Six wrong guesses in fifteen minutes and that account stops answering.
+-- An ATM gives you three; six is forgiving for somebody who has two PINs in
+-- their head, and still turns forty seconds of guessing into eleven years.
+create or replace function public.auth_guard(p_kind text, p_subject text)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare bad int; spray int; waited interval;
+begin
+  select count(*), now() - min(at) into bad, waited
+    from auth_attempts
+   where kind = p_kind and subject = p_subject and not ok
+     and at > now() - interval '15 minutes';
+
+  if bad >= 6 then
+    raise exception 'Too many wrong attempts. Please wait % minutes and try again.',
+      greatest(1, 15 - floor(extract(epoch from waited) / 60)::int);
+  end if;
+
+  -- and a spray across many accounts is still one attacker
+  select count(*) into spray from auth_attempts
+   where kind = p_kind and not ok and at > now() - interval '1 minute';
+  if spray >= 120 then
+    raise exception 'Too many failed sign-ins right now. Please try again shortly.';
+  end if;
+end;
+$$;
+
+create or replace function public.auth_note(p_kind text, p_subject text, p_ok boolean)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  insert into auth_attempts (kind, subject, ok) values (p_kind, p_subject, p_ok);
+  -- a good sign-in wipes the slate, so a forgetful worker is not locked out
+  -- an hour later for guesses they already recovered from
+  if p_ok then
+    delete from auth_attempts where kind = p_kind and subject = p_subject and not ok;
+  end if;
+end;
+$$;
+
+-- ---------- 16.2 sessions, so the hash leaves the hot path ----------
+create table if not exists public.worker_sessions (
+  token      uuid primary key default gen_random_uuid(),
+  worker_id  uuid not null references public.workers(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  last_used  timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '60 days'
+);
+create index if not exists worker_sessions_worker_idx on public.worker_sessions (worker_id);
+alter table public.worker_sessions enable row level security;   -- no policies
+
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on public.worker_sessions from %I', r);
+    end if;
+  end loop;
+end $$;
+
+-- The PIN is checked once, here, and a token is handed back. Everything
+-- afterwards is an indexed lookup on a 122-bit random value instead of a
+-- bcrypt round — which is what makes a stronger hash affordable at all.
+create or replace function public.worker_auth(p_phone text, p_pin text, p_token uuid default null)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; stored text;
+begin
+  if p_token is not null then
+    update worker_sessions s set last_used = now()
+     where s.token = p_token and s.expires_at > now()
+     returning s.worker_id into wid;
+    if wid is not null then return wid; end if;
+    raise exception 'Your session has expired — please sign in again';
+  end if;
+
+  if p_phone is null or p_pin is null then
+    raise exception 'Wrong phone number or PIN';
+  end if;
+  perform public.auth_guard('login', p_phone);
+
+  select w.id, s.pin_hash into wid, stored
+    from workers w join worker_secrets s on s.worker_id = w.id
+   where w.phone = p_phone;
+
+  if wid is null or stored is null or stored <> crypt(p_pin, stored) then
+    perform public.auth_note('login', p_phone, false);
+    raise exception 'Wrong phone number or PIN';
+  end if;
+
+  perform public.auth_note('login', p_phone, true);
+
+  -- quietly re-hash anything still on the old cost factor
+  if split_part(stored, '$', 3)::int < 10 then
+    update worker_secrets set pin_hash = crypt(p_pin, gen_salt('bf', 10)) where worker_id = wid;
+  end if;
+  return wid;
+end;
+$$;
+
+create or replace function public.worker_session_start(p_phone text, p_pin text)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; tok uuid;
+begin
+  wid := public.worker_auth(p_phone, p_pin, null);
+  delete from worker_sessions where worker_id = wid and expires_at < now();
+  insert into worker_sessions (worker_id) values (wid) returning token into tok;
+  return tok;
+end;
+$$;
+
+create or replace function public.worker_session_end(p_token uuid)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  delete from worker_sessions where token = p_token;
+end;
+$$;
+
+-- new PINs are hashed properly from here on
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  new_id uuid; jwt_phone text; need_otp boolean;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then raise exception 'PIN must be exactly 4 digits'; end if;
+  if p_phone !~ '^[6-9]\d{9}$' then raise exception 'Enter a valid 10-digit Indian mobile number'; end if;
+  perform check_rate_bands(p_data->'skills');
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''), '\D', '', 'g');
+  if length(jwt_phone) > 10 then jwt_phone := right(jwt_phone, 10); end if;
+  if coalesce(need_otp,false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, thumb, city, area, about, lat, lng, skills,
+                       available, phone_verified, terms_version, consent_at, age_confirmed)
+  values (coalesce(p_data->>'name',''), p_phone, p_data->>'selfie', p_data->>'thumb',
+          p_data->>'city', p_data->>'area', p_data->>'about',
+          (p_data->>'lat')::double precision, (p_data->>'lng')::double precision,
+          coalesce(p_data->'skills','[]'::jsonb),
+          coalesce((p_data->>'available')::boolean, true), jwt_phone <> '',
+          nullif(p_data->>'terms_version',''),
+          case when coalesce((p_data->>'age_confirmed')::boolean, false) then now() end,
+          coalesce((p_data->>'age_confirmed')::boolean, false))
+  returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash, email, wa_code)
+    values (new_id, crypt(p_pin, gen_salt('bf', 10)),
+            nullif(btrim(coalesce(p_data->>'email','')), ''),
+            nullif(btrim(coalesce(p_data->>'wa_code','')), ''));
+  return query select * from workers where id = new_id;
+end;
+$$;
+
+-- ---------- 16.3 the admin PIN gets the same treatment ----------
+create or replace function public.admin_check(p_pin text)
+returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare h text; good boolean;
+begin
+  select pin_hash into h from nearse_admin where id = 1;
+  if h is null then
+    raise exception 'No admin PIN is set.';
+  end if;
+  if public.pin_is_published(h) then
+    raise exception 'This admin PIN is published in the public repository and has been disabled. Set a new one in Supabase, SQL editor: update nearse_admin set pin_hash = crypt(''your new pin'', gen_salt(''bf'', 12)) where id = 1;';
+  end if;
+  perform public.auth_guard('admin', 'admin');
+  good := (h = crypt(p_pin, h));
+  perform public.auth_note('admin', 'admin', good);
+  return good;
+end;
+$$;
+
+-- ---------- 16.4 the hot worker calls take a token ----------
+-- Each of these ran bcrypt on every single call; the chat ones ran it every
+-- four seconds. The signature gains p_token, so the old one has to go first.
+drop function if exists public.worker_threads(text, text, int);
+create or replace function public.worker_threads(p_phone text default null, p_pin text default null,
+                                      p_limit int default 40, p_token uuid default null)
+returns table (
+  code text, status text, skill text, detail text, note text, price int, unit text,
+  customer_name text, customer_area text, customer_phone text,
+  created_at timestamptz, last_message_at timestamptz, unread int, preview text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth(p_phone, p_pin, p_token);
+  return query
+    select t.code, t.status, t.skill, t.detail, t.note, t.price, t.unit,
+           t.customer_name, t.customer_area,
+           case when t.status in ('accepted','working','done','closed') then t.customer_phone end,
+           t.created_at, t.last_message_at, t.worker_unread,
+           (select m.body from messages m where m.thread_id = t.id order by m.id desc limit 1)
+      from threads t
+     where t.worker_id = wid
+     order by (t.worker_unread > 0) desc, t.last_message_at desc
+     limit greatest(1, least(p_limit, 100));
+end;
+$$;
+
+drop function if exists public.worker_thread_messages(text, text, text, bigint);
+create or replace function public.worker_thread_messages(
+  p_phone text default null, p_pin text default null, p_code text default null,
+  p_after bigint default 0, p_token uuid default null)
+returns table (id bigint, sender text, body text, created_at timestamptz)
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; wid uuid;
+begin
+  wid := public.worker_auth(p_phone, p_pin, p_token);
+  select t.id into tid from threads t where t.code = upper(btrim(p_code)) and t.worker_id = wid;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  update threads set worker_unread = 0 where threads.id = tid and threads.worker_unread > 0;
+  return query
+    select m.id, m.sender, m.body, m.created_at from messages m
+     where m.thread_id = tid and m.id > coalesce(p_after, 0)
+     order by m.id;
+end;
+$$;
+
+drop function if exists public.worker_post_message(text, text, text, text);
+create or replace function public.worker_post_message(
+  p_phone text default null, p_pin text default null, p_code text default null,
+  p_body text default null, p_token uuid default null)
+returns bigint
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; wid uuid; st text; mid bigint; burst int;
+begin
+  wid := public.worker_auth(p_phone, p_pin, p_token);
+  select t.id, t.status into tid, st from threads t
+   where t.code = upper(btrim(p_code)) and t.worker_id = wid;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  if st in ('declined','cancelled','closed') then raise exception 'This conversation is closed'; end if;
+  if btrim(coalesce(p_body,'')) = '' then raise exception 'Type a message first'; end if;
+  if length(p_body) > 2000 then raise exception 'That message is too long'; end if;
+
+  select count(*) into burst from messages
+   where thread_id = tid and sender = 'worker' and created_at > now() - interval '1 minute';
+  if burst >= 20 then raise exception 'Slow down a moment'; end if;
+
+  insert into messages (thread_id, sender, body) values (tid, 'worker', btrim(p_body))
+    returning id into mid;
+  update threads set last_message_at = now(), customer_unread = customer_unread + 1 where id = tid;
+  return mid;
+end;
+$$;
+
+drop function if exists public.worker_set_thread(text, text, text, text, text);
+create or replace function public.worker_set_thread(
+  p_phone text default null, p_pin text default null, p_code text default null,
+  p_status text default null, p_reason text default null, p_token uuid default null)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; wid uuid; st text; wname text;
+begin
+  wid := public.worker_auth(p_phone, p_pin, p_token);
+  select w.name into wname from workers w where w.id = wid;
+  select t.id, t.status into tid, st from threads t
+   where t.code = upper(btrim(p_code)) and t.worker_id = wid;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  if st in ('cancelled','closed') then raise exception 'This one is already finished'; end if;
+
+  if p_status = 'accepted' then
+    if st <> 'requested' then raise exception 'Only a new request can be accepted'; end if;
+    update threads set status = 'accepted', accepted_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body) values (tid, 'system', wname || ' accepted this job.');
+  elsif p_status = 'declined' then
+    if st <> 'requested' then raise exception 'Only a new request can be declined'; end if;
+    update threads set status = 'declined', closed_at = now(), last_message_at = now(),
+                       decline_reason = nullif(btrim(coalesce(p_reason,'')),'')
+     where id = tid;
+    insert into messages (thread_id, sender, body)
+      values (tid, 'system', wname || ' could not take this job'
+              || coalesce(' — ' || nullif(btrim(coalesce(p_reason,'')),''), '.'));
+  elsif p_status = 'working' then
+    if st <> 'accepted' then raise exception 'Accept the job first'; end if;
+    update threads set status = 'working', started_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body) values (tid, 'system', wname || ' has started work.');
+  elsif p_status = 'done' then
+    if st not in ('accepted','working') then raise exception 'This job has not started'; end if;
+    update threads set status = 'done', done_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body)
+      values (tid, 'system', wname || ' marked the work finished. Please confirm.');
+  else
+    raise exception 'A worker cannot set that';
+  end if;
+  update threads set customer_unread = customer_unread + 1 where id = tid;
+  return p_status;
+end;
+$$;
+
+drop function if exists public.worker_stats(text, text);
+create or replace function public.worker_stats(p_phone text default null, p_pin text default null,
+                                    p_token uuid default null)
+returns table (
+  requested int, accepted int, declined int, working int, completed int, cancelled int,
+  unread int, reviews int, avg_stars numeric, response_rate numeric, this_month int,
+  listed_value int)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth(p_phone, p_pin, p_token);
+  return query
+  with t as (select * from threads where worker_id = wid)
+  select
+    (select count(*) from t)::int,
+    (select count(*) from t where status in ('accepted','working','done','closed'))::int,
+    (select count(*) from t where status = 'declined')::int,
+    (select count(*) from t where status in ('accepted','working'))::int,
+    (select count(*) from t where status = 'closed')::int,
+    (select count(*) from t where status = 'cancelled')::int,
+    (select coalesce(sum(worker_unread), 0) from t)::int,
+    (select count(*) from worker_ratings r where r.worker_id = wid and not r.hidden)::int,
+    (select round(avg(r.stars)::numeric, 1) from worker_ratings r where r.worker_id = wid and not r.hidden),
+    (select case when count(*) = 0 then null
+                 else round(100.0 * count(*) filter (where status <> 'requested') / count(*), 0) end
+       from t),
+    (select count(*) from t where created_at > date_trunc('month', now()))::int,
+    (select coalesce(sum(price), 0) from t where status = 'closed')::int;
+end;
+$$;
+
+-- ---------- 16.5 ratings you cannot stuff ----------
+-- rate_worker took an anonymous caller-supplied "rater" token, so anybody
+-- could send a fresh one with each request and move a score as far as they
+-- liked. Reviews now come only from a job that finished, through
+-- review_thread. The unauthenticated door is closed rather than narrowed.
+drop function if exists public.rate_worker(uuid, int, text);
+drop function if exists public.rate_worker(uuid, int);
+
+-- ---------- 16.6 public inserts get a ceiling ----------
+-- bookings and worker_reports were insert-with-check(true) and nothing else,
+-- which is an invitation to fill the database for free.
+drop policy if exists "public can create bookings" on public.bookings;
+drop policy if exists "anyone can report a profile" on public.worker_reports;
+revoke insert on public.bookings from anon, authenticated;
+revoke insert on public.worker_reports from anon, authenticated;
+
+create or replace function public.record_booking(
+  p_worker uuid, p_worker_name text, p_customer_name text, p_customer_phone text, p_note text)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare recent int;
+begin
+  select count(*) into recent from bookings
+   where customer_phone = p_customer_phone and created_at > now() - interval '1 hour';
+  if recent >= 20 then return; end if;      -- quietly stop, this is only a record
+  insert into bookings (worker_id, worker_name, customer_name, customer_phone, note)
+  values (p_worker, left(coalesce(p_worker_name,''), 120), left(coalesce(p_customer_name,''), 120),
+          left(coalesce(p_customer_phone,''), 15), left(coalesce(p_note,''), 500));
+end;
+$$;
+
+create or replace function public.report_worker(
+  p_worker uuid, p_reason text, p_details text default null, p_contact text default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare recent int;
+begin
+  if btrim(coalesce(p_reason,'')) = '' then raise exception 'Please choose a reason'; end if;
+  select count(*) into recent from worker_reports
+   where worker_id = p_worker and created_at > now() - interval '1 day';
+  if recent >= 25 then
+    raise exception 'This profile has already been reported several times today. We are looking at it.';
+  end if;
+  insert into worker_reports (worker_id, reason, details, contact)
+  values (p_worker, left(p_reason, 200), left(coalesce(p_details,''), 1000), left(coalesce(p_contact,''), 120));
+end;
+$$;
+
+-- ---------- 16.7 the indexes the measurements asked for ----------
+-- admin_queue sorted 5,000 rows with nothing to sort on: ~240 ms
+create index if not exists workers_admin_idx on public.workers (status, created_at desc);
+-- and the browse path, which filters on all three before it ranks
+create index if not exists workers_live_idx on public.workers (city, status, available)
+  where status = 'approved';
+-- free-text search was a full scan with LIKE '%…%' on every row
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_trgm') then
+    create extension if not exists pg_trgm;
+    execute 'create index if not exists workers_text_idx on public.workers
+             using gin ((lower(name || '' '' || coalesce(area,'''') || '' '' ||
+                         coalesce(city,'''') || '' '' || coalesce(skills::text,''''))) gin_trgm_ops)';
+  else
+    raise notice 'no pg_trgm — text search stays a sequential scan';
+  end if;
+end $$;
+create index if not exists threads_customer_idx on public.threads (customer_phone, created_at desc);
+create index if not exists ratings_thread_idx   on public.worker_ratings (thread_id);
+
+-- ---------- 16.8 housekeeping for the new tables ----------
+drop function if exists public.purge_expired_data();
+create function public.purge_expired_data()
+returns table (bookings_removed bigint, rejected_removed bigint, contacts_removed bigint,
+               jobs_removed bigint, threads_removed bigint, sessions_removed bigint)
+language plpgsql security definer set search_path = public, extensions as $$
+declare b bigint; r bigint; c bigint; j bigint; t bigint; s bigint;
+begin
+  delete from bookings where created_at < now() - interval '12 months';
+  get diagnostics b = row_count;
+  delete from workers where status = 'rejected'
+     and coalesce(reviewed_at, created_at) < now() - interval '90 days';
+  get diagnostics r = row_count;
+  delete from contact_requests where created_at < now() - interval '90 days';
+  get diagnostics c = row_count;
+  delete from jobs where created_at < now() - interval '12 months';
+  get diagnostics j = row_count;
+  delete from threads where coalesce(closed_at, last_message_at) < now() - interval '12 months';
+  get diagnostics t = row_count;
+  delete from worker_sessions where expires_at < now();
+  get diagnostics s = row_count;
+  delete from auth_attempts where at < now() - interval '7 days';
+  update threads set status = 'expired'
+   where status = 'requested' and created_at < now() - interval '14 days';
+  return query select b, r, c, j, t, s;
+end;
+$$;
+revoke all on function public.purge_expired_data() from public;
+
+-- ---------- 16.9 the admin gets a session too ----------
+-- Measured: the review queue took 230 ms, of which 227 ms was bcrypt at cost
+-- 12 on the admin PIN and 2.4 ms was the actual query. A strong hash on the
+-- admin PIN is right — it is the most valuable credential here — but paying
+-- for it on every screen refresh is not. The PIN buys a token once; the
+-- token is a primary-key lookup after that.
+--
+-- admin_check takes either, so every admin function already written picks
+-- this up without a signature change.
+create table if not exists public.admin_sessions (
+  token      uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  last_used  timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '8 hours'
+);
+alter table public.admin_sessions enable row level security;   -- no policies
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on public.admin_sessions from %I', r);
+    end if;
+  end loop;
+end $$;
+
+create or replace function public.admin_check(p_pin text)
+returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare h text; good boolean; hit uuid;
+begin
+  -- a live session token, handed out below after a real PIN check
+  if p_pin ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    update admin_sessions s set last_used = now()
+     where s.token = p_pin::uuid and s.expires_at > now()
+     returning s.token into hit;
+    return hit is not null;
+  end if;
+
+  select pin_hash into h from nearse_admin where id = 1;
+  if h is null then
+    raise exception 'No admin PIN is set.';
+  end if;
+  if public.pin_is_published(h) then
+    raise exception 'This admin PIN is published in the public repository and has been disabled. Set a new one in Supabase, SQL editor: update nearse_admin set pin_hash = crypt(''your new pin'', gen_salt(''bf'', 12)) where id = 1;';
+  end if;
+  perform public.auth_guard('admin', 'admin');
+  good := (h = crypt(p_pin, h));
+  perform public.auth_note('admin', 'admin', good);
+  return good;
+end;
+$$;
+
+create or replace function public.admin_session_start(p_pin text)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare tok uuid;
+begin
+  -- a token cannot mint another token
+  if p_pin ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    raise exception 'Sign in with the admin PIN';
+  end if;
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  delete from admin_sessions where expires_at < now();
+  insert into admin_sessions default values returning token into tok;
+  return tok;
+end;
+$$;
+
+-- the review queue sorts three groups; each one can use the index on its own
+create or replace function public.admin_queue(p_pin text, p_limit int default 200)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare n int := greatest(1, least(p_limit, 500));
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  return query
+    (select * from workers where status = 'pending'  order by created_at desc limit n)
+    union all
+    (select * from workers where status = 'rejected' order by created_at desc limit n)
+    union all
+    (select * from workers where status not in ('pending','rejected') order by created_at desc limit n)
+    limit n;
+end;
+$$;
+
+-- ============================================================
+-- MIGRATION 17 — make the lockout actually lock
+--
+-- Migration 16 counted failed sign-ins into a table and refused the account
+-- after six. Testing it showed the count never moved: PostgREST runs each
+-- call in one transaction, and RAISE rolls that transaction back — including
+-- the INSERT that had just recorded the failure. The guard read an empty
+-- table every time, so an attacker had unlimited attempts and the whole
+-- mechanism was decoration.
+--
+-- The fix is to stop raising when a credential is wrong. Authentication
+-- failure now returns nothing — no rows, or null — so the transaction
+-- commits and the attempt is on the record. The client turns an empty
+-- result into "Wrong phone number or PIN", which is what it showed anyway.
+--
+-- Raising is still right for everything that is not a credential check: a
+-- closed conversation, an expired session, a rate the bands refuse. Those
+-- have nothing to write down.
+-- ============================================================
+
+create or replace function public.worker_auth(p_phone text, p_pin text, p_token uuid default null)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; stored text;
+begin
+  if p_token is not null then
+    update worker_sessions s set last_used = now()
+     where s.token = p_token and s.expires_at > now()
+     returning s.worker_id into wid;
+    if wid is not null then return wid; end if;
+    -- nothing to record: an expired token is not a guess
+    raise exception 'Your session has expired — please sign in again';
+  end if;
+
+  if p_phone is null or p_pin is null then return null; end if;
+  perform public.auth_guard('login', p_phone);   -- raises only when already locked
+
+  select w.id, s.pin_hash into wid, stored
+    from workers w join worker_secrets s on s.worker_id = w.id
+   where w.phone = p_phone;
+
+  if wid is null or stored is null or stored <> crypt(p_pin, stored) then
+    perform public.auth_note('login', p_phone, false);
+    return null;                                  -- MUST NOT raise: see above
+  end if;
+
+  perform public.auth_note('login', p_phone, true);
+  if split_part(stored, '$', 3)::int < 10 then
+    update worker_secrets set pin_hash = crypt(p_pin, gen_salt('bf', 10)) where worker_id = wid;
+  end if;
+  return wid;
+end;
+$$;
+
+create or replace function public.worker_session_start(p_phone text, p_pin text)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; tok uuid;
+begin
+  wid := public.worker_auth(p_phone, p_pin, null);
+  if wid is null then return null; end if;        -- wrong PIN: commit the note
+  delete from worker_sessions where worker_id = wid and expires_at < now();
+  insert into worker_sessions (worker_id) values (wid) returning token into tok;
+  return tok;
+end;
+$$;
+
+-- sign-in returns no rows rather than raising; the client already treated an
+-- empty result as "wrong number or PIN"
+create or replace function public.login_worker(p_phone text, p_pin text)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth(p_phone, p_pin, null);
+  if wid is null then return; end if;
+  return query select * from workers where id = wid;
+end;
+$$;
+
+create or replace function public.update_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; is_edit boolean; identity_changed boolean;
+begin
+  wid := public.worker_auth(p_phone, p_pin, null);
+  if wid is null then return; end if;
+  if p_data ? 'skills' then perform check_rate_bands(p_data->'skills'); end if;
+
+  is_edit := (p_data ?| array['name','selfie','area','about','skills']);
+  select (p_data->>'name'   is not null and p_data->>'name'   is distinct from w.name)
+      or (p_data->>'selfie' is not null and p_data->>'selfie' is distinct from w.selfie)
+    into identity_changed from workers w where w.id = wid;
+
+  update workers set
+    name = coalesce(p_data->>'name', name),
+    selfie = coalesce(p_data->>'selfie', selfie),
+    thumb = coalesce(p_data->>'thumb', thumb),
+    city = coalesce(p_data->>'city', city),
+    area = coalesce(p_data->>'area', area),
+    about = coalesce(p_data->>'about', about),
+    lat = coalesce((p_data->>'lat')::double precision, lat),
+    lng = coalesce((p_data->>'lng')::double precision, lng),
+    skills = coalesce(p_data->'skills', skills),
+    available = coalesce((p_data->>'available')::boolean, available),
+    status = case when identity_changed then 'pending'
+                  when is_edit and status = 'rejected' then 'pending' else status end,
+    review_note = case when identity_changed then null
+                       when is_edit and status = 'rejected' then null else review_note end
+  where id = wid;
+  return query select * from workers where id = wid;
+end;
+$$;
+
+-- returns whether it deleted anything, so a wrong PIN can be reported without
+-- a raise throwing the attempt record away
+drop function if exists public.delete_worker(text, text);
+-- Dropped first every time: Migration 17 widens this to return boolean,
+-- and CREATE OR REPLACE cannot change a return type on a re-run.
+drop function if exists public.delete_worker(text, text);
+
+create function public.delete_worker(p_phone text, p_pin text)
+returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; urls text[]; u text; obj text;
+begin
+  wid := public.worker_auth(p_phone, p_pin, null);
+  if wid is null then return false; end if;
+
+  select array_remove(array[w.selfie, w.thumb], null) into urls from workers w where w.id = wid;
+  if exists (select 1 from information_schema.tables
+              where table_schema = 'storage' and table_name = 'objects') then
+    foreach u in array coalesce(urls, '{}'::text[]) loop
+      obj := substring(u from '/object/public/selfies/(.+)$');
+      if obj is not null then
+        execute 'delete from storage.objects where bucket_id = ''selfies'' and name = $1' using obj;
+      end if;
+    end loop;
+  end if;
+  delete from workers where id = wid;
+  return true;
+end;
+$$;
+
+-- the same reasoning for the admin: the callers used to raise, which threw
+-- away the note admin_check had just written
+create or replace function public.admin_queue(p_pin text, p_limit int default 200)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare n int := greatest(1, least(p_limit, 500));
+begin
+  if not public.admin_check(p_pin) then return; end if;
+  return query
+    (select * from workers where status = 'pending'  order by created_at desc limit n)
+    union all
+    (select * from workers where status = 'rejected' order by created_at desc limit n)
+    union all
+    (select * from workers where status not in ('pending','rejected') order by created_at desc limit n)
+    limit n;
+end;
+$$;
+
+create or replace function public.admin_wa_codes(p_pin text)
+returns table (worker_id uuid, wa_code text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then return; end if;
+  return query select s.worker_id, s.wa_code from worker_secrets s where s.wa_code is not null;
+end;
+$$;
+
+create or replace function public.admin_reports(p_pin text)
+returns table (id bigint, created_at timestamptz, worker_id uuid, worker_name text,
+               worker_phone text, reason text, details text, contact text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then return; end if;
+  return query
+    select r.id, r.created_at, r.worker_id, w.name, w.phone, r.reason, r.details, r.contact
+      from worker_reports r left join workers w on w.id = r.worker_id
+     where not r.handled order by r.created_at desc limit 200;
+end;
+$$;
+
+create or replace function public.admin_session_start(p_pin text)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare tok uuid;
+begin
+  if p_pin ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then return null; end if;
+  if not public.admin_check(p_pin) then return null; end if;
+  delete from admin_sessions where expires_at < now();
+  insert into admin_sessions default values returning token into tok;
+  return tok;
+end;
+$$;

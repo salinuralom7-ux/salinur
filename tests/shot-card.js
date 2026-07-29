@@ -22,7 +22,7 @@ const D = '/tmp/claude-0/-home-user-salinur/5804f10d-9047-5141-886a-31b320556fa3
     saveSession(); go('card'); return w.worker_code;
   });
   await p.waitForTimeout(1100);
-  await p.locator('.idcard').screenshot({ path: D + 'idcard.png' });
+  await p.locator('.badge').screenshot({ path: D + 'idcard.png' });
   await p.screenshot({ path: D + 'card-screen.png' });
   await p.evaluate(c => { go('verify'); document.getElementById('verifyInput').value = c; return runVerify(c); }, code);
   await p.waitForTimeout(1200);

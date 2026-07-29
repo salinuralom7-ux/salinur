@@ -316,10 +316,9 @@ const srv = http.createServer((req, res) => {
   await page.locator('.wcard').first().click();
   await page.waitForTimeout(400);
   console.log('Detail rate rows:', await page.locator('.price-line').count());
-  await page.locator('#rateStars span[data-s="5"]').click();
-  await page.locator('.rating-box button').click();
-  await page.waitForTimeout(500);
-  console.log('Rating applied:', (await page.locator('#wDetail .stars').first().textContent()).trim());
+  // the pass-by rating box is gone: a score can only come from a job that
+  // finished, through the conversation
+  console.log('No pass-by rating box:', await page.locator('#rateStars').count() === 0);
   // an electrician is dispatched instantly now, so this door opens the NOW sheet
   console.log('Detail CTA reflects the mode:', (await page.locator('#bookCta').textContent()).trim(),
               '|', (await page.locator('#bookCtaNote').textContent()).trim());
