@@ -1835,10 +1835,10 @@ footer a:hover{color:var(--brand)}
              and on a phone with only Business installed that can end up
              prompting to install ordinary WhatsApp. So Business gets its own
              button on Android, where an app can actually be named. -->
-        <a class="btn btn-wab btn-block" id="waBizBtn" href="#" target="_blank" rel="noopener" onclick="markWaOpened()" hidden>
+        <button type="button" class="btn btn-wab btn-block" id="waBizBtn" onclick="openWaBusiness()" hidden>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24"/></svg>
           I use WhatsApp Business
-        </a>
+        </button>
         <button class="btn btn-quiet btn-block btn-sm" id="waCopyBtn" onclick="copyWaMessage()" style="margin-top:8px">
           Neither button works? Copy the message
         </button>
@@ -3796,7 +3796,12 @@ function authTab(which){
   $("authIn").style.display = which === "in" ? "block" : "none";
   $("authUp").style.display = which === "up" ? "block" : "none";
 }
-function saveSession(){ try{ localStorage.setItem(SSTORE, JSON.stringify(session)); }catch(e){} }
+function saveSession(){
+  try{ localStorage.setItem(SSTORE, JSON.stringify(session)); }catch(e){}
+  /* the landing door says "Register as a worker" or "Visit your profile"
+     depending on this, and every change to it comes through here */
+  paintWorkDoor();
+}
 function loadSession(){ try{ session = JSON.parse(localStorage.getItem(SSTORE)); }catch(e){ session = null; } }
 async function signUp(){
   const name  = $("upName").value.trim();
@@ -3882,9 +3887,7 @@ function initWaVerify(){
   /* Naming an app is only possible through an Android intent URL. On iOS both
      WhatsApp apps register the same scheme and the system picks, so a second
      button there would be a lie — the copy fallback covers that case. */
-  const biz = $("waBizBtn");
-  biz.hidden = !isAndroid();
-  if(!biz.hidden) biz.href = waLink(REPTO_WA, msg, "com.whatsapp.w4b");
+  $("waBizBtn").hidden = !isAndroid();
   $("waDoneBtn").disabled = true;
   $("waNumber").textContent = "+91 " + REPTO_WA.slice(2, 7) + " " + REPTO_WA.slice(7);
 }
@@ -3894,10 +3897,33 @@ let waMessage = "";
 /* wa.me for everyone, an explicit intent when a particular app is wanted. */
 function waLink(number, text, pkg){
   const t = encodeURIComponent(text || "");
+  const web = `https://wa.me/${number}${text ? "?text=" + t : ""}`;
   if(pkg && isAndroid()){
-    return `intent://send?phone=${number}&text=${t}#Intent;scheme=whatsapp;package=${pkg};end`;
+    /* browser_fallback_url matters: without it, a phone that does not have
+       that exact package just fails, and the caller is left staring at
+       nothing. With it, Chrome quietly goes to wa.me instead. */
+    return `intent://send?phone=${number}&text=${t}#Intent;scheme=whatsapp;package=${pkg};` +
+           `S.browser_fallback_url=${encodeURIComponent(web)};end`;
   }
-  return `https://wa.me/${number}${text ? "?text=" + t : ""}`;
+  return web;
+}
+
+/* Naming an app needs a TOP-LEVEL navigation — the OS takes the page over and
+   the app comes forward. Opening it in a new tab cannot do that, and inside an
+   installed app the empty tab collapses back to the start URL, which looks
+   exactly like "the button did nothing and sent me home". */
+function openWaBusiness(){
+  markWaOpened();
+  const url = waLink(REPTO_WA, waMessage, "com.whatsapp.w4b");
+  /* if we are still here a moment later, the hand-off did not happen and the
+     person deserves to be told what to do instead of guessing */
+  const bail = setTimeout(() => {
+    if(!document.hidden) toast("WhatsApp Business didn't open — use “Copy the message” below");
+  }, 1800);
+  document.addEventListener("visibilitychange", () => clearTimeout(bail), { once:true });
+  window.addEventListener("pagehide", () => clearTimeout(bail), { once:true });
+  try{ window.location.href = url; }
+  catch(e){ clearTimeout(bail); window.location.href = `https://wa.me/${REPTO_WA}?text=${encodeURIComponent(waMessage)}`; }
 }
 
 /* The last resort, and the one that works on every phone ever made: put the
@@ -4049,6 +4075,7 @@ function signOut(){
   if(session && session.token) api.signOutToken(session.token);
   session = null;
   try{ localStorage.removeItem(SSTORE); }catch(e){}
+  paintWorkDoor();                       // after the session goes, not before
   toast("Signed out");
   go("home");
 }
