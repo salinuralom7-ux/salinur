@@ -47,3 +47,37 @@ psql -d nearse_test -f tests/schema-verify.sql
 
 It needs roles named `anon` and `authenticated` to exist, as they do on
 Supabase, or the column-grant block has nothing to apply to.
+
+## Scale and abuse
+
+`schema-scale.sql` seeds a throwaway Postgres to the size Guwahati is
+expected to reach and then attacks it. Run it after `schema-test.sh`.
+
+The numbers it exists to protect, measured on 5,000 workers / 1,200
+bookings / 9,600 messages:
+
+| | before | after |
+|---|---|---|
+| Browse, first page | 19.4 ms | 7.3 ms |
+| Free-text search | 30.8 ms | 9.4 ms |
+| Worker polls the chat (every 4 s) | 6.2 ms | 0.2 ms |
+| Worker opens My work | 4.5 ms | 0.1 ms |
+| Admin review queue | 230 ms | 0.5 ms |
+| Admin dashboard | 240 ms | 7.8 ms |
+| Guessing a worker's 4-digit PIN | ~40 seconds | ~17 days |
+
+Two of those deserve explaining, because both were invisible until measured:
+
+* The worker calls each re-ran bcrypt, and the chat polls every four
+  seconds. That capped how strong the password hash could ever be. A
+  session token moved the hash to sign-in only, which is what made cost 10
+  affordable.
+* The admin queue's 230 ms was 227 ms of bcrypt and 2.4 ms of query. The
+  index was already doing its job; the PIN was the cost.
+
+And one that only a test could have caught: the first version of the
+lockout counted failed sign-ins into a table and then raised. PostgREST
+runs each call in one transaction, so the raise rolled back the very row
+that recorded the failure — the counter never moved and the lockout did
+nothing at all. Authentication failures now return an empty result instead
+of raising. `schema-scale.sql` asserts the count actually stops.
