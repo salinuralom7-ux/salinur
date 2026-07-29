@@ -80,8 +80,8 @@ const ok = (label, cond, extra) =>
     go('me');
   });
   await work.waitForTimeout(800);
-  ok('Worker profile shows a My work entry', await work.locator('.work-entry').count() === 1);
-  await work.locator('.work-entry').click();
+  ok('Worker profile shows a My work entry', await work.locator('.work-entry', { hasText: 'My work' }).count() === 1);
+  await work.locator('.work-entry', { hasText: 'My work' }).click();
   await work.waitForTimeout(900);
   ok('Inbox opens', await work.locator('#scr-inbox.on').count() === 1);
   ok('The request is listed', await work.locator('.thread-row').count() >= 1);

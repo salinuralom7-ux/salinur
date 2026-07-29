@@ -3335,3 +3335,147 @@ begin
 end;
 $$;
 revoke all on function public.purge_expired_data() from public;
+
+-- ============================================================
+-- MIGRATION 15 — the Repto Worker ID
+--
+-- Every worker gets a permanent identity number and a card they can show or
+-- print. It exists so that a worker standing at somebody's door has a way to
+-- say who they are that does not depend on the customer having the app open,
+-- and so that a number written on a card can be checked against the register.
+--
+-- Shape of the number, and why:
+--
+--   * TWELVE DIGITS, shown in three groups of four, the way an Aadhaar
+--     number is — because that is the format everybody here already knows
+--     how to read out over a phone.
+--   * RANDOM, not sequential. A sequence would tell any competitor exactly
+--     how many workers are on the platform, and would tell a customer that
+--     the person in front of them was the eleventh to sign up. Aadhaar is
+--     random for the same reason.
+--   * The first digit is never 0 or 1, again following Aadhaar, so the
+--     number can never be mistaken for a phone number or lose a leading
+--     zero in a spreadsheet.
+--   * The LAST DIGIT IS A CHECK DIGIT (Luhn). One digit misheard or two
+--     transposed fails immediately instead of quietly matching somebody
+--     else. It also means a made-up number is wrong nine times in ten.
+-- ============================================================
+
+create or replace function public.repto_id_check(p_body text)
+returns int
+language plpgsql immutable set search_path = public as $$
+declare
+  total int := 0;
+  i     int;
+  d     int;
+  dbl   boolean := true;   -- p_body excludes the check digit, so start doubled
+begin
+  for i in reverse length(p_body)..1 loop
+    d := substr(p_body, i, 1)::int;
+    if dbl then
+      d := d * 2;
+      if d > 9 then d := d - 9; end if;
+    end if;
+    total := total + d;
+    dbl := not dbl;
+  end loop;
+  return (10 - (total % 10)) % 10;
+end;
+$$;
+
+create or replace function public.repto_id_valid(p_code text)
+returns boolean
+language plpgsql immutable set search_path = public as $$
+declare c text;
+begin
+  c := regexp_replace(coalesce(p_code,''), '\D', '', 'g');
+  if length(c) <> 12 then return false; end if;
+  if left(c, 1) in ('0','1') then return false; end if;
+  return right(c, 1)::int = public.repto_id_check(left(c, 11));
+end;
+$$;
+
+create or replace function public.new_worker_code()
+returns text
+language plpgsql set search_path = public, extensions as $$
+declare body text; code text; i int;
+begin
+  loop
+    body := (2 + floor(random() * 8))::int::text;          -- 2..9
+    for i in 1..10 loop
+      body := body || floor(random() * 10)::int::text;
+    end loop;
+    code := body || public.repto_id_check(body)::text;
+    exit when not exists (select 1 from workers w where w.worker_code = code);
+  end loop;
+  return code;
+end;
+$$;
+
+alter table public.workers add column if not exists worker_code text;
+create unique index if not exists workers_code_idx on public.workers (worker_code);
+
+-- A trigger rather than a line in register_worker: every path that ever
+-- inserts a worker gets a number, including the ones written later.
+create or replace function public.workers_assign_code()
+returns trigger
+language plpgsql set search_path = public, extensions as $$
+begin
+  if new.worker_code is null then
+    new.worker_code := public.new_worker_code();
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists workers_assign_code_trg on public.workers;
+create trigger workers_assign_code_trg
+  before insert on public.workers
+  for each row execute function public.workers_assign_code();
+
+-- anyone who registered before the card existed
+do $$
+declare r record;
+begin
+  for r in select id from workers where worker_code is null loop
+    update workers set worker_code = public.new_worker_code() where id = r.id;
+  end loop;
+end $$;
+
+-- The number on a printed card is worth having only if it can be checked.
+-- This is deliberately public and deliberately thin: it confirms that a
+-- number belongs to a live worker and says what they do. No phone number,
+-- no coordinates, nothing that turns the register into a contact list.
+create or replace function public.verify_worker_id(p_code text)
+returns table (
+  worker_code text, name text, city text, area text, skills jsonb,
+  thumb text, status text, member_since timestamptz,
+  rating_sum int, rating_count int, jobs_done int)
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare c text;
+begin
+  c := regexp_replace(coalesce(p_code,''), '\D', '', 'g');
+  if not public.repto_id_valid(c) then
+    return;                       -- not even a well-formed number
+  end if;
+  return query
+    select w.worker_code, w.name, w.city, w.area, w.skills,
+           coalesce(w.thumb, w.selfie), w.status, w.created_at,
+           w.rating_sum, w.rating_count,
+           (select count(*)::int from threads t
+             where t.worker_id = w.id and t.status = 'closed')
+      from workers w
+     where w.worker_code = c
+       and w.status = 'approved';  -- a card is only valid while the profile is
+end;
+$$;
+
+-- the code travels with the profile the worker signs in to
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('grant select (worker_code) on public.workers to %I', r);
+    end if;
+  end loop;
+end $$;

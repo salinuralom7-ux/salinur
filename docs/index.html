@@ -859,6 +859,102 @@ header{
 }
 .report-link:hover{color:var(--danger)}
 
+/* ---------- the worker ID card ----------
+   Proportioned like a bank card (85.6 × 54 mm) on screen as well as on
+   paper, so what somebody prints is what they were looking at. */
+.idcard{
+  position:relative;margin:18px auto 0;max-width:420px;aspect-ratio:85.6/54;
+  border-radius:16px;padding:15px 17px;color:#F6F2E8;overflow:hidden;
+  display:flex;flex-direction:column;
+  background:
+    radial-gradient(320px 200px at 88% -22%, rgba(234,187,81,.26), transparent 62%),
+    linear-gradient(158deg, #1D1810 0%, #0C0A07 62%);
+  border:1px solid rgba(234,187,81,.34);
+  box-shadow:0 20px 46px rgba(0,0,0,.5);
+}
+.ic-top{display:flex;align-items:center;justify-content:space-between;flex:0 0 auto}
+.ic-brand{display:flex;align-items:center;gap:7px}
+.ic-brand b{font-size:.95rem;font-weight:800;letter-spacing:.16em;color:var(--brand)}
+.ic-kind{font-size:.56rem;font-weight:800;letter-spacing:.2em;color:var(--brand-quiet)}
+.ic-body{display:flex;gap:13px;align-items:flex-start;margin-top:11px;flex:1 1 auto;min-height:0}
+.ic-photo{
+  flex:0 0 auto;width:66px;height:66px;border-radius:9px;overflow:hidden;
+  border:1px solid rgba(234,187,81,.4);background:var(--surface-2);
+}
+.ic-photo img{width:100%;height:100%;object-fit:cover}
+.ic-fields{flex:1;min-width:0}
+.ic-name{font-size:1.02rem;font-weight:800;letter-spacing:-.01em;line-height:1.15;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ic-trade{font-size:.68rem;color:var(--brand-2);margin-top:2px;line-height:1.35;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ic-meta{margin-top:7px;display:flex;flex-direction:column;gap:2px}
+.ic-meta div{display:flex;gap:6px;align-items:baseline}
+.ic-meta dt{flex:0 0 auto;font-size:.53rem;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.ic-meta dd{font-size:.66rem;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ic-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex:0 0 auto;margin-top:8px}
+.ic-no span{display:block;font-size:.5rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ic-no b{display:block;font-size:1.02rem;font-weight:800;letter-spacing:.14em;color:var(--brand);
+  font-variant-numeric:tabular-nums;margin-top:1px}
+.ic-status{
+  flex:0 0 auto;font-size:.53rem;font-weight:800;letter-spacing:.14em;padding:3px 8px;border-radius:4px;
+}
+.ic-status.approved{background:var(--ok);color:#062B16}
+.ic-status.pending{background:var(--warn);color:#2B1608}
+.ic-status.rejected{background:var(--danger);color:#2B0810}
+.ic-check{font-size:.5rem;color:var(--muted);letter-spacing:.05em;margin-top:5px;flex:0 0 auto}
+
+.card-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.card-actions .btn{flex:1 1 160px;padding:12px}
+.card-note{
+  margin-top:18px;border:1px solid var(--line);background:var(--surface);
+  border-radius:var(--r);padding:15px 16px;
+}
+.card-note b{display:block;font-size:.9rem;margin-bottom:6px}
+.card-note p{font-size:.82rem;color:var(--muted);line-height:1.6;margin-bottom:8px}
+.card-note p:last-child{margin-bottom:0}
+.card-note b + p b, .card-note p b{color:var(--ink-2)}
+
+/* ---------- checking a card ---------- */
+.id-input{
+  width:100%;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--r-sm);
+  padding:14px 16px;font-size:1.25rem;font-weight:700;letter-spacing:.18em;
+  font-variant-numeric:tabular-nums;text-align:center;
+}
+.verify-card{border-radius:var(--r);padding:16px;margin-top:18px;border:1px solid var(--line-strong)}
+.verify-card b{display:block;font-size:.98rem;margin-bottom:4px}
+.verify-card > span{display:block;font-size:.83rem;color:var(--muted);line-height:1.6}
+.verify-card.good{border-color:rgba(79,201,141,.45);background:rgba(79,201,141,.07)}
+.verify-card.good b{color:var(--ok)}
+.verify-card.bad{border-color:rgba(232,112,127,.45);background:rgba(232,112,127,.07)}
+.verify-card.bad b{color:var(--danger)}
+.vc-tick{
+  display:grid;place-items:center;width:34px;height:34px;border-radius:50%;
+  background:var(--ok);color:#062B16;font-size:1.35rem;font-weight:800;
+  line-height:1;margin-bottom:9px;padding-bottom:2px;
+}
+.vc-who{display:flex;gap:13px;align-items:center;margin:13px 0}
+.vc-who .avatar{width:56px;height:56px;border-radius:12px;flex:0 0 auto;overflow:hidden;background:var(--surface-2)}
+.vc-who .avatar img{width:100%;height:100%;object-fit:cover}
+.vc-who h4{font-size:1rem;margin-bottom:2px}
+.vc-who span{display:block;font-size:.78rem;color:var(--muted);line-height:1.4}
+.vc-meta{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:13px 0}
+.vc-meta dt{font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.vc-meta dd{font-size:.85rem;color:var(--ink);font-weight:600;margin-top:1px}
+
+/* ---------- printing ----------
+   Everything except the card is furniture. */
+@media print{
+  html,body{background:#fff !important}
+  body > header, body > footer, body > .demo-note, .no-print, .back,
+  .screen:not(.on), .overlay, .toast{display:none !important}
+  .wrap-sm{max-width:none;padding:0}
+  .idcard{
+    margin:0;width:85.6mm;height:54mm;max-width:none;aspect-ratio:auto;
+    border-radius:3mm;box-shadow:none;border:1px solid #8a7a5e;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+}
+
 /* ---------- conversations ---------- */
 .chat-shell{
   position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);z-index:60;
@@ -1523,7 +1619,7 @@ footer a:hover{color:var(--brand)}
               </g>
             </svg>
           </span>
-          <span class="cta-text"><b>Register as a worker</b><i>Set your rates and get bookings</i></span>
+          <span class="cta-text"><b id="ctaWorkTitle">Register as a worker</b><i id="ctaWorkSub">Set your rates and get bookings</i></span>
           <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </button>
       </div>
@@ -1874,6 +1970,38 @@ footer a:hover{color:var(--brand)}
     </button>
   </div>
   <div class="panel" id="meCard"></div>
+</section>
+
+<!-- ============================= WORKER: ID CARD ============================= -->
+<section class="screen" id="scr-card">
+  <div class="wrap-sm">
+    <button class="back no-print" onclick="go('me')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      My profile
+    </button>
+    <div id="cardHost"></div>
+  </div>
+</section>
+
+<!-- ============================= CHECK AN ID ============================= -->
+<section class="screen" id="scr-verify">
+  <div class="wrap-sm">
+    <button class="back" onclick="go('home')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Home
+    </button>
+    <div class="panel">
+      <h2>Check a Repto Worker ID</h2>
+      <p class="hint">Someone at your door with a Repto card? Type the twelve digits on it and see who it belongs to.</p>
+      <div class="field" style="margin-top:16px">
+        <label for="verifyInput">Worker ID number</label>
+        <input type="text" id="verifyInput" class="id-input" placeholder="0000 0000 0000"
+               inputmode="numeric" maxlength="14" oninput="onVerifyInput()">
+      </div>
+      <button class="btn btn-brand btn-block" id="verifyBtn" onclick="runVerify()" style="padding:14px">Check this ID</button>
+      <div id="verifyResult"></div>
+    </div>
+  </div>
 </section>
 
 <!-- ============================= WORKER: MY WORK ============================= -->
@@ -2711,6 +2839,7 @@ const api = {
     const all = demoAll();
     if(all.some(w => w.phone === phone)) throw new Error("This number is already registered — please sign in");
     const w = {id:"w"+Date.now(), created_at:new Date().toISOString(), phone, pin, rating_sum:0, rating_count:0,
+      worker_code: demoCode(),
       available:true, status:"pending", verified:false, phone_verified:!!(session && session.phoneVerified),
       wa_claim:(session && session.waCode) || null, ...data};
     all.unshift(w); demoSave(all); return w;
@@ -2947,6 +3076,18 @@ const api = {
     }
     return demoWorkerStats();
   },
+  async verifyId(code){
+    if(LIVE){
+      const rows = await sb("rpc/verify_worker_id", {method:"POST", body:JSON.stringify({p_code:code})});
+      return (rows && rows[0]) || null;
+    }
+    const w = demoAll().find(x => x.worker_code === code && statusOf(x) === "approved");
+    if(!w) return null;
+    return { worker_code:w.worker_code, name:w.name, city:w.city, area:w.area, skills:w.skills,
+             thumb:w.thumb || w.selfie, status:"approved", member_since:w.created_at,
+             rating_sum:w.rating_sum, rating_count:w.rating_count,
+             jobs_done: allThreads().filter(t => t.worker_id === w.id && t.status === "closed").length };
+  },
   async workerReviews(id, limit){
     if(LIVE) return await sb("rpc/worker_reviews", {method:"POST",
       body:JSON.stringify({p_worker:id, p_limit:limit || 20})}) || [];
@@ -3003,6 +3144,7 @@ function demoSeed(){
   const base = {lat:26.1445, lng:91.7362};
   const mk = (name, area, skills, dLat, dLng, rs, rc) => ({
     id:"d"+name.replace(/\s/g,""), created_at:new Date().toISOString(),
+    worker_code: demoCode(),
     name, phone:"7086599367", pin:"0000", city:"Guwahati", area, about:"",
     selfie:null, lat:base.lat+dLat, lng:base.lng+dLng, skills, available:true,
     status:"approved", verified:true, phone_verified:true, rating_sum:rs, rating_count:rc
@@ -3019,6 +3161,18 @@ function demoSeed(){
     mk("Dipak Nath","Maligaon",[{skill:"AC Service & Repair",price:600,unit:"per unit",exp:"8 years"},{skill:"Refrigerator Repair",price:500,unit:"per visit",exp:"8 years"}], -.020,.010, 29,6),
     mk("Jyoti Kalita","Dispur",[{skill:"Event Photographer",price:8000,unit:"per day",exp:"4 years"},{skill:"Videographer",price:10000,unit:"per day",exp:"3 years"}], .011,.002, 9,2)
   ];
+}
+/* preview mode mints the same shape of number, check digit and all */
+function demoCode(){
+  let body = String(2 + Math.floor(Math.random() * 8));
+  for(let i = 0; i < 10; i++) body += Math.floor(Math.random() * 10);
+  let sum = 0, dbl = true;
+  for(let i = body.length - 1; i >= 0; i--){
+    let n = +body[i];
+    if(dbl){ n *= 2; if(n > 9) n -= 9; }
+    sum += n; dbl = !dbl;
+  }
+  return body + ((10 - (sum % 10)) % 10);
 }
 function demoAll(){
   try{ const raw = localStorage.getItem(WSTORE); if(raw) return JSON.parse(raw); }catch(e){}
@@ -3295,7 +3449,7 @@ function demoMyAppointments(phone){
    experience and something a Play Store review flags. It also makes the
    manifest shortcuts (#find, #work) land where they claim to. */
 const SCREEN_ALIAS = { find:"hire", browse:"hire", search:"hire", worker:"work", register:"work",
-                       bookings:"mine", jobs:"inbox", chat:"mine" };
+                       bookings:"mine", jobs:"inbox", chat:"mine", id:"verify" };
 function screenFromHash(){
   const h = (location.hash || "").replace(/^#/, "").toLowerCase();
   if(!h || h === "admin") return null;
@@ -3333,10 +3487,13 @@ function go(name, viaHistory){
   if(name === "hire") initHire();
   if(name === "me") renderMe();
   if(name === "inbox") renderInbox();
+  if(name === "card") renderCard();
+  if(name === "verify") $("verifyResult").innerHTML = "";
   if(name === "mine") renderMine();
   if(name === "register") initRegister();
   if(name === "otp") initOtp(); else stopResendCooldown();
   if(name === "home") initHome();
+  paintWorkDoor();
 }
 
 window.addEventListener("popstate", e => {
@@ -3355,10 +3512,20 @@ window.addEventListener("popstate", e => {
    The figures and the ticker are read from the real catalogue, so the page is
    describing itself rather than showing decoration. */
 let homeReady = false;
+/* Somebody who has already registered is not going to register again. The
+   door keeps its place and its animation and changes what it offers. */
+function paintWorkDoor(){
+  const t = $("ctaWorkTitle"), sub = $("ctaWorkSub");
+  if(!t || !sub) return;
+  const inside = !!(session && session.registered);
+  t.textContent   = inside ? "Visit your profile" : "Register as a worker";
+  sub.textContent = inside ? "Your ID card, work and reviews" : "Set your rates and get bookings";
+}
 function initHome(){
   /* the link only appears once there is something behind it */
   const link = $("myBookingsLink");
   if(link) link.hidden = !myBookings().length;
+  paintWorkDoor();
   if(homeReady) return;
   homeReady = true;
   $("figServices").textContent = SKILLS.length;
@@ -4182,6 +4349,14 @@ function renderMe(){
         <span class="amt">${money(s.price)} <small>${esc(s.unit)}</small></span>
       </div>`).join("")}
     </div>
+    <button class="work-entry" onclick="go('card')">
+      <span class="we-ico" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v13H3z"/><circle cx="8.5" cy="11.5" r="2.2"/><path d="M5 16.3c.5-1.4 1.9-2.1 3.5-2.1s3 .7 3.5 2.1"/><path d="M14.5 10.5H19M14.5 13.5H19"/></svg>
+      </span>
+      <span class="we-text"><b>My Repto ID card</b>
+        <span>${w.worker_code ? esc(idPretty(w.worker_code)) : "Your worker ID"} — show it, or print it</span></span>
+      <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
     <button class="work-entry" onclick="go('inbox')">
       <span class="we-ico" aria-hidden="true">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -5050,6 +5225,161 @@ function maybeAskPunctuality(){
 const onTimeText = w => (w.on_time_total || 0) >= 3
   ? `<span class="ontime${Math.round(100*w.on_time_yes/w.on_time_total) >= 80 ? " good" : " poor"}">On time ${Math.round(100*w.on_time_yes/w.on_time_total)}%</span>`
   : "";
+
+/* =========================================================================
+   THE REPTO WORKER ID
+   Twelve digits, read in three groups of four like an Aadhaar number, with
+   a Luhn check digit on the end so a misheard number fails rather than
+   quietly matching somebody else. The card exists for the moment a worker
+   is standing at a door and has to say who they are.
+   ========================================================================= */
+const idDigits = c => String(c || "").replace(/\D/g, "");
+const idPretty = c => {
+  const d = idDigits(c);
+  return d.length === 12 ? `${d.slice(0,4)} ${d.slice(4,8)} ${d.slice(8)}` : d;
+};
+/* the same check the database runs, so a typo is caught before a round trip */
+function idValid(code){
+  const d = idDigits(code);
+  if(d.length !== 12 || d[0] === "0" || d[0] === "1") return false;
+  let sum = 0, dbl = true;
+  for(let i = d.length - 2; i >= 0; i--){
+    let n = +d[i];
+    if(dbl){ n *= 2; if(n > 9) n -= 9; }
+    sum += n; dbl = !dbl;
+  }
+  return (10 - (sum % 10)) % 10 === +d[11];
+}
+
+function renderCard(){
+  const w = session && session.worker;
+  if(!w){ go("work"); return; }
+  const host = $("cardHost");
+  const st = statusOf(w);
+  const since = w.created_at ? new Date(w.created_at)
+        .toLocaleDateString("en-IN", {month:"short", year:"numeric"}) : "—";
+  const skills = (w.skills || []).map(s => s.skill);
+
+  host.innerHTML = `
+    <div class="idcard" id="idCard">
+      <div class="ic-top">
+        <span class="ic-brand">
+          <img src="icons/logo.png?v=2" alt="" width="21" height="27">
+          <b>REPTO</b>
+        </span>
+        <span class="ic-kind">WORKER ID</span>
+      </div>
+      <div class="ic-body">
+        <div class="ic-photo"><img src="${avatarOf(w)}" alt=""></div>
+        <div class="ic-fields">
+          <div class="ic-name">${esc(w.name)}</div>
+          <div class="ic-trade">${esc(skills.join(" · ") || "—")}</div>
+          <dl class="ic-meta">
+            <div><dt>Locality</dt><dd>${esc([w.area, w.city].filter(Boolean).join(", ") || "—")}</dd></div>
+            <div><dt>Mobile</dt><dd>+91 ${esc(w.phone || "—")}</dd></div>
+            <div><dt>Member since</dt><dd>${esc(since)}</dd></div>
+          </dl>
+        </div>
+      </div>
+      <div class="ic-foot">
+        <div class="ic-no">
+          <span>Repto Worker ID</span>
+          <b>${esc(idPretty(w.worker_code) || "— — —")}</b>
+        </div>
+        <span class="ic-status ${st}">${st === "approved" ? "VERIFIED" : st === "pending" ? "PENDING" : "NOT VALID"}</span>
+      </div>
+      <p class="ic-check">Check this card at nearse.in/#verify</p>
+    </div>
+
+    <div class="card-actions no-print">
+      <button class="btn btn-brand" onclick="window.print()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>
+        Print or save as PDF
+      </button>
+      <button class="btn btn-outline" onclick="copyWorkerId()">Copy my ID number</button>
+    </div>
+
+    ${st !== "approved" ? `<div class="vstatus pending no-print" style="margin-top:16px">
+      <span class="dotmark">!</span>
+      <div><b>Your card is not active yet</b><span>The number is yours for good, but it will only check out as valid once your profile is approved.</span></div>
+    </div>` : ""}
+
+    <div class="card-note no-print">
+      <b>What this is for</b>
+      <p>Show it when you arrive at a job. Anyone can type the twelve digits into
+        <b>nearse.in</b> → <b>Check a Repto Worker ID</b> and see your name, your trade, your
+        locality and how many jobs you have finished — nothing else. Your number never changes,
+        even if you change your rates, your photo or your trade.</p>
+      <p>Printed at the size of a bank card, so it fits a wallet. Print on thick paper if you can.</p>
+    </div>`;
+}
+async function copyWorkerId(){
+  const code = idPretty((session.worker || {}).worker_code);
+  let ok = false;
+  try{
+    if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(code); ok = true; }
+  }catch(e){}
+  toast(ok ? "ID copied — " + code : "Your ID is " + code);
+}
+
+/* ---------- checking somebody else's card ---------- */
+function onVerifyInput(){
+  const el = $("verifyInput");
+  const d = idDigits(el.value).slice(0, 12);
+  el.value = d.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+}
+async function runVerify(code){
+  const raw = code || $("verifyInput").value;
+  const host = $("verifyResult");
+  if(!idValid(raw)){
+    host.innerHTML = `<div class="verify-card bad">
+      <b>That is not a Repto ID</b>
+      <span>Check the twelve digits and try again. Every real card ends in a digit that has to match the rest, so a number that is out by one will not pass.</span>
+    </div>`;
+    return;
+  }
+  host.innerHTML = '<div class="skeleton"></div>';
+  let row = null;
+  try{ row = await api.verifyId(idDigits(raw)); }
+  catch(e){ host.innerHTML = `<div class="verify-card bad"><b>Could not check that</b><span>${esc(e.message||"")}</span></div>`; return; }
+
+  if(!row){
+    host.innerHTML = `<div class="verify-card bad">
+      <b>No live worker has this ID</b>
+      <span>The number is well formed but does not belong to an approved profile. It may have been withdrawn, or the card may not be genuine.</span>
+    </div>`;
+    return;
+  }
+  const skills = (typeof row.skills === "string" ? JSON.parse(row.skills) : (row.skills||[])).map(s => s.skill);
+  const since = row.member_since ? new Date(row.member_since).toLocaleDateString("en-IN", {month:"long", year:"numeric"}) : "—";
+  const avg = row.rating_count ? (row.rating_sum / row.rating_count).toFixed(1) : null;
+  host.innerHTML = `<div class="verify-card good">
+    <span class="vc-tick">✓</span>
+    <b>This is a genuine Repto worker</b>
+    <div class="vc-who">
+      <span class="avatar"><img src="${row.thumb ? esc(row.thumb) : avatarOf({name:row.name})}" alt=""></span>
+      <div>
+        <h4>${esc(row.name)}</h4>
+        <span>${esc(skills.join(" · ") || "—")}</span>
+        <span>${esc([row.area, row.city].filter(Boolean).join(", "))}</span>
+      </div>
+    </div>
+    <dl class="vc-meta">
+      <div><dt>ID</dt><dd>${esc(idPretty(row.worker_code))}</dd></div>
+      <div><dt>On Repto since</dt><dd>${esc(since)}</dd></div>
+      <div><dt>Jobs finished</dt><dd>${row.jobs_done || 0}</dd></div>
+      <div><dt>Rating</dt><dd>${avg ? avg + "★ from " + row.rating_count : "No ratings yet"}</dd></div>
+    </dl>
+    <p class="hint">This confirms the person is registered with us and their profile is live. It is not a police verification or a background check.</p>
+  </div>`;
+}
+function checkIdHash(){
+  const m = (location.hash || "").match(/^#(?:id|verify)=?(\d[\d\s]*)?$/i);
+  if(!m) return;
+  history.replaceState({screen:"verify"}, "", location.pathname + location.search);
+  go("verify");
+  if(m[1]){ $("verifyInput").value = idPretty(m[1]); runVerify(m[1]); }
+}
 
 /* =========================================================================
    CONVERSATIONS
@@ -6088,6 +6418,7 @@ function checkAdminHash(){
   }
 }
 window.addEventListener("hashchange", checkAdminHash);
+window.addEventListener("hashchange", checkIdHash);
 
 if("serviceWorker" in navigator){
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
@@ -6116,6 +6447,7 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
   const start = screenFromHash();          /* manifest shortcuts land here */
   if(start && start !== "home") go(start);
   checkAdminHash();
+  checkIdHash();
 })();
 </script>
 </body>

@@ -111,8 +111,9 @@ const IPHONE  = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWeb
   // ---------- 3. the worker can see their own record ----------
   await p.evaluate(() => { session.worker.status = 'approved'; go('me'); });
   await p.waitForTimeout(900);
-  ok('The profile links to My work', await p.locator('.work-entry').count() === 1);
-  await p.locator('.work-entry').click();
+  ok('The profile links to My work', await p.locator('.work-entry', { hasText: 'My work' }).count() === 1);
+  ok('…and to the ID card', await p.locator('.work-entry', { hasText: 'ID card' }).count() === 1);
+  await p.locator('.work-entry', { hasText: 'My work' }).click();
   await p.waitForTimeout(900);
   ok('My work opens', await p.locator('#scr-inbox.on').count() === 1);
   const strip = await p.locator('.stat-strip').innerText();
