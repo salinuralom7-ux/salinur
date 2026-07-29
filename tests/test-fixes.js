@@ -40,11 +40,28 @@ const IPHONE  = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWeb
     ok(`${name}: plain button uses wa.me`, plain.startsWith('https://wa.me/917086599367?text='));
 
     if (expectBiz) {
-      const biz = await p.locator('#waBizBtn').getAttribute('href');
-      ok(`${name}: Business button names the Business package`,
-         biz.startsWith('intent://send?phone=917086599367') && biz.includes('package=com.whatsapp.w4b'), biz.slice(0, 60) + '…');
-      ok(`${name}: Business link carries the same code`,
+      // it must be a button handled in JS, not an anchor: an intent URL opened
+      // in a new context cannot reach the OS, and inside an installed app the
+      // empty tab collapses to the start URL — "it did nothing and went home"
+      ok(`${name}: Business control is a button, not a new-tab link`,
+         await p.evaluate(() => {
+           const b = document.getElementById('waBizBtn');
+           return b.tagName === 'BUTTON' && !b.getAttribute('target');
+         }));
+      // window.location cannot be stubbed, so assert on the URL the handler
+      // builds — the shape of that URL is what was wrong
+      const biz = await p.evaluate(() => waLink(REPTO_WA, waMessage, 'com.whatsapp.w4b'));
+      ok(`${name}: it targets the Business package by name`,
+         biz.startsWith('intent://send?phone=917086599367') && biz.includes('package=com.whatsapp.w4b'),
+         biz.slice(0, 58) + '…');
+      ok(`${name}: with a fallback so a missing app does not dead-end`,
+         biz.includes('S.browser_fallback_url=') && decodeURIComponent(biz).includes('https://wa.me/917086599367'));
+      ok(`${name}: carrying the same verification code`,
          decodeURIComponent(biz).includes(await p.locator('#waCode').innerText()));
+      ok(`${name}: and a handler that navigates the top level`,
+         await p.evaluate(() => typeof openWaBusiness === 'function' &&
+           /location\.href/.test(openWaBusiness.toString()) &&
+           !/window\.open/.test(openWaBusiness.toString())));
     }
 
     // the fallback that works on any phone at all

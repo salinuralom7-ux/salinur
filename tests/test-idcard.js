@@ -37,6 +37,25 @@ const ok = (label, cond, extra) =>
     go('work'); return (document.querySelector('.screen.on') || {}).id;
   }) === 'scr-me');
 
+  // the door must follow the session the instant it changes, not only after a
+  // reload — that is what made it look like the rename had never shipped
+  await p.evaluate(() => { session = null; saveSession(); });
+  await p.waitForTimeout(300);
+  ok('Clearing the session repaints the door at once', (await door()).trim() === 'Register as a worker');
+  await p.evaluate(() => {
+    const w = demoAll()[0];
+    session = { phone: w.phone, pin: w.pin, name: w.name, registered: true, worker: w };
+    saveSession();
+  });
+  await p.waitForTimeout(300);
+  ok('Signing back in repaints it at once', (await door()).trim() === 'Visit your profile');
+
+  // and it survives a cold start, which is how a worker actually opens the app
+  await p.reload();
+  await p.waitForTimeout(1500);
+  ok('It is still right after closing and reopening the app',
+     (await door()).trim() === 'Visit your profile', await door());
+
   // signing out puts it back
   await p.evaluate(() => { session = null; go('home'); });
   await p.waitForTimeout(500);
