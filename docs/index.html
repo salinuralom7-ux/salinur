@@ -859,6 +859,146 @@ header{
 }
 .report-link:hover{color:var(--danger)}
 
+/* ---------- conversations ---------- */
+.chat-shell{
+  position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);z-index:60;
+}
+body.in-chat > header,
+body.in-chat > footer,
+body.in-chat > .demo-note{display:none}
+.chat-head{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  padding-top:calc(12px + env(safe-area-inset-top));
+  border-bottom:1px solid var(--line);background:var(--surface);flex:0 0 auto;
+}
+.chat-back{background:none;border:0;color:var(--ink-2);padding:4px;display:grid;place-items:center}
+.chat-who{flex:1;min-width:0}
+.chat-who b{display:block;font-size:.98rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-who span{display:block;font-size:.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-state{
+  flex:0 0 auto;font-size:.68rem;font-weight:700;letter-spacing:.02em;padding:4px 9px;
+  border-radius:999px;border:1px solid var(--line-strong);color:var(--muted);white-space:nowrap;
+}
+.chat-state.ok{color:var(--ok);border-color:rgba(79,201,141,.4);background:rgba(79,201,141,.10)}
+.chat-state.wait{color:var(--brand-2);border-color:rgba(234,187,81,.4);background:var(--brand-soft)}
+.chat-state.done{color:var(--ok);border-color:rgba(79,201,141,.4);background:rgba(79,201,141,.16)}
+.chat-state.off{color:var(--muted)}
+.chat-actions{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;flex:0 0 auto;
+  border-bottom:1px solid var(--line);background:var(--surface-2);
+}
+.chat-actions:empty{display:none}
+.chat-actions .btn{padding:8px 14px;font-size:.85rem}
+.chat-rate{font-size:.78rem;color:var(--brand-quiet);font-weight:600;margin-right:auto}
+.chat-note{font-size:.79rem;color:var(--muted);line-height:1.5;flex:1 1 100%}
+.chat-log{
+  flex:1 1 auto;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;
+  overscroll-behavior:contain;
+}
+.msg{max-width:78%;padding:9px 13px;border-radius:14px;font-size:.9rem;line-height:1.5;position:relative}
+.msg span{display:block;overflow-wrap:anywhere}
+.msg i{display:block;font-style:normal;font-size:.63rem;opacity:.62;margin-top:3px;text-align:right}
+.msg.own{align-self:flex-end;background:var(--brand);color:var(--brand-ink);border-bottom-right-radius:5px}
+.msg.them{align-self:flex-start;background:var(--surface-2);color:var(--ink);border-bottom-left-radius:5px}
+.msg-system{
+  align-self:center;max-width:88%;text-align:center;font-size:.75rem;color:var(--muted);
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 13px;
+}
+.chat-compose{
+  display:flex;gap:9px;padding:12px 16px;flex:0 0 auto;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);background:var(--surface);
+}
+.chat-compose input{
+  flex:1;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:999px;
+  padding:11px 16px;font-size:.92rem;
+}
+.chat-compose input:disabled{opacity:.5}
+.chat-compose button{
+  flex:0 0 auto;width:44px;height:44px;border:0;border-radius:50%;background:var(--brand);
+  color:var(--brand-ink);display:grid;place-items:center;
+}
+.chat-compose button:disabled{opacity:.4}
+
+/* ---------- inbox rows ---------- */
+.thread-row{
+  display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:13px 14px;margin-top:9px;
+}
+.thread-row:hover{border-color:var(--line-strong)}
+.thread-row.unread{border-color:rgba(234,187,81,.42);background:var(--surface-2)}
+.tr-main{flex:1;min-width:0}
+.tr-main b{display:flex;align-items:center;gap:7px;font-size:.93rem;margin-bottom:2px}
+.tr-skill{display:block;font-size:.78rem;color:var(--brand-quiet)}
+.tr-prev{display:block;font-size:.77rem;color:var(--muted);margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr-side{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.tr-side i{font-style:normal;font-size:.68rem;color:var(--muted)}
+.dot-n{
+  font-style:normal;font-size:.63rem;font-weight:800;min-width:17px;height:17px;padding:0 5px;
+  border-radius:999px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;
+}
+.tabs.three{flex-wrap:nowrap}
+.tabs.three .tab{flex:1 1 0;min-width:0;font-size:.79rem;padding:9px 2px;white-space:nowrap}
+.tabs.three .tab i{font-style:normal;opacity:.7;margin-left:2px}
+
+/* ---------- the worker's numbers ---------- */
+.stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+.stat-strip .stat{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 6px;text-align:center}
+.stat-strip .stat b{display:block;font-size:1.15rem;font-weight:800;color:var(--brand-2);line-height:1.2}
+.stat-strip .stat span{display:block;font-size:.66rem;color:var(--muted);margin-top:3px;line-height:1.35}
+.stat-note{font-size:.78rem;color:var(--muted);margin:9px 0 2px;line-height:1.55}
+.stat-note b{color:var(--ink-2)}
+.work-entry{
+  display:flex;align-items:center;gap:13px;width:100%;text-align:left;margin-top:16px;
+  background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--r);padding:14px;
+}
+.work-entry:hover{border-color:var(--brand)}
+.we-ico{
+  flex:0 0 auto;width:38px;height:38px;border-radius:11px;background:var(--brand-soft);
+  color:var(--brand-2);display:grid;place-items:center;
+}
+.we-text{flex:1;min-width:0}
+.we-text b{display:flex;align-items:center;gap:7px;font-size:.94rem}
+.we-text span{display:block;font-size:.77rem;color:var(--muted);line-height:1.45;margin-top:2px}
+.we-badge{
+  font-style:normal;font-size:.63rem;font-weight:800;min-width:17px;height:17px;padding:0 5px;
+  border-radius:999px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;
+}
+
+/* ---------- reviews ---------- */
+.reviews-box{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+.rv-head{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.rv{padding:9px 0;border-bottom:1px solid var(--line)}
+.rv:last-child{border-bottom:0}
+.rv-top{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.rv-stars{color:var(--brand);font-size:.85rem;letter-spacing:.06em}
+.rv-stars .dim{color:var(--line-strong)}
+.rv-who{font-size:.73rem;color:var(--muted)}
+.rv p{font-size:.86rem;color:var(--ink-2);line-height:1.55;margin-top:4px;overflow-wrap:anywhere}
+.pick-stars.big{justify-content:center;gap:9px;font-size:2.1rem;margin:6px 0 2px}
+.star-word{text-align:center;font-size:.82rem;color:var(--muted);margin-bottom:12px;min-height:1.2em}
+
+/* WhatsApp Business gets its own button, in its own darker green */
+.btn-wab{background:#0B7C63;color:#F2FBF8;display:inline-flex;align-items:center;justify-content:center;
+  gap:9px;padding:12px;font-weight:700;margin-top:8px}
+.btn-wab:hover{background:#0A6B56}
+
+/* a small, short celebration when a profile is approved */
+.cheer{position:fixed;inset:0;pointer-events:none;z-index:90;overflow:hidden}
+.cheer i{
+  position:absolute;top:-14px;width:8px;height:13px;border-radius:2px;background:var(--brand);
+  animation:fall 2.2s cubic-bezier(.3,.7,.5,1) forwards;
+}
+.cheer i:nth-child(3n){background:var(--brand-2)}
+.cheer i:nth-child(4n){background:var(--ok);width:7px;height:7px;border-radius:50%}
+@keyframes fall{
+  0%{transform:translateY(0) rotate(0);opacity:1}
+  100%{transform:translateY(104vh) rotate(520deg);opacity:.15}
+}
+@media (prefers-reduced-motion: reduce){ .cheer{display:none} }
+
 /* ---------- consent ---------- */
 .consent{
   border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r);
@@ -1320,6 +1460,7 @@ footer a:hover{color:var(--brand)}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>
         Install app
       </button>
+      <a class="header-link" id="myBookingsLink" href="#" onclick="go('mine');return false" hidden>My bookings</a>
       <a class="header-link" href="#" onclick="go('hire');return false">Browse workers</a>
     </div>
   </div>
@@ -1520,8 +1661,20 @@ footer a:hover{color:var(--brand)}
           <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24m4.52 10.35c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.38.1-.5.11-.11.25-.29.37-.44.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.13-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.28"/></svg>
           Send my code on WhatsApp
         </a>
+        <!-- A great many small traders in Guwahati run WhatsApp Business and
+             nothing else. wa.me hands the link to whichever app claims it,
+             and on a phone with only Business installed that can end up
+             prompting to install ordinary WhatsApp. So Business gets its own
+             button on Android, where an app can actually be named. -->
+        <a class="btn btn-wab btn-block" id="waBizBtn" href="#" target="_blank" rel="noopener" onclick="markWaOpened()" hidden>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24"/></svg>
+          I use WhatsApp Business
+        </a>
+        <button class="btn btn-quiet btn-block btn-sm" id="waCopyBtn" onclick="copyWaMessage()" style="margin-top:8px">
+          Neither button works? Copy the message
+        </button>
         <button class="btn btn-brand btn-block" id="waDoneBtn" onclick="waSent()" style="padding:14px;margin-top:10px" disabled>I’ve sent it</button>
-        <p class="hint" style="margin-top:12px">Goes to the Repto number. We check it against the number you entered — that’s how we know it’s really you, and that bookings will reach you.</p>
+        <p class="hint" style="margin-top:12px">Goes to the Repto number, <b id="waNumber">+91 70865 99367</b>. We check it against the number you entered — that’s how we know it’s really you, and that bookings will reach you.</p>
       </div>
 
       <!-- code-entry flow, used once an SMS/WhatsApp provider is connected -->
@@ -1723,6 +1876,54 @@ footer a:hover{color:var(--brand)}
   <div class="panel" id="meCard"></div>
 </section>
 
+<!-- ============================= WORKER: MY WORK ============================= -->
+<section class="screen" id="scr-inbox">
+  <div class="wrap-sm">
+    <button class="back" onclick="go('me')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      My profile
+    </button>
+    <div class="panel" id="inboxCard"></div>
+  </div>
+</section>
+
+<!-- ============================= CUSTOMER: MY BOOKINGS ============================= -->
+<section class="screen" id="scr-mine">
+  <div class="wrap-sm">
+    <button class="back" onclick="go('home')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Home
+    </button>
+    <div class="panel" id="mineCard"></div>
+  </div>
+</section>
+
+<!-- ============================= CONVERSATION ============================= -->
+<!-- One screen, both sides. Which one you are is decided by chatSide, not by
+     a separate page, so a change to the conversation is made once. -->
+<section class="screen" id="scr-chat">
+  <div class="chat-shell">
+    <header class="chat-head">
+      <button class="chat-back" onclick="leaveChat()" aria-label="Back">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="chat-who">
+        <b id="chatTitle">—</b>
+        <span id="chatSub"></span>
+      </div>
+      <span class="chat-state" id="chatState"></span>
+    </header>
+    <div class="chat-actions" id="chatActions"></div>
+    <div class="chat-log" id="chatLog"></div>
+    <form class="chat-compose" id="chatCompose" onsubmit="sendChat(event)">
+      <input type="text" id="chatInput" placeholder="Write a message…" autocomplete="off" maxlength="2000">
+      <button type="submit" id="chatSend" aria-label="Send">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+      </button>
+    </form>
+  </div>
+</section>
+
 <!-- ============================= HIRE ============================= -->
 <section class="screen" id="scr-hire">
   <div class="wrap">
@@ -1896,6 +2097,24 @@ footer a:hover{color:var(--brand)}
       Your name and number are shared with the worker so they can reply, and we keep a record of the request —
       see our <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>.
       Cancelling is free and done straight with the worker: <a href="cancellation/" target="_blank" rel="noopener">how that works</a>.</p>
+  </div>
+</div>
+
+<div class="overlay" id="reviewOverlay" onclick="if(event.target===this)closeModal('reviewOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('reviewOverlay')" aria-label="Close">✕</button>
+    <h3>How did it go?</h3>
+    <p class="sub" id="reviewWho"></p>
+    <div class="pick-stars big" id="reviewStars">
+      <span data-s="1" onclick="setReviewStars(1)">★</span><span data-s="2" onclick="setReviewStars(2)">★</span><span data-s="3" onclick="setReviewStars(3)">★</span><span data-s="4" onclick="setReviewStars(4)">★</span><span data-s="5" onclick="setReviewStars(5)">★</span>
+    </div>
+    <p class="star-word" id="reviewWord">Tap to rate</p>
+    <div class="field">
+      <label for="reviewText">Tell other people what happened <span class="sublabel">— optional</span></label>
+      <textarea id="reviewText" rows="3" maxlength="700" placeholder="Was he on time? Was the work neat? Did the price stay as agreed?"></textarea>
+    </div>
+    <button class="btn btn-brand btn-block" id="reviewSendBtn" onclick="sendReview()" style="padding:14px">Post review</button>
+    <p class="hint" style="margin-top:11px;text-align:center">Your first name is shown with the review. Only people whose job actually finished can leave one.</p>
   </div>
 </div>
 
@@ -2659,6 +2878,80 @@ const api = {
     if(LIVE) return await sb("rpc/my_appointments", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})}) || [];
     return demoMyAppointments(phone);
   },
+  /* ---------- conversations ----------
+     A booking used to be a WhatsApp link and nothing else, which meant Repto
+     never learned whether the job was accepted, done, or any good. Every
+     engagement is now a thread the app can see both sides of. */
+  async startThread(o){
+    if(LIVE){
+      const rows = await sb("rpc/start_thread", {method:"POST", body:JSON.stringify({
+        p_worker:o.workerId, p_skill:o.skill, p_name:o.name, p_phone:o.phone,
+        p_area:o.area || null, p_detail:o.detail || null, p_note:o.note || null,
+        p_price:o.price || null, p_unit:o.unit || null, p_mode:o.mode || null,
+        p_job:o.jobId || null })});
+      return Array.isArray(rows) ? rows[0] : rows;
+    }
+    return demoStartThread(o);
+  },
+  async threadView(code, token){
+    if(LIVE){
+      const rows = await sb("rpc/thread_view", {method:"POST", body:JSON.stringify({p_code:code, p_token:token})});
+      return (rows && rows[0]) || null;
+    }
+    return demoThreadView(code, token);
+  },
+  async threadMessages(code, token, after){
+    if(LIVE) return await sb("rpc/thread_messages", {method:"POST",
+      body:JSON.stringify({p_code:code, p_token:token, p_after:after || 0})}) || [];
+    return demoMessages(code, after, "customer");
+  },
+  async postMessage(code, token, body){
+    if(LIVE) return await sb("rpc/post_message", {method:"POST",
+      body:JSON.stringify({p_code:code, p_token:token, p_body:body})});
+    return demoPost(code, "customer", body);
+  },
+  async customerSetThread(code, token, status){
+    if(LIVE) return await sb("rpc/customer_set_thread", {method:"POST",
+      body:JSON.stringify({p_code:code, p_token:token, p_status:status})});
+    return demoSetThread(code, status, "customer");
+  },
+  async reviewThread(code, token, stars, comment){
+    if(LIVE) return await sb("rpc/review_thread", {method:"POST",
+      body:JSON.stringify({p_code:code, p_token:token, p_stars:stars, p_comment:comment || null})});
+    return demoReview(code, stars, comment);
+  },
+  async workerThreads(phone, pin){
+    if(LIVE) return await sb("rpc/worker_threads", {method:"POST",
+      body:JSON.stringify({p_phone:phone, p_pin:pin})}) || [];
+    return demoWorkerThreads();
+  },
+  async workerThreadMessages(phone, pin, code, after){
+    if(LIVE) return await sb("rpc/worker_thread_messages", {method:"POST",
+      body:JSON.stringify({p_phone:phone, p_pin:pin, p_code:code, p_after:after || 0})}) || [];
+    return demoMessages(code, after, "worker");
+  },
+  async workerPostMessage(phone, pin, code, body){
+    if(LIVE) return await sb("rpc/worker_post_message", {method:"POST",
+      body:JSON.stringify({p_phone:phone, p_pin:pin, p_code:code, p_body:body})});
+    return demoPost(code, "worker", body);
+  },
+  async workerSetThread(phone, pin, code, status, reason){
+    if(LIVE) return await sb("rpc/worker_set_thread", {method:"POST",
+      body:JSON.stringify({p_phone:phone, p_pin:pin, p_code:code, p_status:status, p_reason:reason || null})});
+    return demoSetThread(code, status, "worker", reason);
+  },
+  async workerStats(phone, pin){
+    if(LIVE){
+      const rows = await sb("rpc/worker_stats", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})});
+      return (rows && rows[0]) || null;
+    }
+    return demoWorkerStats();
+  },
+  async workerReviews(id, limit){
+    if(LIVE) return await sb("rpc/worker_reviews", {method:"POST",
+      body:JSON.stringify({p_worker:id, p_limit:limit || 20})}) || [];
+    return demoReviews(id);
+  },
   async report(id, reason, details, contact){
     if(LIVE) return await sb("worker_reports", {method:"POST", headers:{Prefer:"return=minimal"},
       body:JSON.stringify({worker_id:id, reason, details:details||null, contact:contact||null})});
@@ -2735,6 +3028,122 @@ function demoSave(all){
   try{ localStorage.setItem(WSTORE, JSON.stringify(all)); }
   catch(e){ toast("Storage full — please use a smaller photo"); }
 }
+
+/* ---------- preview-mode conversations ----------
+   The same state machine as Migration 14, in one browser, so the whole
+   booking-to-review flow can be walked through without a live project. */
+const TSTORE = "repto_threads_store_v1";
+const allThreads  = () => { try{ return JSON.parse(localStorage.getItem(TSTORE) || "[]"); }catch(e){ return []; } };
+const saveThreads = t => { try{ localStorage.setItem(TSTORE, JSON.stringify(t)); }catch(e){} };
+const findThread  = code => allThreads().find(t => t.code === code);
+const CLOSED_STATES = ["declined","cancelled","closed"];
+
+function demoStartThread(o){
+  const all = allThreads();
+  const w = demoAll().find(x => x.id === o.workerId) || {};
+  const code = Array.from({length:10}, () => "0123456789ABCDEF"[Math.floor(Math.random()*16)]).join("");
+  const t = {
+    code, token:"demo-" + code, worker_id:o.workerId, worker_name:w.name, worker_area:w.area,
+    worker_thumb:w.thumb || w.selfie || null, worker_phone:w.phone,
+    rating_sum:w.rating_sum||0, rating_count:w.rating_count||0,
+    skill:o.skill, mode:o.mode, detail:o.detail, note:o.note, price:o.price, unit:o.unit,
+    customer_name:o.name, customer_phone:o.phone, customer_area:o.area,
+    status:"requested", created_at:new Date().toISOString(), last_message_at:new Date().toISOString(),
+    worker_unread:1, customer_unread:0, reviewed:false, messages:[]
+  };
+  t.messages.push({id:1, sender:"system", created_at:t.created_at,
+    body:`${o.name} asked for ${o.skill}${o.detail ? " — " + o.detail : ""}`});
+  if(o.note){ t.messages.push({id:2, sender:"customer", created_at:t.created_at, body:o.note}); t.worker_unread = 2; }
+  all.unshift(t); saveThreads(all);
+  return {code, token:t.token, worker_name:w.name};
+}
+function demoThreadView(code, token){
+  const t = findThread(code);
+  if(!t || t.token !== token) return null;
+  return {...t, worker_phone: ["accepted","working","done","closed"].includes(t.status) ? t.worker_phone : null,
+          unread:t.customer_unread};
+}
+function demoMessages(code, after, side){
+  const all = allThreads(); const t = all.find(x => x.code === code);
+  if(!t) throw new Error("Conversation not found");
+  if(side === "customer") t.customer_unread = 0; else t.worker_unread = 0;
+  saveThreads(all);
+  return t.messages.filter(m => m.id > (after || 0));
+}
+function demoPost(code, sender, body){
+  const all = allThreads(); const t = all.find(x => x.code === code);
+  if(!t) throw new Error("Conversation not found");
+  if(CLOSED_STATES.includes(t.status)) throw new Error("This conversation is closed");
+  const id = (t.messages[t.messages.length-1] || {id:0}).id + 1;
+  t.messages.push({id, sender, body, created_at:new Date().toISOString()});
+  t.last_message_at = new Date().toISOString();
+  if(sender === "customer") t.worker_unread++; else t.customer_unread++;
+  saveThreads(all); return id;
+}
+function demoSetThread(code, status, side, reason){
+  const all = allThreads(); const t = all.find(x => x.code === code);
+  if(!t) throw new Error("Conversation not found");
+  const say = body => t.messages.push({id:(t.messages[t.messages.length-1]||{id:0}).id + 1,
+    sender:"system", body, created_at:new Date().toISOString()});
+  const who = (t.worker_name || "The worker");
+  if(side === "worker"){
+    if(status === "accepted"){ t.accepted_at = new Date().toISOString(); say(who + " accepted this job."); }
+    if(status === "declined"){ t.decline_reason = reason || null;
+      say(who + " could not take this job" + (reason ? " — " + reason : ".")); }
+    if(status === "working") say(who + " has started work.");
+    if(status === "done"){ t.done_at = new Date().toISOString();
+      say(who + " marked the work finished. Please confirm."); }
+    t.customer_unread++;
+  }else{
+    if(status === "cancelled") say("The customer cancelled this request.");
+    if(status === "closed"){ if(t.status !== "done") throw new Error("The worker has not marked this finished yet");
+      say("The customer confirmed the work is finished."); }
+    t.worker_unread++;
+  }
+  t.status = status; t.last_message_at = new Date().toISOString();
+  saveThreads(all); return status;
+}
+function demoReview(code, stars, comment){
+  const all = allThreads(); const t = all.find(x => x.code === code);
+  if(!t) throw new Error("Conversation not found");
+  if(!["done","closed"].includes(t.status)) throw new Error("You can review this once the work is finished");
+  const workers = demoAll(); const w = workers.find(x => x.id === t.worker_id);
+  if(w){
+    w.reviews = (w.reviews || []).filter(r => r.code !== code);
+    if(t.reviewed) w.rating_sum = (w.rating_sum||0) - (t.stars||0);
+    else w.rating_count = (w.rating_count||0) + 1;
+    w.rating_sum = (w.rating_sum||0) + stars;
+    w.reviews.unshift({code, stars, comment:comment||null, skill:t.skill,
+      author:(t.customer_name||"Customer").split(" ")[0], created_at:new Date().toISOString()});
+    demoSave(workers);
+  }
+  t.reviewed = true; t.stars = stars; saveThreads(all);
+}
+function demoWorkerThreads(){
+  const wid = session && session.worker && session.worker.id;
+  return allThreads().filter(t => t.worker_id === wid).map(t => ({
+    ...t, unread:t.worker_unread,
+    customer_phone: ["accepted","working","done","closed"].includes(t.status) ? t.customer_phone : null,
+    preview:(t.messages[t.messages.length-1]||{}).body
+  })).sort((a,b) => (b.unread>0) - (a.unread>0) || (b.last_message_at||"").localeCompare(a.last_message_at||""));
+}
+function demoWorkerStats(){
+  const list = demoWorkerThreads();
+  const n = s => list.filter(t => s.includes(t.status)).length;
+  const w = (session && session.worker) || {};
+  const reviews = (demoAll().find(x => x.id === w.id) || {}).reviews || [];
+  return {
+    requested:list.length, accepted:n(["accepted","working","done","closed"]),
+    declined:n(["declined"]), working:n(["accepted","working"]), completed:n(["closed"]),
+    cancelled:n(["cancelled"]), unread:list.reduce((a,t)=>a+(t.unread||0),0),
+    reviews:reviews.length,
+    avg_stars: reviews.length ? (reviews.reduce((a,r)=>a+r.stars,0)/reviews.length).toFixed(1) : null,
+    response_rate: list.length ? Math.round(100 * n(["accepted","working","done","closed","declined","cancelled"]) / list.length) : null,
+    this_month:list.length,
+    listed_value:list.filter(t=>t.status==="closed").reduce((a,t)=>a+(t.price||0),0)
+  };
+}
+function demoReviews(id){ return (demoAll().find(x => x.id === id) || {}).reviews || []; }
 
 /* ---------- preview-mode dispatch ----------
    The same state machine as the database, in one browser, so the whole flow
@@ -2885,7 +3294,8 @@ function demoMyAppointments(phone){
    gesture closes the whole app from the second screen — which is both a poor
    experience and something a Play Store review flags. It also makes the
    manifest shortcuts (#find, #work) land where they claim to. */
-const SCREEN_ALIAS = { find:"hire", browse:"hire", search:"hire", worker:"work", register:"work" };
+const SCREEN_ALIAS = { find:"hire", browse:"hire", search:"hire", worker:"work", register:"work",
+                       bookings:"mine", jobs:"inbox", chat:"mine" };
 function screenFromHash(){
   const h = (location.hash || "").replace(/^#/, "").toLowerCase();
   if(!h || h === "admin") return null;
@@ -2900,16 +3310,30 @@ function go(name, viaHistory){
   $("scr-" + name).classList.add("on");
   window.scrollTo({top:0});
   currentScreen = name;
+  /* the conversation is a full-screen surface — the site header and footer
+     would otherwise sit on top of its own header bar */
+  document.body.classList.toggle("in-chat", name === "chat");
   if(!viaHistory){
     /* admin is private — it gets a history entry but never a shareable URL */
     const url = (name === "home" || name === "admin")
       ? location.pathname + location.search
       : "#" + name;
-    try{ history.pushState({screen:name}, "", url); }catch(e){}
+    /* Leaving a sheet straight into a screen REPLACES the sheet's entry
+       rather than stacking on it. Pushing would leave the sheet's entry
+       underneath, and any queued history.back() from closing it would then
+       arrive after this navigation and undo it. */
+    try{
+      const st = {screen:name};
+      if(history.state && history.state.modal) history.replaceState(st, "", url);
+      else history.pushState(st, "", url);
+    }catch(e){}
   }
+  if(name !== "chat") stopChatPolling();
   if(name === "work") authTab("in");
   if(name === "hire") initHire();
   if(name === "me") renderMe();
+  if(name === "inbox") renderInbox();
+  if(name === "mine") renderMine();
   if(name === "register") initRegister();
   if(name === "otp") initOtp(); else stopResendCooldown();
   if(name === "home") initHome();
@@ -2932,6 +3356,9 @@ window.addEventListener("popstate", e => {
    describing itself rather than showing decoration. */
 let homeReady = false;
 function initHome(){
+  /* the link only appears once there is something behind it */
+  const link = $("myBookingsLink");
+  if(link) link.hidden = !myBookings().length;
   if(homeReady) return;
   homeReady = true;
   $("figServices").textContent = SKILLS.length;
@@ -3039,8 +3466,48 @@ function initWaVerify(){
   $("otpSent").innerHTML = `One tap to confirm <b>+91 ${esc(session.phone)}</b> is on WhatsApp.`;
 
   const msg = `Repto verification\nName: ${session.name}\nNumber: ${session.phone}\nCode: ${code}`;
-  $("waSendBtn").href = "https://wa.me/" + REPTO_WA + "?text=" + encodeURIComponent(msg);
+  waMessage = msg;
+  $("waSendBtn").href = waLink(REPTO_WA, msg, null);
+  /* Naming an app is only possible through an Android intent URL. On iOS both
+     WhatsApp apps register the same scheme and the system picks, so a second
+     button there would be a lie — the copy fallback covers that case. */
+  const biz = $("waBizBtn");
+  biz.hidden = !isAndroid();
+  if(!biz.hidden) biz.href = waLink(REPTO_WA, msg, "com.whatsapp.w4b");
   $("waDoneBtn").disabled = true;
+  $("waNumber").textContent = "+91 " + REPTO_WA.slice(2, 7) + " " + REPTO_WA.slice(7);
+}
+const isAndroid = () => /android/i.test(navigator.userAgent);
+let waMessage = "";
+
+/* wa.me for everyone, an explicit intent when a particular app is wanted. */
+function waLink(number, text, pkg){
+  const t = encodeURIComponent(text || "");
+  if(pkg && isAndroid()){
+    return `intent://send?phone=${number}&text=${t}#Intent;scheme=whatsapp;package=${pkg};end`;
+  }
+  return `https://wa.me/${number}${text ? "?text=" + t : ""}`;
+}
+
+/* The last resort, and the one that works on every phone ever made: put the
+   message on the clipboard and let them paste it into whatever they use. */
+async function copyWaMessage(){
+  const text = waMessage || "";
+  let ok = false;
+  try{
+    if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); ok = true; }
+  }catch(e){}
+  if(!ok){
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:-1000px";
+    document.body.appendChild(ta); ta.select();
+    try{ ok = document.execCommand("copy"); }catch(e){}
+    ta.remove();
+  }
+  markWaOpened();
+  toast(ok ? "Message copied — paste it to +91 " + REPTO_WA.slice(2) + " on WhatsApp"
+           : "Send this to +91 " + REPTO_WA.slice(2) + ": " + text);
 }
 function markWaOpened(){
   /* only enable "I've sent it" once WhatsApp has actually been opened */
@@ -3160,6 +3627,7 @@ async function signIn(){
     saveSession();
     toast("Welcome back, " + w.name.split(" ")[0]);
     go("me");
+    watchStatus();
   }catch(e){ toast(e.message); }
   btn.disabled = false;
 }
@@ -3714,6 +4182,14 @@ function renderMe(){
         <span class="amt">${money(s.price)} <small>${esc(s.unit)}</small></span>
       </div>`).join("")}
     </div>
+    <button class="work-entry" onclick="go('inbox')">
+      <span class="we-ico" aria-hidden="true">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </span>
+      <span class="we-text"><b>My work<i class="we-badge" id="weUnread" hidden></i></b>
+        <span id="weLine">Requests, conversations and what people said about you</span></span>
+      <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
     <div style="display:flex;gap:10px;margin-top:22px">
       <button class="btn btn-outline btn-sm" style="flex:1" onclick="go('register')">Edit profile</button>
       <button class="btn btn-quiet btn-sm" style="flex:1" onclick="signOut()">Sign out</button>
@@ -3726,6 +4202,27 @@ function renderMe(){
   const modes = workerModes(w);
   if(modes.has("now") && isOnlineNow(w)) pollOffers(); else clearTimeout(offerTimer);
   if(modes.has("slot")) loadAppointments();
+  loadMeSummary();
+  watchStatus();
+}
+/* The profile answers "how am I doing" without making anyone open a tab. */
+async function loadMeSummary(){
+  if(!(session && session.registered)) return;
+  let s;
+  try{ s = await api.workerStats(session.phone, session.pin); }catch(e){ return; }
+  if(!s) return;
+  const line = $("weLine"), badge = $("weUnread");
+  if(!line) return;
+  const bits = [];
+  if(s.requested) bits.push(`${s.requested} request${s.requested===1?"":"s"}`);
+  if(s.completed) bits.push(`${s.completed} completed`);
+  if(s.reviews)   bits.push(`${s.avg_stars}★ from ${s.reviews} review${s.reviews===1?"":"s"}`);
+  line.textContent = bits.length ? bits.join(" · ")
+    : "Requests, conversations and what people said about you";
+  if(badge){
+    badge.hidden = !s.unread;
+    badge.textContent = s.unread || "";
+  }
 }
 async function deleteProfile(){
   if(!session || !session.registered) return;
@@ -4045,12 +4542,34 @@ function openWorker(id){
     </div>
     <button class="btn btn-brand btn-block" id="bookCta" style="padding:14px" onclick="openBookingFor(currentWorker, bookPick.svc)"></button>
     <p class="mode-hint" id="bookCtaNote"></p>
+    <div id="wReviews"></div>
     <button class="report-link" onclick="openReport()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4.5M12 17h.01"/><path d="M10.3 3.9 1.9 18.3A2 2 0 0 0 3.6 21.3h16.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
       Report this profile
     </button>`;
   pickService(0);
   openModal("wOverlay");
+  loadWorkerReviews(w.id);
+}
+/* Stars alone tell a customer almost nothing. The words are the reason
+   somebody picks one carpenter over another. */
+async function loadWorkerReviews(id){
+  const host = $("wReviews");
+  if(!host) return;
+  host.innerHTML = "";
+  let rows = [];
+  try{ rows = await api.workerReviews(id, 8); }catch(e){ return; }
+  if(!rows.length) return;
+  host.innerHTML = `<div class="reviews-box">
+    <div class="rv-head">What people said</div>
+    ${rows.map(r => `<div class="rv">
+      <div class="rv-top">
+        <span class="rv-stars">${"★".repeat(r.stars)}<span class="dim">${"★".repeat(5-r.stars)}</span></span>
+        <span class="rv-who">${esc(r.author || "Customer")}${r.skill ? " · " + esc(r.skill) : ""}</span>
+      </div>
+      <p>${esc(r.comment)}</p>
+    </div>`).join("")}
+  </div>`;
 }
 /* A worker can offer three trades that are booked three different ways, so
    the service is chosen before the button can say what it does. */
@@ -4177,44 +4696,35 @@ async function confirmBooking(){
   if(!/^[6-9]\d{9}$/.test(phone)){ toast("Enter a valid 10-digit mobile number"); return; }
   if(!area){ toast("Please choose your area"); return; }
 
-  /* The tab has to be opened inside the click, before any await, or the
-     browser treats it as an unsolicited pop-up and blocks it. */
-  const tab = window.open("", "_blank");
   const btn = $("confirmBookBtn"); const label = btn.textContent;
-  btn.disabled = true; btn.textContent = "Opening WhatsApp…";
+  btn.disabled = true; btn.textContent = "Sending…";
 
-  let workerPhone;
+  const when = bookWhenText() + " · " + bookSlotText();
+  let started;
   try{
-    workerPhone = w.phone || await api.contact(w.id);
+    /* The request opens a conversation inside Repto instead of throwing the
+       customer into WhatsApp. That is what lets the app know whether the job
+       was accepted, whether it happened, and whether it was any good. */
+    started = await api.startThread({
+      workerId:w.id, skill:s.skill, name, phone,
+      area, detail:[when, area + ", Guwahati"].filter(Boolean).join(" · "),
+      note, price:s.price, unit:s.unit, mode:modeOf(s.skill)
+    });
   }catch(e){
-    if(tab) tab.close();
     btn.disabled = false; btn.textContent = label;
-    toast(e.message || "Could not reach that worker just now");
+    toast(e.message || "Could not send that just now");
     return;
   }
   btn.disabled = false; btn.textContent = label;
 
-  const when = bookWhenText() + " · " + bookSlotText();
   api.book({ worker_id:w.id, worker_name:w.name, customer_name:name, customer_phone:phone,
              note:[s.skill, when, area, note].filter(Boolean).join(" | ") });
 
-  const msg =
-`*Booking request via Repto (nearse.in)*
-
-Hello ${w.name.split(" ")[0]}, I found your profile on Repto and would like to book you.
-
-*Service:* ${s.skill} (${money(s.price)} ${s.unit||""})
-*When:* ${when}
-*Where:* ${area}, Guwahati${note ? "\n*Details:* " + note : ""}
-
-*Name:* ${name}
-*Mobile:* ${phone}
-
-Please reply to confirm. Thank you.`;
-  const url = "https://wa.me/91" + workerPhone + "?text=" + encodeURIComponent(msg);
-  if(tab) tab.location.href = url; else window.location.href = url;
-  closeModal("bookOverlay");
-  toast("Request sent — " + w.name.split(" ")[0] + " will reply on WhatsApp");
+  rememberBooking({ code:started.code, token:started.token, worker:w.name,
+                    skill:s.skill, at:new Date().toISOString() });
+  hideModal("bookOverlay");   /* go('chat') consumes the sheet's history entry */
+  toast("Request sent to " + w.name.split(" ")[0]);
+  openChat(started.code, "customer", "hire");
 }
 
 /* =========================================================================
@@ -4540,6 +5050,343 @@ function maybeAskPunctuality(){
 const onTimeText = w => (w.on_time_total || 0) >= 3
   ? `<span class="ontime${Math.round(100*w.on_time_yes/w.on_time_total) >= 80 ? " good" : " poor"}">On time ${Math.round(100*w.on_time_yes/w.on_time_total)}%</span>`
   : "";
+
+/* =========================================================================
+   CONVERSATIONS
+   A booking is now something the app can follow from request to review,
+   instead of a phone number handed over at the door. One screen serves both
+   sides; chatSide decides which set of buttons appears and which API is
+   called, so the conversation only had to be built once.
+   ========================================================================= */
+const MYSTORE = "repto_my_bookings_v1";
+const myBookings  = () => { try{ return JSON.parse(localStorage.getItem(MYSTORE) || "[]"); }catch(e){ return []; } };
+const saveMyBookings = list => { try{ localStorage.setItem(MYSTORE, JSON.stringify(list.slice(0, 60))); }catch(e){} };
+function rememberBooking(rec){
+  const list = myBookings().filter(b => b.code !== rec.code);
+  list.unshift(rec); saveMyBookings(list);
+}
+const myBooking = code => myBookings().find(b => b.code === code);
+
+const THREAD_STATE = {
+  requested: { label:"Waiting for a reply", tone:"wait" },
+  accepted:  { label:"Accepted",            tone:"ok" },
+  working:   { label:"Work in progress",    tone:"ok" },
+  done:      { label:"Finished — confirm",  tone:"wait" },
+  closed:    { label:"Completed",           tone:"done" },
+  declined:  { label:"Declined",            tone:"off" },
+  cancelled: { label:"Cancelled",           tone:"off" },
+  expired:   { label:"No reply",            tone:"off" }
+};
+
+let chatSide = "customer";    /* customer | worker */
+let chatCode = null, chatToken = null, chatAfter = 0, chatTimer = null, chatThread = null;
+let chatBackTo = "home";
+
+async function openChat(code, side, backTo){
+  chatSide  = side || "customer";
+  chatCode  = code;
+  chatAfter = 0;
+  chatBackTo = backTo || (chatSide === "worker" ? "inbox" : "mine");
+  const mine = myBooking(code);
+  chatToken = mine ? mine.token : null;
+  if(chatSide === "customer" && !chatToken){ toast("That conversation is not on this device"); return; }
+  $("chatLog").innerHTML = '<div class="skeleton"></div>';
+  $("chatActions").innerHTML = "";
+  go("chat");
+  await refreshChat(true);
+  startChatPolling();
+}
+function leaveChat(){
+  stopChatPolling();
+  go(chatBackTo);
+}
+function startChatPolling(){
+  stopChatPolling();
+  /* four seconds while the screen is in front of somebody, and nothing at all
+     when it is not — a phone in a pocket should not be polling a database */
+  chatTimer = setInterval(() => {
+    if(document.hidden || currentScreen !== "chat") return;
+    refreshChat(false);
+  }, 4000);
+}
+function stopChatPolling(){ clearInterval(chatTimer); chatTimer = null; }
+
+async function refreshChat(full){
+  if(!chatCode) return;
+  try{
+    if(full || chatSide === "customer"){
+      if(chatSide === "customer"){
+        chatThread = await api.threadView(chatCode, chatToken);
+      }else{
+        const list = await api.workerThreads(session.phone, session.pin);
+        chatThread = list.find(t => t.code === chatCode) || chatThread;
+      }
+      if(chatThread) paintChatHead();
+    }
+    const rows = chatSide === "customer"
+      ? await api.threadMessages(chatCode, chatToken, chatAfter)
+      : await api.workerThreadMessages(session.phone, session.pin, chatCode, chatAfter);
+    if(rows && rows.length){
+      appendMessages(rows);
+      chatAfter = rows[rows.length - 1].id;
+      /* a new message can also mean the other side changed the status */
+      if(!full) refreshChatHead();
+    }
+  }catch(e){
+    if(full) $("chatLog").innerHTML = `<div class="empty"><b>Could not open this conversation</b>${esc(e.message||"")}</div>`;
+  }
+}
+async function refreshChatHead(){
+  try{
+    if(chatSide === "customer") chatThread = await api.threadView(chatCode, chatToken);
+    else{
+      const list = await api.workerThreads(session.phone, session.pin);
+      chatThread = list.find(t => t.code === chatCode) || chatThread;
+    }
+    paintChatHead();
+  }catch(e){}
+}
+
+function paintChatHead(){
+  const t = chatThread; if(!t) return;
+  const st = THREAD_STATE[t.status] || THREAD_STATE.requested;
+  $("chatTitle").textContent = chatSide === "customer" ? (t.worker_name || "Worker") : (t.customer_name || "Customer");
+  $("chatSub").textContent = [t.skill, t.detail].filter(Boolean).join(" · ");
+  const badge = $("chatState");
+  badge.textContent = st.label;
+  badge.className = "chat-state " + st.tone;
+  $("chatActions").innerHTML = chatActions(t);
+  $("chatInput").disabled = ["declined","cancelled","closed","expired"].includes(t.status);
+  $("chatSend").disabled = $("chatInput").disabled;
+  $("chatInput").placeholder = $("chatInput").disabled
+    ? "This conversation is closed" : "Write a message…";
+}
+
+function chatActions(t){
+  const money0 = t.price ? `${money(t.price)} ${esc(t.unit||"")}` : "";
+  const rate = money0 ? `<span class="chat-rate">Listed at ${money0}</span>` : "";
+  if(chatSide === "worker"){
+    if(t.status === "requested") return rate + `
+      <button class="btn btn-brand btn-sm" onclick="workerThread('accepted')">Accept this job</button>
+      <button class="btn btn-outline btn-sm" onclick="workerDecline()">Can't take it</button>`;
+    if(t.status === "accepted") return rate + `
+      <button class="btn btn-brand btn-sm" onclick="workerThread('working')">I've started</button>
+      ${t.customer_phone ? callBtn(t.customer_phone) : ""}`;
+    if(t.status === "working") return rate + `
+      <button class="btn btn-brand btn-sm" onclick="workerThread('done')">Mark finished</button>
+      ${t.customer_phone ? callBtn(t.customer_phone) : ""}`;
+    if(t.status === "done") return `<span class="chat-note">Waiting for ${esc((t.customer_name||"the customer").split(" ")[0])} to confirm.</span>`;
+    return "";
+  }
+  /* customer */
+  if(t.status === "requested") return rate + `
+    <span class="chat-note">${esc((t.worker_name||"They").split(" ")[0])} has been told. You'll see the reply here.</span>
+    <button class="btn btn-outline btn-sm" onclick="customerThread('cancelled')">Cancel</button>`;
+  if(t.status === "accepted" || t.status === "working") return rate + `
+    ${t.worker_phone ? callBtn(t.worker_phone) : ""}
+    <button class="btn btn-outline btn-sm" onclick="customerThread('cancelled')">Cancel</button>`;
+  if(t.status === "done") return rate + `
+    <button class="btn btn-brand btn-sm" onclick="customerThread('closed')">Yes, it's finished</button>`;
+  if(t.status === "closed" && !t.reviewed) return `
+    <button class="btn btn-brand btn-sm" onclick="openReview()">Leave a review</button>`;
+  if(t.status === "closed") return `<span class="chat-note">Completed. Thank you for the review.</span>`;
+  if(t.status === "declined") return `<span class="chat-note">${esc(t.decline_reason || "They could not take this one.")}</span>
+    <button class="btn btn-outline btn-sm" onclick="go('hire')">Find someone else</button>`;
+  return "";
+}
+/* A phone call stays available once a job is on — the app is the place the
+   work happens, not a reason to be unreachable when somebody is at the gate. */
+const callBtn = num => `<a class="btn btn-outline btn-sm" href="tel:+91${esc(num)}">Call</a>`;
+
+function appendMessages(rows){
+  const log = $("chatLog");
+  if(!log.dataset.ready){ log.innerHTML = ""; log.dataset.ready = "1"; }
+  const nearBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 90;
+  log.insertAdjacentHTML("beforeend", rows.map(m => {
+    const t = new Date(m.created_at).toLocaleTimeString("en-IN", {hour:"numeric", minute:"2-digit"});
+    if(m.sender === "system") return `<div class="msg-system">${esc(m.body)}</div>`;
+    const own = m.sender === chatSide;
+    return `<div class="msg ${own ? "own" : "them"}"><span>${esc(m.body)}</span><i>${esc(t)}</i></div>`;
+  }).join(""));
+  if(nearBottom) log.scrollTop = log.scrollHeight;
+}
+
+async function sendChat(e){
+  e.preventDefault();
+  const box = $("chatInput");
+  const body = box.value.trim();
+  if(!body) return;
+  box.value = "";
+  try{
+    if(chatSide === "customer") await api.postMessage(chatCode, chatToken, body);
+    else await api.workerPostMessage(session.phone, session.pin, chatCode, body);
+    await refreshChat(false);
+  }catch(err){ box.value = body; toast(err.message || "Message not sent"); }
+}
+
+async function workerThread(status, reason){
+  try{
+    await api.workerSetThread(session.phone, session.pin, chatCode, status, reason);
+    await refreshChat(false);
+    await refreshChatHead();
+    toast({accepted:"Job accepted", working:"Marked as started", done:"Marked finished",
+           declined:"Request declined"}[status] || "Updated");
+  }catch(e){ toast(e.message); }
+}
+function workerDecline(){
+  const why = prompt("Why can't you take this one?\nThe customer sees this, so keep it short and clear.");
+  if(why === null) return;
+  workerThread("declined", why.trim());
+}
+async function customerThread(status){
+  if(status === "cancelled" && !confirm("Cancel this request?")) return;
+  try{
+    await api.customerSetThread(chatCode, chatToken, status);
+    await refreshChat(false);
+    await refreshChatHead();
+    if(status === "closed"){ toast("Thank you — how did it go?"); openReview(); }
+    else toast("Request cancelled");
+  }catch(e){ toast(e.message); }
+}
+
+/* ---------- the review, written once the job is actually finished ---------- */
+let reviewStars = 0;
+const STAR_WORD = ["Tap to rate","Poor","Not good","Fine","Good","Excellent"];
+function openReview(){
+  const t = chatThread; if(!t) return;
+  reviewStars = 0;
+  $("reviewWho").textContent = `${t.worker_name || "Worker"} · ${t.skill || ""}`;
+  $("reviewText").value = "";
+  setReviewStars(0);
+  openModal("reviewOverlay");
+}
+function setReviewStars(n){
+  reviewStars = n;
+  document.querySelectorAll("#reviewStars span").forEach(s => s.classList.toggle("lit", +s.dataset.s <= n));
+  $("reviewWord").textContent = STAR_WORD[n] || STAR_WORD[0];
+}
+async function sendReview(){
+  if(!reviewStars){ toast("Tap the stars to rate from 1 to 5"); return; }
+  const btn = $("reviewSendBtn"); btn.disabled = true; btn.textContent = "Posting…";
+  try{
+    await api.reviewThread(chatCode, chatToken, reviewStars, $("reviewText").value.trim());
+    closeModal("reviewOverlay");
+    toast("Review posted — thank you");
+    await refreshChatHead();
+  }catch(e){ toast(e.message); }
+  btn.disabled = false; btn.textContent = "Post review";
+}
+
+/* ---------- the worker's inbox ---------- */
+let inboxTab = "open";
+async function renderInbox(){
+  const host = $("inboxCard");
+  host.innerHTML = '<div class="skeleton"></div>';
+  let list = [], stats = null;
+  try{
+    [list, stats] = await Promise.all([
+      api.workerThreads(session.phone, session.pin),
+      api.workerStats(session.phone, session.pin)
+    ]);
+  }catch(e){ host.innerHTML = `<p class="hint">Could not load your work — ${esc(e.message||"")}</p>`; return; }
+
+  const groups = {
+    open: list.filter(t => ["requested","accepted","working","done"].includes(t.status)),
+    done: list.filter(t => t.status === "closed"),
+    other: list.filter(t => ["declined","cancelled","expired"].includes(t.status))
+  };
+  const rows = groups[inboxTab] || [];
+  const tab = (k, label, n) =>
+    `<button class="tab${inboxTab===k?" on":""}" onclick="inboxTab='${k}';renderInbox()">${label}${n?` <i>${n}</i>`:""}</button>`;
+
+  host.innerHTML = `
+    <h2>My work</h2>
+    ${stats ? statsStrip(stats) : ""}
+    <div class="tabs three">
+      ${tab("open","Active", groups.open.length)}
+      ${tab("done","Completed", groups.done.length)}
+      ${tab("other","Closed", groups.other.length)}
+    </div>
+    ${rows.length ? rows.map(threadRow).join("")
+      : `<div class="empty" style="margin:14px 0 0"><b>Nothing here yet</b>${
+          inboxTab === "open"
+            ? "New requests land here the moment a customer sends one."
+            : "Finished jobs will show up here."}</div>`}`;
+}
+function statsStrip(s){
+  const cell = (n, label) => `<div class="stat"><b>${n}</b><span>${label}</span></div>`;
+  return `<div class="stat-strip">
+    ${cell(s.requested || 0, "requests")}
+    ${cell(s.accepted || 0, "accepted")}
+    ${cell(s.completed || 0, "completed")}
+    ${cell(s.avg_stars ? s.avg_stars + "★" : "—", s.reviews ? s.reviews + (s.reviews === 1 ? " review" : " reviews") : "no reviews")}
+  </div>
+  ${s.response_rate != null ? `<p class="stat-note">You reply to <b>${s.response_rate}%</b> of requests${
+      s.listed_value ? ` · ${money(s.listed_value)} of finished work at your listed rates` : ""}.</p>` : ""}`;
+}
+function threadRow(t){
+  const st = THREAD_STATE[t.status] || THREAD_STATE.requested;
+  const when = new Date(t.last_message_at || t.created_at);
+  const ago = timeAgo(when);
+  return `<button class="thread-row${t.unread ? " unread" : ""}" onclick="openChat('${jsq(t.code)}','worker','inbox')">
+    <span class="tr-main">
+      <b>${esc(t.customer_name || "Customer")}${t.unread ? `<i class="dot-n">${t.unread}</i>` : ""}</b>
+      <span class="tr-skill">${esc(t.skill)}${t.customer_area ? " · " + esc(t.customer_area) : ""}</span>
+      <span class="tr-prev">${esc(t.preview || t.detail || "")}</span>
+    </span>
+    <span class="tr-side">
+      <span class="chat-state ${st.tone}">${st.label}</span>
+      <i>${esc(ago)}</i>
+    </span>
+  </button>`;
+}
+function timeAgo(d){
+  const s = Math.max(0, (Date.now() - d.getTime()) / 1000);
+  if(s < 60) return "just now";
+  if(s < 3600) return Math.floor(s/60) + " min";
+  if(s < 86400) return Math.floor(s/3600) + " hr";
+  if(s < 604800) return Math.floor(s/86400) + "d";
+  return d.toLocaleDateString("en-IN", {day:"numeric", month:"short"});
+}
+
+/* ---------- the customer's bookings ---------- */
+async function renderMine(){
+  const host = $("mineCard");
+  const saved = myBookings();
+  if(!saved.length){
+    host.innerHTML = `<h2>My bookings</h2>
+      <div class="empty" style="margin:14px 0 0"><b>No bookings yet</b>
+        Once you request someone, the conversation lives here.</div>
+      <button class="btn btn-brand btn-block" style="margin-top:16px" onclick="go('hire')">Find a worker</button>`;
+    return;
+  }
+  host.innerHTML = `<h2>My bookings</h2><div class="skeleton"></div>`;
+  const views = await Promise.all(saved.map(async b => {
+    try{ const v = await api.threadView(b.code, b.token); return v ? {...v, token:b.token} : null; }
+    catch(e){ return null; }
+  }));
+  const live = views.filter(Boolean);
+  if(!live.length){
+    host.innerHTML = `<h2>My bookings</h2>
+      <div class="empty" style="margin:14px 0 0"><b>Nothing to show</b>
+        These bookings are no longer available.</div>`;
+    return;
+  }
+  host.innerHTML = `<h2>My bookings</h2>` + live.map(t => {
+    const st = THREAD_STATE[t.status] || THREAD_STATE.requested;
+    return `<button class="thread-row${t.unread ? " unread" : ""}" onclick="openChat('${jsq(t.code)}','customer','mine')">
+      <span class="tr-main">
+        <b>${esc(t.worker_name || "Worker")}${t.unread ? `<i class="dot-n">${t.unread}</i>` : ""}</b>
+        <span class="tr-skill">${esc(t.skill)}${t.detail ? " · " + esc(t.detail) : ""}</span>
+        ${t.status === "closed" && !t.reviewed ? `<span class="tr-prev">Leave a review</span>` : ""}
+      </span>
+      <span class="tr-side">
+        <span class="chat-state ${st.tone}">${st.label}</span>
+        <i>${esc(timeAgo(new Date(t.created_at)))}</i>
+      </span>
+    </button>`;
+  }).join("");
+}
 
 /* ---------- reporting a profile ----------
    A marketplace that sends strangers to people's homes needs somewhere to say
@@ -5177,6 +6024,63 @@ document.addEventListener("keydown", e => {
   if(e.key === "Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id));
 });
 
+/* ---------- keeping the profile honest about itself ----------
+   The worker's own copy of their profile was only ever refreshed on a cold
+   start. A phone keeps a standalone app alive for days, so somebody could be
+   approved on Monday and still be looking at "under review" on Thursday —
+   the only way to see the truth was to clear the app's data. Now it
+   re-checks whenever the app comes back to the front, and while a profile is
+   waiting it also polls, so approval lands on the screen the worker is
+   already looking at. */
+let statusTimer = null;
+async function refreshMe(announce){
+  if(!(session && session.registered)) return;
+  let fresh;
+  try{ fresh = await api.login(session.phone, session.pin); }catch(e){ return; }
+  const was = statusOf(session.worker || {});
+  const now = statusOf(fresh);
+  session.worker = fresh;
+  saveSession();
+  if(currentScreen === "me") renderMe();
+  if(announce && was !== now){
+    if(now === "approved"){
+      toast("Your profile is approved — you're live on Repto");
+      celebrate();
+    }else if(now === "rejected"){
+      toast("Your profile needs a change — open your profile to see why");
+    }
+  }
+  return now;
+}
+function watchStatus(){
+  clearInterval(statusTimer);
+  if(!(session && session.registered)) return;
+  if(statusOf(session.worker || {}) !== "pending") return;
+  /* a minute is often enough to catch an approval while the worker waits,
+     and cheap enough that a thousand of them costs nothing */
+  statusTimer = setInterval(() => {
+    if(document.hidden) return;
+    refreshMe(true).then(st => { if(st && st !== "pending") clearInterval(statusTimer); });
+  }, 60000);
+}
+function celebrate(){
+  const host = document.createElement("div");
+  host.className = "cheer";
+  host.innerHTML = Array.from({length:18}, (_, i) =>
+    `<i style="left:${Math.round(4 + i * 5.4)}%;animation-delay:${(i % 6) * 90}ms"></i>`).join("");
+  document.body.appendChild(host);
+  setTimeout(() => host.remove(), 2600);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden) return;
+  refreshMe(true);
+  if(currentScreen === "inbox") renderInbox();
+  if(currentScreen === "mine") renderMine();
+  if(currentScreen === "chat") refreshChat(false);
+});
+window.addEventListener("focus", () => { if(!document.hidden) refreshMe(true); });
+
 function checkAdminHash(){
   if(location.hash.toLowerCase() === "#admin"){
     history.replaceState(null, "", location.pathname);
@@ -5204,6 +6108,7 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
   }
   if(session && session.registered){
     try{ session.worker = await api.login(session.phone, session.pin); saveSession(); }catch(e){}
+    watchStatus();
   }
   initHome();
   /* the entry in the history stack the app started on */
