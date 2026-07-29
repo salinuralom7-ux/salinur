@@ -391,24 +391,33 @@ const srv = http.createServer((req, res) => {
   console.log('Signed back in for deletion test:', await page.locator('#scr-me.on').count() === 1);
   console.log('Delete control present:', await page.locator('.danger-zone button').count() === 1);
 
-  // a wrong confirmation word must NOT delete
+  // leaving is a sheet now, not a spelling test in a browser prompt
   page.removeAllListeners('dialog');
-  page.on('dialog', d => d.type() === 'confirm' ? d.accept() : d.accept('nope'));
+  let strayDialogs = 0;
+  page.on('dialog', d => { strayDialogs++; d.dismiss(); });
+
   await page.locator('.danger-zone button').click();
   await page.waitForTimeout(600);
-  console.log('Survives a mistyped confirmation:', await page.locator('#scr-me.on').count() === 1);
+  console.log('Leaving opens a sheet, not a prompt:', await page.locator('#leaveOverlay.open').count() === 1);
 
-  // cancelling the first dialog must NOT delete
-  page.removeAllListeners('dialog');
-  page.on('dialog', d => d.dismiss());
-  await page.locator('.danger-zone button').click();
-  await page.waitForTimeout(600);
-  console.log('Survives cancelling:', await page.locator('#scr-me.on').count() === 1);
+  // backing out must NOT delete
+  await page.locator('#leaveStep1 .btn-quiet').click();
+  await page.waitForTimeout(500);
+  console.log('Survives backing out:', await page.locator('#scr-me.on').count() === 1);
 
-  page.removeAllListeners('dialog');
-  page.on('dialog', d => d.type() === 'confirm' ? d.accept() : d.accept('DELETE'));
   await page.locator('.danger-zone button').click();
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(400);
+  await page.locator('#leaveStep1 .btn-danger').click();
+  await page.waitForTimeout(500);
+  console.log('Asks why before it lets you go:', await page.locator('.leave-reason').count() >= 6);
+  await page.locator('.leave-reason').first().click();
+  await page.locator('#leaveGoBtn').click();
+  await page.waitForTimeout(1100);
+  console.log('Says goodbye kindly:',
+    (await page.locator('#leaveStep3').innerText()).toLowerCase().includes('sad to see you go'));
+  console.log('No browser prompts anywhere in leaving:', strayDialogs === 0);
+  await page.locator('#leaveStep3 .btn-brand').click();
+  await page.waitForTimeout(700);
   console.log('Deleted and returned home:', await page.locator('#scr-home.on').count() === 1);
   console.log('Profile really gone from store:', await page.evaluate(
     () => !JSON.parse(localStorage.getItem('nearse_workers_v1')).some(w => w.phone === '9435012345')));

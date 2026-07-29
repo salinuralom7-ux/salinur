@@ -1004,6 +1004,30 @@ header{
 .remote-tag::before{content:"◍ ";opacity:.8}
 .chat-nudge{padding:8px 14px;font-size:.82rem}
 
+.leave-list{margin:12px 0 0;padding-left:18px}
+.leave-list li{font-size:.85rem;color:var(--ink-2);line-height:1.7}
+.leave-reasons{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+.leave-reason{
+  text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:11px 13px;font-size:.86rem;color:var(--ink-2);line-height:1.4;
+}
+.leave-reason:hover{border-color:var(--line-strong)}
+.leave-reason.on{border-color:var(--brand);background:var(--brand-soft);color:var(--ink);font-weight:600}
+
+.exits{
+  border:1px solid var(--line-strong);background:var(--surface);border-radius:var(--r);
+  padding:15px 16px;margin:16px 0 4px;
+}
+.exits > b{display:block;font-size:.92rem;margin-bottom:11px}
+.exits > b span{font-weight:400;color:var(--muted);font-size:.78rem}
+.exit-row{display:flex;align-items:center;gap:10px;padding:4px 0}
+.ex-bar{flex:0 0 64px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.ex-bar i{display:block;height:100%;background:var(--brand);border-radius:3px}
+.ex-label{flex:1;min-width:0;font-size:.8rem;color:var(--ink-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-n{flex:0 0 auto;font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.exit-note{display:block;margin-top:10px;font-size:.74rem;color:var(--muted);line-height:1.5}
+
 /* ---------- conversations ---------- */
 .chat-shell{
   position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);z-index:60;
@@ -2277,6 +2301,46 @@ footer a:hover{color:var(--brand)}
   </div>
 </div>
 
+<div class="overlay" id="leaveOverlay" onclick="if(event.target===this)closeModal('leaveOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('leaveOverlay')" aria-label="Close">✕</button>
+
+    <div id="leaveStep1">
+      <h3>Delete your Repto profile?</h3>
+      <p class="sub">This removes it for good. It cannot be undone.</p>
+      <ul class="leave-list">
+        <li>Your name, photo, rates and contact details</li>
+        <li>Your conversations and your ID card</li>
+        <li>The reviews customers left for you</li>
+      </ul>
+      <p class="hint">Customers will stop finding you straight away.</p>
+      <button class="btn btn-danger btn-block" onclick="leaveStep(2)" style="padding:14px;margin-top:16px">Yes, delete my profile</button>
+      <button class="btn btn-quiet btn-block btn-sm" style="margin-top:9px" onclick="closeModal('leaveOverlay')">Keep my profile</button>
+    </div>
+
+    <div id="leaveStep2" hidden>
+      <h3>Before you go</h3>
+      <p class="sub">What made you decide to leave? It is the only way we find out what is wrong.</p>
+      <div class="leave-reasons" id="leaveReasons"></div>
+      <div class="field" style="margin-top:12px">
+        <label for="leaveNote">Anything else? <span class="sublabel">— optional</span></label>
+        <textarea id="leaveNote" rows="3" maxlength="800" placeholder="Tell us what happened. We read all of these."></textarea>
+      </div>
+      <button class="btn btn-danger btn-block" id="leaveGoBtn" onclick="confirmLeave()" style="padding:14px">Delete my profile</button>
+      <button class="btn btn-quiet btn-block btn-sm" style="margin-top:9px" onclick="closeModal('leaveOverlay')">Cancel</button>
+    </div>
+
+    <div id="leaveStep3" hidden>
+      <div class="done-mark" aria-hidden="true" style="background:var(--surface-2);color:var(--brand-2)">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13.5s1.4 1.6 4 1.6 4-1.6 4-1.6"/><path d="M9 9h.01M15 9h.01"/><circle cx="12" cy="12" r="9.2"/></svg>
+      </div>
+      <h3>Sad to see you go</h3>
+      <p class="sub">Your profile and everything on it has been deleted. You can always register again — nothing is held against you, and you would start fresh.</p>
+      <button class="btn btn-brand btn-block" style="padding:14px;margin-top:16px" onclick="hideModal('leaveOverlay');go('home')">Back to Repto</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="reviewOverlay" onclick="if(event.target===this)closeModal('reviewOverlay')">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="closeModal('reviewOverlay')" aria-label="Close">✕</button>
@@ -3281,11 +3345,23 @@ const api = {
       worker_name:w.name, worker_phone:w.phone, reason, details:details||null, contact:contact||null});
     localStorage.setItem("nearse_reports_v1", JSON.stringify(list));
   },
-  async remove(phone, pin){
+  async remove(phone, pin, reason, note){
+    if(!LIVE && reason){
+      try{
+        const list = JSON.parse(localStorage.getItem("repto_exits_v1") || "[]");
+        const hit = list.find(x => x.reason === reason);
+        if(hit) hit.people++; else list.push({reason, people:1, share:0});
+        const tot = list.reduce((a,x)=>a+x.people, 0);
+        list.forEach(x => x.share = Math.round(100 * x.people / tot));
+        localStorage.setItem("repto_exits_v1", JSON.stringify(list));
+      }catch(e){}
+    }
     if(LIVE){
-      const gone = await sb("rpc/delete_worker", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})});
-      if(gone !== true) throw new Error("Wrong phone number or PIN");
-      return true;
+      const rows = await sb("rpc/delete_worker", {method:"POST", body:JSON.stringify({
+        p_phone:phone, p_pin:pin, p_reason:reason || null, p_note:note || null })});
+      const r = Array.isArray(rows) ? rows[0] : rows;
+      if(!r || r.deleted !== true) throw new Error("Wrong phone number or PIN");
+      return r;
     }
     const all = demoAll();
     const i = all.findIndex(x => x.phone === phone && x.pin === pin);
@@ -4600,19 +4676,76 @@ async function loadMeSummary(){
     badge.textContent = s.unread || "";
   }
 }
-async function deleteProfile(){
+/* Leaving used to mean confirm(), then typing the word DELETE into a
+   prompt(). Nobody should have to prove their spelling to leave. It asks
+   once, asks why, and says goodbye properly — and the answers are the only
+   honest signal about what is wrong with the app. */
+const LEAVE_REASONS = [
+  "I am not getting enough bookings",
+  "I found work somewhere else",
+  "Customers ask but never confirm",
+  "The app is confusing to use",
+  "I do not want my details online",
+  "Something went wrong with a customer",
+  "I am taking a break — may come back",
+  "Another reason"
+];
+let leaveReason = "";
+function deleteProfile(){
   if(!session || !session.registered) return;
-  if(!confirm("Delete your Repto profile?\n\nYour photo, rates and contact details are removed for good. Customers will no longer find you. This cannot be undone.")) return;
-  const typed = prompt("To confirm, type DELETE");
-  if(typed === null) return;
-  if(typed.trim().toUpperCase() !== "DELETE"){ toast("Not deleted — the word didn't match"); return; }
+  leaveReason = "";
+  $("leaveStep1").hidden = false;
+  $("leaveStep2").hidden = true;
+  $("leaveStep3").hidden = true;
+  $("leaveNote").value = "";
+  $("leaveReasons").innerHTML = LEAVE_REASONS.map((r,i)=>
+    `<button type="button" class="leave-reason" data-r="${i}" onclick="pickLeaveReason(${i})">${esc(r)}</button>`).join("");
+  openModal("leaveOverlay");
+}
+function leaveStep(n){
+  $("leaveStep1").hidden = n !== 1;
+  $("leaveStep2").hidden = n !== 2;
+  $("leaveStep3").hidden = n !== 3;
+}
+function pickLeaveReason(i){
+  leaveReason = LEAVE_REASONS[i];
+  document.querySelectorAll(".leave-reason").forEach(b => b.classList.toggle("on", +b.dataset.r === i));
+}
+async function confirmLeave(){
+  const btn = $("leaveGoBtn"); btn.disabled = true; btn.textContent = "Deleting…";
+  /* held before the row goes, because that is what tells us which files to
+     remove afterwards */
+  const w = (session && session.worker) || {};
+  const media = [w.selfie, w.thumb].filter(Boolean);
   try{
-    await api.remove(session.phone, session.pin);
+    const res = await api.remove(session.phone, session.pin, leaveReason, $("leaveNote").value.trim());
+    await removeStoredPhotos((res && res.media && res.media.length) ? res.media : media);
+    if(session && session.token) api.signOutToken(session.token);
+    clearInterval(pendingTimer); clearInterval(statusTimer);
     session = null;
     try{ localStorage.removeItem(SSTORE); }catch(e){}
-    toast("Your profile has been deleted");
-    go("home");
-  }catch(e){ toast(e.message); }
+    leaveStep(3);
+  }catch(e){ toast(e.message || "Could not delete just now"); }
+  btn.disabled = false; btn.textContent = "Delete my profile";
+}
+/* Supabase refuses a direct delete on storage.objects — it insists on the
+   storage API, which is why doing it in SQL took the whole function down.
+   The rows are queued server-side and removed here; a narrow policy allows
+   exactly the queued paths and nothing else. */
+async function removeStoredPhotos(list){
+  if(!LIVE || !list || !list.length) return;
+  for(const item of list){
+    const name = /^https?:/i.test(item)
+      ? (item.split("/object/public/" + SELFIE_BUCKET + "/")[1] || "")
+      : item;
+    if(!name) continue;
+    try{
+      await fetch(`${SUPABASE_URL}/storage/v1/object/${SELFIE_BUCKET}/${name}`, {
+        method: "DELETE",
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+      });
+    }catch(e){ /* the nightly sweep catches whatever a closed tab missed */ }
+  }
 }
 /* ---------- the worker's side of instant jobs ---------- */
 const workerModes = w => new Set((w.skills||[]).map(s => modeOf(s.skill)));
@@ -6420,6 +6553,13 @@ function demoStats(){
   };
 }
 
+async function loadExits(){
+  try{
+    if(LIVE) return await sb("rpc/admin_exit_reasons", {method:"POST",
+      body:JSON.stringify({p_pin:adminPin, p_days:90})}) || [];
+    return JSON.parse(localStorage.getItem("repto_exits_v1") || "[]");
+  }catch(e){ return []; }
+}
 async function loadReports(){
   try{
     if(LIVE) return await sb("rpc/admin_reports", {method:"POST", body:JSON.stringify({p_pin:adminPin})}) || [];
@@ -6472,6 +6612,7 @@ async function renderAdmin(){
   catch(e){ host.innerHTML = tabs + `<p class="hint">Could not load profiles — ${esc(e.message||"")}</p>` + exit; return; }
   await loadWaCodes();
   const reports = await loadReports();
+  const exits = await loadExits();
   const pending  = all.filter(w => statusOf(w) === "pending");
   const approved = all.filter(w => statusOf(w) === "approved");
   const rejected = all.filter(w => statusOf(w) === "rejected");
@@ -6491,6 +6632,15 @@ async function renderAdmin(){
           <span>${new Date(r.created_at).toLocaleString("en-IN")}</span></div>
         <button class="btn btn-quiet btn-sm" onclick="clearReport(${Number(r.id)})">Done</button>
       </div>`).join("")}
+    </div>` : ""}
+    ${exits.length ? `<div class="exits">
+      <b>Why people left <span>· last 90 days</span></b>
+      ${exits.map(e => `<div class="exit-row">
+        <span class="ex-bar"><i style="width:${Math.max(4, Number(e.share)||0)}%"></i></span>
+        <span class="ex-label">${esc(e.reason)}</span>
+        <span class="ex-n">${e.people}${e.share ? ` · ${e.share}%` : ""}</span>
+      </div>`).join("")}
+      <span class="exit-note">Nothing here identifies anybody. It is the reason, the trade and how long they stayed.</span>
     </div>` : ""}
     ${pending.length ? `<div class="bulk">
       <b>Approve in bulk</b>

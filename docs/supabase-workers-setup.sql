@@ -4534,3 +4534,184 @@ begin
   return coalesce(n, 0);
 end;
 $$;
+
+-- ============================================================
+-- MIGRATION 19 — leaving properly
+--
+-- Two things were wrong with deleting a profile.
+--
+-- The serious one: delete_worker removed the photo with a direct
+--   delete from storage.objects
+-- and Supabase forbids that — a trigger raises "direct deletion from storage
+-- tables is not allowed, use the storage API instead". The raise took the
+-- whole function down, so nobody could delete their profile at all. The
+-- right to erasure and the Play Store requirement were both broken in
+-- production while the tests passed, because a plain Postgres has no storage
+-- schema and the guarded block simply skipped.
+--
+-- Photo paths are now queued for removal instead, and a narrowly scoped
+-- policy lets the API delete exactly those and nothing else: an object
+-- becomes deletable only once its owner has already gone.
+--
+-- The second: people were made to type DELETE. Nobody is asked to prove
+-- their spelling to leave a shop. We ask once, and we ask why — the answers
+-- are the only honest signal about what is wrong with the app.
+-- ============================================================
+
+create table if not exists public.deleted_media (
+  path      text primary key,
+  queued_at timestamptz not null default now()
+);
+alter table public.deleted_media enable row level security;
+-- readable so the storage policy below can consult it; it holds nothing but
+-- the filenames of photos already orphaned
+drop policy if exists "orphan list is readable" on public.deleted_media;
+create policy "orphan list is readable" on public.deleted_media for select using (true);
+
+do $$
+begin
+  if exists (select 1 from information_schema.schemata where schema_name = 'storage') then
+    execute 'drop policy if exists "orphaned selfies may be removed" on storage.objects';
+    execute $p$create policy "orphaned selfies may be removed"
+      on storage.objects for delete
+      using (bucket_id = 'selfies'
+             and exists (select 1 from public.deleted_media m where m.path = storage.objects.name))$p$;
+  end if;
+end $$;
+
+-- why people leave. No name, no number: this is for learning what is broken,
+-- not for chasing anybody who left.
+create table if not exists public.exit_reasons (
+  id         bigserial primary key,
+  created_at timestamptz not null default now(),
+  reason     text not null,
+  note       text,
+  city       text,
+  trades     text,
+  days_here  int,
+  jobs_done  int
+);
+alter table public.exit_reasons enable row level security;   -- no policies
+
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on public.exit_reasons from %I', r);
+      execute format('revoke all on sequence public.exit_reasons_id_seq from %I', r);
+    end if;
+  end loop;
+end $$;
+
+drop function if exists public.delete_worker(text, text);
+drop function if exists public.delete_worker(text, text, text, text);
+
+create function public.delete_worker(p_phone text, p_pin text,
+                                     p_reason text default null, p_note text default null)
+returns table (deleted boolean, media text[])
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; urls text[]; paths text[] := '{}'; u text; obj text; w record;
+begin
+  wid := public.worker_auth(p_phone, p_pin, null);
+  if wid is null then
+    return query select false, '{}'::text[];
+    return;
+  end if;
+
+  select * into w from workers where id = wid;
+  select array_remove(array[w.selfie, w.thumb], null) into urls;
+
+  foreach u in array coalesce(urls, '{}'::text[]) loop
+    obj := substring(u from '/object/public/selfies/(.+)$');
+    if obj is not null then
+      paths := paths || obj;
+      insert into deleted_media (path) values (obj) on conflict (path) do nothing;
+    end if;
+  end loop;
+
+  if nullif(btrim(coalesce(p_reason,'')),'') is not null then
+    insert into exit_reasons (reason, note, city, trades, days_here, jobs_done)
+    values (left(p_reason, 120), left(nullif(btrim(coalesce(p_note,'')),''), 800), w.city,
+            (select string_agg(s->>'skill', ', ') from jsonb_array_elements(coalesce(w.skills,'[]'::jsonb)) s),
+            greatest(0, extract(day from now() - w.created_at)::int),
+            (select count(*)::int from threads t where t.worker_id = wid and t.status = 'closed'));
+  end if;
+
+  delete from workers where id = wid;
+  return query select true, paths;
+end;
+$$;
+
+-- what the answers add up to, for the admin screen
+create or replace function public.admin_exit_reasons(p_pin text, p_days int default 90)
+returns table (reason text, people bigint, share numeric, last_seen timestamptz)
+language plpgsql security definer set search_path = public, extensions as $$
+declare total bigint;
+begin
+  if not public.admin_check(p_pin) then return; end if;
+  select count(*) into total from exit_reasons
+   where created_at > now() - make_interval(days => greatest(1, p_days));
+  return query
+    select e.reason, count(*),
+           case when total = 0 then 0 else round(100.0 * count(*) / total, 0) end,
+           max(e.created_at)
+      from exit_reasons e
+     where e.created_at > now() - make_interval(days => greatest(1, p_days))
+     group by e.reason
+     order by count(*) desc;
+end;
+$$;
+
+create or replace function public.admin_exit_notes(p_pin text, p_limit int default 40)
+returns table (created_at timestamptz, reason text, note text, trades text, days_here int)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then return; end if;
+  return query
+    select e.created_at, e.reason, e.note, e.trades, e.days_here
+      from exit_reasons e
+     where e.note is not null
+     order by e.created_at desc
+     limit greatest(1, least(p_limit, 200));
+end;
+$$;
+
+-- anything the browser could not finish removing is swept up here
+drop function if exists public.purge_expired_data();
+create function public.purge_expired_data()
+returns table (bookings_removed bigint, rejected_removed bigint, contacts_removed bigint,
+               jobs_removed bigint, threads_removed bigint, sessions_removed bigint,
+               media_pending bigint)
+language plpgsql security definer set search_path = public, extensions as $$
+declare b bigint; r bigint; c bigint; j bigint; t bigint; s bigint; mp bigint;
+begin
+  delete from bookings where created_at < now() - interval '12 months';
+  get diagnostics b = row_count;
+  delete from workers where status = 'rejected'
+     and coalesce(reviewed_at, created_at) < now() - interval '90 days';
+  get diagnostics r = row_count;
+  delete from contact_requests where created_at < now() - interval '90 days';
+  get diagnostics c = row_count;
+  delete from jobs where created_at < now() - interval '12 months';
+  get diagnostics j = row_count;
+  delete from threads where coalesce(closed_at, last_message_at) < now() - interval '12 months';
+  get diagnostics t = row_count;
+  delete from worker_sessions where expires_at < now();
+  get diagnostics s = row_count;
+  delete from auth_attempts where at < now() - interval '7 days';
+
+  -- a photo whose object is already gone leaves the queue too
+  if exists (select 1 from information_schema.schemata where schema_name = 'storage') then
+    execute 'delete from public.deleted_media m
+              where not exists (select 1 from storage.objects o
+                                 where o.bucket_id = ''selfies'' and o.name = m.path)';
+  end if;
+  select count(*) into mp from deleted_media;
+
+  update threads set status = 'expired'
+   where status = 'requested' and created_at < now() - interval '14 days';
+  return query select b, r, c, j, t, s, mp;
+end;
+$$;
+revoke all on function public.purge_expired_data() from public;
