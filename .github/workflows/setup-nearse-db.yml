@@ -154,7 +154,27 @@ jobs:
                 on pa.specific_name = r.specific_name
              where r.routine_schema='public' and r.routine_name='search_workers'
                and pa.parameter_mode='OUT' and pa.parameter_name='phone') as search_still_returns_phone,
-            (select count(*)::int from public.worker_reports where not handled) as open_reports
+            (select count(*)::int from public.worker_reports where not handled) as open_reports,
+            -- Deleting a profile: this is the one that was silently broken in
+            -- production. Supabase forbids a direct delete on storage.objects,
+            -- so any function still doing it takes the whole erasure down.
+            (select count(*)::int from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+              where n.nspname='public'
+                and p.prosrc ~* 'delete[[:space:]]+from[[:space:]]+storage') as fns_deleting_storage_directly,
+            (select count(*)::int from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+              where n.nspname='public' and p.proname='delete_worker') as delete_worker_overloads,
+            (select pg_get_function_identity_arguments(p.oid) from pg_proc p
+              join pg_namespace n on n.oid=p.pronamespace
+             where n.nspname='public' and p.proname='delete_worker' limit 1) as delete_worker_args,
+            (select count(*)::int from pg_policies
+              where schemaname='storage' and tablename='objects'
+                and cmd='DELETE') as storage_delete_policy,
+            (select count(*)::int from information_schema.tables
+              where table_schema='public' and table_name='deleted_media') as media_queue,
+            (select count(*)::int from information_schema.routines
+              where routine_schema='public'
+                and routine_name in ('worker_auth','worker_session_start','auth_guard',
+                                     'admin_session_start','verify_worker_id','start_thread')) as session_fns
           HSQL
           jq -Rs '{query: .}' /tmp/harden.sql > /tmp/h.json
           code=$(curl -sS -o /tmp/harden.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/h.json)
@@ -165,7 +185,15 @@ jobs:
             note "WARNING: the admin PIN is still the one published in this repo. See DEPLOY.md, Job 0."
           fi
           # these are failures: they mean the migration did not take
-          for bad in '"anon_can_read_phone":true' '"workers_policy_wide_open":1' '"search_still_returns_phone":1' '"old_unlimited_rate_fn":1'; do
+          # A profile that cannot be deleted breaks the right to erasure and the
+          # Play Store listing, and it failed silently once already.
+          if grep -q '"fns_deleting_storage_directly":0' /tmp/harden.json; then
+            note "OK: nothing deletes from storage.objects in SQL any more"
+          fi
+          if ! grep -q '"storage_delete_policy":1' /tmp/harden.json; then
+            note "WARNING: no DELETE policy on storage.objects — profiles still delete, photos wait for the nightly sweep"
+          fi
+          for bad in '"anon_can_read_phone":true' '"workers_policy_wide_open":1' '"search_still_returns_phone":1' '"old_unlimited_rate_fn":1' '"fns_deleting_storage_directly":1' '"delete_worker_overloads":0' '"media_queue":0'; do
             if grep -q "$bad" /tmp/harden.json; then
               note "ERROR: hardening not applied — $bad"; exit 1
             fi
