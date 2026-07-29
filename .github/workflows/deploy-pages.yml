@@ -1,4 +1,4 @@
-name: Deploy Budget Cars website
+name: Deploy nearse.in
 
 on:
   push:

@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nearse — Trusted Local Workers in Guwahati, Booked Directly</title>
-<meta name="description" content="Nearse connects you with verified local workers in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers, beauticians and more. Nearest first, rated by the community, priced by the workers themselves.">
-<meta name="keywords" content="Nearse, nearse.in, local workers near me, book maid cook electrician plumber, home services Guwahati, hire tutor driver Assam, find work near me">
+<title>Repto — Trusted Local Workers in Guwahati, Booked Directly</title>
+<meta name="description" content="Repto connects you with verified local workers in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers, beauticians and more. Nearest first, rated by the community, priced by the workers themselves.">
+<meta name="keywords" content="Repto, nearse.in, local workers near me, book maid cook electrician plumber, home services Guwahati, hire tutor driver Assam, find work near me">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://nearse.in/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Nearse">
-<meta property="og:title" content="Nearse — Trusted local workers, booked directly">
+<meta property="og:site_name" content="Repto">
+<meta property="og:title" content="Repto — Trusted local workers, booked directly">
 <meta property="og:description" content="Verified local workers near you. Nearest first, community rated, prices set by the workers.">
 <meta property="og:url" content="https://nearse.in/">
 <meta property="og:image" content="https://nearse.in/icons/icon-512.png?v=2">
-<meta property="og:image:alt" content="Nearse logo — a worker inside a location pin">
+<meta property="og:image:alt" content="Repto logo — a worker inside a location pin">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://nearse.in/icons/icon-512.png?v=2">
 <meta name="theme-color" content="#0C0A07">
@@ -22,7 +22,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Nearse">
+<meta name="apple-mobile-web-app-title" content="Repto">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=2">
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=2">
@@ -33,7 +33,7 @@
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "Nearse",
+  "name": "Repto",
   "url": "https://nearse.in/",
   "description": "Marketplace connecting customers with verified local skilled workers across India — home services, repairs, tutoring, care, events and professional work.",
   "potentialAction": {
@@ -45,7 +45,7 @@
 </script>
 <style>
 /* ==========================================================================
-   NEARSE — design system
+   REPTO — design system
    warm charcoal ground · gold brand sampled from the mark · sand type
    ========================================================================== */
 :root{
@@ -149,6 +149,9 @@ header{
   height:33px;width:auto;display:block;flex:0 0 auto;
 }
 .brand .name{font-weight:800;font-size:1.18rem;letter-spacing:-.03em}
+/* The wordmark is the drawn logo, not type: the R carries a gold slash that
+   no font gives us. Height drives it, width follows, so it never distorts. */
+.brand .wordmark{height:22px;width:auto;display:block;flex:0 0 auto}
 .header-link{font-size:.88rem;font-weight:600;color:var(--muted)}
 .install-btn{
   display:inline-flex;align-items:center;gap:7px;border:1px solid var(--brand);
@@ -737,6 +740,103 @@ header{
 }
 .bulk-row{display:flex;align-items:center;gap:12px;margin-top:11px;flex-wrap:wrap}
 .bulk-row .hint{margin:0}
+/* ---------- admin dashboard ---------- */
+.admin-tabs{margin-bottom:18px;display:grid;grid-template-columns:repeat(3,1fr)}
+.admin-tabs .tab{padding-left:6px;padding-right:6px;white-space:nowrap}
+/* the one thing on the dashboard that is a call to action, not a number */
+.todo-bar{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border:1px solid rgba(232,146,74,.45);background:rgba(232,146,74,.09);
+  border-radius:var(--r);padding:13px 15px;margin:14px 0 2px;text-align:left;color:var(--ink);
+}
+.todo-bar:hover{background:rgba(232,146,74,.15)}
+.todo-bar b{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--warn);margin-bottom:2px}
+.todo-bar span{font-size:.85rem;line-height:1.45}
+.todo-bar svg{flex:0 0 auto;color:var(--warn)}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0}
+.stat-grid.four{grid-template-columns:repeat(2,1fr)}
+@media(min-width:640px){
+  .stat-grid{grid-template-columns:repeat(4,1fr)}
+  .stat-grid.four{grid-template-columns:repeat(4,1fr)}
+}
+.stat{
+  border:1px solid var(--line);background:var(--surface);border-radius:var(--r);
+  padding:14px 15px;display:flex;flex-direction:column;gap:2px;
+}
+.stat b{font-size:1.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;color:var(--brand-2)}
+.stat span{font-size:.78rem;color:var(--muted);line-height:1.4}
+.stat i{font-style:normal;font-size:.72rem;color:var(--brand-quiet);margin-top:3px}
+.stat.warn{border-color:rgba(232,146,74,.45);background:rgba(232,146,74,.07)}
+.stat.warn b{color:var(--warn)}
+
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:6px 0 16px}
+/* Five columns have to fit a 390px phone. Inside the admin panel the usable
+   width is 300px, so no min-width here at all — a fixed layout divides what
+   there is, and the wrapper still scrolls if a number ever gets huge. */
+.stat-table{width:100%;border-collapse:collapse;font-size:.78rem;table-layout:fixed}
+.stat-table th:not(:first-child),
+.stat-table td:not(:first-child){width:16%}
+.stat-table th:first-child,
+.stat-table td:first-child{width:36%}
+@media(min-width:560px){.stat-table{font-size:.85rem}}
+.stat-table th{
+  text-align:right;font-size:.62rem;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--muted);font-weight:700;padding:0 0 9px;border-bottom:1px solid var(--line-strong);
+}
+.stat-table th:first-child{text-align:left}
+.stat-table td{padding:10px 0;text-align:right;border-bottom:1px solid var(--line);color:var(--ink)}
+.stat-table td:first-child{text-align:left;color:var(--ink-2);padding-right:10px}
+.stat-table td span{display:block;font-size:.72rem;color:var(--muted);line-height:1.4}
+.stat-table.act{min-width:640px}
+.stat-table.act td{text-align:left;font-size:.79rem;vertical-align:top;padding-right:10px}
+.pill{
+  display:inline-block;border-radius:999px;padding:2px 9px;font-size:.7rem;font-weight:700;
+  background:var(--surface-2);color:var(--brand-quiet);white-space:nowrap;
+}
+.pill.instant{background:rgba(234,187,81,.16);color:var(--brand-2)}
+.pill.appointment{background:rgba(79,201,141,.14);color:var(--ok)}
+
+.note-box{
+  border-left:3px solid var(--brand);background:var(--surface);border-radius:0 var(--r-sm) var(--r-sm) 0;
+  padding:13px 15px;margin:4px 0 18px;
+}
+.note-box b{display:block;font-size:.86rem;margin-bottom:5px}
+.note-box p{font-size:.8rem;color:var(--muted);line-height:1.6}
+.note-box b + p b{display:inline;color:var(--ink-2)}
+
+.chart{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:15px;margin-bottom:16px}
+.chart-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.chart-head b{font-size:.88rem}
+.chart-head span{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.chart-head i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.chart-head i.k1{background:var(--brand)}
+.chart-head i.k2{background:var(--brand-quiet);margin-left:8px}
+.bars{display:flex;align-items:flex-end;gap:4px;height:104px}
+.bar-col{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;position:relative;padding-bottom:15px}
+.bar-col .b{width:44%;min-height:2px;border-radius:2px 2px 0 0;display:block}
+.bar-col .b1{background:var(--brand)}
+.bar-col .b2{background:var(--brand-quiet);opacity:.55}
+.bar-col em{
+  position:absolute;bottom:0;left:0;right:0;text-align:center;
+  font-style:normal;font-size:.62rem;color:var(--muted);
+}
+
+.panel-sub{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:15px;margin-bottom:12px}
+.panel-sub > b{font-size:.88rem;display:block}
+.sub-note{display:block;font-size:.72rem;color:var(--muted);margin:2px 0 10px}
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:8px 0;border-bottom:1px solid var(--line)}
+.kv:last-of-type{border-bottom:0}
+.kv span{font-size:.81rem;color:var(--ink-2)}
+.kv b{font-size:.95rem;white-space:nowrap}
+.kv b small{font-weight:500;font-size:.72rem;color:var(--muted)}
+.warn-text{color:var(--warn)}
+.rank{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.82rem}
+.rank:last-child{border-bottom:0}
+.rank span{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank b{color:var(--brand-2)}
+.two-col{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:640px){.two-col{grid-template-columns:1fr 1fr}}
+
 .reports{
   border:1px solid rgba(232,112,127,.42);background:rgba(232,112,127,.07);
   border-radius:var(--r);padding:16px;margin:16px 0 4px;
@@ -1212,8 +1312,8 @@ footer a:hover{color:var(--brand)}
 
 <header>
   <div class="wrap masthead">
-    <a class="brand" href="#" onclick="go('home');return false" aria-label="Nearse home">
-      <img class="mark" src="icons/logo.png?v=2" alt="" width="26" height="33"><span class="name">Nearse</span>
+    <a class="brand" href="#" onclick="go('home');return false" aria-label="Repto home">
+      <img class="mark" src="icons/logo.png?v=2" alt="" width="26" height="33"><img class="wordmark" src="icons/wordmark.png?v=3" alt="Repto" width="447" height="132">
     </a>
     <div style="display:flex;align-items:center;gap:14px">
       <button class="install-btn" id="installBtn" onclick="installApp()" hidden>
@@ -1317,7 +1417,7 @@ footer a:hover{color:var(--brand)}
     </div>
 
     <div class="assure">
-      <span><i class="dot"></i>Every profile checked by a person</span>
+      <span><i class="dot"></i>Every profile verified before it goes live</span>
       <span><i class="dot"></i>Nearest to you first</span>
       <span><i class="dot"></i>Rates set by the worker</span>
       <span><i class="dot"></i>No commission</span>
@@ -1421,7 +1521,7 @@ footer a:hover{color:var(--brand)}
           Send my code on WhatsApp
         </a>
         <button class="btn btn-brand btn-block" id="waDoneBtn" onclick="waSent()" style="padding:14px;margin-top:10px" disabled>I’ve sent it</button>
-        <p class="hint" style="margin-top:12px">Goes to the Nearse number. We check it against the number you entered — that’s how we know it’s really you, and that bookings will reach you.</p>
+        <p class="hint" style="margin-top:12px">Goes to the Repto number. We check it against the number you entered — that’s how we know it’s really you, and that bookings will reach you.</p>
       </div>
 
       <!-- code-entry flow, used once an SMS/WhatsApp provider is connected -->
@@ -1568,7 +1668,7 @@ footer a:hover{color:var(--brand)}
       <div class="field">
         <label for="regCity">City</label>
         <input type="text" id="regCity" value="Guwahati" readonly aria-readonly="true" class="locked">
-        <p class="hint" style="margin-top:6px">Nearse is live in Guwahati first. More cities are coming soon.</p>
+        <p class="hint" style="margin-top:6px">Repto is live in Guwahati first. More cities are coming soon.</p>
       </div>
       <div class="field">
         <label for="regArea">Which locality are you in?</label>
@@ -1596,7 +1696,7 @@ footer a:hover{color:var(--brand)}
       <label class="consent-row">
         <input type="checkbox" id="consentPublish">
         <span>I want my <b>name, photo, services, rates, locality and WhatsApp number</b> shown publicly to
-          customers on Nearse, and I accept the
+          customers on Repto, and I accept the
           <a href="terms/" target="_blank" rel="noopener">terms of use</a> and
           <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>.</span>
       </label>
@@ -1604,7 +1704,7 @@ footer a:hover{color:var(--brand)}
         <input type="checkbox" id="consentAge">
         <span>I am <b>18 years or older</b>.</span>
       </label>
-      <p class="consent-note">You can withdraw this at any time by deleting your profile, which erases it from Nearse for good.</p>
+      <p class="consent-note">You can withdraw this at any time by deleting your profile, which erases it from Repto for good.</p>
     </div>
 
     <button class="btn btn-brand btn-block" id="regSaveBtn" onclick="saveProfile()" style="padding:14px;margin-top:6px">Publish my profile</button>
@@ -1658,11 +1758,11 @@ footer a:hover{color:var(--brand)}
     <div class="trust-strip">
       <div class="trust-item">
         <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
-        <div><b>Checked by us</b><span>Every profile is reviewed by the Nearse team before it goes live.</span></div>
+        <div><b>Verified by Repto</b><span>We check the photo, the details and the WhatsApp number before a profile goes live.</span></div>
       </div>
       <div class="trust-item">
         <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-        <div><b>Clear rates, no fees</b><span>Workers set their own price. Nearse charges no commission.</span></div>
+        <div><b>Clear rates, no fees</b><span>Workers set their own price. Repto charges no commission.</span></div>
       </div>
       <div class="trust-item">
         <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
@@ -1686,7 +1786,7 @@ footer a:hover{color:var(--brand)}
 <footer>
   <div class="wrap">
     <div class="foot-top">
-      <span>© <span id="year"></span> Nearse · Local services, done right</span>
+      <span>© <span id="year"></span> Repto · Local services, done right</span>
       <nav class="foot-links">
         <a href="about/">About us</a>
         <a href="privacy/">Privacy policy</a>
@@ -1724,11 +1824,8 @@ footer a:hover{color:var(--brand)}
       <div class="field full"><label for="nowArea">Where are you?</label><select id="nowArea"></select></div>
       <div class="field full"><label for="nowNote">What is the problem? <span class="sublabel">— optional</span></label><textarea id="nowNote" rows="2" placeholder="e.g. Two ceiling fans not working."></textarea></div>
     </div>
-    <div class="now-explain">
-      <b>We ask the nearest available worker first.</b>
-      <span>They have 60 seconds to accept. If they cannot come, we ask the next one, and the next — you do not have to chase anybody. You only see a name once somebody has actually said yes.</span>
-    </div>
-    <button class="btn btn-brand btn-block" id="nowGoBtn" onclick="startNowJob()" style="padding:14px">Find someone now</button>
+    <div class="now-explain" id="nowExplain"></div>
+    <button class="btn btn-brand btn-block" id="nowGoBtn" onclick="startNowJob()" style="padding:14px">Send the request</button>
   </div>
 </div>
 
@@ -1760,7 +1857,7 @@ footer a:hover{color:var(--brand)}
       <div class="field full"><label for="slotNote">Reason for the visit <span class="sublabel">— optional</span></label><textarea id="slotNote" rows="2" placeholder="e.g. Tooth pain on the left side."></textarea></div>
     </div>
     <button class="btn btn-brand btn-block" id="slotBookBtn" onclick="confirmSlot()" style="padding:14px">Confirm appointment</button>
-    <p class="hint" style="margin-top:11px;text-align:center">The time is held for you straight away. Nearse takes no commission.</p>
+    <p class="hint" style="margin-top:11px;text-align:center">The time is held for you straight away. Repto takes no commission.</p>
   </div>
 </div>
 
@@ -1795,7 +1892,7 @@ footer a:hover{color:var(--brand)}
 
     <div class="quote" id="bookQuote"></div>
     <button class="btn btn-brand btn-block" id="confirmBookBtn" onclick="confirmBooking()" style="padding:14px">Send request on WhatsApp</button>
-    <p class="hint" style="margin-top:11px;text-align:center">Goes straight to the worker. Nearse takes no commission.<br>
+    <p class="hint" style="margin-top:11px;text-align:center">Goes straight to the worker. Repto takes no commission.<br>
       Your name and number are shared with the worker so they can reply, and we keep a record of the request —
       see our <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>.
       Cancelling is free and done straight with the worker: <a href="cancellation/" target="_blank" rel="noopener">how that works</a>.</p>
@@ -1831,7 +1928,7 @@ footer a:hover{color:var(--brand)}
     <h3>Verification photo</h3>
     <p class="sub">Look straight at the camera, in good light, face inside the circle.</p>
     <div class="cam-stage"><video id="camVideo" autoplay playsinline muted></video><div class="cam-oval"></div></div>
-    <p class="cam-tip" id="camTip">Only a live photo is accepted — this is how we keep Nearse trustworthy.</p>
+    <p class="cam-tip" id="camTip">Only a live photo is accepted — this is how we keep Repto trustworthy.</p>
     <button class="btn btn-brand btn-block" id="camShot" onclick="captureFrame()" style="padding:14px">Capture photo</button>
   </div>
 </div>
@@ -1839,12 +1936,12 @@ footer a:hover{color:var(--brand)}
 <div class="overlay" id="iosOverlay" onclick="if(event.target===this)closeModal('iosOverlay')">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="closeModal('iosOverlay')" aria-label="Close">✕</button>
-    <h3>Install Nearse</h3>
-    <p class="sub">Add Nearse to your home screen — it opens like a normal app, full screen.</p>
+    <h3>Install Repto</h3>
+    <p class="sub">Add Repto to your home screen — it opens like a normal app, full screen.</p>
     <div class="ios-steps">
       <div class="ios-step"><span class="n">1</span><p>Tap the <b>Share</b> button at the bottom of Safari (the square with an arrow pointing up).</p></div>
       <div class="ios-step"><span class="n">2</span><p>Scroll down and tap <b>Add to Home Screen</b>.</p></div>
-      <div class="ios-step"><span class="n">3</span><p>Tap <b>Add</b>. The Nearse icon appears with your other apps.</p></div>
+      <div class="ios-step"><span class="n">3</span><p>Tap <b>Add</b>. The Repto icon appears with your other apps.</p></div>
     </div>
     <button class="btn btn-brand btn-block" onclick="closeModal('iosOverlay')" style="margin-top:8px">Got it</button>
   </div>
@@ -1854,7 +1951,7 @@ footer a:hover{color:var(--brand)}
 
 <script>
 /* =========================================================================
-   NEARSE — application
+   REPTO — application
    ========================================================================= */
 const SUPABASE_URL      = "https://mpufunsitqtdkqlibxof.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdWZ1bnNpdHF0ZGtxbGlieG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTAyNTksImV4cCI6MjA5ODkyNjI1OX0.iyYX1EFJwrdPWxXLTCHHm8cdmuO-roPIjjX4T-SU53E";
@@ -2238,7 +2335,7 @@ const MODE_LABEL = {
   hire:  { verb:"Send an enquiry", note:"Ongoing work — agreed between you" }
 };
 
-/* Trades where the law expects a registration number, and Nearse should not
+/* Trades where the law expects a registration number, and Repto should not
    publish a profile without one. A patient must be able to check the number
    against the council's own register — that is the whole point of it. */
 const COUNCILS = [
@@ -2490,10 +2587,19 @@ const api = {
     if(LIVE){
       const rows = await sb("rpc/create_job", {method:"POST", body:JSON.stringify({
         p_skill:o.skill, p_name:o.name, p_phone:o.phone, p_area:o.area,
-        p_note:o.note || null, p_lat:o.lat ?? null, p_lng:o.lng ?? null, p_city:CITY })});
+        p_note:o.note || null, p_lat:o.lat ?? null, p_lng:o.lng ?? null, p_city:CITY,
+        p_worker:o.workerId || null })});
       return Array.isArray(rows) ? rows[0] : rows;
     }
     return demoCreateJob(o);
+  },
+  /* only ever called because the customer asked for it */
+  async widenJob(code){
+    if(LIVE){
+      const rows = await sb("rpc/widen_job", {method:"POST", body:JSON.stringify({p_code:code})});
+      return Array.isArray(rows) ? rows[0] : rows;
+    }
+    return demoWidenJob(code);
   },
   async jobState(code){
     if(LIVE){
@@ -2585,7 +2691,17 @@ const api = {
     demoSave(all);
   },
   async book(rec){
-    if(LIVE){ try{ await sb("bookings", {method:"POST", body:JSON.stringify(rec), headers:{Prefer:"return=minimal"}}); }catch(e){ console.error(e); } }
+    if(LIVE){
+      try{ await sb("bookings", {method:"POST", body:JSON.stringify(rec), headers:{Prefer:"return=minimal"}}); }
+      catch(e){ console.error(e); }
+      return;
+    }
+    /* preview keeps them too, so the admin dashboard has something to show */
+    try{
+      const list = JSON.parse(localStorage.getItem("nearse_bookings_v1") || "[]");
+      list.unshift({...rec, id:Date.now(), created_at:new Date().toISOString()});
+      localStorage.setItem("nearse_bookings_v1", JSON.stringify(list.slice(0, 500)));
+    }catch(e){}
   }
 };
 
@@ -2640,34 +2756,55 @@ function demoRank(skill, lat, lng, asked){
     .map(x => x.w);
 }
 function demoOfferNext(j){
-  const next = demoRank(j.skill, j.lat, j.lng, j.asked)[0];
-  if(!next){ j.status = "nobody"; return null; }
+  /* a job that named somebody is theirs alone until the customer widens it */
+  const pool = demoRank(j.skill, j.lat, j.lng, j.asked)
+    .filter(w => !j.direct || w.id === j.requested);
+  const next = pool[0];
+  if(!next){ j.status = j.direct ? "no_answer" : "nobody"; return null; }
   j.asked.push(next.id);
   j.offer = { workerId: next.id, expires: Date.now() + OFFER_MS };
   return next;
 }
 function demoAdvance(j){
   if(j.status !== "searching") return j;
-  if(Date.now() > j.searchUntil){ j.status = "nobody"; return j; }
+  if(Date.now() > j.searchUntil){ j.status = j.direct ? "no_answer" : "nobody"; return j; }
   if(!j.offer || j.offer.expires <= Date.now()) demoOfferNext(j);
   return j;
 }
 function demoCreateJob(o){
   const list = jobsAll();
+  /* the named worker only counts if they actually offer this service */
+  const wanted = o.workerId && demoAll().find(w => w.id === o.workerId
+    && statusOf(w) === "approved" && w.available !== false
+    && (w.skills||[]).some(s => s.skill === o.skill));
   const j = { code: Math.random().toString(36).slice(2,8).toUpperCase(),
               skill:o.skill, name:o.name, phone:o.phone, area:o.area, note:o.note,
               lat:o.lat ?? null, lng:o.lng ?? null, status:"searching", asked:[], offer:null,
-              searchUntil: Date.now() + 20*60000, worker:null, eta:null };
+              searchUntil: Date.now() + 20*60000, worker:null, eta:null,
+              requested: wanted ? wanted.id : null, direct: !!wanted };
   demoOfferNext(j);
   list.unshift(j); jobsSave(list);
-  return { code: j.code, asked: j.asked.length };
+  return { code: j.code, asked: j.asked.length, direct: j.direct };
+}
+function demoWidenJob(code){
+  const list = jobsAll(); const j = list.find(x => x.code === code);
+  if(!j) throw new Error("That search cannot be reopened");
+  j.direct = false;
+  j.status = "searching";
+  j.searchUntil = Math.max(j.searchUntil, Date.now() + 15*60000);
+  j.offer = null;
+  demoOfferNext(j);
+  jobsSave(list);
+  return { status: j.status, asked: j.asked.length };
 }
 function demoJobState(code){
   const list = jobsAll(); const j = list.find(x => x.code === code);
   if(!j) return null;
   demoAdvance(j); jobsSave(list);
   const w = j.worker ? demoAll().find(x => x.id === j.worker) : null;
+  const req = j.requested ? demoAll().find(x => x.id === j.requested) : null;
   return { status:j.status, asked:j.asked.length, skill:j.skill,
+           direct: !!j.direct, requested_name: req ? req.name : null,
            worker_name: w ? w.name : null,
            worker_phone: (j.status === "accepted" && w) ? w.phone : null,
            worker_area: w ? w.area : null, eta_minutes: j.eta,
@@ -2870,7 +3007,7 @@ async function sbAuth(path, body){
   return data;
 }
 
-const NEARSE_WA = "917086599367";   /* the Nearse business WhatsApp number */
+const REPTO_WA = "917086599367";   /* the Repto business WhatsApp number */
 
 function initOtp(){
   if(!session || !session.phone){ go("work"); return; }
@@ -2889,7 +3026,7 @@ function initOtp(){
 
 /* ---------- WhatsApp click-to-chat verification ----------
    No SMS gateway, no DLT registration, no Meta Business API. The worker sends
-   a code from their own WhatsApp to the Nearse number; the message arriving
+   a code from their own WhatsApp to the Repto number; the message arriving
    from that number is the proof that the number is theirs and is on WhatsApp.
    The admin matches code against sender when reviewing the profile. */
 function initWaVerify(){
@@ -2901,8 +3038,8 @@ function initWaVerify(){
   $("waCode").textContent = code;
   $("otpSent").innerHTML = `One tap to confirm <b>+91 ${esc(session.phone)}</b> is on WhatsApp.`;
 
-  const msg = `Nearse verification\nName: ${session.name}\nNumber: ${session.phone}\nCode: ${code}`;
-  $("waSendBtn").href = "https://wa.me/" + NEARSE_WA + "?text=" + encodeURIComponent(msg);
+  const msg = `Repto verification\nName: ${session.name}\nNumber: ${session.phone}\nCode: ${code}`;
+  $("waSendBtn").href = "https://wa.me/" + REPTO_WA + "?text=" + encodeURIComponent(msg);
   $("waDoneBtn").disabled = true;
 }
 function markWaOpened(){
@@ -3475,7 +3612,7 @@ async function saveProfile(){
   const firstTime = !session.registered;
   if(firstTime){
     if(!$("consentPublish").checked){ toast("Please tick the box agreeing to show your profile publicly"); return; }
-    if(!$("consentAge").checked){ toast("Nearse is for adults — please confirm you are 18 or older"); return; }
+    if(!$("consentAge").checked){ toast("Repto is for adults — please confirm you are 18 or older"); return; }
   }
   const btn = $("regSaveBtn"); const label = btn.textContent;
   btn.disabled = true; btn.textContent = "Saving…";
@@ -3583,7 +3720,7 @@ function renderMe(){
     </div>
     <div class="danger-zone">
       <b>Delete my profile</b>
-      <span>Removes your profile, photo, rates and contact details from Nearse for good — the photo goes from our image storage too. This cannot be undone.</span>
+      <span>Removes your profile, photo, rates and contact details from Repto for good — the photo goes from our image storage too. This cannot be undone.</span>
       <button class="btn btn-danger btn-sm" onclick="deleteProfile()">Delete my profile</button>
     </div>`;
   const modes = workerModes(w);
@@ -3592,7 +3729,7 @@ function renderMe(){
 }
 async function deleteProfile(){
   if(!session || !session.registered) return;
-  if(!confirm("Delete your Nearse profile?\n\nYour photo, rates and contact details are removed for good. Customers will no longer find you. This cannot be undone.")) return;
+  if(!confirm("Delete your Repto profile?\n\nYour photo, rates and contact details are removed for good. Customers will no longer find you. This cannot be undone.")) return;
   const typed = prompt("To confirm, type DELETE");
   if(typed === null) return;
   if(typed.trim().toUpperCase() !== "DELETE"){ toast("Not deleted — the word didn't match"); return; }
@@ -3664,9 +3801,9 @@ async function acceptOffer(code){
     const j = await api.acceptOffer(session.phone, session.pin, code, mins);
     toast("Accepted — message them now");
     const msg =
-`*Nearse booking ${code}*
+`*Repto booking ${code}*
 
-Hello ${(j.customer_name||"").split(" ")[0]}, I have accepted your request on Nearse.
+Hello ${(j.customer_name||"").split(" ")[0]}, I have accepted your request on Repto.
 
 *Service:* ${j.skill}
 *Where:* ${j.area}, Guwahati${j.note ? "\n*Details:* " + j.note : ""}
@@ -3893,7 +4030,7 @@ function openWorker(id){
         <div style="margin-top:5px">${starsOf(w)}${onTimeText(w)}</div>
       </div>
     </div>
-    ${w.reg_number ? `<p class="reg-line">${w.reg_verified ? "✓ Registration checked by Nearse" : "Registration"}: ${esc(w.reg_number)}</p>` : ""}
+    ${w.reg_number ? `<p class="reg-line">${w.reg_verified ? "✓ Registration checked by Repto" : "Registration"}: ${esc(w.reg_number)}</p>` : ""}
     ${w.about ? `<p class="hint" style="margin-bottom:6px">${esc(w.about)}</p>` : ""}
     <div class="price-list">
       ${(w.skills||[]).map((s,i)=>`<button class="price-line pick${i===0?" on":""}" data-i="${i}" onclick="pickService(${i})">
@@ -4062,9 +4199,9 @@ async function confirmBooking(){
              note:[s.skill, when, area, note].filter(Boolean).join(" | ") });
 
   const msg =
-`*Booking request via Nearse (nearse.in)*
+`*Booking request via Repto (nearse.in)*
 
-Hello ${w.name.split(" ")[0]}, I found your profile on Nearse and would like to book you.
+Hello ${w.name.split(" ")[0]}, I found your profile on Repto and would like to book you.
 
 *Service:* ${s.skill} (${money(s.price)} ${s.unit||""})
 *When:* ${when}
@@ -4108,8 +4245,17 @@ function openNowBooking(){
   const w = currentWorker;
   const s = (w.skills||[])[bookPick.svc] || {};
   hideModal("wOverlay");
-  $("nowTitle").textContent = "Get a " + (s.skill || "worker").toLowerCase() + " now";
-  $("nowSub").innerHTML = `Around <b>${esc(money(s.price||0))} ${esc(s.unit||"")}</b> — the final amount is agreed after they see the job.`;
+  /* This sheet is reached by tapping one person's profile. It used to say
+     "Get a plumber now" and then broadcast to whoever answered — so the
+     customer thought they had booked the face they were looking at. */
+  const first = (w.name || "").split(" ")[0] || "them";
+  $("nowTitle").textContent = "Ask " + esc(w.name || "this worker") + " to come now";
+  $("nowSub").innerHTML = `<b>${esc(s.skill||"")}</b> · around <b>${esc(money(s.price||0))} ${esc(s.unit||"")}</b> — the final amount is agreed after ${esc(first)} sees the job.`;
+  const ex = $("nowExplain");
+  if(ex) ex.innerHTML =
+    `<b>This request goes to ${esc(w.name || "them")}, and nobody else.</b>
+     <span>${esc(first)} has 60 seconds to accept. If ${esc(first)} cannot come, we will tell you —
+       and it is then your choice whether we look for somebody else nearby.</span>`;
   const sel = $("nowArea");
   sel.innerHTML = '<option value="">Select your locality</option>' + areaOptions(null);
   sel.value = "";
@@ -4128,14 +4274,19 @@ async function startNowJob(){
   const btn = $("nowGoBtn"); btn.disabled = true; btn.textContent = "Looking…";
   try{
     const res = await api.createJob({ skill:s.skill, name, phone, area, note,
+                                      workerId: w && w.id,
                                       lat: myLoc && myLoc.lat, lng: myLoc && myLoc.lng });
-    nowJob = { code: res.code, skill: s.skill, name, phone, area, note };
+    nowJob = { code: res.code, skill: s.skill, name, phone, area, note,
+               askedFor: (res && res.direct === false) ? null : (w && w.name) };
+    if(res && res.direct === false && w){
+      toast(w.name.split(" ")[0] + " is not available for that service — looking more widely");
+    }
     try{ localStorage.setItem("nearse_job_v1", JSON.stringify(nowJob)); }catch(e){}
     hideModal("nowOverlay");
     openModal("searchOverlay");
     pollJob();
-  }catch(e){ toast(e.message || "Could not start the search"); }
-  btn.disabled = false; btn.textContent = "Find someone now";
+  }catch(e){ toast(e.message || "Could not send the request"); }
+  btn.disabled = false; btn.textContent = "Send the request";
 }
 
 async function pollJob(){
@@ -4158,12 +4309,15 @@ async function pollJob(){
 function renderSearch(st){
   const host = $("searchBody");
   if(st.status === "searching"){
+    const who = st.direct ? (st.requested_name || nowJob && nowJob.askedFor) : null;
     host.innerHTML = `
       <div class="finding">
         <div class="radar" aria-hidden="true"><span></span><span></span><span></span></div>
-        <h3>Finding a ${esc((st.skill||"worker").toLowerCase())} near you</h3>
-        <p class="sub">Asked <b>${st.asked}</b> ${st.asked === 1 ? "worker" : "workers"} so far.
-          Each one gets 60 seconds before we move to the next.</p>
+        <h3>${who ? "Waiting for " + esc(who) : "Finding a " + esc((st.skill||"worker").toLowerCase()) + " near you"}</h3>
+        <p class="sub">${who
+          ? "Your request has gone to " + esc(who) + " and nobody else. They have 60 seconds to accept."
+          : `Asked <b>${st.asked}</b> ${st.asked === 1 ? "worker" : "workers"} so far.
+             Each one gets 60 seconds before we move to the next.`}</p>
         <div class="tick-left">${Math.max(0, st.seconds_left|0)}s</div>
         <button class="btn btn-quiet btn-block btn-sm" onclick="cancelNowJob()">Stop looking</button>
       </div>`;
@@ -4181,6 +4335,18 @@ function renderSearch(st){
           Message them on WhatsApp
         </a>
         <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="closeSearch()">Done</button>
+      </div>`;
+  }else if(st.status === "no_answer"){
+    const who = st.requested_name || (nowJob && nowJob.askedFor) || "That worker";
+    host.innerHTML = `
+      <div class="finding">
+        <h3>${esc(who)} did not answer</h3>
+        <p class="sub">They may be on another job, or away from their phone. Nothing has been booked,
+          and we have not passed your request to anybody else — you chose ${esc(who.split(" ")[0])},
+          so that is your decision to make.</p>
+        <button class="btn btn-brand btn-block" onclick="widenSearch()">Find someone else nearby</button>
+        <button class="btn btn-outline btn-block btn-sm" style="margin-top:10px" onclick="closeSearch();go('hire')">Pick somebody myself</button>
+        <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="closeSearch()">Leave it</button>
       </div>`;
   }else if(st.status === "nobody"){
     host.innerHTML = `
@@ -4200,7 +4366,7 @@ function renderSearch(st){
 function onJobAccepted(st){
   const j = nowJob; if(!j || !st.worker_phone) return;
   const msg =
-`*Nearse booking ${j.code}*
+`*Repto booking ${j.code}*
 
 Hello ${(st.worker_name||"").split(" ")[0]}, thank you for accepting.
 
@@ -4212,6 +4378,20 @@ Hello ${(st.worker_name||"").split(" ")[0]}, thank you for accepting.
   const btn = $("jobWaBtn");
   if(btn) btn.href = "https://wa.me/91" + st.worker_phone + "?text=" + encodeURIComponent(msg);
   try{ localStorage.setItem("nearse_job_done_v1", j.code); }catch(e){}
+}
+
+/* Only ever reached by the customer tapping "Find someone else nearby".
+   Nothing widens a search on its own — that is the whole point of the fix. */
+async function widenSearch(){
+  if(!nowJob) return closeSearch();
+  try{
+    await api.widenJob(nowJob.code);
+    nowJob.askedFor = null;
+    $("searchBody").innerHTML = `<div class="finding">
+      <div class="radar" aria-hidden="true"><span></span><span></span><span></span></div>
+      <h3>Looking for someone else</h3><p class="sub">Asking the nearest available worker now.</p></div>`;
+    pollJob();
+  }catch(e){ toast(e.message || "Could not reopen the search"); }
 }
 
 async function cancelNowJob(){
@@ -4323,7 +4503,7 @@ async function confirmSlot(){
   const when = new Date(slotPick.date + "T00:00:00")
     .toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long" });
   const msg =
-`*Nearse appointment*
+`*Repto appointment*
 
 Hello ${w.name.split(" ")[0]}, I have booked an appointment.
 
@@ -4408,7 +4588,7 @@ function previewAdminPin(){
       v = String(Math.floor(1000 + Math.random() * 9000));
       localStorage.setItem("nearse_preview_admin", v);
     }
-    console.info("[Nearse preview] admin PIN for this browser:", v);
+    console.info("[Repto preview] admin PIN for this browser:", v);
     return v;
   }catch(e){ return null; }
 }
@@ -4447,6 +4627,83 @@ async function loadWaCodes(){
     }
   }catch(e){ /* codes are a convenience — never block the queue on them */ }
 }
+/* ---------- the numbers ----------
+   Live, these come from one SQL function so the whole dashboard is a single
+   round trip. In preview mode the same shape is assembled from localStorage,
+   so the screen can be worked on without a database. */
+async function loadStats(){
+  if(LIVE) return await sb("rpc/admin_stats", {method:"POST", body:JSON.stringify({p_pin:adminPin})});
+  return demoStats();
+}
+async function loadRecent(){
+  if(LIVE) return await sb("rpc/admin_recent", {method:"POST", body:JSON.stringify({p_pin:adminPin, p_limit:25})}) || [];
+  return demoBookings().slice(0, 25).map(b => ({
+    kind:"WhatsApp", at:b.created_at, worker_name:b.worker_name,
+    skill:(b.note||"").split(" | ")[0], customer_name:b.customer_name,
+    customer_phone:b.customer_phone, status:"sent"
+  }));
+}
+function demoBookings(){
+  try{ return JSON.parse(localStorage.getItem("nearse_bookings_v1") || "[]"); }catch(e){ return []; }
+}
+function demoStats(){
+  const all = demoAll(), books = demoBookings();
+  const reports = (()=>{ try{ return JSON.parse(localStorage.getItem("nearse_reports_v1")||"[]"); }catch(e){ return []; } })();
+  const day = new Date(); day.setHours(0,0,0,0);
+  const since = n => { const d = new Date(day); d.setDate(d.getDate() - n); return d; };
+  const span = (rows, get) => ({
+    today:  rows.filter(r => new Date(get(r)) >= day).length,
+    last7:  rows.filter(r => new Date(get(r)) >= since(6)).length,
+    last30: rows.filter(r => new Date(get(r)) >= since(29)).length,
+    total:  rows.length
+  });
+  const at = r => r.created_at;
+  const approved = all.filter(w => statusOf(w) === "approved");
+  const rated = all.filter(w => (w.rating_count||0) > 0);
+  const tally = (rows, key) => Object.entries(rows.reduce((m,r)=>{
+    const k = key(r); if(k) m[k] = (m[k]||0)+1; return m; }, {}))
+    .map(([k,n])=>({[key.label||"skill"]:k, n})).sort((a,b)=>b.n-a.n).slice(0,8);
+  const bySkill = tally(books, b => (b.note||"").split(" | ")[0]);
+  const byArea = Object.entries(approved.reduce((m,w)=>{ if(w.area) m[w.area]=(m[w.area]||0)+1; return m; },{}))
+    .map(([area,n])=>({area,n})).sort((a,b)=>b.n-a.n).slice(0,8);
+  const daily = [];
+  for(let i = 13; i >= 0; i--){
+    const from = since(i), to = since(i-1);
+    daily.push({
+      d: from.toISOString().slice(0,10),
+      signups:  all.filter(w => new Date(w.created_at) >= from && new Date(w.created_at) < to).length,
+      requests: books.filter(b => new Date(b.created_at) >= from && new Date(b.created_at) < to).length
+    });
+  }
+  return {
+    generated_at: new Date().toISOString(), preview: true,
+    workers: {...span(all, at), total: all.length,
+      approved: approved.length,
+      pending: all.filter(w => statusOf(w)==="pending").length,
+      rejected: all.filter(w => statusOf(w)==="rejected").length,
+      available: approved.filter(w => w.available !== false).length,
+      online: 0, verified: all.filter(w => w.phone_verified).length,
+      with_photo: all.filter(w => w.selfie).length,
+      consented: all.filter(w => w.consent_at || w.age_confirmed).length},
+    requests: span(books, at),
+    whatsapp_requests: span(books, at),
+    instant_jobs: {today:0,last7:0,last30:0,total:0,searching:0,accepted:0,done:0,nobody:0,cancelled:0,avg_accept_seconds:null},
+    appointments: {today:0,last7:0,last30:0,total:0,booked:0,done:0,cancelled:0},
+    completed: {today:0,last7:0,last30:0,total:0},
+    ratings: {today:0,last7:0,last30:0,total:rated.reduce((n,w)=>n+(w.rating_count||0),0)},
+    quality: {
+      avg_rating: rated.length
+        ? +(rated.reduce((n,w)=>n + w.rating_sum/w.rating_count, 0)/rated.length).toFixed(2) : null,
+      rated_workers: rated.length, on_time_pct: null,
+      open_reports: reports.length},
+    supply: {
+      never_booked: approved.filter(w => !books.some(b => b.worker_id === w.id)).length,
+      unmet_last30: 0, contact_requests_last30: 0},
+    top_services: bySkill, top_areas: byArea, pending_areas: [],
+    daily
+  };
+}
+
 async function loadReports(){
   try{
     if(LIVE) return await sb("rpc/admin_reports", {method:"POST", body:JSON.stringify({p_pin:adminPin})}) || [];
@@ -4463,12 +4720,40 @@ async function clearReport(id){
     renderAdmin();
   }catch(e){ toast(e.message); }
 }
+/* The admin screen used to be the review queue and nothing else, which
+   answered "who is waiting" and no other question. Three tabs now: the
+   numbers, the queue, and the raw stream of what is actually happening. */
+let adminTab = "stats";
+function setAdminTab(t){ adminTab = t; renderAdmin(); }
+
 async function renderAdmin(){
   const host = $("adminPanel");
   host.innerHTML = '<div class="skeleton"></div>';
+  const tabs = `<div class="tabs admin-tabs">
+      <button class="tab${adminTab==="stats"?" on":""}" onclick="setAdminTab('stats')">Dashboard</button>
+      <button class="tab${adminTab==="review"?" on":""}" onclick="setAdminTab('review')">Review</button>
+      <button class="tab${adminTab==="activity"?" on":""}" onclick="setAdminTab('activity')">Activity</button>
+    </div>`;
+  const exit = `<button class="btn btn-quiet btn-block btn-sm" style="margin-top:18px" onclick="adminPin=null;go('home')">Exit admin</button>`;
+
+  if(adminTab === "stats"){
+    let s;
+    try{ s = await loadStats(); }
+    catch(e){ host.innerHTML = tabs + `<p class="hint">Could not load the numbers — ${esc(e.message||"")}</p>` + exit; return; }
+    host.innerHTML = tabs + renderDashboard(s) + exit;
+    return;
+  }
+  if(adminTab === "activity"){
+    let rows;
+    try{ rows = await loadRecent(); }
+    catch(e){ host.innerHTML = tabs + `<p class="hint">Could not load activity — ${esc(e.message||"")}</p>` + exit; return; }
+    host.innerHTML = tabs + renderActivity(rows) + exit;
+    return;
+  }
+
   let all = [];
   try{ all = await api.reviewQueue(); }
-  catch(e){ host.innerHTML = `<p class="hint">Could not load profiles — ${esc(e.message||"")}</p>`; return; }
+  catch(e){ host.innerHTML = tabs + `<p class="hint">Could not load profiles — ${esc(e.message||"")}</p>` + exit; return; }
   await loadWaCodes();
   const reports = await loadReports();
   const pending  = all.filter(w => statusOf(w) === "pending");
@@ -4478,7 +4763,7 @@ async function renderAdmin(){
     ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px"><b>${label}</b>${hint ? " — " + hint : ""}</p>` +
       list.map(adminCard).join("")
     : "";
-  host.innerHTML = `
+  host.innerHTML = tabs + `
     <h2>Profile review</h2>
     ${reports.length ? `<div class="reports">
       <b>${reports.length} open ${reports.length === 1 ? "report" : "reports"}</b>
@@ -4515,9 +4800,136 @@ async function renderAdmin(){
       ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px"><b>Awaiting approval</b></p>` + pending.map(adminCard).join("")
       : `<div class="divider"></div><div class="empty" style="margin:0"><b>Nothing to review</b>New profiles will appear here.</div>`}
     ${section("Live profiles", approved)}
-    ${section("Rejected", rejected, "not visible to customers")}
-    <button class="btn btn-quiet btn-block btn-sm" style="margin-top:18px" onclick="adminPin=null;go('home')">Exit admin</button>`;
+    ${section("Rejected", rejected, "not visible to customers")}` + exit;
 }
+/* ---------- dashboard ---------- */
+const nf = n => (n == null ? "—" : Number(n).toLocaleString("en-IN"));
+function mins(sec){
+  if(sec == null) return "—";
+  return sec < 90 ? Math.round(sec) + "s" : Math.round(sec/60) + " min";
+}
+function renderDashboard(s){
+  const w = s.workers || {}, r = s.requests || {}, c = s.completed || {},
+        j = s.instant_jobs || {}, ap = s.appointments || {}, q = s.quality || {},
+        sup = s.supply || {}, rt = s.ratings || {};
+  const daily = s.daily || [];
+  const peak = Math.max(1, ...daily.map(d => Math.max(d.signups, d.requests)));
+
+  const tile = (n, label, note, tone) =>
+    `<div class="stat${tone ? " " + tone : ""}"><b>${nf(n)}</b><span>${label}</span>${note ? `<i>${note}</i>` : ""}</div>`;
+  const row = (label, o, note) =>
+    `<tr><td>${label}${note ? `<span>${note}</span>` : ""}</td>
+       <td>${nf(o.today)}</td><td>${nf(o.last7)}</td><td>${nf(o.last30)}</td><td>${nf(o.total)}</td></tr>`;
+  const list = (rows, key) => rows.length
+    ? rows.map(x => `<div class="rank"><span>${esc(x[key])}</span><b>${nf(x.n)}</b></div>`).join("")
+    : `<p class="hint" style="margin:0">Nothing yet.</p>`;
+
+  /* the dashboard is the landing tab, so anything waiting on a person has to
+     be visible from here rather than only inside the queue */
+  const todo = [];
+  if(w.pending) todo.push(`${nf(w.pending)} profile${w.pending === 1 ? "" : "s"} awaiting approval`);
+  if(q.open_reports) todo.push(`${nf(q.open_reports)} open report${q.open_reports === 1 ? "" : "s"}`);
+
+  return `
+    <h2>How Repto is doing</h2>
+    <p class="hint">${s.preview ? "Preview mode — these are the profiles saved in this browser." :
+      "Live, as of " + new Date(s.generated_at).toLocaleString("en-IN") + ". Days run midnight to midnight, Indian time."}</p>
+
+    ${todo.length ? `<button class="todo-bar" onclick="setAdminTab('review')">
+      <span><b>Needs you</b>${esc(todo.join(" · "))}</span>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>` : ""}
+
+    <div class="stat-grid">
+      ${tile(w.today, "registered today")}
+      ${tile(r.today, "requests today")}
+      ${tile(c.today, "jobs completed today")}
+      ${tile(w.pending, "awaiting your approval", null, w.pending ? "warn" : "")}
+    </div>
+
+    <div class="table-wrap">
+      <table class="stat-table">
+        <thead><tr><th>Since</th><th>Today</th><th>7d</th><th>30d</th><th>All</th></tr></thead>
+        <tbody>
+          ${row("Worker registrations", w)}
+          ${row("Requests sent", r, "every way a customer reaches a worker")}
+          ${row("— over WhatsApp", s.whatsapp_requests || {})}
+          ${row("— instant jobs", j)}
+          ${row("— appointments", ap)}
+          ${row("Jobs completed", c, "confirmed finished")}
+          ${row("Ratings left", rt, "someone rates after being worked with")}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box">
+      <b>What "completed" can and cannot tell you</b>
+      <p>A request sent over WhatsApp leaves Repto and we never learn what happened — no completion, no amount, nothing.
+      Only instant jobs and appointments come back with a real "done", so those are what the completed row counts.
+      <b>Ratings are the softer clue</b>: nobody rates a worker they never met, so that number moving is the honest sign that
+      real work is being done. If requests are high and both of those stay near zero, people are asking and nothing is happening.</p>
+    </div>
+
+    <div class="chart">
+      <div class="chart-head"><b>Last 14 days</b><span><i class="k1"></i>registrations <i class="k2"></i>requests</span></div>
+      <div class="bars">
+        ${daily.map(d => `<div class="bar-col" title="${esc(d.d)} — ${d.signups} registered, ${d.requests} requests">
+            <span class="b b1" style="height:${Math.round(d.signups/peak*100)}%"></span>
+            <span class="b b2" style="height:${Math.round(d.requests/peak*100)}%"></span>
+            <em>${new Date(d.d + "T00:00:00").getDate()}</em>
+          </div>`).join("")}
+      </div>
+    </div>
+
+    <div class="stat-grid four">
+      ${tile(w.approved, "live profiles")}
+      ${tile(w.available, "available for work")}
+      ${tile(w.online, "online right now")}
+      ${tile(j.searching, "jobs searching now")}
+    </div>
+
+    <div class="panel-sub">
+      <b>Where it is leaking</b>
+      <div class="kv"><span>Live workers nobody has ever booked</span><b class="${sup.never_booked ? "warn-text" : ""}">${nf(sup.never_booked)}</b></div>
+      <div class="kv"><span>Instant jobs that found nobody, 30 days</span><b class="${sup.unmet_last30 ? "warn-text" : ""}">${nf(sup.unmet_last30)}</b></div>
+      <div class="kv"><span>Average wait before a worker accepts</span><b>${mins(j.avg_accept_seconds)}</b></div>
+      <div class="kv"><span>Profiles waiting on you</span><b class="${w.pending ? "warn-text" : ""}">${nf(w.pending)}</b></div>
+      <p class="hint" style="margin:10px 0 0">Workers nobody books are the ones who leave. Jobs that find nobody are customers who do not come back.</p>
+    </div>
+
+    <div class="panel-sub">
+      <b>Quality</b>
+      <div class="kv"><span>Average rating</span><b>${q.avg_rating != null ? q.avg_rating + " ★" : "—"} <small>${nf(q.rated_workers)} rated</small></b></div>
+      <div class="kv"><span>Turned up on time</span><b>${q.on_time_pct != null ? q.on_time_pct + "%" : "—"}</b></div>
+      <div class="kv"><span>Open reports</span><b class="${q.open_reports ? "warn-text" : ""}">${nf(q.open_reports)}</b></div>
+      <div class="kv"><span>Rejected profiles</span><b>${nf(w.rejected)}</b></div>
+    </div>
+
+    <div class="two-col">
+      <div class="panel-sub"><b>Most asked for</b><span class="sub-note">last 30 days</span>${list(s.top_services || [], "skill")}</div>
+      <div class="panel-sub"><b>Where the workers are</b><span class="sub-note">live profiles</span>${list(s.top_areas || [], "area")}</div>
+    </div>`;
+}
+
+function renderActivity(rows){
+  if(!rows.length) return `<h2>Recent activity</h2><div class="empty" style="margin:0"><b>Nothing yet</b>Requests will appear here as they come in.</div>`;
+  return `<h2>Recent activity</h2>
+    <p class="hint">The last ${rows.length} requests, newest first. Numbers are here so you can follow something up.</p>
+    <div class="table-wrap">
+      <table class="stat-table act">
+        <thead><tr><th>When</th><th>Type</th><th>Worker</th><th>Service</th><th>Customer</th><th>State</th></tr></thead>
+        <tbody>${rows.map(r => `<tr>
+          <td>${new Date(r.at).toLocaleString("en-IN", {day:"numeric", month:"short", hour:"numeric", minute:"2-digit"})}</td>
+          <td><span class="pill ${esc((r.kind||"").toLowerCase())}">${esc(r.kind)}</span></td>
+          <td>${esc(r.worker_name || "—")}</td>
+          <td>${esc(r.skill || "—")}</td>
+          <td>${esc(r.customer_name || "—")}${r.customer_phone ? `<span>${esc(r.customer_phone)}</span>` : ""}</td>
+          <td>${esc(r.status || "—")}</td>
+        </tr>`).join("")}</tbody>
+      </table>
+    </div>`;
+}
+
 function adminCard(w){
   const st = statusOf(w);
   const actions = {
@@ -4721,7 +5133,7 @@ function renderPushState(){
     el.textContent = "Job alerts are on for this phone.";
     if(btn) btn.hidden = true;
   }else if(isIOS() && !isStandalone()){
-    el.textContent = "On iPhone, add Nearse to your home screen first — then alerts can reach you.";
+    el.textContent = "On iPhone, add Repto to your home screen first — then alerts can reach you.";
     if(btn){ btn.hidden = false; btn.textContent = "Add to home screen"; }
   }else if(pushSupported() && Notification.permission === "denied"){
     el.textContent = "Alerts are blocked in your browser settings. Offers will still reach you on WhatsApp.";
@@ -4746,7 +5158,7 @@ window.addEventListener("beforeinstallprompt", e => {
 window.addEventListener("appinstalled", () => {
   deferredInstall = null;
   $("installBtn").hidden = true;
-  toast("Nearse installed — open it from your home screen");
+  toast("Repto installed — open it from your home screen");
 });
 async function installApp(){
   if(deferredInstall){

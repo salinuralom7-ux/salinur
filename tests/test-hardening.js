@@ -19,7 +19,7 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   page.on('pageerror', e => errors.push(e.message));
 
   // ---------- no admin PIN in the shipped source ----------
-  ok('No admin PIN literal in the source', !/Nearse@20/.test(html));
+  ok('No admin PIN literal in the source', !/Repto@20/.test(html));
   ok('No DEMO_ADMIN_PIN constant', !/DEMO_ADMIN_PIN/.test(html));
 
   await page.goto('http://localhost:8811/');
@@ -63,7 +63,13 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
     const hash = sc.url.split('#')[1];
     const p = await ctx.newPage();
     await p.goto('http://localhost:8811/#' + hash);
-    await p.waitForTimeout(900);
+    // wait for the router to settle rather than guessing at a timeout: the
+    // boot path probes Supabase first, and under load 900ms was not always
+    // enough, which made this assertion flap
+    await p.waitForFunction(
+      () => document.querySelector('.screen.on') &&
+            document.querySelector('.screen.on').id !== 'scr-home',
+      null, { timeout: 8000 }).catch(() => {});
     const id = await p.evaluate(() => (document.querySelector('.screen.on') || {}).id);
     ok(`Shortcut "${sc.name}" (#${hash}) opens a real screen`, id !== 'scr-home', id);
     await p.close();
@@ -108,6 +114,9 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   await admin.goto('http://localhost:8811/#admin');
   await admin.waitForTimeout(1400);
   ok('Admin opens with the per-browser preview PIN', await admin.locator('#scr-admin.on').count() === 1);
+  ok('Dashboard flags the open report', (await admin.locator('.todo-bar').innerText()).includes('open report'));
+  await admin.locator('.admin-tabs .tab', { hasText: 'Review' }).click();
+  await admin.waitForTimeout(900);
   ok('Open report shown to the admin', await admin.locator('.report-item').count() === 1);
   await admin.locator('.report-item .btn').click();
   await admin.waitForTimeout(700);

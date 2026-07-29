@@ -1,8 +1,8 @@
-# Nearse
+# Repto
 
 A marketplace for booking local skilled workers in Guwahati — maids, cooks,
 electricians, plumbers, tutors, drivers, doctors and 160 other trades. Workers
-set their own price and Nearse takes no commission.
+set their own price and Repto takes no commission.
 
 Live at **[nearse.in](https://nearse.in)**.
 
@@ -10,10 +10,9 @@ Live at **[nearse.in](https://nearse.in)**.
 
 | Path | What it is |
 |---|---|
-| `docs/index.html` | The whole Nearse app. One file, no build step. |
+| `docs/index.html` | The whole Repto app. One file, no build step. |
 | `docs/supabase-workers-setup.sql` | The database. Applied whole on every deploy, so every statement has to be safe to run again. |
 | `docs/about/`, `privacy/`, `terms/`, `cancellation/`, `delete-account/` | The legal pages. Plain HTML, no JavaScript, stable URLs. |
-| `docs/cars/` | Budget Cars — a separate showroom site sharing the same hosting. |
 | `docs/functions/upload.js` | Cloudflare Pages Function that stores profile photos in R2. |
 | `tests/` | Playwright harnesses and SQL checks. See [`tests/README.md`](tests/README.md). |
 | `store/` | Play Store and App Store submission package. See [`store/README.md`](store/README.md). |
@@ -44,7 +43,7 @@ node tests/test-ks.js   # the whole worker and customer journey
 Two things to remember when changing the app:
 
 1. **Bump `CACHE` in `docs/sw.js`** whenever `docs/index.html` changes, or
-   phones that already installed Nearse keep serving the old version.
+   phones that already installed Repto keep serving the old version.
 2. **The SQL file is re-applied on every push.** Test it by applying it three
    times in a row before you push.
 

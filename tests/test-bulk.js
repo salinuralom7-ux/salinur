@@ -35,7 +35,7 @@ const srv = http.createServer((q,r)=>{r.writeHead(200,{'Content-Type':'text/html
 
   // a realistic paste: whole WhatsApp messages, 12 of them, plus one bogus code
   const paste = codes.slice(0, 12).map((c,i) =>
-    `[7:0${i} pm, 25/07/2026] +91 94350${20001+i}: Nearse verification\nName: Pending ${i+1}\nNumber: 94350${20001+i}\nCode: ${c}`
+    `[7:0${i} pm, 25/07/2026] +91 94350${20001+i}: Repto verification\nName: Pending ${i+1}\nNumber: 94350${20001+i}\nCode: ${c}`
   ).join('\n') + '\nCode: 999999';
   await p.fill('#bulkCodes', paste);
   await p.locator('button', { hasText: 'Approve matching codes' }).click();

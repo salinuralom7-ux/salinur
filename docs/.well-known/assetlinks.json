@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "in.nearse.app",
+    "package_name": "in.repto.app",
     "sha256_cert_fingerprints": [
       "REPLACE_WITH_YOUR_PLAY_APP_SIGNING_SHA256_FINGERPRINT"
     ]

@@ -82,12 +82,6 @@ const srv = http.createServer((req, res) => {
   await ctx.setOffline(false);
   await shell.close();
 
-  // Budget Cars must NOT be swallowed by the Nearse worker
-  const cars = await ctx.newPage();
-  await cars.goto('http://localhost:8790/cars/');
-  await cars.waitForTimeout(1200);
-  console.log('Budget Cars still separate:', await cars.title());
-  await cars.close();
 
   // install button appears when the browser offers installation
   await page.evaluate(() => {

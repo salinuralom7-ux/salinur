@@ -1,5 +1,5 @@
 -- ============================================================
--- NEARSE — Supabase setup (runs in the same project as Budget Cars)
+-- REPTO — Supabase setup
 --
 -- This file is applied whole on every deploy, so every statement in it has
 -- to be safe to run again. Later sections deliberately replace earlier ones;
@@ -144,35 +144,14 @@ begin
 end;
 $$;
 
--- ============================================================
--- Budget Cars: owner PIN moved to a bcrypt hash (never stored in
--- plain text, never committed to the repo). check_pin now verifies
--- against the hash.
--- ============================================================
-alter table public.owner_settings add column if not exists pin_hash text;
--- Seed a hash only if there is none. This used to assign the hash
--- unconditionally, and because CI re-runs this whole file on every push, any
--- PIN the owner set by hand was silently reset to the committed one on the
--- next deploy. Migration 10 disables the committed hash outright.
-update public.owner_settings
-  set pin_hash = '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea',
-      pin = ''
-  where id = 1 and coalesce(pin_hash, '') = '';
-
-create or replace function public.check_pin(p_pin text)
-returns boolean
-language sql
-security definer
-set search_path = public, extensions
-as $$
-  select exists (
-    select 1 from owner_settings
-    where id = 1 and pin_hash is not null and pin_hash = crypt(p_pin, pin_hash)
-  );
-$$;
+-- Budget Cars was retired on 27 July 2026 and its setup moved out of this
+-- file. Its tables (cars, owner_settings) and its check_pin function are
+-- deliberately left in the database rather than dropped: the site can come
+-- back from git history, and dropping them would destroy the inventory.
+-- Nothing below maintains them any more.
 
 -- ============================================================
--- Nearse: profile verification
+-- Repto: profile verification
 --   * new profiles are hidden until an admin approves them
 --   * existing profiles are grandfathered in on first migration
 --   * admin actions are gated by a bcrypt-hashed PIN on the server
@@ -458,7 +437,7 @@ $$;
 -- MIGRATION 4 — WhatsApp click-to-chat verification
 --
 -- Instead of paying a provider to send a code TO the worker, the worker
--- sends a code FROM their own WhatsApp to the Nearse business number. The
+-- sends a code FROM their own WhatsApp to the Repto business number. The
 -- message arriving from that number is the proof: it can only have come
 -- through WhatsApp, and only from the account that controls it. No SMS
 -- gateway, no DLT registration, no Meta Business API.
@@ -526,7 +505,7 @@ end;
 $$;
 
 -- The admin panel shows, next to each profile awaiting review, the code that
--- should have arrived on the Nearse WhatsApp from that worker's number.
+-- should have arrived on the Repto WhatsApp from that worker's number.
 create or replace function public.admin_wa_codes(p_pin text)
 returns table (worker_id uuid, wa_code text)
 language plpgsql security definer set search_path = public, extensions as $$
@@ -914,7 +893,7 @@ $$;
 -- ============================================================
 -- MIGRATION 9 — sensible price bands per service
 --
--- Workers set their own rate, which is the point of Nearse, but an
+-- Workers set their own rate, which is the point of Repto, but an
 -- unbounded number invites nonsense listings and makes the marketplace
 -- untrustworthy — the same reason OLX will not let you list a phone for
 -- one rupee. Each service gets a floor and a ceiling drawn from what that
@@ -1229,14 +1208,13 @@ $$;
 -- The hashes below are the ones committed to this repository. They cannot be
 -- un-published, so they are rejected outright rather than merely discouraged.
 -- To set a real one, in Supabase → SQL editor:
---   update nearse_admin  set pin_hash = crypt('your new pin', gen_salt('bf', 12)) where id = 1;
---   update owner_settings set pin_hash = crypt('your new pin', gen_salt('bf', 12)) where id = 1;
+--   update nearse_admin set pin_hash = crypt('your new pin', gen_salt('bf', 12)) where id = 1;
 create or replace function public.pin_is_published(p_hash text)
 returns boolean
 language sql immutable set search_path = public as $$
   select p_hash in (
-    '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1MvfFFRq56oyGoPkG',  -- Nearse admin
-    '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea'   -- Budget Cars owner
+    '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1MvfFFRq56oyGoPkG',  -- Repto admin
+    '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea'   -- retired Budget Cars owner
   );
 $$;
 
@@ -1251,19 +1229,6 @@ begin
   end if;
   if public.pin_is_published(h) then
     raise exception 'This admin PIN is published in the public repository and has been disabled. Set a new one in Supabase, SQL editor: update nearse_admin set pin_hash = crypt(''your new pin'', gen_salt(''bf'', 12)) where id = 1;';
-  end if;
-  return h = crypt(p_pin, h);
-end;
-$$;
-
-create or replace function public.check_pin(p_pin text)
-returns boolean
-language plpgsql security definer set search_path = public, extensions as $$
-declare h text;
-begin
-  select pin_hash into h from owner_settings where id = 1;
-  if h is null or public.pin_is_published(h) then
-    return false;
   end if;
   return h = crypt(p_pin, h);
 end;
@@ -1945,7 +1910,11 @@ $$;
 
 -- What the customer's screen polls. The code is the only thing that opens it,
 -- which is why it is six characters of randomness and the job dies in an hour.
-create or replace function public.job_state(p_code text)
+-- Migration 13 widens this return type, and the whole file is re-applied on
+-- every deploy, so the old shape has to go before it is written back.
+drop function if exists public.job_state(text);
+
+create function public.job_state(p_code text)
 returns table (status text, asked int, worker_name text, worker_phone text,
                worker_area text, eta_minutes int, seconds_left int, skill text)
 language sql stable security definer set search_path = public, extensions as $$
@@ -2449,3 +2418,415 @@ begin
     execute format('grant usage, select on sequence public.worker_reports_id_seq to %I', r);
   end loop;
 end $$;
+
+-- ============================================================
+-- MIGRATION 12 — numbers for the admin screen
+--
+-- The admin screen could approve profiles and nothing else, so there was no
+-- way to answer "how is this going". Everything below is derived from rows
+-- that already exist; nothing new is recorded about anybody.
+--
+-- One honest limit, stated here because the screen states it too: a booking
+-- that goes out over WhatsApp leaves no completion signal. Repto sees the
+-- request leave and never learns what happened. Only instant-dispatch jobs
+-- and appointments carry a real "done", so the screen reports those as
+-- completions and counts ratings separately as the softer evidence that a
+-- job actually happened.
+-- ============================================================
+
+create index if not exists bookings_created_idx     on public.bookings (created_at desc);
+create index if not exists workers_created_idx      on public.workers (created_at desc);
+create index if not exists jobs_created_idx         on public.jobs (created_at desc);
+create index if not exists appointments_created_idx on public.appointments (created_at desc);
+create index if not exists ratings_created_idx      on public.worker_ratings (created_at desc);
+
+create or replace function public.admin_stats(p_pin text)
+returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  -- everything is reported in Indian time; "today" means today in Guwahati,
+  -- not today in UTC, which is five and a half hours out and would make the
+  -- morning's numbers look like yesterday's
+  d0 timestamptz := date_trunc('day', now() at time zone 'Asia/Kolkata') at time zone 'Asia/Kolkata';
+  d7 timestamptz := d0 - interval '6 days';
+  d30 timestamptz := d0 - interval '29 days';
+  out jsonb;
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+
+  select jsonb_build_object(
+
+    'generated_at', now(),
+    'day_start', d0,
+
+    ---------------------------------------------------------------- people
+    'workers', (select jsonb_build_object(
+        'total',        count(*),
+        'approved',     count(*) filter (where status = 'approved'),
+        'pending',      count(*) filter (where status = 'pending'),
+        'rejected',     count(*) filter (where status = 'rejected'),
+        'available',    count(*) filter (where status = 'approved' and available),
+        'online',       count(*) filter (where status = 'approved' and online_until > now()),
+        'today',        count(*) filter (where created_at >= d0),
+        'last7',        count(*) filter (where created_at >= d7),
+        'last30',       count(*) filter (where created_at >= d30),
+        'verified',     count(*) filter (where phone_verified),
+        'with_photo',   count(*) filter (where selfie is not null),
+        'consented',    count(*) filter (where consent_at is not null)
+      ) from workers),
+
+    ---------------------------------------------------------------- demand
+    -- a "request" is any of the three ways a customer reaches a worker
+    'requests', (select jsonb_build_object(
+        'today',  (select count(*) from bookings     where created_at >= d0)
+                + (select count(*) from jobs         where created_at >= d0)
+                + (select count(*) from appointments where created_at >= d0),
+        'last7',  (select count(*) from bookings     where created_at >= d7)
+                + (select count(*) from jobs         where created_at >= d7)
+                + (select count(*) from appointments where created_at >= d7),
+        'last30', (select count(*) from bookings     where created_at >= d30)
+                + (select count(*) from jobs         where created_at >= d30)
+                + (select count(*) from appointments where created_at >= d30),
+        'total',  (select count(*) from bookings)
+                + (select count(*) from jobs)
+                + (select count(*) from appointments)
+      )),
+
+    'whatsapp_requests', (select jsonb_build_object(
+        'today', count(*) filter (where created_at >= d0),
+        'last7', count(*) filter (where created_at >= d7),
+        'last30', count(*) filter (where created_at >= d30),
+        'total', count(*)
+      ) from bookings),
+
+    'instant_jobs', (select jsonb_build_object(
+        'today',     count(*) filter (where created_at >= d0),
+        'last7',     count(*) filter (where created_at >= d7),
+        'last30',    count(*) filter (where created_at >= d30),
+        'total',     count(*),
+        'searching', count(*) filter (where status = 'searching' and search_until > now()),
+        'accepted',  count(*) filter (where status = 'accepted'),
+        'done',      count(*) filter (where status = 'done'),
+        'nobody',    count(*) filter (where status = 'nobody'),
+        'cancelled', count(*) filter (where status = 'cancelled'),
+        -- how long a customer waits before somebody says yes
+        'avg_accept_seconds', (select round(avg(extract(epoch from (accepted_at - created_at))))
+                                 from jobs
+                                where accepted_at is not null
+                                  and accepted_at >= created_at
+                                  and created_at >= d30)
+      ) from jobs),
+
+    'appointments', (select jsonb_build_object(
+        'today',     count(*) filter (where created_at >= d0),
+        'last7',     count(*) filter (where created_at >= d7),
+        'last30',    count(*) filter (where created_at >= d30),
+        'total',     count(*),
+        'booked',    count(*) filter (where status = 'booked'),
+        'done',      count(*) filter (where status = 'done'),
+        'cancelled', count(*) filter (where status = 'cancelled')
+      ) from appointments),
+
+    ------------------------------------------------------- jobs finished
+    -- the only completions Repto can actually observe
+    'completed', jsonb_build_object(
+        'today',  (select count(*) from jobs where status='done' and created_at >= d0)
+                + (select count(*) from appointments where status='done' and created_at >= d0),
+        'last7',  (select count(*) from jobs where status='done' and created_at >= d7)
+                + (select count(*) from appointments where status='done' and created_at >= d7),
+        'last30', (select count(*) from jobs where status='done' and created_at >= d30)
+                + (select count(*) from appointments where status='done' and created_at >= d30),
+        'total',  (select count(*) from jobs where status='done')
+                + (select count(*) from appointments where status='done')
+      ),
+
+    -- softer evidence: somebody only leaves a rating after being worked with
+    'ratings', (select jsonb_build_object(
+        'today',  count(*) filter (where created_at >= d0),
+        'last7',  count(*) filter (where created_at >= d7),
+        'last30', count(*) filter (where created_at >= d30),
+        'total',  count(*)
+      ) from worker_ratings),
+
+    'quality', (select jsonb_build_object(
+        'avg_rating',  (select round(avg(rating_sum::numeric / nullif(rating_count,0)), 2)
+                          from workers where rating_count > 0),
+        'rated_workers', (select count(*) from workers where rating_count > 0),
+        'on_time_pct', (select case when sum(on_time_total) > 0
+                          then round(100.0 * sum(on_time_yes) / sum(on_time_total)) end
+                          from workers),
+        'open_reports', (select count(*) from worker_reports where not handled)
+      )),
+
+    ------------------------------------------------------- supply health
+    'supply', jsonb_build_object(
+        -- approved workers nobody has ever reached: supply going to waste
+        'never_booked', (select count(*) from workers w
+                          where w.status = 'approved'
+                            and not exists (select 1 from bookings b where b.worker_id = w.id)
+                            and not exists (select 1 from jobs j where j.worker_id = w.id)
+                            and not exists (select 1 from appointments a where a.worker_id = w.id)),
+        -- customers who wanted somebody now and got nobody
+        'unmet_last30', (select count(*) from jobs
+                          where status = 'nobody' and created_at >= d30),
+        'contact_requests_last30', (select count(*) from contact_requests where created_at >= d30)
+      ),
+
+    ------------------------------------------------------- what and where
+    'top_services', (select coalesce(jsonb_agg(t), '[]'::jsonb) from (
+        select skill, count(*) as n from (
+          select split_part(note, ' | ', 1) as skill from bookings where created_at >= d30
+          union all select skill from jobs         where created_at >= d30
+          union all select skill from appointments where created_at >= d30
+        ) x where skill is not null and btrim(skill) <> ''
+        group by skill order by n desc, skill limit 8) t),
+
+    'top_areas', (select coalesce(jsonb_agg(t), '[]'::jsonb) from (
+        select area, count(*) as n from workers
+         where status = 'approved' and area is not null
+         group by area order by n desc, area limit 8) t),
+
+    'pending_areas', (select coalesce(jsonb_agg(t), '[]'::jsonb) from (
+        select area, count(*) as n from workers
+         where status = 'pending' and area is not null
+         group by area order by n desc, area limit 5) t),
+
+    ------------------------------------------------------- last two weeks
+    'daily', (select coalesce(jsonb_agg(t order by t.d), '[]'::jsonb) from (
+        select (g.d at time zone 'Asia/Kolkata')::date as d,
+               (select count(*) from workers  w where w.created_at >= g.d and w.created_at < g.d + interval '1 day') as signups,
+               (select count(*) from bookings b where b.created_at >= g.d and b.created_at < g.d + interval '1 day')
+             + (select count(*) from jobs     j where j.created_at >= g.d and j.created_at < g.d + interval '1 day')
+             + (select count(*) from appointments a where a.created_at >= g.d and a.created_at < g.d + interval '1 day') as requests
+          from generate_series(d0 - interval '13 days', d0, interval '1 day') g(d)) t)
+
+  ) into out;
+
+  return out;
+end;
+$$;
+
+-- The ten most recent requests, so the admin can see actual activity rather
+-- than only counts. Customer numbers are included: this is the operator's own
+-- screen, behind the PIN, and following up on a complaint needs them.
+create or replace function public.admin_recent(p_pin text, p_limit int default 12)
+returns table (kind text, at timestamptz, worker_name text, skill text,
+               customer_name text, customer_phone text, status text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  return query
+    select * from (
+      select 'WhatsApp'::text, b.created_at, b.worker_name,
+             split_part(b.note, ' | ', 1), b.customer_name, b.customer_phone, 'sent'::text
+        from bookings b
+      union all
+      select 'Instant'::text, j.created_at, w.name, j.skill,
+             j.customer_name, j.customer_phone, j.status
+        from jobs j left join workers w on w.id = j.worker_id
+      union all
+      select 'Appointment'::text, a.created_at, w.name, a.skill,
+             a.customer_name, a.customer_phone, a.status
+        from appointments a left join workers w on w.id = a.worker_id
+    ) x
+    order by x.at desc
+    limit greatest(1, least(p_limit, 50));
+end;
+$$;
+
+-- ============================================================
+-- MIGRATION 13 — booking a named worker means that worker
+--
+-- The bug: tapping Book on a profile started an open search. The customer
+-- had just looked at that person's photo, rating and rate, and the sheet
+-- said "Get a plumber now" while the job went to whoever answered first.
+-- The person they chose might never even have been asked.
+--
+-- That is a bait and switch, and it is the fastest way to lose the trust
+-- the review queue exists to build. A job that starts from a profile is now
+-- reserved for that profile. If they do not answer, the customer is told
+-- whose answer is missing and asked whether to look wider — the platform
+-- never decides that on their behalf.
+-- ============================================================
+
+alter table public.jobs add column if not exists requested_worker uuid references public.workers(id) on delete set null;
+alter table public.jobs add column if not exists direct boolean not null default false;
+-- statuses gain 'no_answer': the named worker did not reply, which is not
+-- the same as nobody in the city being free
+
+-- Only the requested worker is a candidate while a job is reserved.
+create or replace function public.next_job_candidate(p_job uuid)
+returns uuid
+language sql stable security definer set search_path = public, extensions as $$
+  select w.id
+    from workers w, jobs j
+   where j.id = p_job
+     and w.status = 'approved'
+     and w.available
+     and (not j.direct or w.id = j.requested_worker)
+     and (j.city is null or w.city = j.city)
+     and exists (select 1 from jsonb_array_elements(w.skills) s
+                  where s->>'skill' = j.skill)
+     and not exists (select 1 from job_offers o
+                      where o.job_id = j.id and o.worker_id = w.id)
+   order by
+     -- the person actually chosen always goes first, even once the search
+     -- has been widened: they may still be the best answer
+     (w.id = j.requested_worker) desc,
+     (w.online_until is not null and w.online_until > now()) desc,
+     case when j.lat is null or w.lat is null then 1e6 else
+       6371 * 2 * asin(sqrt(
+         power(sin(radians(w.lat - j.lat) / 2), 2) +
+         cos(radians(j.lat)) * cos(radians(w.lat)) *
+         power(sin(radians(w.lng - j.lng) / 2), 2)))
+     end,
+     case when w.rating_count = 0 then 3.4
+          else w.rating_sum::numeric / w.rating_count end desc,
+     w.created_at
+   limit 1;
+$$;
+
+-- Running out of candidates means two different things now.
+create or replace function public.offer_next(p_job uuid, p_seconds int default 60)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare cand uuid; n int; is_direct boolean;
+begin
+  select next_job_candidate(p_job) into cand;
+  if cand is null then
+    select direct into is_direct from jobs where id = p_job;
+    update jobs
+       set status = case when coalesce(is_direct, false) then 'no_answer' else 'nobody' end
+     where id = p_job and status = 'searching';
+    return null;
+  end if;
+  select count(*) into n from job_offers where job_id = p_job;
+  insert into job_offers (job_id, worker_id, rank, expires_at)
+    values (p_job, cand, n + 1, now() + make_interval(secs => greatest(20, least(p_seconds, 300))));
+  update jobs set asked_count = n + 1 where id = p_job;
+  return cand;
+end;
+$$;
+
+-- A reserved job that runs out of time is waiting on one person, not on the
+-- whole city, so it stops as 'no_answer' too.
+create or replace function public.advance_jobs()
+returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare j record; moved int := 0;
+begin
+  update job_offers set status = 'expired'
+   where status = 'pending' and expires_at <= now();
+
+  for j in select id from jobs
+            where status = 'searching' and search_until > now()
+              and not exists (select 1 from job_offers o
+                               where o.job_id = jobs.id and o.status = 'pending')
+  loop
+    perform offer_next(j.id, 60);
+    moved := moved + 1;
+  end loop;
+
+  update jobs
+     set status = case when direct then 'no_answer' else 'nobody' end
+   where status = 'searching' and search_until <= now();
+  return moved;
+end;
+$$;
+
+-- the nine-argument version from Migration 11 has to go; the ten-argument
+-- one below is replaced in place on every later run
+drop function if exists public.create_job(text, text, text, text, text, double precision, double precision, text, int);
+
+create or replace function public.create_job(
+  p_skill text, p_name text, p_phone text, p_area text, p_note text default null,
+  p_lat double precision default null, p_lng double precision default null,
+  p_city text default 'Guwahati', p_minutes int default 20,
+  p_worker uuid default null)
+returns table (code text, worker_id uuid, asked int, direct boolean)
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid; c text; cand uuid; wanted uuid; is_direct boolean := false;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit mobile number';
+  end if;
+  if btrim(coalesce(p_name,'')) = '' then
+    raise exception 'Please enter your name';
+  end if;
+
+  -- A named worker only counts if they are actually bookable for this trade.
+  -- Otherwise the job falls back to an open search, and the customer is told.
+  if p_worker is not null then
+    select w.id into wanted from workers w
+     where w.id = p_worker and w.status = 'approved' and w.available
+       and exists (select 1 from jsonb_array_elements(w.skills) s where s->>'skill' = p_skill);
+    is_direct := wanted is not null;
+  end if;
+
+  loop
+    c := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+    exit when not exists (select 1 from jobs where jobs.code = c);
+  end loop;
+
+  insert into jobs (code, skill, city, area, lat, lng, customer_name, customer_phone, note,
+                    search_until, requested_worker, direct)
+  values (c, p_skill, p_city, p_area, p_lat, p_lng, btrim(p_name), p_phone,
+          nullif(btrim(coalesce(p_note,'')),''),
+          now() + make_interval(mins => greatest(2, least(p_minutes, 60))),
+          wanted, is_direct)
+  returning id into jid;
+
+  cand := offer_next(jid, 60);
+  return query select c, cand, (select asked_count from jobs where id = jid), is_direct;
+end;
+$$;
+
+-- The customer, and only the customer, decides to look beyond the person
+-- they picked. Nothing widens a search on its own.
+create or replace function public.widen_job(p_code text, p_minutes int default 15)
+returns table (status text, asked int)
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid;
+begin
+  -- every column is qualified: the OUT parameters are called status and asked,
+  -- and an unqualified `status` here resolves to the parameter, not the column
+  select j.id into jid from jobs j
+   where j.code = upper(btrim(p_code)) and j.status in ('no_answer', 'searching');
+  if jid is null then
+    raise exception 'That search cannot be reopened';
+  end if;
+  update jobs j
+     set direct = false,
+         status = 'searching',
+         search_until = greatest(j.search_until, now() + make_interval(mins => greatest(2, least(p_minutes, 60))))
+   where j.id = jid;
+  perform offer_next(jid, 60);
+  return query select j.status, j.asked_count from jobs j where j.id = jid;
+end;
+$$;
+
+-- The customer's screen has to be able to say whose answer it is waiting for.
+drop function if exists public.job_state(text);
+
+create function public.job_state(p_code text)
+returns table (status text, asked int, worker_name text, worker_phone text,
+               worker_area text, eta_minutes int, seconds_left int, skill text,
+               direct boolean, requested_name text)
+language sql stable security definer set search_path = public, extensions as $$
+  select j.status, j.asked_count, w.name,
+         case when j.status = 'accepted' then w.phone else null end,
+         w.area, j.eta_minutes,
+         greatest(0, extract(epoch from (
+           coalesce((select o.expires_at from job_offers o
+                      where o.job_id = j.id and o.status = 'pending'
+                      order by o.rank desc limit 1), j.search_until) - now()))::int),
+         j.skill,
+         j.direct,
+         (select rw.name from workers rw where rw.id = j.requested_worker)
+    from jobs j left join workers w on w.id = j.worker_id
+   where j.code = upper(btrim(p_code));
+$$;

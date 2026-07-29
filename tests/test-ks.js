@@ -37,7 +37,6 @@ const srv = http.createServer((req, res) => {
   console.log('Card title and subtitle stack:', await page.evaluate(
     () => getComputedStyle(document.querySelector('.cta-text')).flexDirection));
   console.log('First is a real button:', await page.evaluate(() => document.querySelector('.cta').tagName));
-  console.log('Budget Cars strip gone:', await page.locator('#carsNote').count() === 0);
   console.log('Dark theme:', await page.evaluate(() => getComputedStyle(document.body).backgroundColor));
   console.log('Catalogue size:', await page.evaluate(() => SKILLS.length), 'services in',
               await page.evaluate(() => CATALOGUE.length), 'categories');
@@ -82,7 +81,7 @@ const srv = http.createServer((req, res) => {
   const waCode = (await page.locator('#waCode').textContent()).trim();
   console.log('Code is 6 digits:', /^\d{6}$/.test(waCode));
   const waHref = await page.locator('#waSendBtn').getAttribute('href');
-  console.log('Link targets the new Nearse number:', waHref.startsWith('https://wa.me/917086599367?text='));
+  console.log('Link targets the new Repto number:', waHref.startsWith('https://wa.me/917086599367?text='));
   const waMsg = decodeURIComponent(waHref.split('?text=')[1]);
   console.log('Prefilled message:', JSON.stringify(waMsg));
   console.log('Message carries name, number and code:',
@@ -210,6 +209,11 @@ const srv = http.createServer((req, res) => {
   await adminPage.goto('http://localhost:8777/#admin');
   await adminPage.waitForTimeout(1400);
   console.log('Admin screen opens with PIN:', await adminPage.locator('#scr-admin.on').count() === 1);
+  console.log('Dashboard is the landing tab:', await adminPage.locator('.stat-grid').count() > 0);
+  console.log('Dashboard flags what needs attention:',
+              (await adminPage.locator('.todo-bar').innerText()).replace(/\n/g, ' — '));
+  await adminPage.locator('.admin-tabs .tab', { hasText: 'Review' }).click();
+  await adminPage.waitForTimeout(900);
   console.log('Pending profile listed:', (await adminPage.locator('.admin-card').first().locator('h4').innerText()).replace(/\n/g,' '));
   console.log('Admin has OTP requirement toggle:', await adminPage.locator('#otpSwitch').count() === 1);
   const expect = (await adminPage.locator('.wa-expect').first().innerText()).replace(/\s+/g,' ').trim();
