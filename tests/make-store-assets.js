@@ -59,6 +59,7 @@ const srv = http.createServer((q, r) => {
   const fgCtx = await b.newContext({ viewport: { width: 1024, height: 500 }, deviceScaleFactor: 1 });
   const fg = await fgCtx.newPage();
   const logo = 'data:image/png;base64,' + fs.readFileSync(ROOT + '/icons/logo.png').toString('base64');
+  const word = 'data:image/png;base64,' + fs.readFileSync(ROOT + '/icons/wordmark.png').toString('base64');
   await fg.setContent(`<!doctype html><meta charset="utf-8">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
@@ -67,7 +68,9 @@ const srv = http.createServer((q, r) => {
       background:radial-gradient(760px 420px at 78% -18%, rgba(234,187,81,.20), transparent 62%),
                  radial-gradient(560px 320px at -4% 108%, rgba(234,187,81,.10), transparent 60%), #0C0A07;
       color:#F6F2E8;display:flex;align-items:center;padding:0 64px;gap:38px}
-    .mark{width:118px;height:auto;flex:0 0 auto;filter:drop-shadow(0 14px 34px rgba(0,0,0,.55))}
+    .lockup{display:flex;flex-direction:column;align-items:center;gap:18px;flex:0 0 auto}
+    .mark{width:118px;height:auto;filter:drop-shadow(0 14px 34px rgba(0,0,0,.55))}
+    .word{width:150px;height:auto}
     h1{font-size:50px;font-weight:800;letter-spacing:-.03em;line-height:1.1;white-space:nowrap}
     em{font-style:normal;color:#EABB51}
     p{margin-top:14px;font-size:21px;color:#D8D0BE;line-height:1.5;max-width:690px}
@@ -76,7 +79,7 @@ const srv = http.createServer((q, r) => {
       font-size:15px;font-weight:600;color:#C4B48C}
     .chip.on{background:#EABB51;border-color:#EABB51;color:#14100A;font-weight:800}
   </style>
-  <img class="mark" src="${logo}" alt="">
+  <div class="lockup"><img class="mark" src="${logo}" alt=""><img class="word" src="${word}" alt=""></div>
   <div>
     <h1>Trusted people for every job,<br><em>right where you are.</em></h1>
     <p>Verified local workers across Guwahati. They set their price, you keep the whole conversation.</p>

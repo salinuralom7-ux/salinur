@@ -1,4 +1,4 @@
-# Nearse — setup steps, in plain language
+# Repto — setup steps, in plain language
 
 **Do Job 0 first. It takes two minutes and it is the only genuinely urgent
 thing in this file.** Then Job A (about 20 minutes, before launch) and Job B

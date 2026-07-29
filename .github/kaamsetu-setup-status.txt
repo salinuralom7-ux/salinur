@@ -4,4 +4,4 @@ list projects: HTTP 200
 project: mpufunsitqtdkqlibxof
 run SQL: HTTP 201
 verify workers table: HTTP 201 — [{"n":1}]
-SUCCESS: Nearse database is live
+SUCCESS: Repto database is live

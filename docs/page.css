@@ -1,4 +1,4 @@
-/* Shared styling for the standalone Nearse pages (about, privacy, terms).
+/* Shared styling for the standalone Repto pages (about, privacy, terms).
    These are plain HTML on purpose: they must render with no JavaScript, and
    the Play Store and search engines need to reach them at a stable URL. */
 :root{
@@ -47,6 +47,7 @@ header{
 .brand:hover{text-decoration:none}
 .brand img{height:33px;width:auto;display:block}
 .brand .name{font-weight:800;font-size:1.18rem;letter-spacing:-.03em}
+.brand .wordmark{height:22px;width:auto;display:block;flex:0 0 auto}
 .header-link{font-size:.88rem;font-weight:600;color:var(--muted)}
 .header-link:hover{color:var(--ink);text-decoration:none}
 

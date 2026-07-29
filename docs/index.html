@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nearse — Trusted Local Workers in Guwahati, Booked Directly</title>
-<meta name="description" content="Nearse connects you with verified local workers in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers, beauticians and more. Nearest first, rated by the community, priced by the workers themselves.">
-<meta name="keywords" content="Nearse, nearse.in, local workers near me, book maid cook electrician plumber, home services Guwahati, hire tutor driver Assam, find work near me">
+<title>Repto — Trusted Local Workers in Guwahati, Booked Directly</title>
+<meta name="description" content="Repto connects you with verified local workers in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers, beauticians and more. Nearest first, rated by the community, priced by the workers themselves.">
+<meta name="keywords" content="Repto, nearse.in, local workers near me, book maid cook electrician plumber, home services Guwahati, hire tutor driver Assam, find work near me">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://nearse.in/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Nearse">
-<meta property="og:title" content="Nearse — Trusted local workers, booked directly">
+<meta property="og:site_name" content="Repto">
+<meta property="og:title" content="Repto — Trusted local workers, booked directly">
 <meta property="og:description" content="Verified local workers near you. Nearest first, community rated, prices set by the workers.">
 <meta property="og:url" content="https://nearse.in/">
 <meta property="og:image" content="https://nearse.in/icons/icon-512.png?v=2">
-<meta property="og:image:alt" content="Nearse logo — a worker inside a location pin">
+<meta property="og:image:alt" content="Repto logo — a worker inside a location pin">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://nearse.in/icons/icon-512.png?v=2">
 <meta name="theme-color" content="#0C0A07">
@@ -22,7 +22,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Nearse">
+<meta name="apple-mobile-web-app-title" content="Repto">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=2">
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=2">
@@ -33,7 +33,7 @@
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "Nearse",
+  "name": "Repto",
   "url": "https://nearse.in/",
   "description": "Marketplace connecting customers with verified local skilled workers across India — home services, repairs, tutoring, care, events and professional work.",
   "potentialAction": {
@@ -45,7 +45,7 @@
 </script>
 <style>
 /* ==========================================================================
-   NEARSE — design system
+   REPTO — design system
    warm charcoal ground · gold brand sampled from the mark · sand type
    ========================================================================== */
 :root{
@@ -149,6 +149,9 @@ header{
   height:33px;width:auto;display:block;flex:0 0 auto;
 }
 .brand .name{font-weight:800;font-size:1.18rem;letter-spacing:-.03em}
+/* The wordmark is the drawn logo, not type: the R carries a gold slash that
+   no font gives us. Height drives it, width follows, so it never distorts. */
+.brand .wordmark{height:22px;width:auto;display:block;flex:0 0 auto}
 .header-link{font-size:.88rem;font-weight:600;color:var(--muted)}
 .install-btn{
   display:inline-flex;align-items:center;gap:7px;border:1px solid var(--brand);
@@ -1309,8 +1312,8 @@ footer a:hover{color:var(--brand)}
 
 <header>
   <div class="wrap masthead">
-    <a class="brand" href="#" onclick="go('home');return false" aria-label="Nearse home">
-      <img class="mark" src="icons/logo.png?v=2" alt="" width="26" height="33"><span class="name">Nearse</span>
+    <a class="brand" href="#" onclick="go('home');return false" aria-label="Repto home">
+      <img class="mark" src="icons/logo.png?v=2" alt="" width="26" height="33"><img class="wordmark" src="icons/wordmark.png?v=3" alt="Repto" width="447" height="132">
     </a>
     <div style="display:flex;align-items:center;gap:14px">
       <button class="install-btn" id="installBtn" onclick="installApp()" hidden>
@@ -1518,7 +1521,7 @@ footer a:hover{color:var(--brand)}
           Send my code on WhatsApp
         </a>
         <button class="btn btn-brand btn-block" id="waDoneBtn" onclick="waSent()" style="padding:14px;margin-top:10px" disabled>I’ve sent it</button>
-        <p class="hint" style="margin-top:12px">Goes to the Nearse number. We check it against the number you entered — that’s how we know it’s really you, and that bookings will reach you.</p>
+        <p class="hint" style="margin-top:12px">Goes to the Repto number. We check it against the number you entered — that’s how we know it’s really you, and that bookings will reach you.</p>
       </div>
 
       <!-- code-entry flow, used once an SMS/WhatsApp provider is connected -->
@@ -1665,7 +1668,7 @@ footer a:hover{color:var(--brand)}
       <div class="field">
         <label for="regCity">City</label>
         <input type="text" id="regCity" value="Guwahati" readonly aria-readonly="true" class="locked">
-        <p class="hint" style="margin-top:6px">Nearse is live in Guwahati first. More cities are coming soon.</p>
+        <p class="hint" style="margin-top:6px">Repto is live in Guwahati first. More cities are coming soon.</p>
       </div>
       <div class="field">
         <label for="regArea">Which locality are you in?</label>
@@ -1693,7 +1696,7 @@ footer a:hover{color:var(--brand)}
       <label class="consent-row">
         <input type="checkbox" id="consentPublish">
         <span>I want my <b>name, photo, services, rates, locality and WhatsApp number</b> shown publicly to
-          customers on Nearse, and I accept the
+          customers on Repto, and I accept the
           <a href="terms/" target="_blank" rel="noopener">terms of use</a> and
           <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>.</span>
       </label>
@@ -1701,7 +1704,7 @@ footer a:hover{color:var(--brand)}
         <input type="checkbox" id="consentAge">
         <span>I am <b>18 years or older</b>.</span>
       </label>
-      <p class="consent-note">You can withdraw this at any time by deleting your profile, which erases it from Nearse for good.</p>
+      <p class="consent-note">You can withdraw this at any time by deleting your profile, which erases it from Repto for good.</p>
     </div>
 
     <button class="btn btn-brand btn-block" id="regSaveBtn" onclick="saveProfile()" style="padding:14px;margin-top:6px">Publish my profile</button>
@@ -1755,11 +1758,11 @@ footer a:hover{color:var(--brand)}
     <div class="trust-strip">
       <div class="trust-item">
         <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
-        <div><b>Checked by us</b><span>Every profile is reviewed by the Nearse team before it goes live.</span></div>
+        <div><b>Checked by us</b><span>Every profile is reviewed by the Repto team before it goes live.</span></div>
       </div>
       <div class="trust-item">
         <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-        <div><b>Clear rates, no fees</b><span>Workers set their own price. Nearse charges no commission.</span></div>
+        <div><b>Clear rates, no fees</b><span>Workers set their own price. Repto charges no commission.</span></div>
       </div>
       <div class="trust-item">
         <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
@@ -1783,7 +1786,7 @@ footer a:hover{color:var(--brand)}
 <footer>
   <div class="wrap">
     <div class="foot-top">
-      <span>© <span id="year"></span> Nearse · Local services, done right</span>
+      <span>© <span id="year"></span> Repto · Local services, done right</span>
       <nav class="foot-links">
         <a href="about/">About us</a>
         <a href="privacy/">Privacy policy</a>
@@ -1854,7 +1857,7 @@ footer a:hover{color:var(--brand)}
       <div class="field full"><label for="slotNote">Reason for the visit <span class="sublabel">— optional</span></label><textarea id="slotNote" rows="2" placeholder="e.g. Tooth pain on the left side."></textarea></div>
     </div>
     <button class="btn btn-brand btn-block" id="slotBookBtn" onclick="confirmSlot()" style="padding:14px">Confirm appointment</button>
-    <p class="hint" style="margin-top:11px;text-align:center">The time is held for you straight away. Nearse takes no commission.</p>
+    <p class="hint" style="margin-top:11px;text-align:center">The time is held for you straight away. Repto takes no commission.</p>
   </div>
 </div>
 
@@ -1889,7 +1892,7 @@ footer a:hover{color:var(--brand)}
 
     <div class="quote" id="bookQuote"></div>
     <button class="btn btn-brand btn-block" id="confirmBookBtn" onclick="confirmBooking()" style="padding:14px">Send request on WhatsApp</button>
-    <p class="hint" style="margin-top:11px;text-align:center">Goes straight to the worker. Nearse takes no commission.<br>
+    <p class="hint" style="margin-top:11px;text-align:center">Goes straight to the worker. Repto takes no commission.<br>
       Your name and number are shared with the worker so they can reply, and we keep a record of the request —
       see our <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>.
       Cancelling is free and done straight with the worker: <a href="cancellation/" target="_blank" rel="noopener">how that works</a>.</p>
@@ -1925,7 +1928,7 @@ footer a:hover{color:var(--brand)}
     <h3>Verification photo</h3>
     <p class="sub">Look straight at the camera, in good light, face inside the circle.</p>
     <div class="cam-stage"><video id="camVideo" autoplay playsinline muted></video><div class="cam-oval"></div></div>
-    <p class="cam-tip" id="camTip">Only a live photo is accepted — this is how we keep Nearse trustworthy.</p>
+    <p class="cam-tip" id="camTip">Only a live photo is accepted — this is how we keep Repto trustworthy.</p>
     <button class="btn btn-brand btn-block" id="camShot" onclick="captureFrame()" style="padding:14px">Capture photo</button>
   </div>
 </div>
@@ -1933,12 +1936,12 @@ footer a:hover{color:var(--brand)}
 <div class="overlay" id="iosOverlay" onclick="if(event.target===this)closeModal('iosOverlay')">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="closeModal('iosOverlay')" aria-label="Close">✕</button>
-    <h3>Install Nearse</h3>
-    <p class="sub">Add Nearse to your home screen — it opens like a normal app, full screen.</p>
+    <h3>Install Repto</h3>
+    <p class="sub">Add Repto to your home screen — it opens like a normal app, full screen.</p>
     <div class="ios-steps">
       <div class="ios-step"><span class="n">1</span><p>Tap the <b>Share</b> button at the bottom of Safari (the square with an arrow pointing up).</p></div>
       <div class="ios-step"><span class="n">2</span><p>Scroll down and tap <b>Add to Home Screen</b>.</p></div>
-      <div class="ios-step"><span class="n">3</span><p>Tap <b>Add</b>. The Nearse icon appears with your other apps.</p></div>
+      <div class="ios-step"><span class="n">3</span><p>Tap <b>Add</b>. The Repto icon appears with your other apps.</p></div>
     </div>
     <button class="btn btn-brand btn-block" onclick="closeModal('iosOverlay')" style="margin-top:8px">Got it</button>
   </div>
@@ -1948,7 +1951,7 @@ footer a:hover{color:var(--brand)}
 
 <script>
 /* =========================================================================
-   NEARSE — application
+   REPTO — application
    ========================================================================= */
 const SUPABASE_URL      = "https://mpufunsitqtdkqlibxof.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdWZ1bnNpdHF0ZGtxbGlieG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTAyNTksImV4cCI6MjA5ODkyNjI1OX0.iyYX1EFJwrdPWxXLTCHHm8cdmuO-roPIjjX4T-SU53E";
@@ -2332,7 +2335,7 @@ const MODE_LABEL = {
   hire:  { verb:"Send an enquiry", note:"Ongoing work — agreed between you" }
 };
 
-/* Trades where the law expects a registration number, and Nearse should not
+/* Trades where the law expects a registration number, and Repto should not
    publish a profile without one. A patient must be able to check the number
    against the council's own register — that is the whole point of it. */
 const COUNCILS = [
@@ -3004,7 +3007,7 @@ async function sbAuth(path, body){
   return data;
 }
 
-const NEARSE_WA = "917086599367";   /* the Nearse business WhatsApp number */
+const REPTO_WA = "917086599367";   /* the Repto business WhatsApp number */
 
 function initOtp(){
   if(!session || !session.phone){ go("work"); return; }
@@ -3023,7 +3026,7 @@ function initOtp(){
 
 /* ---------- WhatsApp click-to-chat verification ----------
    No SMS gateway, no DLT registration, no Meta Business API. The worker sends
-   a code from their own WhatsApp to the Nearse number; the message arriving
+   a code from their own WhatsApp to the Repto number; the message arriving
    from that number is the proof that the number is theirs and is on WhatsApp.
    The admin matches code against sender when reviewing the profile. */
 function initWaVerify(){
@@ -3035,8 +3038,8 @@ function initWaVerify(){
   $("waCode").textContent = code;
   $("otpSent").innerHTML = `One tap to confirm <b>+91 ${esc(session.phone)}</b> is on WhatsApp.`;
 
-  const msg = `Nearse verification\nName: ${session.name}\nNumber: ${session.phone}\nCode: ${code}`;
-  $("waSendBtn").href = "https://wa.me/" + NEARSE_WA + "?text=" + encodeURIComponent(msg);
+  const msg = `Repto verification\nName: ${session.name}\nNumber: ${session.phone}\nCode: ${code}`;
+  $("waSendBtn").href = "https://wa.me/" + REPTO_WA + "?text=" + encodeURIComponent(msg);
   $("waDoneBtn").disabled = true;
 }
 function markWaOpened(){
@@ -3609,7 +3612,7 @@ async function saveProfile(){
   const firstTime = !session.registered;
   if(firstTime){
     if(!$("consentPublish").checked){ toast("Please tick the box agreeing to show your profile publicly"); return; }
-    if(!$("consentAge").checked){ toast("Nearse is for adults — please confirm you are 18 or older"); return; }
+    if(!$("consentAge").checked){ toast("Repto is for adults — please confirm you are 18 or older"); return; }
   }
   const btn = $("regSaveBtn"); const label = btn.textContent;
   btn.disabled = true; btn.textContent = "Saving…";
@@ -3717,7 +3720,7 @@ function renderMe(){
     </div>
     <div class="danger-zone">
       <b>Delete my profile</b>
-      <span>Removes your profile, photo, rates and contact details from Nearse for good — the photo goes from our image storage too. This cannot be undone.</span>
+      <span>Removes your profile, photo, rates and contact details from Repto for good — the photo goes from our image storage too. This cannot be undone.</span>
       <button class="btn btn-danger btn-sm" onclick="deleteProfile()">Delete my profile</button>
     </div>`;
   const modes = workerModes(w);
@@ -3726,7 +3729,7 @@ function renderMe(){
 }
 async function deleteProfile(){
   if(!session || !session.registered) return;
-  if(!confirm("Delete your Nearse profile?\n\nYour photo, rates and contact details are removed for good. Customers will no longer find you. This cannot be undone.")) return;
+  if(!confirm("Delete your Repto profile?\n\nYour photo, rates and contact details are removed for good. Customers will no longer find you. This cannot be undone.")) return;
   const typed = prompt("To confirm, type DELETE");
   if(typed === null) return;
   if(typed.trim().toUpperCase() !== "DELETE"){ toast("Not deleted — the word didn't match"); return; }
@@ -3798,9 +3801,9 @@ async function acceptOffer(code){
     const j = await api.acceptOffer(session.phone, session.pin, code, mins);
     toast("Accepted — message them now");
     const msg =
-`*Nearse booking ${code}*
+`*Repto booking ${code}*
 
-Hello ${(j.customer_name||"").split(" ")[0]}, I have accepted your request on Nearse.
+Hello ${(j.customer_name||"").split(" ")[0]}, I have accepted your request on Repto.
 
 *Service:* ${j.skill}
 *Where:* ${j.area}, Guwahati${j.note ? "\n*Details:* " + j.note : ""}
@@ -4027,7 +4030,7 @@ function openWorker(id){
         <div style="margin-top:5px">${starsOf(w)}${onTimeText(w)}</div>
       </div>
     </div>
-    ${w.reg_number ? `<p class="reg-line">${w.reg_verified ? "✓ Registration checked by Nearse" : "Registration"}: ${esc(w.reg_number)}</p>` : ""}
+    ${w.reg_number ? `<p class="reg-line">${w.reg_verified ? "✓ Registration checked by Repto" : "Registration"}: ${esc(w.reg_number)}</p>` : ""}
     ${w.about ? `<p class="hint" style="margin-bottom:6px">${esc(w.about)}</p>` : ""}
     <div class="price-list">
       ${(w.skills||[]).map((s,i)=>`<button class="price-line pick${i===0?" on":""}" data-i="${i}" onclick="pickService(${i})">
@@ -4196,9 +4199,9 @@ async function confirmBooking(){
              note:[s.skill, when, area, note].filter(Boolean).join(" | ") });
 
   const msg =
-`*Booking request via Nearse (nearse.in)*
+`*Booking request via Repto (nearse.in)*
 
-Hello ${w.name.split(" ")[0]}, I found your profile on Nearse and would like to book you.
+Hello ${w.name.split(" ")[0]}, I found your profile on Repto and would like to book you.
 
 *Service:* ${s.skill} (${money(s.price)} ${s.unit||""})
 *When:* ${when}
@@ -4363,7 +4366,7 @@ function renderSearch(st){
 function onJobAccepted(st){
   const j = nowJob; if(!j || !st.worker_phone) return;
   const msg =
-`*Nearse booking ${j.code}*
+`*Repto booking ${j.code}*
 
 Hello ${(st.worker_name||"").split(" ")[0]}, thank you for accepting.
 
@@ -4500,7 +4503,7 @@ async function confirmSlot(){
   const when = new Date(slotPick.date + "T00:00:00")
     .toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long" });
   const msg =
-`*Nearse appointment*
+`*Repto appointment*
 
 Hello ${w.name.split(" ")[0]}, I have booked an appointment.
 
@@ -4585,7 +4588,7 @@ function previewAdminPin(){
       v = String(Math.floor(1000 + Math.random() * 9000));
       localStorage.setItem("nearse_preview_admin", v);
     }
-    console.info("[Nearse preview] admin PIN for this browser:", v);
+    console.info("[Repto preview] admin PIN for this browser:", v);
     return v;
   }catch(e){ return null; }
 }
@@ -4828,7 +4831,7 @@ function renderDashboard(s){
   if(q.open_reports) todo.push(`${nf(q.open_reports)} open report${q.open_reports === 1 ? "" : "s"}`);
 
   return `
-    <h2>How Nearse is doing</h2>
+    <h2>How Repto is doing</h2>
     <p class="hint">${s.preview ? "Preview mode — these are the profiles saved in this browser." :
       "Live, as of " + new Date(s.generated_at).toLocaleString("en-IN") + ". Days run midnight to midnight, Indian time."}</p>
 
@@ -4861,7 +4864,7 @@ function renderDashboard(s){
 
     <div class="note-box">
       <b>What "completed" can and cannot tell you</b>
-      <p>A request sent over WhatsApp leaves Nearse and we never learn what happened — no completion, no amount, nothing.
+      <p>A request sent over WhatsApp leaves Repto and we never learn what happened — no completion, no amount, nothing.
       Only instant jobs and appointments come back with a real "done", so those are what the completed row counts.
       <b>Ratings are the softer clue</b>: nobody rates a worker they never met, so that number moving is the honest sign that
       real work is being done. If requests are high and both of those stay near zero, people are asking and nothing is happening.</p>
@@ -5130,7 +5133,7 @@ function renderPushState(){
     el.textContent = "Job alerts are on for this phone.";
     if(btn) btn.hidden = true;
   }else if(isIOS() && !isStandalone()){
-    el.textContent = "On iPhone, add Nearse to your home screen first — then alerts can reach you.";
+    el.textContent = "On iPhone, add Repto to your home screen first — then alerts can reach you.";
     if(btn){ btn.hidden = false; btn.textContent = "Add to home screen"; }
   }else if(pushSupported() && Notification.permission === "denied"){
     el.textContent = "Alerts are blocked in your browser settings. Offers will still reach you on WhatsApp.";
@@ -5155,7 +5158,7 @@ window.addEventListener("beforeinstallprompt", e => {
 window.addEventListener("appinstalled", () => {
   deferredInstall = null;
   $("installBtn").hidden = true;
-  toast("Nearse installed — open it from your home screen");
+  toast("Repto installed — open it from your home screen");
 });
 async function installApp(){
   if(deferredInstall){

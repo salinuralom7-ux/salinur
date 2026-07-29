@@ -11,7 +11,7 @@ description oversells, and a rejection costs days.
 **App name** (30 max)
 
 ```
-Nearse: Local Workers Nearby
+Repto: Local Workers Nearby
 ```
 
 **Short description** (80 max)
@@ -23,7 +23,7 @@ Book trusted maids, cooks, electricians and tutors near you in Guwahati.
 **Full description** (4000 max)
 
 ```
-Nearse connects you with skilled local workers who already live around you in Guwahati — and lets them set their own price and keep every rupee of it.
+Repto connects you with skilled local workers who already live around you in Guwahati — and lets them set their own price and keep every rupee of it.
 
 FIND SOMEONE FOR THE JOB
 Search 155 services across 16 categories: maids, cooks, electricians, plumbers, carpenters, AC and appliance repair, home tutors, drivers, beauticians, tailors, photographers, packers and movers, and more. Workers closest to you appear first, with their rates already on the card.
@@ -32,7 +32,7 @@ SEND THE REQUEST IN SECONDS
 Pick the service, the day and the time. Your request arrives on the worker's WhatsApp with everything they need to know — the job, when, and where. You agree the final amount with them directly.
 
 NO COMMISSION, EVER
-Nearse takes nothing from a worker's earnings and charges customers nothing to book. The rate you see is the rate the worker set.
+Repto takes nothing from a worker's earnings and charges customers nothing to book. The rate you see is the rate the worker set.
 
 EVERY PROFILE CHECKED BY A PERSON
 Not an algorithm. Someone reviews the photo, the details and the WhatsApp number before a profile goes live. Change your photo or your name later and it goes back for review.
@@ -49,13 +49,13 @@ Create a profile in about two minutes. Choose up to three services, set your own
 START YOUR 30 DAYS FREE
 Free for the first 30 days from the day your profile is approved. We ask for no card, no UPI mandate and no payment details of any kind — there is nothing that can auto-charge you and nothing to cancel.
 
-WHAT NEARSE IS NOT
+WHAT REPTO IS NOT
 We are a place to find each other, not an employer. Workers are independent — they are not our staff and we do not supervise their work. We are not a party to your agreement, and we do not handle payments. Our review confirms a profile looks genuine; it is not a police verification or a background check. Please use ordinary good sense, especially when inviting someone into your home.
 
 YOUR DATA
 No ads, no analytics, no tracking cookies, nothing sold to anybody. Your location is rounded to about 100 metres before it is stored. You can delete your profile yourself, from inside the app, at any time — photo included.
 
-Nearse is on an experimental launch in Guwahati, Assam. Tell us what is broken and we will fix it.
+Repto is on an experimental launch in Guwahati, Assam. Tell us what is broken and we will fix it.
 ```
 
 **App category:** Business

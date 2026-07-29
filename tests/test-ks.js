@@ -81,7 +81,7 @@ const srv = http.createServer((req, res) => {
   const waCode = (await page.locator('#waCode').textContent()).trim();
   console.log('Code is 6 digits:', /^\d{6}$/.test(waCode));
   const waHref = await page.locator('#waSendBtn').getAttribute('href');
-  console.log('Link targets the new Nearse number:', waHref.startsWith('https://wa.me/917086599367?text='));
+  console.log('Link targets the new Repto number:', waHref.startsWith('https://wa.me/917086599367?text='));
   const waMsg = decodeURIComponent(waHref.split('?text=')[1]);
   console.log('Prefilled message:', JSON.stringify(waMsg));
   console.log('Message carries name, number and code:',

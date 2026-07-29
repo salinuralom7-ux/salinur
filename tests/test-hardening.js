@@ -19,7 +19,7 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   page.on('pageerror', e => errors.push(e.message));
 
   // ---------- no admin PIN in the shipped source ----------
-  ok('No admin PIN literal in the source', !/Nearse@20/.test(html));
+  ok('No admin PIN literal in the source', !/Repto@20/.test(html));
   ok('No DEMO_ADMIN_PIN constant', !/DEMO_ADMIN_PIN/.test(html));
 
   await page.goto('http://localhost:8811/');

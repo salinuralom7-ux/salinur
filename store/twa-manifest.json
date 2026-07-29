@@ -1,8 +1,8 @@
 {
-  "packageId": "in.nearse.app",
+  "packageId": "in.repto.app",
   "host": "nearse.in",
-  "name": "Nearse — Local Workers in Guwahati",
-  "launcherName": "Nearse",
+  "name": "Repto — Local Workers in Guwahati",
+  "launcherName": "Repto",
   "display": "standalone",
   "orientation": "portrait",
   "themeColor": "#0C0A07",

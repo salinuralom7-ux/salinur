@@ -7,7 +7,7 @@ update nearse_admin set pin_hash = '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1
 delete from workers where phone in ('9435012345','9435012346');
 do $$ begin
   begin
-    perform public.admin_check('Nearse@20');
+    perform public.admin_check('Repto@20');
     raise exception 'FAIL: published admin PIN still accepted';
   exception when others then
     if sqlerrm like '%published in the public repository%' then

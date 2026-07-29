@@ -1,7 +1,7 @@
-/* Nearse service worker — app shell caching.
+/* Repto service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls always go to the network. */
-const CACHE = "nearse-shell-v22";
+const CACHE = "repto-shell-v23";
 const SHELL = [
   "./",
   "./index.html",
@@ -9,7 +9,8 @@ const SHELL = [
   "./icons/icon-192.png?v=2",
   "./icons/icon-512.png?v=2",
   "./icons/maskable-512.png?v=2",
-  "./icons/logo.png?v=2"
+  "./icons/logo.png?v=2",
+  "./icons/wordmark.png?v=3"
 ];
 
 self.addEventListener("install", e => {
@@ -32,7 +33,7 @@ self.addEventListener("activate", e => {
 self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data && e.data.text() }; }
-  const title = d.title || "New job on Nearse";
+  const title = d.title || "New job on Repto";
   e.waitUntil(self.registration.showNotification(title, {
     body: d.body || "A customer near you needs work done now.",
     icon: "./icons/icon-192.png?v=2",
@@ -50,7 +51,7 @@ self.addEventListener("notificationclick", e => {
   const target = (e.notification.data && e.notification.data.url) || "./?src=push#job";
   e.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
-      // reuse a tab that already has Nearse open rather than piling up windows
+      // reuse a tab that already has Repto open rather than piling up windows
       for (const c of list) {
         if (c.url.includes(self.registration.scope) && "focus" in c) {
           c.navigate(target).catch(() => {});

@@ -1,5 +1,5 @@
 -- ============================================================
--- NEARSE — Supabase setup
+-- REPTO — Supabase setup
 --
 -- This file is applied whole on every deploy, so every statement in it has
 -- to be safe to run again. Later sections deliberately replace earlier ones;
@@ -151,7 +151,7 @@ $$;
 -- Nothing below maintains them any more.
 
 -- ============================================================
--- Nearse: profile verification
+-- Repto: profile verification
 --   * new profiles are hidden until an admin approves them
 --   * existing profiles are grandfathered in on first migration
 --   * admin actions are gated by a bcrypt-hashed PIN on the server
@@ -437,7 +437,7 @@ $$;
 -- MIGRATION 4 — WhatsApp click-to-chat verification
 --
 -- Instead of paying a provider to send a code TO the worker, the worker
--- sends a code FROM their own WhatsApp to the Nearse business number. The
+-- sends a code FROM their own WhatsApp to the Repto business number. The
 -- message arriving from that number is the proof: it can only have come
 -- through WhatsApp, and only from the account that controls it. No SMS
 -- gateway, no DLT registration, no Meta Business API.
@@ -505,7 +505,7 @@ end;
 $$;
 
 -- The admin panel shows, next to each profile awaiting review, the code that
--- should have arrived on the Nearse WhatsApp from that worker's number.
+-- should have arrived on the Repto WhatsApp from that worker's number.
 create or replace function public.admin_wa_codes(p_pin text)
 returns table (worker_id uuid, wa_code text)
 language plpgsql security definer set search_path = public, extensions as $$
@@ -893,7 +893,7 @@ $$;
 -- ============================================================
 -- MIGRATION 9 — sensible price bands per service
 --
--- Workers set their own rate, which is the point of Nearse, but an
+-- Workers set their own rate, which is the point of Repto, but an
 -- unbounded number invites nonsense listings and makes the marketplace
 -- untrustworthy — the same reason OLX will not let you list a phone for
 -- one rupee. Each service gets a floor and a ceiling drawn from what that
@@ -1213,7 +1213,7 @@ create or replace function public.pin_is_published(p_hash text)
 returns boolean
 language sql immutable set search_path = public as $$
   select p_hash in (
-    '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1MvfFFRq56oyGoPkG',  -- Nearse admin
+    '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1MvfFFRq56oyGoPkG',  -- Repto admin
     '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea'   -- retired Budget Cars owner
   );
 $$;
@@ -2427,7 +2427,7 @@ end $$;
 -- that already exist; nothing new is recorded about anybody.
 --
 -- One honest limit, stated here because the screen states it too: a booking
--- that goes out over WhatsApp leaves no completion signal. Nearse sees the
+-- that goes out over WhatsApp leaves no completion signal. Repto sees the
 -- request leave and never learns what happened. Only instant-dispatch jobs
 -- and appointments carry a real "done", so the screen reports those as
 -- completions and counts ratings separately as the softer evidence that a
@@ -2530,7 +2530,7 @@ begin
       ) from appointments),
 
     ------------------------------------------------------- jobs finished
-    -- the only completions Nearse can actually observe
+    -- the only completions Repto can actually observe
     'completed', jsonb_build_object(
         'today',  (select count(*) from jobs where status='done' and created_at >= d0)
                 + (select count(*) from appointments where status='done' and created_at >= d0),

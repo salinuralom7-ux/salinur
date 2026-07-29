@@ -1,5 +1,5 @@
-name: Set up the Nearse database
-# One-time: creates the Nearse tables/functions in the existing Supabase
+name: Set up the Repto database
+# One-time: creates the Repto tables/functions in the existing Supabase
 # project. Reads the Supabase access token from the repo secret
 # SUPABASE_TOKEN. Writes a sanitized status report to
 # .github/kaamsetu-setup-status.txt (never the token). Removed after use.
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Nearse SQL on Supabase
+      - name: Run Repto SQL on Supabase
         env:
           SB_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
         run: |
@@ -197,7 +197,7 @@ jobs:
             note "WARN: could not read anon key from docs/index.html — upload probe skipped"
           fi
 
-          note "SUCCESS: Nearse database is live"
+          note "SUCCESS: Repto database is live"
 
       - name: Commit status report
         if: always()
@@ -205,5 +205,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .github/kaamsetu-setup-status.txt
-          git commit -m "Nearse DB setup status" || echo "nothing to commit"
+          git commit -m "Repto DB setup status" || echo "nothing to commit"
           git push || true

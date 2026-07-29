@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Nearse — Local Workers in Guwahati",
-  "short_name": "Nearse",
+  "name": "Repto — Local Workers in Guwahati",
+  "short_name": "Repto",
   "description": "Book verified local workers in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers and more. Or register your skills and receive bookings.",
   "start_url": "./?src=app",
   "scope": "./",
