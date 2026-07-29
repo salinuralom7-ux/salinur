@@ -111,6 +111,58 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   await admin.waitForTimeout(700);
   ok('Marking it done clears it', await admin.locator('.report-item').count() === 0);
 
+  // ---------- admin review: photo, search, canned reasons, undo ----------
+  await admin.evaluate(() => setAdminTab('review'));
+  await admin.waitForTimeout(900);
+  const cards = () => admin.locator('.admin-card').count();
+  const total = await cards();
+  ok('Review tab lists profiles', total > 0, total);
+
+  ok('Search box present', await admin.locator('#adminQ').count() === 1);
+  const firstName = (await admin.locator('.admin-card h4').first().innerText()).split('\n')[0].trim().split(' ')[0];
+  await admin.fill('#adminQ', firstName);
+  await admin.waitForTimeout(400);
+  const narrowed = await cards();
+  ok('Search narrows the queue', narrowed > 0 && narrowed <= total, `${total} → ${narrowed} for "${firstName}"`);
+  await admin.fill('#adminQ', 'zzzznothing');
+  await admin.waitForTimeout(400);
+  ok('A search that matches nothing shows nothing', await cards() === 0);
+  await admin.fill('#adminQ', '');
+  await admin.waitForTimeout(400);
+  ok('Clearing the search restores the queue', await cards() === total);
+
+  // the photo has to be inspectable — the whole trust story rests on it
+  ok('Photo is a button', await admin.locator('.admin-card .avatar.shot').count() === total);
+  await admin.locator('.admin-card .avatar.shot').first().click();
+  await admin.waitForTimeout(500);
+  ok('Full-size photo opens', await admin.locator('#shotOverlay.open').count() === 1);
+  ok('…with the decision buttons on it', await admin.locator('#shotOverlay .shot-actions .btn').count() >= 1);
+  await admin.locator('#shotOverlay .close').click();
+  await admin.waitForTimeout(400);
+
+  // reject from a list, then take it back
+  const anyCard = admin.locator('.admin-card').first();
+  const who = await anyCard.getAttribute('data-id');
+  await anyCard.locator('button', { hasText: 'Reject' }).click();
+  await admin.waitForTimeout(500);
+  ok('Rejection sheet opens', await admin.locator('#rejectOverlay.open').count() === 1);
+  const nReasons = await admin.locator('.reject-opt').count();
+  ok('Canned reasons offered', nReasons >= 6, nReasons);
+  ok('…and a free-text box as well', await admin.locator('#rejectOther').count() === 1);
+  const reason = (await admin.locator('.reject-opt').first().innerText()).trim();
+  await admin.locator('.reject-opt').first().click();
+  await admin.waitForTimeout(700);
+  const statusOfWho = async () => admin.evaluate(id => {
+    const w = (adminRows || []).find(x => x.id === id); return w && statusOf(w);
+  }, who);
+  ok('Rejecting records the chosen reason', await statusOfWho() === 'rejected', reason);
+
+  ok('Undo offered on the toast', await admin.locator('.toast.with-action .toast-btn').count() === 1,
+     await admin.locator('.toast').innerText());
+  await admin.locator('.toast-btn').click();
+  await admin.waitForTimeout(700);
+  ok('Undo puts the profile back', await statusOfWho() === 'approved');
+
   // wrong PIN is refused
   const bad = await ctx.newPage();
   bad.on('dialog', d => d.accept('0000'));

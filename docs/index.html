@@ -1589,6 +1589,54 @@ body.in-chat > .demo-note{display:none}
   box-shadow:var(--shadow);max-width:92vw;text-align:center;
 }
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.with-action{display:flex;align-items:center;gap:14px;padding:10px 10px 10px 20px;text-align:left}
+.toast.with-action > span{white-space:nowrap}
+.toast-btn{
+  background:var(--brand);color:var(--brand-ink);border:0;border-radius:999px;
+  padding:8px 16px;font-weight:800;font-size:.83rem;white-space:nowrap;
+}
+.toast-btn:hover{background:var(--brand-2)}
+
+/* ---------- admin: search, photo, rejection ---------- */
+.admin-search{
+  display:flex;align-items:center;gap:10px;margin-top:16px;
+  background:var(--surface-2);border:1px solid var(--line-strong);
+  border-radius:var(--r-sm);padding:0 13px;color:var(--muted);
+}
+.admin-search input{
+  flex:1;background:none;border:0;outline:none;padding:12px 0;font-size:.92rem;
+}
+.admin-search input::-webkit-search-cancel-button{display:none}
+.admin-search .clear{
+  background:none;border:0;color:var(--muted);font-size:.9rem;padding:6px;
+}
+.admin-search .clear:hover{color:var(--ink)}
+
+.admin-card .avatar.shot{
+  position:relative;padding:0;border:0;background:var(--surface-2);
+  border-radius:12px;overflow:hidden;flex:0 0 auto;
+}
+.admin-card .avatar.shot .zoom{
+  position:absolute;right:4px;bottom:4px;width:22px;height:22px;border-radius:50%;
+  background:rgba(12,10,7,.82);color:var(--brand-2);display:grid;place-items:center;
+}
+.admin-card .avatar.shot:hover{box-shadow:0 0 0 2px var(--brand)}
+
+.shot-stage{
+  background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;display:grid;place-items:center;min-height:180px;
+}
+.shot-stage img{width:100%;max-width:340px;height:auto;display:block}
+.shot-none{color:var(--muted);font-size:.88rem;padding:56px 0}
+.shot-actions{display:flex;gap:10px;margin-top:18px}
+.shot-actions .btn{flex:1;padding:13px}
+
+.reject-list{display:flex;flex-direction:column;gap:8px}
+.reject-opt{
+  text-align:left;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:12px 14px;font-size:.87rem;line-height:1.45;color:var(--ink-2);
+}
+.reject-opt:hover{border-color:var(--danger);color:var(--ink);background:rgba(232,112,127,.09)}
 footer{border-top:1px solid var(--line);padding:26px 0 34px;margin-top:auto}
 footer .wrap{
   display:flex;flex-direction:column;gap:14px;
@@ -2382,6 +2430,28 @@ footer a:hover{color:var(--brand)}
   </div>
 </div>
 
+<div class="overlay" id="shotOverlay" onclick="if(event.target===this)closeModal('shotOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('shotOverlay')" aria-label="Close">✕</button>
+    <div id="shotBody"></div>
+  </div>
+</div>
+
+<div class="overlay" id="rejectOverlay" onclick="if(event.target===this)closeModal('rejectOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('rejectOverlay')" aria-label="Close">✕</button>
+    <h3>Why is this being rejected?</h3>
+    <p class="sub" id="rejectWho"></p>
+    <p class="hint" style="margin-bottom:10px">The worker sees exactly these words, and can fix it and resubmit.</p>
+    <div class="reject-list" id="rejectList"></div>
+    <div class="field" style="margin-top:14px">
+      <label for="rejectOther">Or write your own</label>
+      <textarea id="rejectOther" rows="2" placeholder="Keep it clear and factual."></textarea>
+    </div>
+    <button class="btn btn-outline btn-block" onclick="sendReject('')">Reject with this reason</button>
+  </div>
+</div>
+
 <div class="overlay" id="camOverlay" onclick="if(event.target===this)stopCamera()">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="stopCamera()" aria-label="Close">✕</button>
@@ -2936,8 +3006,32 @@ function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"
 function jsq(s){ return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }
 function toast(msg){
   const t = $("toast");
-  t.textContent = msg; t.classList.add("show");
+  t.textContent = msg; t.classList.remove("with-action"); t.classList.add("show");
   clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 3400);
+}
+/* A toast you can act on, with the seconds left counting down on the button.
+   Used for undo: a mis-tapped Reject sends a real message to a real person,
+   so there has to be a way back that does not involve finding them again. */
+function toastAction(msg, label, seconds, fn){
+  const t = $("toast");
+  let left = seconds;
+  const paint = () => {
+    t.innerHTML = `<span>${esc(msg)}</span>`;
+    const b = document.createElement("button");
+    b.className = "toast-btn";
+    b.textContent = `${label} (${left})`;
+    b.onclick = () => { clearTimeout(t._h); clearInterval(t._t); t.classList.remove("show"); fn(); };
+    t.appendChild(b);
+  };
+  paint();
+  t.classList.add("show", "with-action");
+  clearTimeout(t._h); clearInterval(t._t);
+  t._t = setInterval(() => {
+    left--;
+    if(left <= 0){ clearInterval(t._t); t.classList.remove("show"); return; }
+    const b = t.querySelector(".toast-btn");
+    if(b) b.textContent = `${label} (${left})`;
+  }, 1000);
 }
 /* Sheets get a history entry too, so back closes the sheet rather than
    jumping a whole screen — the behaviour people expect on Android.
@@ -6609,6 +6703,37 @@ async function clearReport(id){
 let adminTab = "stats";
 function setAdminTab(t){ adminTab = t; renderAdmin(); }
 
+/* The queue is held here between renders so that typing in the search box
+   filters what is already loaded instead of asking the server again on every
+   keystroke. */
+let adminRows = null;
+let adminQuery = "";
+let adminUndo = null;      /* {id, status, note} — the state before the last decision */
+
+/* Why a profile gets turned away. Free text meant every rejection was worded
+   differently and, at fifty a day, mostly not written at all. */
+const REJECT_REASONS = [
+  "The photo is not a clear picture of your face",
+  "The photo looks like it is not of you",
+  "The photo is taken from a gallery, not the camera",
+  "The name does not look like a real name",
+  "The WhatsApp code did not arrive, or came from a different number",
+  "The rate is not realistic for this service",
+  "This looks like a duplicate of another profile",
+  "The services chosen do not match the details given"
+];
+
+function adminSearchInput(el){
+  adminQuery = el.value.trim().toLowerCase();
+  paintReview();                       /* no refetch: filter what is in hand */
+}
+function adminMatches(w){
+  if(!adminQuery) return true;
+  const hay = [w.name, w.phone, w.area, w.city, w.reg_number,
+               (w.skills||[]).map(s=>s.skill).join(" ")].join(" ").toLowerCase();
+  return adminQuery.split(/\s+/).every(word => hay.includes(word));
+}
+
 async function renderAdmin(){
   const host = $("adminPanel");
   host.innerHTML = '<div class="skeleton"></div>';
@@ -6634,19 +6759,38 @@ async function renderAdmin(){
     return;
   }
 
-  let all = [];
-  try{ all = await api.reviewQueue(); }
+  try{ adminRows = await api.reviewQueue(); }
   catch(e){ host.innerHTML = tabs + `<p class="hint">Could not load profiles — ${esc(e.message||"")}</p>` + exit; return; }
   await loadWaCodes();
-  const reports = await loadReports();
-  const exits = await loadExits();
-  const pending  = all.filter(w => statusOf(w) === "pending");
-  const approved = all.filter(w => statusOf(w) === "approved");
-  const rejected = all.filter(w => statusOf(w) === "rejected");
+  adminReportsCache = await loadReports();
+  adminExitsCache = await loadExits();
+  paintReview();
+}
+
+/* Drawing the review tab is separate from loading it, so searching and acting
+   on one card do not cost four network round trips and a jump back to the top
+   of the page. */
+let adminReportsCache = [], adminExitsCache = [];
+function paintReview(){
+  const host = $("adminPanel");
+  const all = adminRows || [];
+  const reports = adminReportsCache, exits = adminExitsCache;
+  const tabs = `<div class="tabs admin-tabs">
+      <button class="tab" onclick="setAdminTab('stats')">Dashboard</button>
+      <button class="tab on" onclick="setAdminTab('review')">Review</button>
+      <button class="tab" onclick="setAdminTab('activity')">Activity</button>
+    </div>`;
+  const exit = `<button class="btn btn-quiet btn-block btn-sm" style="margin-top:18px" onclick="adminPin=null;go('home')">Exit admin</button>`;
+
+  const hit = all.filter(adminMatches);
+  const pending  = hit.filter(w => statusOf(w) === "pending");
+  const approved = hit.filter(w => statusOf(w) === "approved");
+  const rejected = hit.filter(w => statusOf(w) === "rejected");
   const section = (label, list, hint) => list.length
     ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px"><b>${label}</b>${hint ? " — " + hint : ""}</p>` +
       list.map(adminCard).join("")
     : "";
+  const y = window.scrollY;
   host.innerHTML = tabs + `
     <h2>Profile review</h2>
     ${reports.length ? `<div class="reports">
@@ -6679,7 +6823,15 @@ async function renderAdmin(){
         <span class="hint" id="bulkHint">${pending.length} waiting</span>
       </div>
     </div>` : ""}
-    <p class="hint">${pending.length} awaiting approval · ${approved.length} live · ${rejected.length} rejected</p>
+    <div class="admin-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="adminQ" placeholder="Find by name, number, locality or trade"
+             value="${esc(adminQuery)}" oninput="adminSearchInput(this)" autocomplete="off">
+      ${adminQuery ? `<button class="clear on" onclick="adminQuery='';paintReview()" aria-label="Clear">✕</button>` : ""}
+    </div>
+    <p class="hint">${adminQuery
+      ? `${hit.length} of ${all.length} profiles match “${esc(adminQuery)}”`
+      : `${pending.length} awaiting approval · ${approved.length} live · ${rejected.length} rejected`}</p>
 
     <div class="switch-row" style="margin-top:16px">
       <div><b>Automatic code delivery</b><span>${LIVE
@@ -6691,9 +6843,15 @@ async function renderAdmin(){
 
     ${pending.length
       ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px"><b>Awaiting approval</b></p>` + pending.map(adminCard).join("")
-      : `<div class="divider"></div><div class="empty" style="margin:0"><b>Nothing to review</b>New profiles will appear here.</div>`}
+      : `<div class="divider"></div><div class="empty" style="margin:0"><b>${adminQuery ? "Nothing waiting matches that" : "Nothing to review"}</b>${adminQuery ? "Live and rejected profiles that match are below." : "New profiles will appear here."}</div>`}
     ${section("Live profiles", approved)}
     ${section("Rejected", rejected, "not visible to customers")}` + exit;
+
+  /* keep the page where it was: approving the fourth card should not throw
+     you back to the top of a list of fifty */
+  window.scrollTo(0, y);
+  const q = $("adminQ");
+  if(q && adminQuery){ q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
 }
 /* ---------- dashboard ---------- */
 const nf = n => (n == null ? "—" : Number(n).toLocaleString("en-IN"));
@@ -6833,8 +6991,12 @@ function adminCard(w){
     rejected: `<button class="btn btn-brand btn-sm" onclick="adminSet('${jsq(w.id)}','approved')">Approve</button>
                <button class="btn btn-outline btn-sm" onclick="adminSet('${jsq(w.id)}','pending')">To review</button>`
   }[st];
-  return `<div class="admin-card">
-    <span class="avatar"><img src="${avatarOf(w)}" alt=""></span>
+  return `<div class="admin-card" data-id="${esc(w.id)}" data-status="${esc(st)}">
+    <button class="avatar shot" onclick="openAdminPhoto('${jsq(w.id)}')" title="See the photo full size"
+            aria-label="See ${esc(w.name)}'s photo full size">
+      <img src="${avatarOf(w)}" alt="">
+      ${w.selfie ? `<span class="zoom"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M11 8.5v5M8.5 11h5"/></svg></span>` : ""}
+    </button>
     <div style="flex:1;min-width:0">
       <h4>${esc(w.name)} ${w.phone_verified
         ? '<span class="verified-badge">✓ Number verified</span>'
@@ -6908,12 +7070,56 @@ async function bulkApprove(){
   renderAdmin();
 }
 
+/* ---------- the photo, at a size you can actually judge ----------
+   The whole promise to customers is that a person looked at this photo. At
+   76 pixels in the queue you cannot tell a face from a stock image, so the
+   decision buttons live next to the full-size picture too. */
+let adminPhotoId = null;
+function openAdminPhoto(id){
+  const w = (adminRows || []).find(x => x.id === id);
+  if(!w) return;
+  adminPhotoId = id;
+  const st = statusOf(w);
+  $("shotBody").innerHTML = `
+    <div class="shot-stage">${w.selfie
+      ? `<img src="${esc(w.selfie)}" alt="Verification photo of ${esc(w.name)}">`
+      : `<div class="shot-none">No photo on this profile</div>`}</div>
+    <h3 style="margin-top:14px">${esc(w.name)}</h3>
+    <p class="sub" style="margin:2px 0 0">${esc(w.area ? w.area + ", " : "")}${esc(w.city||"")} · ${esc(w.phone||"")}</p>
+    <p class="hint" style="margin-top:8px">${esc((w.skills||[]).map(x=>x.skill + " — ₹" + x.price + " " + x.unit).join(" · "))}</p>
+    ${waCodes[w.id] ? `<div class="wa-expect" style="margin-top:12px">Check WhatsApp for <b>${esc(waCodes[w.id])}</b> from <b>${esc(w.phone||"")}</b>.</div>` : ""}
+    <div class="shot-actions">
+      ${st !== "approved" ? `<button class="btn btn-brand" onclick="closeModal('shotOverlay');adminSet('${jsq(w.id)}','approved')">Approve</button>` : ""}
+      <button class="btn btn-outline" onclick="closeModal('shotOverlay');adminReject('${jsq(w.id)}')">Reject</button>
+    </div>`;
+  openModal("shotOverlay");
+}
+
+/* ---------- rejection, from a list ----------
+   This used to be a prompt() the reviewer typed into. Fifty times a day that
+   is either not done or written differently every time, and the worker is the
+   one who has to make sense of it. */
+let rejectId = null;
 function adminReject(id){
-  const note = prompt("Why is this profile being rejected?\nThe worker will see this, so keep it clear and factual.");
-  if(note === null) return;
+  const w = (adminRows || []).find(x => x.id === id);
+  rejectId = id;
+  $("rejectWho").textContent = w ? w.name + (w.phone ? " · " + w.phone : "") : "";
+  $("rejectList").innerHTML = REJECT_REASONS.map(r =>
+    `<button class="reject-opt" onclick="sendReject('${jsq(r)}')">${esc(r)}</button>`).join("");
+  $("rejectOther").value = "";
+  openModal("rejectOverlay");
+}
+function sendReject(reason){
+  const note = (reason || $("rejectOther").value).trim();
+  if(!note){ toast("Choose a reason, or write one"); return; }
+  const id = rejectId;
+  closeModal("rejectOverlay");
   adminSet(id, "rejected", note);
 }
+
 async function adminSet(id, status, note){
+  const before = (adminRows || []).find(x => x.id === id);
+  const prev = before ? { status: statusOf(before), note: before.review_note || null } : null;
   try{
     if(LIVE){
       await sb("rpc/admin_set_status", {method:"POST",
@@ -6928,8 +7134,21 @@ async function adminSet(id, status, note){
         demoSave(all);
       }
     }
-    toast({approved:"Profile approved", rejected:"Profile rejected", pending:"Moved back to review"}[status]);
-    renderAdmin();
+    /* update the row in hand and repaint, rather than refetching the whole
+       queue, the codes, the reports and the exit reasons all over again */
+    if(before){
+      before.status = status;
+      before.verified = (status === "approved");
+      before.review_note = (note||"").trim() || null;
+      if(status === "approved" && waCodes[id]) before.phone_verified = true;
+    }
+    if(adminTab === "review") paintReview(); else renderAdmin();
+
+    const said = {approved:"Profile approved", rejected:"Profile rejected", pending:"Moved back to review"}[status];
+    if(prev && prev.status !== status){
+      adminUndo = { id, ...prev };
+      toastAction(said, "Undo", 10, () => adminSet(id, prev.status, prev.note));
+    }else toast(said);
   }catch(e){ toast(e.message); }
 }
 async function verifyReg(id){
