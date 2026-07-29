@@ -4568,14 +4568,35 @@ alter table public.deleted_media enable row level security;
 drop policy if exists "orphan list is readable" on public.deleted_media;
 create policy "orphan list is readable" on public.deleted_media for select using (true);
 
+-- the storage policy below reads this table as the caller's role, so the
+-- grant has to be explicit or the delete is refused for the wrong reason
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('grant select on public.deleted_media to %I', r);
+    end if;
+  end loop;
+end $$;
+
 do $$
 begin
   if exists (select 1 from information_schema.schemata where schema_name = 'storage') then
-    execute 'drop policy if exists "orphaned selfies may be removed" on storage.objects';
-    execute $p$create policy "orphaned selfies may be removed"
-      on storage.objects for delete
-      using (bucket_id = 'selfies'
-             and exists (select 1 from public.deleted_media m where m.path = storage.objects.name))$p$;
+    begin
+      execute 'drop policy if exists "orphaned selfies may be removed" on storage.objects';
+      execute $p$create policy "orphaned selfies may be removed"
+        on storage.objects for delete
+        using (bucket_id = 'selfies'
+               and exists (select 1 from public.deleted_media m where m.path = storage.objects.name))$p$;
+      raise notice 'storage delete policy in place';
+    exception when others then
+      -- never let this abort the file: deleting the PROFILE must work even if
+      -- the photo has to wait for the nightly sweep
+      raise notice 'could not set the storage delete policy (%) — photos will be swept up instead', sqlerrm;
+    end;
+  else
+    raise notice 'no storage schema — skipping the storage delete policy';
   end if;
 end $$;
 
