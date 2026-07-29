@@ -34,7 +34,7 @@ Pick the service, the day and the time. Your request arrives on the worker's Wha
 NO COMMISSION, EVER
 Repto takes nothing from a worker's earnings and charges customers nothing to book. The rate you see is the rate the worker set.
 
-EVERY PROFILE CHECKED BY A PERSON
+EVERY PROFILE VERIFIED
 Not an algorithm. Someone reviews the photo, the details and the WhatsApp number before a profile goes live. Change your photo or your name later and it goes back for review.
 
 HONEST PRICES
@@ -131,7 +131,7 @@ Category: **Utility, Productivity, Communication or Other**
 | Does it share the user's current location with other users? | **No** — only the locality name and a rounded distance |
 | Does it allow users to purchase digital goods? | No |
 | Does the app contain user-generated content? | **Yes** — profiles, ratings |
-| Is there a way to report content, and a moderation policy? | **Yes** — Report this profile on every worker, reviewed by a person |
+| Is there a way to report content, and a moderation policy? | **Yes** — Report this profile on every worker, reviewed by our team |
 
 Expect **PEGI 3 / ESRB Everyone** with an interactive-elements notice. Set
 the target audience to **18 and over** — the terms require it and the app

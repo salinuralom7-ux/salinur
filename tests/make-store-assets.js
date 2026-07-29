@@ -87,7 +87,7 @@ const srv = http.createServer((q, r) => {
       <span class="chip on">0% commission</span>
       <span class="chip">155 services</span>
       <span class="chip">124 localities</span>
-      <span class="chip">Checked by a person</span>
+      <span class="chip">Verified profiles</span>
     </div>
   </div>`);
   await fg.waitForTimeout(1800);

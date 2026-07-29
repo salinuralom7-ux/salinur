@@ -216,8 +216,10 @@ Run every asset past these five:
 
 1. Nobody is wearing a Repto uniform, and nothing implies workers are our
    staff.
-2. The word **verified** does not appear next to a person's name or face. Say
-   "checked by a person" instead.
+2. "Verified" never implies official or government vetting. It means we
+   checked the photo, the details and the number ourselves — say "verified
+   before it goes live", never "verified by authorities" or anything that
+   suggests a police or Aadhaar check we do not perform.
 3. No cards, no UPI screens, no cash changing hands.
 4. No invented numbers — no worker counts, no download counts, no star
    ratings, no testimonials from people who do not exist.
