@@ -2949,7 +2949,11 @@ returns boolean language sql immutable set search_path = public as $$
 $$;
 
 -- ---------- 14.2 starting one ----------
-create or replace function public.start_thread(
+-- Dropped first every time: Migration 18 widens the return type to carry
+-- the worker's number for the booking notification.
+drop function if exists public.start_thread(uuid, text, text, text, text, text, text, int, text, text, uuid);
+
+create function public.start_thread(
   p_worker uuid, p_skill text, p_name text, p_phone text,
   p_area text default null, p_detail text default null, p_note text default null,
   p_price int default null, p_unit text default null, p_mode text default null,
@@ -4248,5 +4252,285 @@ begin
   delete from admin_sessions where expires_at < now();
   insert into admin_sessions default values returning token into tok;
   return tok;
+end;
+$$;
+
+-- ============================================================
+-- MIGRATION 18 — remote trades
+--
+-- A video editor cutting a Guwahati wedding film does not have to be in
+-- Guwahati. Neither does the person building the website. These trades are
+-- listed for customers here, but the worker may be anywhere: they are not
+-- filtered by city and there is no distance to rank them by.
+-- ============================================================
+
+insert into public.service_rates (skill, min_price, max_price) values
+  ($q$YouTube Video Editor$q$,500,25000),
+  ($q$Reels & Shorts Editor$q$,200,8000),
+  ($q$Wedding Video Editor$q$,2000,60000),
+  ($q$Motion Graphics Artist$q$,1000,50000),
+  ($q$Colour Grading Artist$q$,1000,40000),
+  ($q$Subtitles & Captions$q$,100,5000),
+  ($q$Podcast & Audio Editor$q$,300,15000),
+  ($q$Photo Editor & Retoucher$q$,100,10000),
+  ($q$Thumbnail Designer$q$,100,5000),
+  ($q$3D Artist & Animator$q$,3000,300000),
+  ($q$Voice-over Artist$q$,300,25000),
+  ($q$UI/UX Designer$q$,3000,300000),
+  ($q$WordPress Developer$q$,2000,150000),
+  ($q$SEO Specialist$q$,2000,60000),
+  ($q$Presentation Designer$q$,300,20000),
+  ($q$Translator (Assamese / Hindi / English)$q$,200,20000),
+  ($q$Online Tutor (Any Subject)$q$,800,25000)
+on conflict (skill) do update
+  set min_price = excluded.min_price, max_price = excluded.max_price;
+
+create table if not exists public.remote_skills (skill text primary key);
+alter table public.remote_skills enable row level security;
+drop policy if exists "remote list is public" on public.remote_skills;
+create policy "remote list is public" on public.remote_skills for select using (true);
+
+delete from public.remote_skills;
+insert into public.remote_skills (skill) values
+  ($q$3D Artist & Animator$q$),
+  ($q$Accountant / Bookkeeper$q$),
+  ($q$Chartered Accountant$q$),
+  ($q$Colour Grading Artist$q$),
+  ($q$Content Writer$q$),
+  ($q$Data Entry Operator$q$),
+  ($q$Digital Marketing Specialist$q$),
+  ($q$GST & Tax Consultant$q$),
+  ($q$Graphic Designer$q$),
+  ($q$Logo & Branding Designer$q$),
+  ($q$Mobile App Developer$q$),
+  ($q$Motion Graphics Artist$q$),
+  ($q$Online Tutor (Any Subject)$q$),
+  ($q$Photo Editor & Retoucher$q$),
+  ($q$Podcast & Audio Editor$q$),
+  ($q$Presentation Designer$q$),
+  ($q$Reels & Shorts Editor$q$),
+  ($q$SEO Specialist$q$),
+  ($q$Social Media Manager$q$),
+  ($q$Subtitles & Captions$q$),
+  ($q$Thumbnail Designer$q$),
+  ($q$Translator (Assamese / Hindi / English)$q$),
+  ($q$UI/UX Designer$q$),
+  ($q$Video Editor$q$),
+  ($q$Voice-over Artist$q$),
+  ($q$Web Developer$q$),
+  ($q$Wedding Video Editor$q$),
+  ($q$WordPress Developer$q$),
+  ($q$YouTube Video Editor$q$);
+
+-- A worker is reachable beyond Guwahati when every trade they offer can be
+-- done remotely. Somebody who also fits ceiling fans still has to be local
+-- for that, so a mixed profile stays a Guwahati profile.
+alter table public.workers add column if not exists serves_remote boolean not null default false;
+
+create or replace function public.workers_set_remote()
+returns trigger
+language plpgsql set search_path = public as $$
+declare total int; remote int;
+begin
+  select count(*), count(*) filter (where exists (
+           select 1 from remote_skills r where r.skill = s->>'skill'))
+    into total, remote
+    from jsonb_array_elements(coalesce(new.skills, '[]'::jsonb)) s;
+  new.serves_remote := (total > 0 and total = remote);
+  return new;
+end;
+$$;
+drop trigger if exists workers_set_remote_trg on public.workers;
+create trigger workers_set_remote_trg
+  before insert or update of skills on public.workers
+  for each row execute function public.workers_set_remote();
+
+update public.workers set skills = skills;      -- recompute for anyone already here
+create index if not exists workers_remote_idx on public.workers (serves_remote)
+  where serves_remote and status = 'approved';
+
+-- search stops filtering remote trades by city, and says which is which
+drop function if exists public.search_workers(double precision, double precision, text, text[], text, text, int, int);
+
+create function public.search_workers(
+  p_lat        double precision default null,
+  p_lng        double precision default null,
+  p_q          text             default null,
+  p_cat_skills text[]           default null,
+  p_area       text             default null,
+  p_city       text             default 'Guwahati',
+  p_limit      int              default 20,
+  p_offset     int              default 0
+)
+returns table (
+  id uuid, name text, selfie text, thumb text, city text, area text, about text,
+  skills jsonb, rating_sum int, rating_count int, distance_km double precision,
+  worker_code text, serves_remote boolean, online_until timestamptz,
+  reg_number text, reg_verified boolean, total_count bigint)
+language sql stable security definer set search_path = public, extensions as $$
+  with base as (
+    select w.*,
+           lower(w.name || ' ' || coalesce(w.area,'') || ' ' || coalesce(w.city,'') || ' ' ||
+                 coalesce(w.skills::text,'')) as hay,
+           case when p_lat is null or w.lat is null or w.serves_remote then null else
+             6371 * 2 * asin(sqrt(
+               power(sin(radians(w.lat - p_lat) / 2), 2) +
+               cos(radians(p_lat)) * cos(radians(w.lat)) *
+               power(sin(radians(w.lng - p_lng) / 2), 2)))
+           end as dist
+      from workers w
+     where w.status = 'approved'
+       and w.available
+       -- a remote trade is offered from wherever the worker happens to be
+       and (p_city is null or w.city = p_city or w.serves_remote)
+       and (p_area is null or w.area = p_area or w.serves_remote)
+       and (p_cat_skills is null or exists (
+             select 1 from jsonb_array_elements(w.skills) s
+              where s->>'skill' = any(p_cat_skills)))
+  ),
+  hit as (
+    select * from base b
+     where p_q is null or btrim(p_q) = '' or (
+       select bool_and(b.hay like '%' || word || '%')
+         from unnest(string_to_array(lower(btrim(p_q)), ' ')) word
+        where word <> '')
+  )
+  select h.id, h.name, h.selfie, h.thumb, h.city, h.area, h.about, h.skills,
+         h.rating_sum, h.rating_count, h.dist, h.worker_code, h.serves_remote,
+         h.online_until, h.reg_number, h.reg_verified,
+         count(*) over () as total_count
+    from hit h
+   order by
+     case when h.dist is null then 1 else 0 end,
+     round(coalesce(h.dist, 0)::numeric, 1),
+     case when h.rating_count = 0 then 3.4
+          else h.rating_sum::numeric / h.rating_count end desc,
+     h.created_at desc
+   limit greatest(1, least(p_limit, 50))
+  offset greatest(0, p_offset);
+$$;
+
+-- registration accepts a city other than Guwahati only for remote-only work
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  new_id uuid; jwt_phone text; need_otp boolean; total int; remote int;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then raise exception 'PIN must be exactly 4 digits'; end if;
+  if p_phone !~ '^[6-9]\d{9}$' then raise exception 'Enter a valid 10-digit Indian mobile number'; end if;
+  perform check_rate_bands(p_data->'skills');
+
+  select count(*), count(*) filter (where exists (
+           select 1 from remote_skills r where r.skill = s->>'skill'))
+    into total, remote
+    from jsonb_array_elements(coalesce(p_data->'skills','[]'::jsonb)) s;
+  if total > remote and coalesce(p_data->>'city','') <> 'Guwahati' then
+    raise exception 'Work done at a customer''s home is Guwahati only for now';
+  end if;
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''), '\D', '', 'g');
+  if length(jwt_phone) > 10 then jwt_phone := right(jwt_phone, 10); end if;
+  if coalesce(need_otp,false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, thumb, city, area, about, lat, lng, skills,
+                       available, phone_verified, terms_version, consent_at, age_confirmed)
+  values (coalesce(p_data->>'name',''), p_phone, p_data->>'selfie', p_data->>'thumb',
+          nullif(btrim(coalesce(p_data->>'city','')),''), p_data->>'area', p_data->>'about',
+          (p_data->>'lat')::double precision, (p_data->>'lng')::double precision,
+          coalesce(p_data->'skills','[]'::jsonb),
+          coalesce((p_data->>'available')::boolean, true), jwt_phone <> '',
+          nullif(p_data->>'terms_version',''),
+          case when coalesce((p_data->>'age_confirmed')::boolean, false) then now() end,
+          coalesce((p_data->>'age_confirmed')::boolean, false))
+  returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash, email, wa_code)
+    values (new_id, crypt(p_pin, gen_salt('bf', 10)),
+            nullif(btrim(coalesce(p_data->>'email','')), ''),
+            nullif(btrim(coalesce(p_data->>'wa_code','')), ''));
+  return query select * from workers where id = new_id;
+end;
+$$;
+
+-- the booking notification needs the number, so start_thread hands it back
+-- and records the hand-over exactly like any other contact request
+drop function if exists public.start_thread(uuid, text, text, text, text, text, text, int, text, text, uuid);
+-- Dropped first every time: Migration 18 widens the return type to carry
+-- the worker's number for the booking notification.
+drop function if exists public.start_thread(uuid, text, text, text, text, text, text, int, text, text, uuid);
+
+create function public.start_thread(
+  p_worker uuid, p_skill text, p_name text, p_phone text,
+  p_area text default null, p_detail text default null, p_note text default null,
+  p_price int default null, p_unit text default null, p_mode text default null,
+  p_job uuid default null)
+returns table (code text, token uuid, worker_name text, worker_phone text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; c text; tok uuid; wname text; wphone text; recent int;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then raise exception 'Enter a valid 10-digit mobile number'; end if;
+  if btrim(coalesce(p_name,'')) = '' then raise exception 'Please enter your name'; end if;
+
+  select w.name, w.phone into wname, wphone from workers w
+   where w.id = p_worker and w.status = 'approved' and w.available;
+  if wname is null then raise exception 'That worker is not available at the moment'; end if;
+
+  select count(*) into recent from threads
+   where customer_phone = p_phone and created_at > now() - interval '1 hour';
+  if recent >= 15 then
+    raise exception 'That is a lot of requests in one hour. Please try again later.';
+  end if;
+
+  loop
+    c := upper(substr(encode(gen_random_bytes(8), 'hex'), 1, 10));
+    exit when not exists (select 1 from threads where threads.code = c);
+  end loop;
+
+  insert into threads (code, worker_id, skill, mode, detail, note, price, unit,
+                       customer_name, customer_phone, customer_area, job_id, worker_unread)
+  values (c, p_worker, p_skill, nullif(btrim(coalesce(p_mode,'')),''),
+          nullif(btrim(coalesce(p_detail,'')),''), nullif(btrim(coalesce(p_note,'')),''),
+          p_price, nullif(btrim(coalesce(p_unit,'')),''),
+          btrim(p_name), p_phone, nullif(btrim(coalesce(p_area,'')),''), p_job, 1)
+  returning id, threads.customer_token into tid, tok;
+
+  insert into messages (thread_id, sender, body)
+  values (tid, 'system',
+          format('%s asked for %s%s', btrim(p_name), p_skill,
+                 case when nullif(btrim(coalesce(p_detail,'')),'') is null then ''
+                      else ' — ' || btrim(p_detail) end));
+  if nullif(btrim(coalesce(p_note,'')),'') is not null then
+    insert into messages (thread_id, sender, body) values (tid, 'customer', btrim(p_note));
+    update threads set worker_unread = 2 where id = tid;
+  end if;
+
+  insert into contact_requests (worker_id, requester) values (p_worker, p_phone);
+  return query select c, tok, wname, wphone;
+end;
+$$;
+
+-- how many requests are sitting unanswered, for the badge the worker sees
+-- without opening anything
+create or replace function public.worker_pending(p_phone text default null, p_pin text default null,
+                                                 p_token uuid default null)
+returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; n int;
+begin
+  wid := public.worker_auth(p_phone, p_pin, p_token);
+  if wid is null then return 0; end if;
+  select count(*) into n from threads
+   where worker_id = wid and status = 'requested';
+  return coalesce(n, 0);
 end;
 $$;

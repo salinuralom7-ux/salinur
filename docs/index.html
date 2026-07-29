@@ -998,6 +998,12 @@ header{
   }
 }
 
+.remote-tag{
+  font-style:normal;color:var(--brand-2);font-weight:700;
+}
+.remote-tag::before{content:"◍ ";opacity:.8}
+.chat-nudge{padding:8px 14px;font-size:.82rem}
+
 /* ---------- conversations ---------- */
 .chat-shell{
   position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);z-index:60;
@@ -1959,13 +1965,13 @@ footer a:hover{color:var(--brand)}
     <div class="grid-2">
       <div class="field">
         <label for="regCity">City</label>
-        <input type="text" id="regCity" value="Guwahati" readonly aria-readonly="true" class="locked">
-        <p class="hint" style="margin-top:6px">Repto is live in Guwahati first. More cities are coming soon.</p>
+        <input type="text" id="regCity" value="Guwahati" readonly aria-readonly="true" class="locked" maxlength="40">
+        <p class="hint" id="regCityNote" style="margin-top:6px">Work done at a customer's home is Guwahati only for now.</p>
       </div>
       <div class="field">
         <label for="regArea">Which locality are you in?</label>
         <select id="regArea"></select>
-        <p class="hint" style="margin-top:6px">Customers search by locality — pick the one nearest to where you live or work.</p>
+        <p class="hint" id="regAreaNote" style="margin-top:6px">Customers search by locality — pick the one nearest to where you live or work.</p>
       </div>
       <div class="field full">
         <label for="regAbout">About your work <span class="sublabel">— optional</span></label>
@@ -2558,6 +2564,23 @@ const RATE_BAND = {
   "Office Assistant":[6000,30000],
   "Office Housekeeping Staff":[6000,30000],
   "Building Caretaker":[6000,30000],
+  "YouTube Video Editor":[500,25000],
+  "Reels & Shorts Editor":[200,8000],
+  "Wedding Video Editor":[2000,60000],
+  "Motion Graphics Artist":[1000,50000],
+  "Colour Grading Artist":[1000,40000],
+  "Subtitles & Captions":[100,5000],
+  "Podcast & Audio Editor":[300,15000],
+  "Photo Editor & Retoucher":[100,10000],
+  "Thumbnail Designer":[100,5000],
+  "3D Artist & Animator":[3000,300000],
+  "Voice-over Artist":[300,25000],
+  "UI/UX Designer":[3000,300000],
+  "WordPress Developer":[2000,150000],
+  "SEO Specialist":[2000,60000],
+  "Presentation Designer":[300,20000],
+  "Translator (Assamese / Hindi / English)":[200,20000],
+  "Online Tutor (Any Subject)":[800,25000],
   "General Physician":[200,1500],
   "Dentist":[200,3000],
   "Child Specialist (Paediatrician)":[200,1500],
@@ -2646,11 +2669,22 @@ const CATALOGUE = [
     ["Property Agent","per job"],["Architect","per project"],["Civil Engineer (Consultation)","per visit"],
     ["Vastu Consultant","per visit"]
   ]],
+  ["edit","Video & Creative",[
+    ["Video Editor","per job"],["YouTube Video Editor","per job"],["Reels & Shorts Editor","per job"],
+    ["Wedding Video Editor","per job"],["Motion Graphics Artist","per job"],
+    ["Colour Grading Artist","per job"],["3D Artist & Animator","per project"],
+    ["Photo Editor & Retoucher","per job"],["Thumbnail Designer","per job"],
+    ["Subtitles & Captions","per job"],["Podcast & Audio Editor","per job"],
+    ["Voice-over Artist","per job"]
+  ]],
   ["tech","Tech & Digital",[
-    ["Web Developer","per project"],["Mobile App Developer","per project"],["Graphic Designer","per job"],
-    ["Logo & Branding Designer","per job"],["Video Editor","per job"],["Social Media Manager","per month"],
-    ["Digital Marketing Specialist","per month"],["Content Writer","per job"],
-    ["Data Entry Operator","per month"]
+    ["Web Developer","per project"],["Mobile App Developer","per project"],
+    ["UI/UX Designer","per project"],["WordPress Developer","per project"],
+    ["Graphic Designer","per job"],["Logo & Branding Designer","per job"],
+    ["Presentation Designer","per job"],["Social Media Manager","per month"],
+    ["Digital Marketing Specialist","per month"],["SEO Specialist","per month"],
+    ["Content Writer","per job"],["Translator (Assamese / Hindi / English)","per job"],
+    ["Online Tutor (Any Subject)","per month"],["Data Entry Operator","per month"]
   ]],
   ["garden","Gardening & Outdoor",[
     ["Gardener (Regular)","per month"],["Garden Setup & Landscaping","per project"],["Lawn Mowing","per visit"],
@@ -2716,7 +2750,24 @@ const MODE_OVERRIDE = {
   "Social Media Manager":"hire", "Digital Marketing Specialist":"hire", "Data Entry Operator":"hire",
   "Gardener (Regular)":"hire", "Garden Setup & Landscaping":"sched", "Tree Cutting & Pruning":"sched",
   "Dog Trainer":"hire", "Dog Walker":"hire", "Pet Sitter":"sched",
-  "Packers & Movers":"sched"
+  "Packers & Movers":"sched",
+  "YouTube Video Editor":"hire",
+  "Reels & Shorts Editor":"hire",
+  "Wedding Video Editor":"hire",
+  "Motion Graphics Artist":"hire",
+  "Colour Grading Artist":"hire",
+  "Subtitles & Captions":"hire",
+  "Podcast & Audio Editor":"hire",
+  "Photo Editor & Retoucher":"hire",
+  "Thumbnail Designer":"hire",
+  "3D Artist & Animator":"hire",
+  "Voice-over Artist":"hire",
+  "UI/UX Designer":"hire",
+  "WordPress Developer":"hire",
+  "SEO Specialist":"hire",
+  "Presentation Designer":"hire",
+  "Translator (Assamese / Hindi / English)":"hire",
+  "Online Tutor (Any Subject)":"hire"
 };
 const MODE_LABEL = {
   now:   { verb:"Book now",    note:"Someone comes today" },
@@ -2758,6 +2809,45 @@ CATALOGUE.forEach(([key,label,items])=>{
   });
 });
 const modeOf = name => SKILL_MODE[name] || "sched";
+
+/* Work that reaches a customer down a wire rather than through their front
+   door. An editor cutting a Guwahati wedding film does not have to be in
+   Guwahati, so these trades are not filtered by city and are not ranked by
+   distance — there is no distance to rank by. */
+const REMOTE_SKILLS = new Set([
+  "3D Artist & Animator",
+  "Accountant / Bookkeeper",
+  "Chartered Accountant",
+  "Colour Grading Artist",
+  "Content Writer",
+  "Data Entry Operator",
+  "Digital Marketing Specialist",
+  "GST & Tax Consultant",
+  "Graphic Designer",
+  "Logo & Branding Designer",
+  "Mobile App Developer",
+  "Motion Graphics Artist",
+  "Online Tutor (Any Subject)",
+  "Photo Editor & Retoucher",
+  "Podcast & Audio Editor",
+  "Presentation Designer",
+  "Reels & Shorts Editor",
+  "SEO Specialist",
+  "Social Media Manager",
+  "Subtitles & Captions",
+  "Thumbnail Designer",
+  "Translator (Assamese / Hindi / English)",
+  "UI/UX Designer",
+  "Video Editor",
+  "Voice-over Artist",
+  "Web Developer",
+  "Wedding Video Editor",
+  "WordPress Developer",
+  "YouTube Video Editor"
+]);
+const isRemoteSkill = n => REMOTE_SKILLS.has(n);
+const allRemote = names => names.length > 0 && names.every(isRemoteSkill);
+const anyRemote = names => names.some(isRemoteSkill);
 const needsRegistration = name => Object.prototype.hasOwnProperty.call(REG_REQUIRED, name);
 const POPULAR = ["Electrician","Plumber","Carpenter","Housemaid (Daily)","Home Cook (Daily Meals)","Home Tutor (Class 6–10)","AC Service & Repair","Beautician (At Home)","Personal Driver (Monthly)","Packers & Movers"];
 
@@ -2912,7 +3002,7 @@ const api = {
     const all = demoAll();
     if(all.some(w => w.phone === phone)) throw new Error("This number is already registered — please sign in");
     const w = {id:"w"+Date.now(), created_at:new Date().toISOString(), phone, pin, rating_sum:0, rating_count:0,
-      worker_code: demoCode(),
+      worker_code: demoCode(), serves_remote: allRemote((data.skills||[]).map(x=>x.skill)),
       available:true, status:"pending", verified:false, phone_verified:!!(session && session.phoneVerified),
       wa_claim:(session && session.waCode) || null, ...data};
     all.unshift(w); demoSave(all); return w;
@@ -2969,12 +3059,14 @@ const api = {
       return { list, total: list.length ? Number(list[0].total_count) : 0 };
     }
     /* preview mode does the same work locally so the flow is identical */
+    /* the same rule as search_workers: a remote trade is offered from
+       wherever the worker happens to be, so city and locality do not apply */
     let all = demoAll().filter(w => w.available !== false && statusOf(w) === "approved"
-      && (!w.city || w.city.toLowerCase().includes(CITY.toLowerCase()))
-      && (!o.area || w.area === o.area)
+      && (w.serves_remote || !w.city || w.city.toLowerCase().includes(CITY.toLowerCase()))
+      && (w.serves_remote || !o.area || w.area === o.area)
       && (!o.catSkills || !o.catSkills.length || (w.skills||[]).some(s => o.catSkills.includes(s.skill)))
       && matchesQueryText(w, o.q));
-    all.forEach(w => { w.distance_km = distanceTo(w); });
+    all.forEach(w => { w.distance_km = w.serves_remote ? null : distanceTo(w); });
     all.sort((a,b)=>{
       const da = a.distance_km, db = b.distance_km;
       if(da != null && db != null && Math.abs(da-db) > 0.4) return da - db;
@@ -3872,10 +3964,12 @@ async function signIn(){
     toast("Welcome back, " + w.name.split(" ")[0]);
     go("me");
     watchStatus();
+    watchPending();
   }catch(e){ toast(e.message); }
   btn.disabled = false;
 }
 function signOut(){
+  clearInterval(pendingTimer); lastPending = 0;
   if(session && session.token) api.signOutToken(session.token);
   session = null;
   try{ localStorage.removeItem(SSTORE); }catch(e){}
@@ -3897,7 +3991,7 @@ function initRegister(){
   thumbData  = w ? (w.thumb || null) : null;
   selfieLive = false;
   regLoc = (w && w.lat != null) ? {lat:w.lat, lng:w.lng} : null;
-  $("regCity").value = CITY;
+  paintCityField();
   const areaSel = $("regArea");
   areaSel.innerHTML = '<option value="">Select your locality</option>' + areaOptions(w && w.area);
   if(w && w.area && !AREAS.includes(w.area)){
@@ -4054,6 +4148,31 @@ function toggleSkill(name){
   renderPicked();
   renderModeBlocks();
 }
+/* Somebody who only edits video can live in Silchar or Sivasagar. Somebody
+   who also fits ceiling fans cannot, so a mixed profile stays a Guwahati
+   profile and the field locks again. */
+function paintCityField(){
+  const box = $("regCity"), note = $("regCityNote"), area = $("regArea"), aNote = $("regAreaNote");
+  if(!box) return;
+  const remoteOnly = allRemote(picked);
+  box.readOnly = !remoteOnly;
+  box.classList.toggle("locked", !remoteOnly);
+  box.setAttribute("aria-readonly", String(!remoteOnly));
+  if(remoteOnly){
+    const w = session && session.worker;
+    if(box.value === CITY || !box.value) box.value = (w && w.city && w.city !== CITY) ? w.city : "";
+    box.placeholder = "Where do you live?";
+    note.innerHTML = "This work is done remotely, so you can be anywhere in India. Customers in Guwahati will still find you.";
+    if(area) area.required = false;
+    if(aNote) aNote.textContent = "Optional for remote work.";
+  }else{
+    box.value = CITY;
+    box.placeholder = "";
+    note.textContent = "Work done at a customer's home is Guwahati only for now.";
+    if(aNote) aNote.textContent = "Customers search by locality — pick the one nearest to where you live or work.";
+  }
+}
+
 function renderPicked(){
   const prior = window._existing || [];
   const live = collectSkills();
@@ -4298,7 +4417,10 @@ async function saveProfile(){
   if(badRate){ toast(badRate); return; }
   if(!selfieData){ toast("Please take your verification photo"); return; }
   const area = $("regArea").value.trim();
-  if(!area){ toast("Please choose your area in Guwahati"); return; }
+  const remoteOnly = allRemote(skills.map(x => x.skill));
+  const city = remoteOnly ? $("regCity").value.trim() : CITY;
+  if(remoteOnly && !city){ toast("Please enter the city you live in"); return; }
+  if(!remoteOnly && !area){ toast("Please choose your area in Guwahati"); return; }
 
   /* a regulated trade cannot be published without the number that proves it */
   const modes = pickedModes();
@@ -4345,7 +4467,7 @@ async function saveProfile(){
 
   const data = {
     name: session.name || (session.worker && session.worker.name),
-    skills, selfie:selfieUrl, thumb:thumbUrl || null, city:CITY, area,
+    skills, selfie:selfieUrl, thumb:thumbUrl || null, city, area,
     about: $("regAbout").value.trim(),
     lat: regLoc ? regLoc.lat : null,
     lng: regLoc ? regLoc.lng : null,
@@ -4610,6 +4732,7 @@ const CAT_ICON = {
   event:'<path d="M4 8h16v12H4z"/><path d="M4 8l8-5 8 5"/><circle cx="12" cy="14" r="3"/>',
   prof:'<path d="M4 7h16v13H4z"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M4 12h16"/>',
   tech:'<path d="M3 5h18v11H3z"/><path d="M8 20h8"/><path d="M12 16v4"/>',
+  edit:'<path d="M3 6.5h13v11H3z"/><path d="m16 11 5-3v8l-5-3z"/><path d="M6 6.5v11M13 6.5v11"/>',
   garden:'<path d="M12 21c0-5 3-9 8-10-1 5-4 8-8 10z"/><path d="M12 21c0-5-3-9-8-10 1 5 4 8 8 10z"/><path d="M12 21v-6"/>',
   pet:'<circle cx="8" cy="9" r="2"/><circle cx="16" cy="9" r="2"/><circle cx="6" cy="15" r="1.8"/><circle cx="18" cy="15" r="1.8"/><path d="M12 13c2.5 0 4 2 4 4s-1.5 3-4 3-4-1.5-4-3 1.5-4 4-4z"/>',
   tailor:'<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M8.5 15 17 4"/><path d="M15.5 15 7 4"/>',
@@ -4751,7 +4874,9 @@ function paintResults(q, areaPick){
         <h3>${esc(w.name)} <span class="verified-badge">✓ Verified</span>${w.is_online ? '<span class="online-dot" title="Available right now">● Now</span>' : ""}</h3>
         <div class="trade">${trades}</div>
         <div class="row">
-          <span class="where">${esc(w.area || w.city || "")}${d != null ? ' <em>· ' + esc(showDist(d)) + '</em>' : ""}</span>
+          <span class="where">${w.serves_remote
+            ? '<em class="remote-tag">Works remotely</em>' + (w.city ? " · " + esc(w.city) : "")
+            : esc(w.area || w.city || "") + (d != null ? ' <em>· ' + esc(showDist(d)) + '</em>' : "")}</span>
           <span>${starsOf(w)}${onTimeText(w)}</span>
         </div>
         <div class="price">${money(s0.price||0)} <small>${esc(s0.unit||"")}</small></div>
@@ -4777,7 +4902,9 @@ function openWorker(id){
       <div class="avatar"><img src="${avatarOf(w)}" alt=""></div>
       <div>
         <h3>${esc(w.name)}</h3>
-        <div class="sub" style="margin:0">${esc(w.area ? w.area + ", " : "")}${esc(w.city||"")}${d!=null ? " · " + showDist(d) : ""}</div>
+        <div class="sub" style="margin:0">${w.serves_remote
+          ? '<em class="remote-tag">Works remotely</em>' + (w.city ? " · " + esc(w.city) : "")
+          : esc(w.area ? w.area + ", " : "") + esc(w.city||"") + (d!=null ? " · " + showDist(d) : "")}</div>
         <div style="margin-top:5px">${starsOf(w)}${onTimeText(w)}</div>
       </div>
     </div>
@@ -4961,7 +5088,9 @@ async function confirmBooking(){
              note:[s.skill, when, area, note].filter(Boolean).join(" | ") });
 
   rememberBooking({ code:started.code, token:started.token, worker:w.name,
-                    skill:s.skill, at:new Date().toISOString() });
+                    skill:s.skill, at:new Date().toISOString(),
+                    workerPhone:started.worker_phone || w.phone || null,
+                    detail:[when, area + ", Guwahati"].filter(Boolean).join(" · ") });
   hideModal("bookOverlay");   /* go('chat') consumes the sheet's history entry */
   toast("Request sent to " + w.name.split(" ")[0]);
   openChat(started.code, "customer", "hire");
@@ -5724,6 +5853,18 @@ async function runVerify(code){
     <p class="hint">This confirms the person is registered with us and their profile is live. It is not a police verification or a background check.</p>
   </div>`;
 }
+/* the link in the WhatsApp nudge: opens that conversation for whichever
+   side is signed in on this device */
+function checkJobHash(){
+  const m = (location.hash || "").match(/^#job=([0-9A-Fa-f]{10})$/);
+  if(!m) return;
+  const code = m[1].toUpperCase();
+  history.replaceState({screen:"home"}, "", location.pathname + location.search);
+  if(session && session.registered) openChat(code, "worker", "inbox");
+  else if(myBooking(code)) openChat(code, "customer", "mine");
+  else { go("work"); toast("Sign in to see this request"); }
+}
+
 function checkIdHash(){
   const m = (location.hash || "").match(/^#(?:id|verify)=?(\d[\d\s]*)?$/i);
   if(!m) return;
@@ -5861,8 +6002,12 @@ function chatActions(t){
   }
   /* customer */
   if(t.status === "requested") return rate + `
-    <span class="chat-note">${esc((t.worker_name||"They").split(" ")[0])} has been told. You'll see the reply here.</span>
-    <button class="btn btn-outline btn-sm" onclick="customerThread('cancelled')">Cancel</button>`;
+    <button class="btn btn-wa btn-sm chat-nudge" onclick="nudgeWhatsApp()">
+      ${alreadyNudged(t.code) ? "Nudge again on WhatsApp" : "Also tell them on WhatsApp"}
+    </button>
+    <button class="btn btn-outline btn-sm" onclick="customerThread('cancelled')">Cancel</button>
+    <span class="chat-note">The request is already in ${esc((t.worker_name||"their").split(" ")[0])}'s Repto.
+      A WhatsApp message makes their phone actually buzz.</span>`;
   if(t.status === "accepted" || t.status === "working") return rate + `
     ${t.worker_phone ? callBtn(t.worker_phone) : ""}
     <button class="btn btn-outline btn-sm" onclick="customerThread('cancelled')">Cancel</button>`;
@@ -5957,6 +6102,39 @@ async function sendReview(){
   }catch(e){ toast(e.message); }
   btn.disabled = false; btn.textContent = "Post review";
 }
+
+/* ---------- telling the worker it is there ----------
+   The request lands in Repto the moment it is sent, but a worker who is not
+   holding their phone will not know. Until push notifications are wired to a
+   sender, WhatsApp is the thing that actually buzzes in a pocket in
+   Guwahati — so the customer can fire one off in a tap, and it carries a
+   link back into the conversation rather than replacing it. */
+function nudgeText(t){
+  const b = myBooking(t.code) || {};
+  return `*New booking request on Repto*
+
+Hello ${(t.worker_name || "").split(" ")[0]}, I have sent you a request on Repto and I am waiting for you to confirm it.
+
+*Service:* ${t.skill || ""}${t.price ? ` (${money(t.price)} ${t.unit || ""})` : ""}
+${(t.detail || b.detail) ? "*When:* " + (t.detail || b.detail) + "\n" : ""}*Request code:* ${t.code}
+
+Open it here to accept or decline:
+https://nearse.in/#job=${t.code}
+
+— sent from Repto`;
+}
+
+function nudgeWhatsApp(){
+  const t = chatThread; if(!t) return;
+  const b = myBooking(t.code) || {};
+  const num = t.worker_phone || b.workerPhone;
+  if(!num){ toast("Their number is not available yet"); return; }
+  const url = waLink("91" + idDigits(num), nudgeText(t), null);
+  window.open(url, "_blank", "noopener");
+  try{ localStorage.setItem("repto_nudged_" + t.code, "1"); }catch(e){}
+  toast("Opening WhatsApp — press send and they will get both");
+}
+const alreadyNudged = code => { try{ return !!localStorage.getItem("repto_nudged_" + code); }catch(e){ return false; } };
 
 /* ---------- the worker's inbox ---------- */
 let inboxTab = "open";
@@ -6715,6 +6893,37 @@ document.addEventListener("keydown", e => {
   if(e.key === "Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id));
 });
 
+/* A worker with the app open should not have to go looking. This checks for
+   unanswered requests on a slow loop and whenever the app comes back to the
+   front, and says so once rather than every time. */
+let pendingTimer = null, lastPending = 0;
+async function checkPending(announce){
+  if(!(session && session.registered && statusOf(session.worker||{}) === "approved")) return;
+  let n = 0;
+  try{
+    if(LIVE) n = await sb("rpc/worker_pending", {method:"POST", body:JSON.stringify(workerAuth({}))}) || 0;
+    else n = demoWorkerThreads().filter(t => t.status === "requested").length;
+  }catch(e){ return; }
+  const badge = $("weUnread");
+  if(badge){ badge.hidden = !n; badge.textContent = n || ""; }
+  const door = $("ctaWorkSub");
+  if(door && currentScreen === "home"){
+    door.textContent = n
+      ? (n === 1 ? "1 request waiting for you" : n + " requests waiting for you")
+      : "Your ID card, work and reviews";
+  }
+  if(announce && n > lastPending && currentScreen !== "inbox" && currentScreen !== "chat"){
+    toast(n === 1 ? "A customer is asking to book you" : n + " customers are waiting for your reply");
+  }
+  lastPending = n;
+}
+function watchPending(){
+  clearInterval(pendingTimer);
+  if(!(session && session.registered)) return;
+  checkPending(false);
+  pendingTimer = setInterval(() => { if(!document.hidden) checkPending(true); }, 45000);
+}
+
 /* ---------- keeping the profile honest about itself ----------
    The worker's own copy of their profile was only ever refreshed on a cold
    start. A phone keeps a standalone app alive for days, so somebody could be
@@ -6769,6 +6978,7 @@ document.addEventListener("visibilitychange", () => {
   if(currentScreen === "inbox") renderInbox();
   if(currentScreen === "mine") renderMine();
   if(currentScreen === "chat") refreshChat(false);
+  checkPending(true);
 });
 window.addEventListener("focus", () => { if(!document.hidden) refreshMe(true); });
 
@@ -6780,6 +6990,7 @@ function checkAdminHash(){
 }
 window.addEventListener("hashchange", checkAdminHash);
 window.addEventListener("hashchange", checkIdHash);
+window.addEventListener("hashchange", checkJobHash);
 
 if("serviceWorker" in navigator){
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{}));
@@ -6802,6 +7013,7 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
     try{ session.worker = await api.login(session.phone, session.pin); saveSession(); }catch(e){}
     ensureWorkerSession();
     watchStatus();
+    watchPending();
   }
   initHome();
   /* the entry in the history stack the app started on */
@@ -6810,6 +7022,7 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
   if(start && start !== "home") go(start);
   checkAdminHash();
   checkIdHash();
+  checkJobHash();
 })();
 </script>
 </body>
