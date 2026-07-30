@@ -4736,3 +4736,434 @@ begin
 end;
 $$;
 revoke all on function public.purge_expired_data() from public;
+
+-- ============================================================
+-- MIGRATION 20 — the profile write path validates what it is given
+--
+-- The UI limited these; the database did not, and the database is the only
+-- place that counts. Everything below was demonstrated against a real
+-- Postgres by calling register_worker directly, the way anybody with the
+-- public anon key can:
+--
+--   * A MADE-UP SKILL NAME BYPASSED THE PRICE BANDS ENTIRELY.
+--     check_rate_bands skips any skill it has no band for — "a service with
+--     no band is unrestricted" — so
+--       "Electrician — CHEAPEST!! call 9998887776" at ₹1
+--     was accepted and published. That defeats the whole point of the bands,
+--     and the trade name doubles as a free advert with a phone number in it,
+--     shown on every card. All 184 catalogue services are in service_rates,
+--     so requiring membership costs nothing and makes the floor and ceiling
+--     unbypassable.
+--   * FIFTY SERVICES on one profile, against a limit of three in the UI.
+--   * A 200,000-CHARACTER "about", a 5,000-character name, a 2,000-character
+--     locality, a 500-character pricing unit. One profile could be 200 KB,
+--     downloaded by every customer who browsed past it.
+--   * A PROFILE PHOTO POINTING ANYWHERE — https://example.com/tracker.png
+--     was accepted, which serves somebody else's content under Repto's brand
+--     and hands them the IP address of every customer who scrolls past.
+--   * COORDINATES ANYWHERE ON EARTH, including 0,0. Coordinates decide who
+--     ranks as "nearest", so this is also ranking manipulation.
+--
+-- The skill objects are rebuilt from known keys rather than filtered, so any
+-- extra field a client invents is dropped rather than stored.
+-- ============================================================
+
+-- the pricing units the app offers; kept as a table so CI can check the two
+-- lists have not drifted apart
+create table if not exists public.pricing_units (unit text primary key);
+insert into public.pricing_units (unit) values
+  ('per hour'),('per visit'),('per unit'),('per day'),('per week'),('per month'),
+  ('per job'),('per project'),('per piece'),('per session'),('per trip'),
+  ('per sq ft'),('per plate')
+on conflict (unit) do nothing;
+alter table public.pricing_units enable row level security;
+drop policy if exists "units are public" on public.pricing_units;
+create policy "units are public" on public.pricing_units for select using (true);
+
+-- where a profile photo is allowed to be served from. Add a row here when the
+-- photo host changes; do not widen it to '%'.
+create table if not exists public.photo_hosts (pattern text primary key);
+insert into public.photo_hosts (pattern) values
+  ('%.supabase.co'),      -- Supabase Storage, the current path
+  ('%.r2.dev'),           -- Cloudflare R2 public bucket
+  ('img.repto.in'),
+  ('img.nearse.in')
+on conflict (pattern) do nothing;
+alter table public.photo_hosts enable row level security;
+-- no select policy: nothing in the app needs to read it
+
+create or replace function public.clean_photo_url(p_url text)
+returns text
+language plpgsql stable set search_path = public, extensions as $$
+declare h text;
+begin
+  if p_url is null or btrim(p_url) = '' then return null; end if;
+  -- rows written before photos moved to Storage, and preview mode, are base64
+  if p_url like 'data:image/%' then return p_url; end if;
+  if p_url !~* '^https://' then
+    raise exception 'A profile photo has to be uploaded through Repto';
+  end if;
+  h := lower(split_part(split_part(substring(p_url from 9), '/', 1), ':', 1));
+  if not exists (select 1 from photo_hosts p where h like p.pattern) then
+    raise exception 'A profile photo has to be uploaded through Repto';
+  end if;
+  return left(p_url, 500);
+end;
+$$;
+
+/* p_strict is on for registration, where name and services are required, and
+   off for an edit, which is allowed to carry one field on its own. */
+create or replace function public.clean_worker_data(p_data jsonb, p_strict boolean default true)
+returns jsonb
+language plpgsql stable set search_path = public, extensions as $$
+declare
+  d       jsonb := coalesce(p_data, '{}'::jsonb);
+  s       jsonb;
+  keep    jsonb := '[]'::jsonb;
+  n       int := 0;
+  v       text;
+  la      double precision;
+  ln      double precision;
+begin
+  if d ? 'name' then
+    v := btrim(coalesce(d->>'name',''));
+    if p_strict and length(v) < 2 then raise exception 'Please enter your name'; end if;
+    d := jsonb_set(d, '{name}', to_jsonb(left(v, 80)));
+  end if;
+
+  if d ? 'about' then
+    d := jsonb_set(d, '{about}', to_jsonb(left(btrim(coalesce(d->>'about','')), 600)));
+  end if;
+  if d ? 'area' then
+    d := jsonb_set(d, '{area}', to_jsonb(left(btrim(coalesce(d->>'area','')), 60)));
+  end if;
+  if d ? 'city' then
+    d := jsonb_set(d, '{city}', to_jsonb(left(btrim(coalesce(d->>'city','')), 60)));
+  end if;
+
+  if d ? 'selfie' then d := jsonb_set(d, '{selfie}', coalesce(to_jsonb(public.clean_photo_url(d->>'selfie')), 'null'::jsonb)); end if;
+  if d ? 'thumb'  then d := jsonb_set(d, '{thumb}',  coalesce(to_jsonb(public.clean_photo_url(d->>'thumb')),  'null'::jsonb)); end if;
+
+  /* Coordinates decide who is "nearest", so anything outside the north-east
+     is dropped rather than trusted. Location is optional anyway — a profile
+     with none simply is not distance-ranked. */
+  if d ? 'lat' or d ? 'lng' then
+    begin
+      la := nullif(d->>'lat','')::double precision;
+      ln := nullif(d->>'lng','')::double precision;
+    exception when others then la := null; ln := null;
+    end;
+    if la is null or ln is null
+       or la not between 24.0 and 28.5 or ln not between 89.5 and 96.5 then
+      d := jsonb_set(d, '{lat}', 'null'::jsonb, true);
+      d := jsonb_set(d, '{lng}', 'null'::jsonb, true);
+    end if;
+  end if;
+
+  if d ? 'skills' then
+    if jsonb_typeof(d->'skills') <> 'array' then raise exception 'Services must be a list'; end if;
+    for s in select * from jsonb_array_elements(d->'skills') loop
+      n := n + 1;
+      if n > 3 then raise exception 'You can offer up to 3 services'; end if;
+      if not exists (select 1 from service_rates r where r.skill = s->>'skill') then
+        raise exception 'That is not a service on Repto: %', left(coalesce(s->>'skill','(none)'), 60);
+      end if;
+      if not exists (select 1 from pricing_units u where u.unit = s->>'unit') then
+        raise exception 'Choose how % is priced', s->>'skill';
+      end if;
+      if nullif(s->>'price','') is null
+         or (s->>'price') !~ '^\d{1,7}$' or (s->>'price')::int < 1 then
+        raise exception 'Set a whole-rupee rate for %', s->>'skill';
+      end if;
+      -- rebuilt from known keys, so anything else a client sends is dropped
+      keep := keep || jsonb_build_array(jsonb_build_object(
+        'skill', s->>'skill',
+        'price', (s->>'price')::int,
+        'unit',  s->>'unit',
+        'exp',   left(btrim(coalesce(s->>'exp','')), 40)));
+    end loop;
+    if p_strict and n = 0 then raise exception 'Choose at least one service'; end if;
+    d := jsonb_set(d, '{skills}', keep);
+  end if;
+
+  return d;
+end;
+$$;
+
+-- ---------- both write paths now go through the cleaner ----------
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  d jsonb; new_id uuid; jwt_phone text; need_otp boolean; total int; remote int;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then raise exception 'PIN must be exactly 4 digits'; end if;
+  if p_phone !~ '^[6-9]\d{9}$' then raise exception 'Enter a valid 10-digit Indian mobile number'; end if;
+
+  d := public.clean_worker_data(p_data, true);
+  perform check_rate_bands(d->'skills');
+
+  select count(*), count(*) filter (where exists (
+           select 1 from remote_skills r where r.skill = s->>'skill'))
+    into total, remote
+    from jsonb_array_elements(coalesce(d->'skills','[]'::jsonb)) s;
+  if total > remote and coalesce(d->>'city','') <> 'Guwahati' then
+    raise exception 'Work done at a customer''s home is Guwahati only for now';
+  end if;
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''), '\D', '', 'g');
+  if length(jwt_phone) > 10 then jwt_phone := right(jwt_phone, 10); end if;
+  if coalesce(need_otp,false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, thumb, city, area, about, lat, lng, skills,
+                       available, phone_verified, terms_version, consent_at, age_confirmed)
+  values (coalesce(d->>'name',''), p_phone, d->>'selfie', d->>'thumb',
+          nullif(btrim(coalesce(d->>'city','')),''), d->>'area', d->>'about',
+          (d->>'lat')::double precision, (d->>'lng')::double precision,
+          coalesce(d->'skills','[]'::jsonb),
+          coalesce((d->>'available')::boolean, true), jwt_phone <> '',
+          left(nullif(d->>'terms_version',''), 40),
+          case when coalesce((d->>'age_confirmed')::boolean, false) then now() end,
+          coalesce((d->>'age_confirmed')::boolean, false))
+  returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash, email, wa_code)
+    values (new_id, crypt(p_pin, gen_salt('bf', 10)),
+            left(nullif(btrim(coalesce(d->>'email','')), ''), 160),
+            left(nullif(btrim(coalesce(d->>'wa_code','')), ''), 12));
+  return query select * from workers where id = new_id;
+end;
+$$;
+
+create or replace function public.update_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare d jsonb; wid uuid; is_edit boolean; identity_changed boolean;
+begin
+  wid := public.worker_auth(p_phone, p_pin, null);
+  if wid is null then return; end if;
+
+  d := public.clean_worker_data(p_data, false);
+  if d ? 'skills' then perform check_rate_bands(d->'skills'); end if;
+
+  is_edit := (d ?| array['name','selfie','area','about','skills']);
+  select (d->>'name'   is not null and d->>'name'   is distinct from w.name)
+      or (d->>'selfie' is not null and d->>'selfie' is distinct from w.selfie)
+    into identity_changed from workers w where w.id = wid;
+
+  update workers set
+    name = coalesce(d->>'name', name),
+    selfie = coalesce(d->>'selfie', selfie),
+    thumb = coalesce(d->>'thumb', thumb),
+    city = coalesce(d->>'city', city),
+    area = coalesce(d->>'area', area),
+    about = coalesce(d->>'about', about),
+    lat = coalesce((d->>'lat')::double precision, lat),
+    lng = coalesce((d->>'lng')::double precision, lng),
+    skills = coalesce(d->'skills', skills),
+    available = coalesce((d->>'available')::boolean, available),
+    status = case when identity_changed then 'pending'
+                  when is_edit and status = 'rejected' then 'pending' else status end,
+    review_note = case when identity_changed then null
+                       when is_edit and status = 'rejected' then null else review_note end
+  where id = wid;
+  return query select * from workers where id = wid;
+end;
+$$;
+
+-- ---------- a stale PIN must say so, not quietly do nothing ----------
+-- worker_auth returns NULL rather than raising, on purpose: the lockout
+-- counter has to record the attempt before anybody hears about it. But five
+-- callers then treated NULL as "carry on", which produced the worst kind of
+-- failure — the app said "Saved" and nothing had been saved.
+--
+--   * update_worker       a wrong or stale PIN reported success and changed nothing,
+--                         so a worker could believe their rate had been updated.
+--   * worker_post_message a message was silently dropped.
+--   * worker_set_thread   a job moved to "on the way" or "finished" and did not.
+--   * worker_threads      the inbox came back empty, so a worker whose session had
+--                         gone stale concluded there was no work rather than
+--                         signing in again.
+--   * worker_stats        the same, for the summary on their profile.
+--
+-- A PIN can go stale in an ordinary way: change it on one phone and the other
+-- phone keeps the old one in its session until it is asked to sign in again.
+create or replace function public.worker_auth_required(p_phone text, p_pin text, p_token uuid default null)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth(p_phone, p_pin, p_token);
+  if wid is null then
+    raise exception 'Please sign in again — that number and PIN did not match';
+  end if;
+  return wid;
+end;
+$$;
+
+
+create or replace function public.update_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare d jsonb; wid uuid; is_edit boolean; identity_changed boolean;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, null);
+
+  d := public.clean_worker_data(p_data, false);
+  if d ? 'skills' then perform check_rate_bands(d->'skills'); end if;
+
+  is_edit := (d ?| array['name','selfie','area','about','skills']);
+  select (d->>'name'   is not null and d->>'name'   is distinct from w.name)
+      or (d->>'selfie' is not null and d->>'selfie' is distinct from w.selfie)
+    into identity_changed from workers w where w.id = wid;
+
+  update workers set
+    name = coalesce(d->>'name', name),
+    selfie = coalesce(d->>'selfie', selfie),
+    thumb = coalesce(d->>'thumb', thumb),
+    city = coalesce(d->>'city', city),
+    area = coalesce(d->>'area', area),
+    about = coalesce(d->>'about', about),
+    lat = coalesce((d->>'lat')::double precision, lat),
+    lng = coalesce((d->>'lng')::double precision, lng),
+    skills = coalesce(d->'skills', skills),
+    available = coalesce((d->>'available')::boolean, available),
+    status = case when identity_changed then 'pending'
+                  when is_edit and status = 'rejected' then 'pending' else status end,
+    review_note = case when identity_changed then null
+                       when is_edit and status = 'rejected' then null else review_note end
+  where id = wid;
+  return query select * from workers where id = wid;
+end;
+$$;
+
+create or replace function public.worker_post_message(
+  p_phone text default null, p_pin text default null, p_code text default null,
+  p_body text default null, p_token uuid default null)
+returns bigint
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; wid uuid; st text; mid bigint; burst int;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  select t.id, t.status into tid, st from threads t
+   where t.code = upper(btrim(p_code)) and t.worker_id = wid;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  if st in ('declined','cancelled','closed') then raise exception 'This conversation is closed'; end if;
+  if btrim(coalesce(p_body,'')) = '' then raise exception 'Type a message first'; end if;
+  if length(p_body) > 2000 then raise exception 'That message is too long'; end if;
+
+  select count(*) into burst from messages
+   where thread_id = tid and sender = 'worker' and created_at > now() - interval '1 minute';
+  if burst >= 20 then raise exception 'Slow down a moment'; end if;
+
+  insert into messages (thread_id, sender, body) values (tid, 'worker', btrim(p_body))
+    returning id into mid;
+  update threads set last_message_at = now(), customer_unread = customer_unread + 1 where id = tid;
+  return mid;
+end;
+$$;
+
+create or replace function public.worker_set_thread(
+  p_phone text default null, p_pin text default null, p_code text default null,
+  p_status text default null, p_reason text default null, p_token uuid default null)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; wid uuid; st text; wname text;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  select w.name into wname from workers w where w.id = wid;
+  select t.id, t.status into tid, st from threads t
+   where t.code = upper(btrim(p_code)) and t.worker_id = wid;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  if st in ('cancelled','closed') then raise exception 'This one is already finished'; end if;
+
+  if p_status = 'accepted' then
+    if st <> 'requested' then raise exception 'Only a new request can be accepted'; end if;
+    update threads set status = 'accepted', accepted_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body) values (tid, 'system', wname || ' accepted this job.');
+  elsif p_status = 'declined' then
+    if st <> 'requested' then raise exception 'Only a new request can be declined'; end if;
+    update threads set status = 'declined', closed_at = now(), last_message_at = now(),
+                       decline_reason = nullif(btrim(coalesce(p_reason,'')),'')
+     where id = tid;
+    insert into messages (thread_id, sender, body)
+      values (tid, 'system', wname || ' could not take this job'
+              || coalesce(' — ' || nullif(btrim(coalesce(p_reason,'')),''), '.'));
+  elsif p_status = 'working' then
+    if st <> 'accepted' then raise exception 'Accept the job first'; end if;
+    update threads set status = 'working', started_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body) values (tid, 'system', wname || ' has started work.');
+  elsif p_status = 'done' then
+    if st not in ('accepted','working') then raise exception 'This job has not started'; end if;
+    update threads set status = 'done', done_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body)
+      values (tid, 'system', wname || ' marked the work finished. Please confirm.');
+  else
+    raise exception 'A worker cannot set that';
+  end if;
+  update threads set customer_unread = customer_unread + 1 where id = tid;
+  return p_status;
+end;
+$$;
+
+create or replace function public.worker_threads(p_phone text default null, p_pin text default null,
+                                      p_limit int default 40, p_token uuid default null)
+returns table (
+  code text, status text, skill text, detail text, note text, price int, unit text,
+  customer_name text, customer_area text, customer_phone text,
+  created_at timestamptz, last_message_at timestamptz, unread int, preview text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  return query
+    select t.code, t.status, t.skill, t.detail, t.note, t.price, t.unit,
+           t.customer_name, t.customer_area,
+           case when t.status in ('accepted','working','done','closed') then t.customer_phone end,
+           t.created_at, t.last_message_at, t.worker_unread,
+           (select m.body from messages m where m.thread_id = t.id order by m.id desc limit 1)
+      from threads t
+     where t.worker_id = wid
+     order by (t.worker_unread > 0) desc, t.last_message_at desc
+     limit greatest(1, least(p_limit, 100));
+end;
+$$;
+
+create or replace function public.worker_stats(p_phone text default null, p_pin text default null,
+                                    p_token uuid default null)
+returns table (
+  requested int, accepted int, declined int, working int, completed int, cancelled int,
+  unread int, reviews int, avg_stars numeric, response_rate numeric, this_month int,
+  listed_value int)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  return query
+  with t as (select * from threads where worker_id = wid)
+  select
+    (select count(*) from t)::int,
+    (select count(*) from t where status in ('accepted','working','done','closed'))::int,
+    (select count(*) from t where status = 'declined')::int,
+    (select count(*) from t where status in ('accepted','working'))::int,
+    (select count(*) from t where status = 'closed')::int,
+    (select count(*) from t where status = 'cancelled')::int,
+    (select coalesce(sum(worker_unread), 0) from t)::int,
+    (select count(*) from worker_ratings r where r.worker_id = wid and not r.hidden)::int,
+    (select round(avg(r.stars)::numeric, 1) from worker_ratings r where r.worker_id = wid and not r.hidden),
+    (select case when count(*) = 0 then null
+                 else round(100.0 * count(*) filter (where status <> 'requested') / count(*), 0) end
+       from t),
+    (select count(*) from t where created_at > date_trunc('month', now()))::int,
+    (select coalesce(sum(price), 0) from t where status = 'closed')::int;
+end;
+$$;

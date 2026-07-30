@@ -1889,7 +1889,7 @@ footer a:hover{color:var(--brand)}
       <div id="authUp" style="display:none">
         <div class="field">
           <label for="upName">Full name</label>
-          <input type="text" id="upName" placeholder="As customers should see it" autocomplete="name">
+          <input type="text" id="upName" placeholder="As customers should see it" autocomplete="name" maxlength="80">
         </div>
         <div class="field">
           <label for="upPhone">WhatsApp number</label>
@@ -2110,7 +2110,7 @@ footer a:hover{color:var(--brand)}
       </div>
       <div class="field full">
         <label for="regAbout">About your work <span class="sublabel">— optional</span></label>
-        <textarea id="regAbout" rows="2" placeholder="e.g. 8 years of experience in home wiring and repairs. Punctual and neat."></textarea>
+        <textarea id="regAbout" rows="2" maxlength="600" placeholder="e.g. 8 years of experience in home wiring and repairs. Punctual and neat."></textarea>
       </div>
     </div>
 
@@ -3171,10 +3171,33 @@ async function sbCall(path, opts = {}){
       if(again.p_token){ delete again.p_token; Object.assign(again, workerAuth({})); }
       return await sbCall(path, {...opts, body: JSON.stringify(again), _retried: true});
     }
+    /* The server has told us this number and PIN no longer match — a PIN
+       changed on another phone, most often. Act on it once, centrally, rather
+       than letting every screen fail on its own and leaving somebody looking
+       at an empty inbox wondering where their work went. */
+    if(/sign in again — that number and PIN/i.test(msg)) forceSignIn();
     throw new Error(msg || ("HTTP " + res.status));
   }
   const text = await res.text();
   return text ? JSON.parse(text) : null;
+}
+
+/* Sends somebody back to the sign-in screen once, however many calls failed. */
+let signingInAgain = false;
+function forceSignIn(){
+  if(signingInAgain) return;
+  signingInAgain = true;
+  const phone = session && session.phone;
+  session = null;
+  try{ localStorage.removeItem(SSTORE); }catch(e){}
+  clearTimeout(offerTimer); stopChatPolling();
+  setTimeout(() => {
+    signingInAgain = false;
+    if(typeof paintWorkDoor === "function") paintWorkDoor();
+    go("work");
+    if(phone && $("inPhone")) $("inPhone").value = phone;
+    toast("Please sign in again — your PIN has changed");
+  }, 0);
 }
 
 /* An opaque per-device token. It says nothing about who you are; it exists so
@@ -4450,8 +4473,8 @@ function renderPicked(){
       <div class="rate-row">
         <label class="rupee"><span>₹</span><input class="sd-price" type="number" min="1" inputmode="numeric"
           placeholder="Your rate" value="${known.price ? known.price : ""}" oninput="checkRate(this)"></label>
-        <select class="sd-unit">${units.map(u=>`<option${u===unit?" selected":""}>${u}</option>`).join("")}</select>
-        <input class="sd-exp exp" type="text" placeholder="Experience — e.g. 5 years" value="${esc(known.exp||"")}">
+        <select class="sd-unit">${units.map(u=>`<option${u===unit?" selected":""}>${esc(u)}</option>`).join("")}</select>
+        <input class="sd-exp exp" type="text" maxlength="40" placeholder="Experience — e.g. 5 years" value="${esc(known.exp||"")}">
       </div>
       ${RATE_BAND[name] ? `<p class="band">Usual range in Guwahati: <b>${money0(RATE_BAND[name][0])} – ${money0(RATE_BAND[name][1])}</b> ${esc(unit)}</p>` : ""}
     </div>`;
@@ -4960,6 +4983,23 @@ async function toggleOnline(on){
 async function pollOffers(){
   const box = $("offerBox");
   if(!box || !session || !session.registered){ clearTimeout(offerTimer); return; }
+
+  /* Nothing polls from a pocket. This loop runs every second while an offer is
+     live and every five otherwise, and it used to keep running with the app in
+     the background — a few hundred online workers would have been tens of
+     millions of requests a day from phones nobody was looking at, and a
+     battery complaint in every review. Push is what reaches a backgrounded
+     phone; visibilitychange below catches up the instant it comes forward. */
+  if(document.hidden){
+    clearTimeout(offerTimer);
+    offerTimer = setTimeout(pollOffers, 30000);   /* a slow heartbeat, in case */
+    return;
+  }
+  /* Deliberately NOT gated on the "available right now" switch. Being on only
+     puts a worker first in the queue — next_job_candidate ranks by it, it does
+     not filter by it — so a worker who has not flipped the switch is still
+     offered work, and must still be able to see it. */
+
   let offers = [];
   try{ offers = await api.myOffers(session.phone, session.pin); }catch(e){}
   renderOffers(offers);
@@ -7546,6 +7586,8 @@ document.addEventListener("visibilitychange", () => {
   if(currentScreen === "inbox") renderInbox();
   if(currentScreen === "mine") renderMine();
   if(currentScreen === "chat") refreshChat(false);
+  /* coming back to the app is exactly when a waiting offer matters most */
+  if(session && session.registered && $("offerBox")) pollOffers();
   checkPending(true);
 });
 window.addEventListener("focus", () => { if(!document.hidden) refreshMe(true); });
