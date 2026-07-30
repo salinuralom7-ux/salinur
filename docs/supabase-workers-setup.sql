@@ -1890,6 +1890,14 @@ begin
 end;
 $$;
 
+-- every overload goes first: a later migration changes this function's
+-- return type, and CREATE OR REPLACE cannot do that on a re-run
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'create_job'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
 create or replace function public.create_job(
   p_skill text, p_name text, p_phone text, p_area text, p_note text default null,
   p_lat double precision default null, p_lng double precision default null,
@@ -1926,6 +1934,14 @@ $$;
 -- every deploy, so the old shape has to go before it is written back.
 drop function if exists public.job_state(text);
 
+-- every overload goes first: a later migration changes this function's
+-- return type, and CREATE OR REPLACE cannot do that on a re-run
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'job_state'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
 create function public.job_state(p_code text)
 returns table (status text, asked int, worker_name text, worker_phone text,
                worker_area text, eta_minutes int, seconds_left int, skill text)
@@ -1987,6 +2003,14 @@ $$;
 
 -- Accepting is the whole point: it is the first moment anybody has actually
 -- agreed to come. The worker commits to an arrival window at the same time.
+-- every overload goes first: Migration 21 changes this function's return
+-- type, and CREATE OR REPLACE cannot do that on a re-run of this file
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'accept_offer'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
 create or replace function public.accept_offer(p_phone text, p_pin text, p_code text, p_eta int default 30)
 returns table (customer_name text, customer_phone text, area text, note text, skill text)
 language plpgsql security definer set search_path = public, extensions as $$
@@ -2758,6 +2782,14 @@ $$;
 -- one below is replaced in place on every later run
 drop function if exists public.create_job(text, text, text, text, text, double precision, double precision, text, int);
 
+-- every overload goes first: a later migration changes this function's
+-- return type, and CREATE OR REPLACE cannot do that on a re-run
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'create_job'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
 create or replace function public.create_job(
   p_skill text, p_name text, p_phone text, p_area text, p_note text default null,
   p_lat double precision default null, p_lng double precision default null,
@@ -2828,6 +2860,14 @@ $$;
 -- The customer's screen has to be able to say whose answer it is waiting for.
 drop function if exists public.job_state(text);
 
+-- every overload goes first: a later migration changes this function's
+-- return type, and CREATE OR REPLACE cannot do that on a re-run
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'job_state'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
 create function public.job_state(p_code text)
 returns table (status text, asked int, worker_name text, worker_phone text,
                worker_area text, eta_minutes int, seconds_left int, skill text,
@@ -3011,6 +3051,14 @@ end;
 $$;
 
 -- ---------- 14.3 the customer's side ----------
+-- every overload goes first: Migration 21 changes this function's return
+-- type, and CREATE OR REPLACE cannot do that on a re-run of this file
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'thread_view'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
 create or replace function public.thread_view(p_code text, p_token uuid)
 returns table (
   code text, status text, skill text, mode text, detail text, price int, unit text,
@@ -3097,6 +3145,14 @@ end;
 $$;
 
 -- ---------- 14.4 the worker's side ----------
+-- every overload goes first: Migration 21 changes this function's return
+-- type, and CREATE OR REPLACE cannot do that on a re-run of this file
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'worker_threads'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
 create or replace function public.worker_threads(p_phone text, p_pin text, p_limit int default 40)
 returns table (
   code text, status text, skill text, detail text, note text, price int, unit text,
@@ -5115,6 +5171,14 @@ begin
 end;
 $$;
 
+-- every overload goes first: Migration 21 changes this function's return
+-- type, and CREATE OR REPLACE cannot do that on a re-run of this file
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'worker_threads'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
 create or replace function public.worker_threads(p_phone text default null, p_pin text default null,
                                       p_limit int default 40, p_token uuid default null)
 returns table (
@@ -5166,4 +5230,285 @@ begin
     (select count(*) from t where created_at > date_trunc('month', now()))::int,
     (select coalesce(sum(price), 0) from t where status = 'closed')::int;
 end;
+$$;
+
+-- ============================================================
+-- MIGRATION 21 — the conversation belongs in Repto, and it tells you
+--                when it has been read
+--
+-- Two things were wrong with an instant job once a worker accepted it:
+--
+--   1. accept_offer never created a thread. The in-app conversation existed
+--      for ordinary bookings and not for instant ones, so the only channel
+--      after "X is coming" was a WhatsApp deep link on both sides. The chat
+--      was built and then bypassed.
+--   2. There was an unread COUNT per side but no read STATE, so there was no
+--      way to draw a second tick. A count answers "how many did I miss";
+--      it cannot answer "has she seen the message I just sent".
+--
+-- Read state is a watermark per side — the highest message id that side has
+-- seen — rather than a row per message per reader. One integer, written once
+-- when a chat is opened or polled, and it still gives an exact per-message
+-- tick because message ids only ever increase within a thread.
+-- ============================================================
+
+alter table public.threads add column if not exists worker_read_id   bigint not null default 0;
+alter table public.threads add column if not exists customer_read_id bigint not null default 0;
+
+/* Everything already in a thread counts as read the moment that side looks at
+   it, which is what fetching the messages means. */
+create or replace function public.thread_messages(p_code text, p_token uuid, p_after bigint default 0)
+returns table (id bigint, sender text, body text, created_at timestamptz)
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; top bigint;
+begin
+  select t.id into tid from threads t
+   where t.code = upper(btrim(p_code)) and t.customer_token = p_token;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  select coalesce(max(m.id), 0) into top from messages m where m.thread_id = tid;
+  update threads set customer_unread = 0,
+                     customer_read_id = greatest(customer_read_id, top)
+   where threads.id = tid;
+  return query
+    select m.id, m.sender, m.body, m.created_at from messages m
+     where m.thread_id = tid and m.id > coalesce(p_after, 0)
+     order by m.id;
+end;
+$$;
+
+create or replace function public.worker_thread_messages(
+  p_phone text default null, p_pin text default null, p_code text default null,
+  p_after bigint default 0, p_token uuid default null)
+returns table (id bigint, sender text, body text, created_at timestamptz)
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; wid uuid; top bigint;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  select t.id into tid from threads t where t.code = upper(btrim(p_code)) and t.worker_id = wid;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  select coalesce(max(m.id), 0) into top from messages m where m.thread_id = tid;
+  update threads set worker_unread = 0,
+                     worker_read_id = greatest(worker_read_id, top)
+   where threads.id = tid;
+  return query
+    select m.id, m.sender, m.body, m.created_at from messages m
+     where m.thread_id = tid and m.id > coalesce(p_after, 0)
+     order by m.id;
+end;
+$$;
+
+-- each side is told how far the OTHER side has read, which is what a tick is
+drop function if exists public.thread_view(text, uuid);
+create function public.thread_view(p_code text, p_token uuid)
+returns table (
+  code text, status text, skill text, mode text, detail text, price int, unit text,
+  decline_reason text, created_at timestamptz, accepted_at timestamptz, done_at timestamptz,
+  worker_id uuid, worker_name text, worker_area text, worker_thumb text,
+  worker_phone text, rating_sum int, rating_count int, unread int, reviewed boolean,
+  read_upto bigint)
+language sql stable security definer set search_path = public, extensions as $$
+  select t.code, t.status, t.skill, t.mode, t.detail, t.price, t.unit,
+         t.decline_reason, t.created_at, t.accepted_at, t.done_at,
+         w.id, w.name, w.area, coalesce(w.thumb, w.selfie),
+         case when t.status in ('accepted','working','done','closed') then w.phone end,
+         w.rating_sum, w.rating_count, t.customer_unread,
+         exists (select 1 from worker_ratings r where r.thread_id = t.id),
+         t.worker_read_id
+    from threads t join workers w on w.id = t.worker_id
+   where t.code = upper(btrim(p_code)) and t.customer_token = p_token;
+$$;
+
+drop function if exists public.worker_threads(text, text, int, uuid);
+create function public.worker_threads(p_phone text default null, p_pin text default null,
+                                      p_limit int default 40, p_token uuid default null)
+returns table (
+  code text, status text, skill text, detail text, note text, price int, unit text,
+  customer_name text, customer_area text, customer_phone text,
+  created_at timestamptz, last_message_at timestamptz, unread int, preview text,
+  read_upto bigint)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  return query
+    select t.code, t.status, t.skill, t.detail, t.note, t.price, t.unit,
+           t.customer_name, t.customer_area,
+           case when t.status in ('accepted','working','done','closed') then t.customer_phone end,
+           t.created_at, t.last_message_at, t.worker_unread,
+           (select m.body from messages m where m.thread_id = t.id order by m.id desc limit 1),
+           t.customer_read_id
+      from threads t
+     where t.worker_id = wid
+     order by (t.worker_unread > 0) desc, t.last_message_at desc
+     limit greatest(1, least(p_limit, 100));
+end;
+$$;
+
+-- ---------- accepting an instant job opens the conversation ----------
+drop function if exists public.accept_offer(text, text, text, int);
+create function public.accept_offer(p_phone text, p_pin text, p_code text, p_eta int default 30)
+returns table (customer_name text, customer_phone text, area text, note text, skill text,
+               thread_code text, thread_token uuid)
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wid uuid; jid uuid; tid uuid; c text; tok uuid; px int; un text;
+  /* NOT called j: `j` is the table alias below, and PL/pgSQL resolves a
+     qualified name to a variable before an alias, so `j.code` would read an
+     unassigned record instead of the column. */
+  jrow jobs;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, null);
+
+  select j.id into jid from jobs j where j.code = upper(btrim(p_code)) for update;
+  if jid is null then raise exception 'That job no longer exists'; end if;
+
+  if not exists (select 1 from job_offers o
+                  where o.job_id = jid and o.worker_id = wid
+                    and o.status = 'pending' and o.expires_at > now()) then
+    raise exception 'That job has already gone to someone else';
+  end if;
+  if (select status from jobs where id = jid) <> 'searching' then
+    raise exception 'That job has already gone to someone else';
+  end if;
+
+  update job_offers set status = 'accepted' where job_id = jid and worker_id = wid;
+  update job_offers set status = 'expired'
+   where job_id = jid and worker_id <> wid and status = 'pending';
+  update jobs set status = 'accepted', worker_id = wid, accepted_at = now(),
+                  eta_minutes = greatest(5, least(coalesce(p_eta, 30), 240))
+   where id = jid;
+
+  select * into jrow from jobs where id = jid;
+
+  -- one conversation per job, however many times this is called
+  select t.id, t.code, t.customer_token into tid, c, tok
+    from threads t where t.job_id = jid limit 1;
+
+  if tid is null then
+    select (s->>'price')::int, s->>'unit' into px, un
+      from workers w, jsonb_array_elements(w.skills) s
+     where w.id = wid and s->>'skill' = jrow.skill limit 1;
+
+    loop
+      c := upper(substr(encode(gen_random_bytes(8), 'hex'), 1, 10));
+      exit when not exists (select 1 from threads where threads.code = c);
+    end loop;
+
+    insert into threads (code, worker_id, skill, mode, detail, note, price, unit,
+                         customer_name, customer_phone, customer_area, job_id,
+                         status, accepted_at, worker_unread, customer_unread)
+    values (c, wid, jrow.skill, 'now',
+            'Arriving in about ' || greatest(5, least(coalesce(p_eta, 30), 240)) || ' minutes',
+            nullif(btrim(coalesce(jrow.note,'')),''), px, un,
+            jrow.customer_name, jrow.customer_phone, nullif(btrim(coalesce(jrow.area,'')),''), jid,
+            'accepted', now(), 0, 1)
+    returning id, threads.customer_token into tid, tok;
+
+    insert into messages (thread_id, sender, body)
+    values (tid, 'system',
+            format('%s accepted this job and said about %s minutes.',
+                   (select w.name from workers w where w.id = wid),
+                   greatest(5, least(coalesce(p_eta, 30), 240))));
+  end if;
+
+  return query select jrow.customer_name, jrow.customer_phone, jrow.area, jrow.note, jrow.skill, c, tok;
+end;
+$$;
+
+-- ============================================================
+-- MIGRATION 22 — the customer gets into the conversation, safely
+--
+-- The customer's side polls job_state(code) and that is all it knows. To open
+-- the in-app chat it needs the thread's code and token, and those cannot go
+-- behind the job code alone: the job code is six hex characters, about 16
+-- million, and job_state already hands out the worker's phone number once a
+-- job is accepted. Anybody willing to spend an afternoon guessing could walk
+-- the space. Putting a conversation behind it would be worse.
+--
+-- So a job gets its own bearer token, returned once to whoever created it, and
+-- job_state hands over the thread only when that token is presented. New job
+-- codes are ten characters rather than six while we are here; the short ones
+-- already issued keep working.
+-- ============================================================
+
+alter table public.jobs add column if not exists customer_token uuid not null default gen_random_uuid();
+
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'create_job'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
+
+create function public.create_job(
+  p_skill text, p_name text, p_phone text, p_area text, p_note text default null,
+  p_lat double precision default null, p_lng double precision default null,
+  p_city text default 'Guwahati', p_minutes int default 20,
+  p_worker uuid default null)
+returns table (code text, worker_id uuid, asked int, direct boolean, customer_token uuid)
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid; c text; cand uuid; wanted uuid; is_direct boolean := false; tok uuid;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit mobile number';
+  end if;
+  if btrim(coalesce(p_name,'')) = '' then
+    raise exception 'Please enter your name';
+  end if;
+
+  if p_worker is not null then
+    select w.id into wanted from workers w
+     where w.id = p_worker and w.status = 'approved' and w.available
+       and exists (select 1 from jsonb_array_elements(w.skills) s where s->>'skill' = p_skill);
+    is_direct := wanted is not null;
+  end if;
+
+  loop
+    c := upper(substr(encode(gen_random_bytes(8), 'hex'), 1, 10));
+    exit when not exists (select 1 from jobs where jobs.code = c);
+  end loop;
+
+  insert into jobs (code, skill, city, area, lat, lng, customer_name, customer_phone, note,
+                    search_until, requested_worker, direct)
+  values (c, p_skill, p_city, p_area, p_lat, p_lng, btrim(p_name), p_phone,
+          nullif(btrim(coalesce(p_note,'')),''),
+          now() + make_interval(mins => greatest(2, least(p_minutes, 60))),
+          wanted, is_direct)
+  returning id, jobs.customer_token into jid, tok;
+
+  cand := offer_next(jid, 60);
+  return query select c, cand, (select asked_count from jobs where id = jid), is_direct, tok;
+end;
+$$;
+
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'job_state'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
+
+create function public.job_state(p_code text, p_token uuid default null)
+returns table (status text, asked int, worker_name text, worker_phone text,
+               worker_area text, eta_minutes int, seconds_left int, skill text,
+               direct boolean, requested_name text,
+               thread_code text, thread_token uuid)
+language sql stable security definer set search_path = public, extensions as $$
+  select j.status, j.asked_count, w.name,
+         case when j.status = 'accepted' then w.phone else null end,
+         w.area, j.eta_minutes,
+         greatest(0, extract(epoch from (
+           coalesce((select o.expires_at from job_offers o
+                      where o.job_id = j.id and o.status = 'pending'
+                      order by o.rank desc limit 1), j.search_until) - now()))::int),
+         j.skill,
+         j.direct,
+         (select rw.name from workers rw where rw.id = j.requested_worker),
+         -- the conversation, but only for whoever holds the job's own token
+         case when p_token is not null and p_token = j.customer_token
+              then (select t.code from threads t where t.job_id = j.id limit 1) end,
+         case when p_token is not null and p_token = j.customer_token
+              then (select t.customer_token from threads t where t.job_id = j.id limit 1) end
+    from jobs j left join workers w on w.id = j.worker_id
+   where j.code = upper(btrim(p_code));
 $$;
