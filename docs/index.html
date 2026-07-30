@@ -122,8 +122,16 @@ button{font-family:inherit;cursor:pointer;color:inherit;touch-action:manipulatio
 a,label,select,summary{touch-action:manipulation}
 input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ink);color-scheme:dark}
 svg{display:block}
-.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
-.wrap-sm{max-width:620px;margin:0 auto;padding:0 20px}
+/* max() rather than a flat 20px: on a rotated phone the notch eats one side,
+   and text otherwise runs underneath it. */
+.wrap{max-width:1080px;margin:0 auto;
+  padding-left:max(20px, env(safe-area-inset-left));
+  padding-right:max(20px, env(safe-area-inset-right));
+}
+.wrap-sm{max-width:620px;margin:0 auto;
+  padding-left:max(20px, env(safe-area-inset-left));
+  padding-right:max(20px, env(safe-area-inset-right));
+}
 
 h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.15;font-weight:700}
 .serif{font-family:var(--serif);font-weight:600;letter-spacing:-.01em}
@@ -163,7 +171,17 @@ header{
   border-bottom:1px solid var(--line);background:rgba(12,10,7,.88);
   backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;
 }
-.masthead{display:flex;align-items:center;justify-content:space-between;padding-top:16px;padding-bottom:16px;gap:12px}
+/* The status bar sits ON TOP of the page in an installed iOS app — that is
+   what apple-mobile-web-app-status-bar-style: black-translucent means, and
+   viewport-fit=cover keeps it that way so the background reaches the notch.
+   Without this inset the wordmark, Browse workers and the menu button are
+   underneath the clock, invisible against the dark, and only a rubber-band
+   pull reveals them. The chat header always had it; this one did not. */
+.masthead{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-top:calc(16px + env(safe-area-inset-top));
+  padding-bottom:16px;
+}
 .brand{display:inline-flex;align-items:center;gap:10px}
 .brand .mark{
   height:33px;width:auto;display:block;flex:0 0 auto;
@@ -203,7 +221,9 @@ header{
 }
 .drawer-back.open{opacity:1;pointer-events:auto}
 .drawer{
-  position:fixed;top:0;right:0;bottom:0;z-index:71;width:min(86vw,340px);
+  position:fixed;top:0;right:0;bottom:0;z-index:71;
+  width:min(86vw, calc(340px + env(safe-area-inset-right)));
+  padding-right:env(safe-area-inset-right);
   background:var(--bg-2);border-left:1px solid var(--line-strong);
   display:flex;flex-direction:column;
   transform:translateX(100%);transition:transform .26s cubic-bezier(.22,.85,.3,1);
@@ -213,7 +233,8 @@ header{
 .drawer.open{transform:translateX(0)}
 body.menu-open{overflow:hidden}
 .drawer-head{
-  display:flex;align-items:center;gap:9px;padding:18px 18px 14px;
+  display:flex;align-items:center;gap:9px;
+  padding:calc(18px + env(safe-area-inset-top)) 18px 14px;
   border-bottom:1px solid var(--line);flex:0 0 auto;
 }
 .drawer-head .mark{height:28px;width:auto}
@@ -249,7 +270,8 @@ body.menu-open{overflow:hidden}
 }
 .row-n[hidden]{display:none}
 .drawer-foot{
-  flex:0 0 auto;padding:14px 22px 18px;border-top:1px solid var(--line);
+  flex:0 0 auto;border-top:1px solid var(--line);
+  padding:14px 22px calc(18px + env(safe-area-inset-bottom));
   display:flex;flex-direction:column;gap:3px;
   font-size:.74rem;color:var(--muted);
 }
@@ -1780,7 +1802,10 @@ body.in-chat > .demo-note{display:none}
 .overlay.open{display:flex;animation:fade .18s ease}
 .modal{
   background:var(--surface);border-radius:var(--r-lg) var(--r-lg) 0 0;width:100%;max-width:520px;
-  max-height:92vh;overflow-y:auto;padding:26px 24px 30px;position:relative;
+  max-height:92vh;overflow-y:auto;position:relative;
+  /* a sheet rises from the bottom edge, so its last button must clear the
+     home indicator rather than sit under it */
+  padding:26px 24px calc(30px + env(safe-area-inset-bottom));
   animation:rise .26s cubic-bezier(.2,.8,.3,1);
 }
 @media(min-width:600px){.modal{border-radius:var(--r-lg)}}
@@ -1815,7 +1840,8 @@ body.in-chat > .demo-note{display:none}
 
 /* ---------- toast + footer ---------- */
 .toast{
-  position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(90px);
+  position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(90px);
   background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:13px 22px;border-radius:999px;
   font-size:.88rem;font-weight:600;z-index:200;opacity:0;transition:all .28s ease;
   box-shadow:var(--shadow);max-width:92vw;text-align:center;
@@ -1869,7 +1895,10 @@ body.in-chat > .demo-note{display:none}
   border-radius:var(--r-sm);padding:12px 14px;font-size:.87rem;line-height:1.45;color:var(--ink-2);
 }
 .reject-opt:hover{border-color:var(--danger);color:var(--ink);background:rgba(232,112,127,.09)}
-footer{border-top:1px solid var(--line);padding:26px 0 34px;margin-top:auto}
+footer{
+  border-top:1px solid var(--line);margin-top:auto;
+  padding:26px 0 calc(34px + env(safe-area-inset-bottom));
+}
 footer .wrap{
   display:flex;flex-direction:column;gap:14px;
   color:var(--muted);font-size:.83rem;

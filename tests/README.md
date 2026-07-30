@@ -15,6 +15,7 @@ node tests/test-ks.js
 | `test-modes.js` | The four booking modes: instant dispatch with auto-divert, appointment slots, punctuality, registration numbers |
 | `dispatch-verify.sql` | The same, against a real Postgres — offer rotation, double-accept, slot collisions, table privileges |
 | `test-hardening.js` | Back-button navigation, manifest shortcuts, rating limits, reporting, admin PIN |
+| `test-safearea.js` | Nothing hides under the iPhone status bar or home indicator |
 | `test-bubbles.js` | Chat bubbles: the read receipt, the WhatsApp meta row, day dividers, no zoom |
 | `test-lifecycle.js` | The core loop from both sides: book → accept → work → finish → confirm → review |
 | `test-auth-punct.js` | Worker calls travel on a session token, and the punctuality question |
@@ -46,6 +47,13 @@ they were violated:
 * **`lock_public_functions()` must be the last statement.** Supabase grants
   EXECUTE on every new function to PUBLIC and to anon, so anything defined
   after that call stays reachable by any visitor holding the public key.
+
+One rule for the app, which no browser on a desktop will catch: **anything
+pinned to a screen edge must inset itself with `env(safe-area-inset-*)`.** An
+installed iOS app draws the status bar and the home indicator *over* the page,
+and a desktop browser reports every inset as 0 — so a header that hides under
+the clock looks perfect in every test. `test-safearea.js` forces real iPhone
+values and measures the edges against them.
 
 And one rule the schema cannot check for you: **a function that verifies a PIN
 must not RAISE when the PIN is wrong.** PostgREST wraps an RPC in one
