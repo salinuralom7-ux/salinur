@@ -3,6 +3,12 @@
    /tmp/db-units.txt; prints the difference in both directions and a VERDICT
    line the workflow greps.
 
+   Compared as sets, deliberately. The first version of this check compared an
+   md5 of the two sorted lists, which can never match: Postgres sorts by the
+   database collation and JavaScript sorts by UTF-16 code unit, and these names
+   carry em dashes, ampersands and brackets. It reported drift on a live
+   database whose catalogue was in fact identical.
+
    A service the app offers with no row in service_rates has no floor and no
    ceiling, because check_rate_bands skips any skill it has no band for. That
    is a launch-blocking hole, so it fails the deploy. A band for a service
