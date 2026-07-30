@@ -211,34 +211,30 @@ jobs:
           # The price bands only hold if every service the app offers has a row
           # in service_rates: check_rate_bands lets an unknown skill through, so
           # a service missing here is a service with no floor and no ceiling.
-          # Compare the two lists by fingerprint rather than by count, so a
-          # rename is caught as well as an addition.
-          node -e '
-            const fs = require("fs"), crypto = require("crypto");
-            const src = fs.readFileSync("docs/index.html", "utf8");
-            const cat = eval("(" + src.match(/const CATALOGUE = (\[[\s\S]*?\n\]);/)[1] + ")");
-            const units = eval("(" + src.match(/const UNITS\s*=\s*(\[[^\]]*\])/)[1] + ")");
-            const skills = [];
-            cat.forEach(([k, l, items]) => items.forEach(([n]) => skills.push(n)));
-            const fp = a => crypto.createHash("md5").update(a.slice().sort().join("|")).digest("hex");
-            fs.writeFileSync("/tmp/app-fp.txt", `${fp(skills)} ${fp(units)} ${skills.length} ${units.length}\n`);
-          '
-          read app_rates app_units n_sk n_un < /tmp/app-fp.txt
-          db_rates=$(jq -r '.[0].rates_fingerprint // ""' /tmp/harden.json)
-          db_units=$(jq -r '.[0].units_fingerprint // ""' /tmp/harden.json)
-          note "catalogue: app $n_sk services / $n_un units"
-          if [ "$app_rates" != "$db_rates" ]; then
-            note "ERROR: the app offers services that service_rates does not price."
-            note "       Any such service has no floor and no ceiling. Add the missing"
-            note "       rows to Migration 9 in docs/supabase-workers-setup.sql."
+          # Name the difference rather than only reporting that there is one.
+          cat > /tmp/rates.sql <<'RSQL'
+          select coalesce(string_agg(skill, chr(10) order by skill), '') as skills,
+                 coalesce((select string_agg(unit, chr(10) order by unit) from public.pricing_units), '') as units
+            from public.service_rates
+          RSQL
+          jq -Rs '{query: .}' /tmp/rates.sql > /tmp/r.json
+          code=$(curl -sS -o /tmp/rates.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/r.json)
+          note "read service_rates: HTTP $code"
+          jq -r '.[0].skills' /tmp/rates.json > /tmp/db-skills.txt
+          jq -r '.[0].units'  /tmp/rates.json > /tmp/db-units.txt
+          node tests/catalogue-drift.js > /tmp/drift.txt 2>&1 || true
+          while IFS= read -r line; do note "$line"; done < /tmp/drift.txt
+          if grep -q '^VERDICT unpriced' /tmp/drift.txt; then
+            note "ERROR: the services listed as UNPRICED above have no floor and no"
+            note "       ceiling, so any rate at all can be published for them. Add"
+            note "       them to Migration 9 in docs/supabase-workers-setup.sql."
             exit 1
           fi
-          if [ "$app_units" != "$db_units" ]; then
-            note "ERROR: UNITS in index.html and pricing_units in the database differ."
-            note "       A unit missing from the table is refused on save."
+          if grep -q '^VERDICT units' /tmp/drift.txt; then
+            note "ERROR: a unit the app offers is missing from pricing_units, so"
+            note "       choosing it is refused on save."
             exit 1
           fi
-          note "OK: catalogue and pricing units match the database
           # End-to-end photo upload, using the public anon key exactly as the
           # browser does — proves the bucket, its policies and public read all work.
           anon=$(grep -oP 'SUPABASE_ANON_KEY\s*=\s*"\K[^"]+' docs/index.html | head -1)
