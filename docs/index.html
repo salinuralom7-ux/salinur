@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- An installed app does not zoom. maximum-scale also kills the double-tap
+     zoom that makes every tap feel 300ms late. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Repto — Trusted Local Workers in Guwahati, Booked Directly</title>
 <meta name="description" content="Repto connects you with verified local workers in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers, beauticians and more. Nearest first, rated by the community, priced by the workers themselves.">
 <meta name="keywords" content="Repto, nearse.in, local workers near me, book maid cook electrician plumber, home services Guwahati, hire tutor driver Assam, find work near me">
@@ -116,7 +118,8 @@ body{
 }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
-button{font-family:inherit;cursor:pointer;color:inherit}
+button{font-family:inherit;cursor:pointer;color:inherit;touch-action:manipulation}
+a,label,select,summary{touch-action:manipulation}
 input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ink);color-scheme:dark}
 svg{display:block}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
@@ -410,7 +413,10 @@ body.menu-open{overflow:hidden}
 .ticker-row{display:flex;gap:11px;width:max-content;animation:slide 64s linear infinite}
 .ticker-row.rev{animation-direction:reverse;animation-duration:78s}
 @keyframes slide{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
-.tick{
+/* Scoped to the ticker it was written for. As a bare `.tick` it also claimed
+   the read receipt in a chat bubble, which is how a 15px pair of ticks became
+   a rounded grey pill sitting on top of the timestamp. */
+.ticker .tick{
   border:1px solid var(--line);border-radius:999px;padding:7px 15px;
   font-size:.82rem;font-weight:600;color:var(--muted);white-space:nowrap;
   background:var(--surface);
@@ -1222,20 +1228,43 @@ body.in-chat > .demo-note{display:none}
   flex:1 1 auto;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;
   overscroll-behavior:contain;
 }
-.msg{max-width:78%;padding:9px 13px;border-radius:14px;font-size:.9rem;line-height:1.5;position:relative}
-.msg span{display:block;overflow-wrap:anywhere}
-.msg i{display:block;font-style:normal;font-size:.63rem;opacity:.62;margin-top:3px;text-align:right}
-.msg.own{align-self:flex-end;background:var(--brand);color:var(--brand-ink);border-bottom-right-radius:5px}
-/* One tick when it has left the phone, two when the other side has opened the
-   conversation. The unread pair sits at the same opacity as the timestamp so it
-   reads as "sent"; going read brightens it rather than changing the glyph, so
-   nobody has to count ticks to tell the difference. */
-.msg.own .tick{
-  display:inline;font-style:normal;letter-spacing:-.16em;margin-left:3px;
-  opacity:.5;transition:opacity .18s ease,color .18s ease;
+/* A wrapping flex row: the text takes what it needs and the time follows it on
+   the same line, dropping to its own line only when the text fills the bubble.
+   The time used to be a block underneath, centred, which is why every bubble
+   was taller than it needed to be. */
+.msg{
+  max-width:78%;padding:6px 9px 6px 11px;border-radius:13px;
+  font-size:.92rem;line-height:1.42;position:relative;
+  display:flex;flex-wrap:wrap;align-items:flex-end;column-gap:8px;row-gap:1px;
 }
-.msg.own.read .tick{opacity:1;color:#0B3B22;font-weight:700}
-.msg.them{align-self:flex-start;background:var(--surface-2);color:var(--ink);border-bottom-left-radius:5px}
+.msg-text{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.msg-meta{
+  flex:0 0 auto;margin-left:auto;display:inline-flex;align-items:center;gap:2px;
+  font-size:.66rem;line-height:1.5;opacity:.6;font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.msg.own{align-self:flex-end;background:var(--brand);color:var(--brand-ink);border-bottom-right-radius:4px}
+.msg.them{align-self:flex-start;background:var(--surface-2);color:var(--ink);border-bottom-left-radius:4px}
+
+/* One tick means it left this phone. Two mean the other side has opened the
+   conversation. Showing two either way and dimming one of them asked people to
+   compare shades to tell sent from read; the count is the signal, as it is in
+   every messaging app anybody already uses. */
+.msg-ticks{display:inline-flex;align-items:center;margin-left:1px;transition:color .18s ease}
+.msg-ticks svg{display:block}
+.msg-ticks .two{display:none}
+.msg.read .msg-ticks .one{display:none}
+.msg.read .msg-ticks .two{display:block}
+.msg.own.read .msg-meta{opacity:.9}
+.msg.own.read .msg-ticks{color:#0A3D22}
+
+/* Which day a run of messages belongs to. Without it a conversation spread
+   over a week reads as though all of it happened this afternoon. */
+.msg-day{
+  align-self:center;margin:8px 0 2px;padding:4px 12px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--line);
+  font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+}
 .msg-system{
   align-self:center;max-width:88%;text-align:center;font-size:.75rem;color:var(--muted);
   background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 13px;
@@ -1247,7 +1276,7 @@ body.in-chat > .demo-note{display:none}
 }
 .chat-compose input{
   flex:1;background:var(--surface-2);border:1px solid var(--line-strong);border-radius:999px;
-  padding:11px 16px;font-size:.92rem;
+  padding:11px 16px;font-size:1rem;   /* 16px, or iOS zooms the page on focus */
 }
 .chat-compose input:disabled{opacity:.5}
 .chat-compose button{
@@ -1478,7 +1507,7 @@ body.in-chat > .demo-note{display:none}
 }
 .scf input,.scf select{
   width:100%;background:var(--surface-2);border:1px solid var(--line-strong);
-  border-radius:var(--r-sm);padding:10px 11px;font-size:.92rem;
+  border-radius:var(--r-sm);padding:10px 11px;font-size:1rem;   /* see .chat-compose input */
 }
 .slot-days{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
 .sday{
@@ -1596,7 +1625,10 @@ body.in-chat > .demo-note{display:none}
 .loc-city svg{color:var(--brand-2)}
 .loc-area{
   background:var(--surface);border:1px solid var(--line-strong);border-radius:999px;
-  padding:7px 13px;font-size:.82rem;font-weight:600;color:var(--ink-2);outline:none;
+  padding:7px 13px;font-weight:600;color:var(--ink-2);outline:none;
+  /* 16px so iOS does not zoom when this is tapped; the pill is sized by its
+     padding, so it looks the same either way */
+  font-size:1rem;
 }
 .loc-area:focus{border-color:var(--brand)}
 
@@ -7086,33 +7118,57 @@ function chatActions(t){
    work happens, not a reason to be unreachable when somebody is at the gate. */
 const callBtn = num => `<a class="btn btn-outline btn-sm" href="tel:+91${esc(num)}">Call</a>`;
 
+/* WhatsApp's bubble, because everybody already knows how to read it: the time
+   and the ticks sit together at the bottom-right INSIDE the bubble, on the same
+   line as the text when it fits and on their own line when it does not. That is
+   a wrapping flex row, not a block underneath. */
+const TICK_ONE = '<svg class="one" viewBox="0 0 12 11" width="12" height="11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6.1 4.1 9.2 10.6 1.8"/></svg>';
+const TICK_TWO = '<svg class="two" viewBox="0 0 17 11" width="17" height="11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6.1 4.1 9.2 10.6 1.8"/><path d="M6.4 9.2 12.9 1.8"/></svg>';
+
+function dayLabel(d){
+  const day = new Date(d); day.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((today - day) / 86400000);
+  if(diff === 0) return "Today";
+  if(diff === 1) return "Yesterday";
+  return day.toLocaleDateString("en-IN", { day:"numeric", month:"short",
+    year: day.getFullYear() === today.getFullYear() ? undefined : "numeric" });
+}
+
 function appendMessages(rows){
   const log = $("chatLog");
-  if(!log.dataset.ready){ log.innerHTML = ""; log.dataset.ready = "1"; }
+  if(!log.dataset.ready){ log.innerHTML = ""; log.dataset.ready = "1"; log.dataset.day = ""; }
   const nearBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 90;
+  let lastDay = log.dataset.day || "";
   log.insertAdjacentHTML("beforeend", rows.map(m => {
-    const t = new Date(m.created_at).toLocaleTimeString("en-IN", {hour:"numeric", minute:"2-digit"});
-    if(m.sender === "system") return `<div class="msg-system">${esc(m.body)}</div>`;
+    const when = new Date(m.created_at);
+    const t = when.toLocaleTimeString("en-IN", {hour:"numeric", minute:"2-digit"});
+    /* a conversation that runs over two days needs to say so, or every time
+       reads as if it happened this afternoon */
+    const day = dayLabel(when);
+    const divider = day !== lastDay ? `<div class="msg-day">${esc(day)}</div>` : "";
+    lastDay = day;
+    if(m.sender === "system") return divider + `<div class="msg-system">${esc(m.body)}</div>`;
     const own = m.sender === chatSide;
     /* data-mid is what lets a tick change later without redrawing the log */
-    return `<div class="msg ${own ? "own" : "them"}"${own ? ` data-mid="${Number(m.id)}"` : ""}>` +
-           `<span>${esc(m.body)}</span><i>${esc(t)}${own ? ` <s class="tick">${TICK}</s>` : ""}</i></div>`;
+    return divider +
+      `<div class="msg ${own ? "own" : "them"}"${own ? ` data-mid="${Number(m.id)}"` : ""}>` +
+      `<span class="msg-text">${esc(m.body)}</span>` +
+      `<span class="msg-meta">${esc(t)}` +
+      (own ? `<span class="msg-ticks">${TICK_ONE}${TICK_TWO}</span>` : "") +
+      `</span></div>`;
   }).join(""));
+  log.dataset.day = lastDay;
   if(nearBottom) log.scrollTop = log.scrollHeight;
   paintTicks();
 }
-
-/* One tick when it has left this phone, two when the other side has opened the
-   conversation. Read state is a watermark per side — the highest message id
-   they have seen — so a single number decides every bubble. */
-const TICK = "✓✓";
 function paintTicks(){
   const upto = Number((chatThread && chatThread.read_upto) || 0);
   document.querySelectorAll("#chatLog .msg.own[data-mid]").forEach(el => {
     const read = Number(el.dataset.mid) <= upto;
     el.classList.toggle("read", read);
-    const s = el.querySelector(".tick");
-    if(s) s.title = read ? "Read" : "Sent";
+    const t = el.querySelector(".msg-ticks");
+    if(t) t.title = read ? "Read" : "Sent";
   });
 }
 
