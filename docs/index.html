@@ -1131,6 +1131,15 @@ body.in-chat > .demo-note{display:none}
 .msg span{display:block;overflow-wrap:anywhere}
 .msg i{display:block;font-style:normal;font-size:.63rem;opacity:.62;margin-top:3px;text-align:right}
 .msg.own{align-self:flex-end;background:var(--brand);color:var(--brand-ink);border-bottom-right-radius:5px}
+/* One tick when it has left the phone, two when the other side has opened the
+   conversation. The unread pair sits at the same opacity as the timestamp so it
+   reads as "sent"; going read brightens it rather than changing the glyph, so
+   nobody has to count ticks to tell the difference. */
+.msg.own .tick{
+  display:inline;font-style:normal;letter-spacing:-.16em;margin-left:3px;
+  opacity:.5;transition:opacity .18s ease,color .18s ease;
+}
+.msg.own.read .tick{opacity:1;color:#0B3B22;font-weight:700}
 .msg.them{align-self:flex-start;background:var(--surface-2);color:var(--ink);border-bottom-left-radius:5px}
 .msg-system{
   align-self:center;max-width:88%;text-align:center;font-size:.75rem;color:var(--muted);
@@ -1230,6 +1239,19 @@ body.in-chat > .demo-note{display:none}
   100%{transform:translateY(104vh) rotate(520deg);opacity:.15}
 }
 @media (prefers-reduced-motion: reduce){ .cheer{display:none} }
+
+/* the arrival-time sheet: numbers big enough to tap without reading */
+.eta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.eta-opt{
+  border:1px solid var(--line-strong);background:var(--surface-2);border-radius:var(--r);
+  padding:16px 8px 13px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  color:var(--ink);transition:background .14s ease,border-color .14s ease,transform .1s ease;
+}
+.eta-opt:hover{border-color:var(--brand);background:var(--raise)}
+.eta-opt:active{transform:scale(.97)}
+.eta-opt b{font-size:1.7rem;font-weight:800;line-height:1;color:var(--brand-2);font-variant-numeric:tabular-nums}
+.eta-opt span{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.eta-opt i{font-style:normal;font-size:.74rem;color:var(--ink-2);line-height:1.3;text-align:center}
 
 /* ---------- consent ---------- */
 .consent{
@@ -2470,6 +2492,19 @@ footer a:hover{color:var(--brand)}
   </div>
 </div>
 
+<div class="overlay" id="etaOverlay" onclick="if(event.target===this)closeModal('etaOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('etaOverlay')" aria-label="Close">✕</button>
+    <h3>How long to get there?</h3>
+    <p class="sub" id="etaSub">Tap one. The customer sees this as your own promise.</p>
+    <!-- Tap-only, and the number does the talking. A typed answer in a prompt()
+         box asked a lot of somebody who is standing in the street holding a
+         phone, and more of somebody who reads little. -->
+    <div class="eta-grid" id="etaGrid"></div>
+    <p class="hint" style="margin-top:12px;text-align:center">You are asked afterwards whether you kept it, and customers can see it.</p>
+  </div>
+</div>
+
 <div class="overlay" id="reportOverlay" onclick="if(event.target===this)closeModal('reportOverlay')">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="closeModal('reportOverlay')" aria-label="Close">✕</button>
@@ -3372,15 +3407,16 @@ const api = {
     }
     return demoWidenJob(code);
   },
-  async jobState(code){
+  async jobState(code, token){
     if(LIVE){
       /* nudge the queue along as well: pg_cron runs once a minute, and the
          customer is staring at a countdown that has to feel live */
       sb("rpc/advance_jobs", {method:"POST", body:"{}"}).catch(()=>{});
-      const rows = await sb("rpc/job_state", {method:"POST", body:JSON.stringify({p_code:code})});
+      const rows = await sb("rpc/job_state", {method:"POST",
+        body:JSON.stringify({p_code:code, p_token:token || null})});
       return Array.isArray(rows) ? rows[0] : rows;
     }
-    return demoJobState(code);
+    return demoJobState(code, token);
   },
   async cancelJob(code){
     if(LIVE) return await sb("rpc/cancel_job", {method:"POST", body:JSON.stringify({p_code:code})});
@@ -3627,7 +3663,8 @@ function demoStartThread(o){
     skill:o.skill, mode:o.mode, detail:o.detail, note:o.note, price:o.price, unit:o.unit,
     customer_name:o.name, customer_phone:o.phone, customer_area:o.area,
     status:"requested", created_at:new Date().toISOString(), last_message_at:new Date().toISOString(),
-    worker_unread:1, customer_unread:0, reviewed:false, messages:[]
+    worker_unread:1, customer_unread:0, worker_read_id:0, customer_read_id:0,
+    reviewed:false, messages:[]
   };
   t.messages.push({id:1, sender:"system", created_at:t.created_at,
     body:`${o.name} asked for ${o.skill}${o.detail ? " — " + o.detail : ""}`});
@@ -3638,13 +3675,16 @@ function demoStartThread(o){
 function demoThreadView(code, token){
   const t = findThread(code);
   if(!t || t.token !== token) return null;
+  /* read_upto is how far the OTHER side has read — that is what a tick is */
   return {...t, worker_phone: ["accepted","working","done","closed"].includes(t.status) ? t.worker_phone : null,
-          unread:t.customer_unread};
+          unread:t.customer_unread, read_upto: t.worker_read_id || 0};
 }
 function demoMessages(code, after, side){
   const all = allThreads(); const t = all.find(x => x.code === code);
   if(!t) throw new Error("Conversation not found");
-  if(side === "customer") t.customer_unread = 0; else t.worker_unread = 0;
+  const top = (t.messages[t.messages.length - 1] || {id:0}).id;
+  if(side === "customer"){ t.customer_unread = 0; t.customer_read_id = Math.max(t.customer_read_id || 0, top); }
+  else { t.worker_unread = 0; t.worker_read_id = Math.max(t.worker_read_id || 0, top); }
   saveThreads(all);
   return t.messages.filter(m => m.id > (after || 0));
 }
@@ -3700,7 +3740,7 @@ function demoReview(code, stars, comment){
 function demoWorkerThreads(){
   const wid = session && session.worker && session.worker.id;
   return allThreads().filter(t => t.worker_id === wid).map(t => ({
-    ...t, unread:t.worker_unread,
+    ...t, unread:t.worker_unread, read_upto: t.customer_read_id || 0,
     customer_phone: ["accepted","working","done","closed"].includes(t.status) ? t.customer_phone : null,
     preview:(t.messages[t.messages.length-1]||{}).body
   })).sort((a,b) => (b.unread>0) - (a.unread>0) || (b.last_message_at||"").localeCompare(a.last_message_at||""));
@@ -3764,14 +3804,15 @@ function demoCreateJob(o){
   const wanted = o.workerId && demoAll().find(w => w.id === o.workerId
     && statusOf(w) === "approved" && w.available !== false
     && (w.skills||[]).some(s => s.skill === o.skill));
-  const j = { code: Math.random().toString(36).slice(2,8).toUpperCase(),
+  const j = { code: Array.from({length:10}, () => "0123456789ABCDEF"[Math.floor(Math.random()*16)]).join(""),
+              customer_token: "demo-job-" + Math.random().toString(36).slice(2,10),
               skill:o.skill, name:o.name, phone:o.phone, area:o.area, note:o.note,
               lat:o.lat ?? null, lng:o.lng ?? null, status:"searching", asked:[], offer:null,
               searchUntil: Date.now() + 20*60000, worker:null, eta:null,
               requested: wanted ? wanted.id : null, direct: !!wanted };
   demoOfferNext(j);
   list.unshift(j); jobsSave(list);
-  return { code: j.code, asked: j.asked.length, direct: j.direct };
+  return { code: j.code, asked: j.asked.length, direct: j.direct, customer_token: j.customer_token };
 }
 function demoWidenJob(code){
   const list = jobsAll(); const j = list.find(x => x.code === code);
@@ -3784,7 +3825,7 @@ function demoWidenJob(code){
   jobsSave(list);
   return { status: j.status, asked: j.asked.length };
 }
-function demoJobState(code){
+function demoJobState(code, token){
   const list = jobsAll(); const j = list.find(x => x.code === code);
   if(!j) return null;
   demoAdvance(j); jobsSave(list);
@@ -3795,7 +3836,13 @@ function demoJobState(code){
            worker_name: w ? w.name : null,
            worker_phone: (j.status === "accepted" && w) ? w.phone : null,
            worker_area: w ? w.area : null, eta_minutes: j.eta,
-           seconds_left: Math.max(0, Math.round(((j.offer && j.offer.expires) || j.searchUntil) - Date.now()) / 1000) | 0 };
+           seconds_left: Math.max(0, Math.round(((j.offer && j.offer.expires) || j.searchUntil) - Date.now()) / 1000) | 0,
+           /* handed over only to whoever holds the job's own token, exactly as
+              the database does it — the job code alone is not enough */
+           ...(token && token === j.customer_token
+               ? (() => { const t = allThreads().find(x => x.job_code === code);
+                          return t ? { thread_code:t.code, thread_token:t.token } : {}; })()
+               : {}) };
 }
 function demoCancelJob(code){
   const list = jobsAll(); const j = list.find(x => x.code === code);
@@ -3830,7 +3877,31 @@ function demoAcceptOffer(phone, code, eta){
     throw new Error("That job has already gone to someone else");
   j.status = "accepted"; j.worker = me.id; j.eta = eta; j.offer = null;
   jobsSave(list);
-  return { customer_name:j.name, customer_phone:j.phone, area:j.area, note:j.note, skill:j.skill };
+
+  /* Accepting opens the conversation inside Repto. It used to open nothing,
+     which left a WhatsApp link as the only way for either side to speak. */
+  const all = allThreads();
+  let t = all.find(x => x.job_code === code);
+  if(!t){
+    const sk = (me.skills || []).find(x => x.skill === j.skill) || {};
+    const tcode = Array.from({length:10}, () => "0123456789ABCDEF"[Math.floor(Math.random()*16)]).join("");
+    const now = new Date().toISOString();
+    t = { code:tcode, token:"demo-" + tcode, job_code:code,
+          worker_id:me.id, worker_name:me.name, worker_area:me.area,
+          worker_thumb:me.thumb || me.selfie || null, worker_phone:me.phone,
+          rating_sum:me.rating_sum||0, rating_count:me.rating_count||0,
+          skill:j.skill, mode:"now", detail:"Arriving in about " + eta + " minutes",
+          note:j.note || null, price:sk.price || null, unit:sk.unit || null,
+          customer_name:j.name, customer_phone:j.phone, customer_area:j.area,
+          status:"accepted", created_at:now, accepted_at:now, last_message_at:now,
+          worker_unread:0, customer_unread:1, worker_read_id:0, customer_read_id:0,
+          reviewed:false,
+          messages:[{ id:1, sender:"system", created_at:now,
+                      body:me.name + " accepted this job and said about " + eta + " minutes." }] };
+    all.unshift(t); saveThreads(all);
+  }
+  return { customer_name:j.name, customer_phone:j.phone, area:j.area, note:j.note,
+           skill:j.skill, thread_code:t.code, thread_token:t.token };
 }
 function demoDeclineOffer(phone, code){
   const me = demoAll().find(w => w.phone === phone);
@@ -5023,23 +5094,41 @@ function renderOffers(offers){
       </div>
     </div>`).join("");
 }
-async function acceptOffer(code){
-  const eta = prompt("How many minutes until you can be there?\n\nThe customer sees this as your own promise, and is asked afterwards whether you kept it.", "30");
-  if(eta === null) return;
-  const mins = Math.max(5, Math.min(240, parseInt(eta, 10) || 30));
+/* Six taps, no typing. The old version asked for a number in a prompt() box,
+   which is a lot to ask of somebody standing in the street, and more of
+   somebody who reads little. */
+const ETA_CHOICES = [
+  [10, "10", "minutes", "Very close"],
+  [15, "15", "minutes", ""],
+  [20, "20", "minutes", ""],
+  [30, "30", "minutes", "Half an hour"],
+  [45, "45", "minutes", ""],
+  [60, "1",  "hour",    "An hour"]
+];
+let etaFor = null;
+function acceptOffer(code){
+  etaFor = code;
+  $("etaGrid").innerHTML = ETA_CHOICES.map(([mins, big, unit, note]) => `
+    <button class="eta-opt" onclick="confirmEta(${mins})">
+      <b>${big}</b><span>${unit}</span>${note ? `<i>${esc(note)}</i>` : ""}
+    </button>`).join("");
+  openModal("etaOverlay");
+}
+async function confirmEta(mins){
+  const code = etaFor;
+  if(!code) return;
+  etaFor = null;
+  hideModal("etaOverlay");   /* go() consumes this sheet's history entry */
   try{
     const j = await api.acceptOffer(session.phone, session.pin, code, mins);
-    toast("Accepted — message them now");
-    const msg =
-`*Repto booking ${code}*
-
-Hello ${(j.customer_name||"").split(" ")[0]}, I have accepted your request on Repto.
-
-*Service:* ${j.skill}
-*Where:* ${j.area}, Guwahati${j.note ? "\n*Details:* " + j.note : ""}
-
-I will be there in about ${mins} minutes.`;
-    window.open("https://wa.me/91" + j.customer_phone + "?text=" + encodeURIComponent(msg), "_blank");
+    /* Straight into the conversation, inside Repto. This used to open WhatsApp,
+       which moved the job off the platform the moment it was accepted. */
+    if(j && j.thread_code){
+      toast("Accepted — say hello");
+      openChat(j.thread_code, "worker", "me");
+    }else{
+      toast("Accepted");
+    }
     pollOffers();
   }catch(e){ toast(e.message); pollOffers(); }
 }
@@ -5512,7 +5601,8 @@ async function startNowJob(){
     const res = await api.createJob({ skill:s.skill, name, phone, area, note,
                                       workerId: w && w.id,
                                       lat: myLoc && myLoc.lat, lng: myLoc && myLoc.lng });
-    nowJob = { code: res.code, skill: s.skill, name, phone, area, note,
+    nowJob = { code: res.code, token: res.customer_token || null,
+               skill: s.skill, name, phone, area, note,
                askedFor: (res && res.direct === false) ? null : (w && w.name) };
     if(res && res.direct === false && w){
       toast(w.name.split(" ")[0] + " is not available for that service — looking more widely");
@@ -5528,7 +5618,7 @@ async function startNowJob(){
 async function pollJob(){
   if(!nowJob){ return; }
   let st;
-  try{ st = await api.jobState(nowJob.code); }
+  try{ st = await api.jobState(nowJob.code, nowJob.token); }
   catch(e){ st = null; }
   if(!st){ clearTimeout(nowTimer); nowTimer = setTimeout(pollJob, 3000); return; }
   renderSearch(st);
@@ -5566,9 +5656,13 @@ function renderSearch(st){
         <h3>${esc(st.worker_name || "A worker")} is coming</h3>
         <p class="sub">They said <b>about ${st.eta_minutes} minutes</b>${st.worker_area ? ", from " + esc(st.worker_area) : ""}.
           This is their own commitment, not an estimate we made up.</p>
-        <a class="btn btn-wa btn-block" id="jobWaBtn" href="#" target="_blank" rel="noopener">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2"/></svg>
-          Message them on WhatsApp
+        <button class="btn btn-brand btn-block" id="jobChatBtn" onclick="openJobChat()" style="padding:14px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Message ${esc((st.worker_name || "them").split(" ")[0])}
+        </button>
+        <a class="btn btn-wa btn-block btn-sm" id="jobWaBtn" href="#" target="_blank" rel="noopener" style="margin-top:10px" hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2"/></svg>
+          Use WhatsApp instead
         </a>
         <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="closeSearch()">Done</button>
       </div>`;
@@ -5599,8 +5693,36 @@ function renderSearch(st){
   }
 }
 
+function openJobChat(){
+  const j = nowJob; if(!j) return;
+  if(!j.threadCode){ toast("Opening the conversation…"); return; }
+  const code = j.threadCode;
+  /* same reason as confirmEta: hideModal, not closeModal, because a screen
+     follows immediately and go() takes over this history entry */
+  clearTimeout(nowTimer);
+  nowJob = null;
+  try{ localStorage.removeItem("nearse_job_v1"); }catch(e){}
+  hideModal("searchOverlay");
+  openChat(code, "customer", "mine");
+}
+
 function onJobAccepted(st){
-  const j = nowJob; if(!j || !st.worker_phone) return;
+  const j = nowJob; if(!j) return;
+
+  /* The conversation lives in Repto. WhatsApp is still there for anybody who
+     wants it — it is just no longer the only thing on offer, which it was. */
+  if(st.thread_code && st.thread_token){
+    j.threadCode = st.thread_code;
+    rememberBooking({ code: st.thread_code, token: st.thread_token,
+                      worker_name: st.worker_name, skill: j.skill,
+                      created_at: new Date().toISOString() });
+    try{ localStorage.setItem("nearse_job_v1", JSON.stringify(j)); }catch(e){}
+    const link = $("myBookingsLink"); if(link) link.hidden = false;
+  }
+  const chat = $("jobChatBtn");
+  if(chat) chat.disabled = !j.threadCode;
+
+  if(!st.worker_phone){ try{ localStorage.setItem("nearse_job_done_v1", j.code); }catch(e){} return; }
   const msg =
 `*Repto booking ${j.code}*
 
@@ -5612,7 +5734,10 @@ Hello ${(st.worker_name||"").split(" ")[0]}, thank you for accepting.
 *Name:* ${j.name}
 *Mobile:* ${j.phone}`;
   const btn = $("jobWaBtn");
-  if(btn) btn.href = "https://wa.me/91" + st.worker_phone + "?text=" + encodeURIComponent(msg);
+  if(btn){
+    btn.href = "https://wa.me/91" + st.worker_phone + "?text=" + encodeURIComponent(msg);
+    btn.hidden = false;
+  }
   try{ localStorage.setItem("nearse_job_done_v1", j.code); }catch(e){}
 }
 
@@ -6402,24 +6527,24 @@ function stopChatPolling(){ clearInterval(chatTimer); chatTimer = null; }
 async function refreshChat(full){
   if(!chatCode) return;
   try{
-    if(full || chatSide === "customer"){
-      if(chatSide === "customer"){
-        chatThread = await api.threadView(chatCode, chatToken);
-      }else{
-        const list = await api.workerThreads(session.phone, session.pin);
-        chatThread = list.find(t => t.code === chatCode) || chatThread;
-      }
-      if(chatThread) paintChatHead();
+    /* Every poll, both sides. The worker's side used to refresh the head only
+       when a new message arrived, so a second tick — and a status change made
+       by the other side — sat stale until somebody typed. */
+    if(chatSide === "customer"){
+      chatThread = await api.threadView(chatCode, chatToken);
+    }else{
+      const list = await api.workerThreads(session.phone, session.pin);
+      chatThread = list.find(t => t.code === chatCode) || chatThread;
     }
+    if(chatThread) paintChatHead();
     const rows = chatSide === "customer"
       ? await api.threadMessages(chatCode, chatToken, chatAfter)
       : await api.workerThreadMessages(session.phone, session.pin, chatCode, chatAfter);
     if(rows && rows.length){
       appendMessages(rows);
       chatAfter = rows[rows.length - 1].id;
-      /* a new message can also mean the other side changed the status */
-      if(!full) refreshChatHead();
     }
+    paintTicks();
   }catch(e){
     if(full) $("chatLog").innerHTML = `<div class="empty"><b>Could not open this conversation</b>${esc(e.message||"")}</div>`;
   }
@@ -6498,9 +6623,26 @@ function appendMessages(rows){
     const t = new Date(m.created_at).toLocaleTimeString("en-IN", {hour:"numeric", minute:"2-digit"});
     if(m.sender === "system") return `<div class="msg-system">${esc(m.body)}</div>`;
     const own = m.sender === chatSide;
-    return `<div class="msg ${own ? "own" : "them"}"><span>${esc(m.body)}</span><i>${esc(t)}</i></div>`;
+    /* data-mid is what lets a tick change later without redrawing the log */
+    return `<div class="msg ${own ? "own" : "them"}"${own ? ` data-mid="${Number(m.id)}"` : ""}>` +
+           `<span>${esc(m.body)}</span><i>${esc(t)}${own ? ` <s class="tick">${TICK}</s>` : ""}</i></div>`;
   }).join(""));
   if(nearBottom) log.scrollTop = log.scrollHeight;
+  paintTicks();
+}
+
+/* One tick when it has left this phone, two when the other side has opened the
+   conversation. Read state is a watermark per side — the highest message id
+   they have seen — so a single number decides every bubble. */
+const TICK = "✓✓";
+function paintTicks(){
+  const upto = Number((chatThread && chatThread.read_upto) || 0);
+  document.querySelectorAll("#chatLog .msg.own[data-mid]").forEach(el => {
+    const read = Number(el.dataset.mid) <= upto;
+    el.classList.toggle("read", read);
+    const s = el.querySelector(".tick");
+    if(s) s.title = read ? "Read" : "Sent";
+  });
 }
 
 async function sendChat(e){

@@ -184,19 +184,35 @@ const SEED = `
   await worker.waitForTimeout(1200);
   ok('The widened offer reaches the next worker', await worker.locator('.offer').count() === 1);
 
-  // accept it, committing to an arrival window
-  worker.on('dialog', d => d.accept('25'));
+  // accept it, committing to an arrival window — six taps, no typing
   await worker.evaluate(() => { window.open = () => null; });   // don't spawn WhatsApp
   await worker.locator('.offer .btn-brand').click();
-  await worker.waitForTimeout(900);
+  await worker.waitForTimeout(500);
+  ok('Accepting asks for the arrival time as taps, not a typed box',
+     await worker.locator('#etaOverlay.open').count() === 1);
+  const etaOpts = await worker.locator('.eta-opt').count();
+  ok('Every choice is one tap', etaOpts === 6, etaOpts + ' choices');
+  ok('The number leads, not the sentence',
+     (await worker.locator('.eta-opt b').first().innerText()).trim() === '10');
+  await worker.locator('.eta-opt', { hasText: 'Half an hour' }).click();
+  await worker.waitForTimeout(1200);
   ok('Accepting clears the offer', await worker.locator('.offer').count() === 0);
+  ok('The worker lands in the conversation, not WhatsApp',
+     await worker.evaluate(() => (document.querySelector('.screen.on') || {}).id) === 'scr-chat');
 
   // ---------- the customer sees a real commitment ----------
   await cust.waitForTimeout(3200);
   const doneText = await cust.locator('#searchBody').innerText();
   ok('Customer is told who accepted', doneText.includes('Mid Sparks'), doneText.split('\n')[0]);
-  ok('…and the worker\'s own arrival promise', /25 minutes/.test(doneText));
-  ok('WhatsApp button appears only now', await cust.locator('#jobWaBtn').count() === 1);
+  ok('…and the worker\'s own arrival promise', /30 minutes/.test(doneText), doneText.replace(/\n/g,' / '));
+  ok('The customer is offered the in-app conversation first',
+     await cust.locator('#jobChatBtn:visible').count() === 1);
+  ok('…and WhatsApp only as a fallback beneath it',
+     await cust.locator('#jobWaBtn:visible').count() === 1);
+  ok('The in-app button comes before the WhatsApp one', await cust.evaluate(() => {
+    const a = document.getElementById('jobChatBtn'), b = document.getElementById('jobWaBtn');
+    return !!(a && b) && (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  }));
 
   // a second worker cannot take it
   const stolen = await cust.evaluate(async () => {
