@@ -149,10 +149,14 @@ const srv = http.createServer((req, res) => {
   console.log('Back in range clears the warning:', !(await carp.locator('.band').innerText()).includes('Too'));
 
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR4nGP8z8DwnwEKmBhQAAAA//8DVgn+/hZorNMAAAAASUVORK5CYII=', 'base64');
-  await page.locator('#uploadAlt').click().catch(()=>{});
+  // the photo step is one button now; the upload route only appears once the
+  // camera has failed, which it does in a headless browser
+  await page.locator('#photoBtn').click();
+  await page.waitForTimeout(600);
   await page.setInputFiles('#selfieInput', { name: 's.png', mimeType: 'image/png', buffer: png });
   await page.waitForTimeout(500);
-  console.log('Photo set:', await page.locator('#selfieCircle img').count() === 1);
+  console.log('Photo step is one button:', (await page.locator('#photoBtn').innerText()).trim());
+  console.log('Photo set:', await page.locator('#photoThumb img').count() === 1);
   console.log('City locked:', await page.locator('#regCity').inputValue(), '/ readonly:', await page.locator('#regCity').getAttribute('readonly') !== null);
   await page.selectOption('#regArea', 'Jalukbari');
   console.log('Locality options:', await page.locator('#regArea option').count(),

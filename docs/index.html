@@ -177,6 +177,82 @@ header{
 }
 .install-btn:hover{background:var(--brand);color:var(--brand-ink)}
 .install-btn[hidden]{display:none}
+
+/* ---------- the three-dot button and the side menu ---------- */
+.menu-btn{
+  position:relative;width:38px;height:38px;border:1px solid var(--line);border-radius:11px;
+  background:var(--surface);color:var(--ink-2);display:grid;place-items:center;flex:0 0 auto;
+  transition:background .16s ease,border-color .16s ease,color .16s ease;
+}
+.menu-btn:hover{background:var(--surface-2);border-color:var(--line-strong);color:var(--ink)}
+.menu-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+/* something unread, without saying how many on a 38px button */
+.menu-dot{
+  position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;
+  background:var(--brand);box-shadow:0 0 0 2px var(--surface);
+}
+.menu-dot[hidden]{display:none}
+
+.drawer-back{
+  position:fixed;inset:0;z-index:70;background:rgba(4,3,1,.62);
+  opacity:0;pointer-events:none;transition:opacity .22s ease;
+  -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+}
+.drawer-back.open{opacity:1;pointer-events:auto}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;z-index:71;width:min(86vw,340px);
+  background:var(--bg-2);border-left:1px solid var(--line-strong);
+  display:flex;flex-direction:column;
+  transform:translateX(100%);transition:transform .26s cubic-bezier(.22,.85,.3,1);
+  box-shadow:-24px 0 60px rgba(0,0,0,.5);
+  overscroll-behavior:contain;
+}
+.drawer.open{transform:translateX(0)}
+body.menu-open{overflow:hidden}
+.drawer-head{
+  display:flex;align-items:center;gap:9px;padding:18px 18px 14px;
+  border-bottom:1px solid var(--line);flex:0 0 auto;
+}
+.drawer-head .mark{height:28px;width:auto}
+.drawer-head .wordmark{height:19px;width:auto}
+.drawer-x{
+  margin-left:auto;width:32px;height:32px;border:0;border-radius:9px;background:var(--surface);
+  color:var(--muted);display:grid;place-items:center;flex:0 0 auto;
+}
+.drawer-x:hover{background:var(--surface-2);color:var(--ink)}
+.drawer-nav{flex:1;overflow-y:auto;padding:12px 10px 18px;-webkit-overflow-scrolling:touch}
+.dg-label{
+  font-size:.68rem;font-weight:800;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--muted);padding:14px 12px 7px;
+}
+.dg-label:first-child{padding-top:4px}
+.drawer-row{
+  display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  padding:12px;border:0;border-radius:11px;background:none;
+  font-size:.94rem;font-weight:600;color:var(--ink-2);
+  transition:background .14s ease,color .14s ease;
+}
+.drawer-row svg{width:19px;height:19px;flex:0 0 auto;color:var(--brand-quiet)}
+.drawer-row span{flex:1;min-width:0}
+.drawer-row:hover{background:var(--surface);color:var(--ink)}
+.drawer-row:hover svg{color:var(--brand-2)}
+.drawer-row:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.drawer-row[hidden]{display:none}
+.row-n{
+  flex:0 0 auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;
+  background:var(--brand);color:var(--brand-ink);
+  font-size:.72rem;font-weight:800;font-style:normal;
+  display:grid;place-items:center;
+}
+.row-n[hidden]{display:none}
+.drawer-foot{
+  flex:0 0 auto;padding:14px 22px 18px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:3px;
+  font-size:.74rem;color:var(--muted);
+}
+@media (prefers-reduced-motion:reduce){
+  .drawer,.drawer-back{transition:none}
+}
 .ios-steps{display:flex;flex-direction:column;gap:12px;margin:16px 0 4px}
 .ios-step{display:flex;gap:12px;align-items:flex-start}
 .ios-step .n{
@@ -631,6 +707,8 @@ header{
   color:var(--muted);font-size:.8rem;text-decoration:underline;text-underline-offset:2px;
 }
 .link-alt:hover{color:var(--ink-2)}
+/* display:block above beats the browser's own [hidden] rule, so say it here */
+.link-alt[hidden]{display:none}
 
 /* ---------- camera capture ---------- */
 .cam-stage{position:relative;background:#000;border-radius:var(--r);overflow:hidden;aspect-ratio:1;margin-bottom:16px}
@@ -1424,14 +1502,25 @@ body.in-chat > .demo-note{display:none}
 .otp-preview b{display:block;margin-top:6px;color:var(--brand-2);font-size:1.5rem;letter-spacing:.3em}
 
 /* ---------- selfie & location ---------- */
-.selfie-row{display:flex;align-items:center;gap:18px}
-.selfie{
-  width:88px;height:88px;border-radius:50%;background:var(--surface-2);
-  border:1px dashed var(--line-strong);display:grid;place-items:center;
-  overflow:hidden;flex:0 0 auto;cursor:pointer;color:var(--muted);
+/* One target, large enough to be the obvious thing to press. Everything the
+   photo needs explaining is explained inside the camera sheet, where it is
+   actually about to matter. */
+.photo-btn{
+  display:flex;align-items:center;gap:16px;width:100%;text-align:left;
+  background:var(--surface);border:1px dashed var(--line-strong);border-radius:var(--r);
+  padding:18px 20px;transition:border-color .16s ease,background .16s ease;
 }
-.selfie:hover{border-color:var(--brand);color:var(--brand)}
-.selfie img{width:100%;height:100%;object-fit:cover}
+.photo-btn:hover{border-color:var(--brand);background:var(--surface-2)}
+.photo-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.photo-btn b{font-size:1.02rem;font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+.pb-ico{
+  width:58px;height:58px;border-radius:50%;background:var(--brand-soft);
+  display:grid;place-items:center;flex:0 0 auto;overflow:hidden;color:var(--brand-2);
+}
+.pb-ico svg{width:27px;height:27px}
+.pb-ico img{width:100%;height:100%;object-fit:cover}
+.photo-btn.done{border-style:solid;border-color:var(--ok);background:rgba(79,201,141,.06)}
+.photo-btn.done .pb-ico{background:transparent}
 .loc-btn{
   display:flex;align-items:center;gap:10px;width:100%;text-align:left;
   background:var(--surface);border:1px dashed var(--line-strong);border-radius:var(--r-sm);
@@ -1774,16 +1863,84 @@ footer a:hover{color:var(--brand)}
     <a class="brand" href="#" onclick="go('home');return false" aria-label="Repto home">
       <img class="mark" src="icons/logo.png?v=2" alt="" width="26" height="33"><img class="wordmark" src="icons/wordmark.png?v=3" alt="Repto" width="447" height="132">
     </a>
-    <div style="display:flex;align-items:center;gap:14px">
-      <button class="install-btn" id="installBtn" onclick="installApp()" hidden>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>
-        Install app
-      </button>
-      <a class="header-link" id="myBookingsLink" href="#" onclick="go('mine');return false" hidden>My bookings</a>
+    <div style="display:flex;align-items:center;gap:12px">
       <a class="header-link" href="#" onclick="go('hire');return false">Browse workers</a>
+      <button class="menu-btn" id="menuBtn" onclick="openMenu()" aria-label="Menu" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>
+        </svg>
+        <i class="menu-dot" id="menuDot" hidden></i>
+      </button>
     </div>
   </div>
 </header>
+
+<!-- ============================= SIDE MENU =============================
+     Everything that is not the job in front of you lives here: your
+     conversations, and the pages people look for once and then never again.
+     They used to be a row of links in the header and a footer at the very
+     bottom of a long page, which is nobody's idea of where to find them. -->
+<div class="drawer-back" id="drawerBack" onclick="closeMenu()" aria-hidden="true"></div>
+<aside class="drawer" id="drawer" aria-label="Menu" aria-hidden="true">
+  <div class="drawer-head">
+    <img class="mark" src="icons/logo.png?v=2" alt="" width="26" height="33">
+    <img class="wordmark" src="icons/wordmark.png?v=3" alt="Repto" width="447" height="132">
+    <button class="drawer-x" onclick="closeMenu()" aria-label="Close menu">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <nav class="drawer-nav">
+    <div class="dg-label">You</div>
+    <button class="drawer-row" id="drawerChats" onclick="menuGo('chats')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>My chats</span><i class="row-n" id="chatsBadge" hidden></i>
+    </button>
+    <button class="drawer-row" id="drawerWork" onclick="menuGo('work')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-1.5A5.5 5.5 0 0 1 9.5 14h5a5.5 5.5 0 0 1 5.5 5.5V21"/><circle cx="12" cy="8" r="4"/></svg>
+      <span id="drawerWorkLabel">Register as a worker</span>
+    </button>
+    <button class="drawer-row" onclick="menuGo('hire')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <span>Find a worker</span>
+    </button>
+
+    <div class="dg-label">Repto</div>
+    <a class="drawer-row" href="about/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+      <span>About us</span>
+    </a>
+    <a class="drawer-row" href="about/#contact">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="m4 7 8 6 8-6"/></svg>
+      <span>Contact us</span>
+    </a>
+    <a class="drawer-row" href="privacy/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/></svg>
+      <span>Privacy policy</span>
+    </a>
+    <a class="drawer-row" href="terms/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/></svg>
+      <span>Terms of use</span>
+    </a>
+    <a class="drawer-row" href="cancellation/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+      <span>Cancellations & refunds</span>
+    </a>
+    <a class="drawer-row" href="delete-account/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>
+      <span>Delete my account</span>
+    </a>
+    <button class="drawer-row" id="installBtn" onclick="installApp()" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>
+      <span>Install app</span>
+    </button>
+  </nav>
+
+  <div class="drawer-foot">
+    <span>Experimental launch · Guwahati, Assam</span>
+    <span>© <span id="yearMenu"></span> Repto</span>
+  </div>
+</aside>
 <div class="demo-note" id="demoNote">Preview mode — profiles are saved on this device only while the live database connects.</div>
 
 
@@ -2120,18 +2277,20 @@ footer a:hover{color:var(--brand)}
 
     <div class="divider"></div>
 
+    <!-- One button. This used to be a circle, a button, a paragraph about what
+         gets rejected and a fallback link, all at once — four things to read
+         before the one thing to do. What the photo is for is explained inside
+         the camera sheet, at the moment it is useful. The upload fallback
+         appears only if the camera actually fails. -->
     <div class="field">
-      <label>Verification photo <span class="sublabel">— taken live, not from your gallery</span></label>
-      <div class="selfie-row">
-        <div class="selfie" id="selfieCircle" onclick="startCamera()" role="button" tabindex="0" aria-label="Take verification photo">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>
-        </div>
-        <div style="flex:1">
-          <button class="btn btn-outline btn-sm" onclick="startCamera()">Open camera</button>
-          <p class="hint" style="margin-top:8px">Our team checks your photo before your profile goes live. Anything that is not a clear photo of your face is rejected.</p>
-          <button class="link-alt" id="uploadAlt" onclick="document.getElementById('selfieInput').click()">Camera not working? Upload instead</button>
-        </div>
-      </div>
+      <label>Verification photo</label>
+      <button class="photo-btn" id="photoBtn" onclick="startCamera()">
+        <span class="pb-ico" id="photoThumb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>
+        </span>
+        <b id="photoBtnLabel">Open camera</b>
+      </button>
+      <button class="link-alt" id="uploadAlt" hidden onclick="document.getElementById('selfieInput').click()">Camera not working? Upload a photo instead</button>
       <input type="file" id="selfieInput" accept="image/*" capture="user" style="display:none" onchange="handleSelfie(this)">
     </div>
 
@@ -2246,6 +2405,21 @@ footer a:hover{color:var(--brand)}
       Home
     </button>
     <div class="panel" id="mineCard"></div>
+  </div>
+</section>
+
+<!-- ============================= ALL MY CHATS =============================
+     One list of everybody you have talked to, whichever side of the job you
+     were on. A person who books a plumber on Monday and lists themselves as a
+     tutor on Tuesday should not have to remember which screen holds which
+     conversation. -->
+<section class="screen" id="scr-chats">
+  <div class="wrap-sm">
+    <button class="back" onclick="go('home')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Home
+    </button>
+    <div class="panel" id="chatsCard"></div>
   </div>
 </section>
 
@@ -3999,6 +4173,7 @@ function go(name, viaHistory){
   if(name === "hire") initHire();
   if(name === "me") renderMe();
   if(name === "inbox") renderInbox();
+  if(name === "chats") renderChats();
   if(name === "card") renderCard();
   if(name === "verify") $("verifyResult").innerHTML = "";
   if(name === "mine") renderMine();
@@ -4008,9 +4183,47 @@ function go(name, viaHistory){
   paintWorkDoor();
 }
 
+/* ---------- the side menu ----------
+   It behaves like a sheet: one history entry, so back closes it instead of
+   leaving the screen behind it. Choosing something from it REPLACES that
+   entry rather than stacking, which is why menuGo does not call closeMenu —
+   go() sees the entry and replaces it. */
+const menuIsOpen = () => $("drawer").classList.contains("open");
+function setMenu(on){
+  $("drawer").classList.toggle("open", on);
+  $("drawerBack").classList.toggle("open", on);
+  $("drawer").setAttribute("aria-hidden", on ? "false" : "true");
+  $("menuBtn").setAttribute("aria-expanded", on ? "true" : "false");
+  document.body.classList.toggle("menu-open", on);
+}
+function openMenu(){
+  paintMenu();
+  setMenu(true);
+  const cur = history.state && history.state.modal;
+  if(cur === "drawer") return;
+  try{
+    const st = {screen:currentScreen, modal:"drawer"};
+    if(cur) history.replaceState(st, ""); else history.pushState(st, "");
+  }catch(e){}
+}
+function closeMenu(){
+  if(!menuIsOpen()) return;
+  setMenu(false);
+  if(history.state && history.state.modal === "drawer"){ try{ history.back(); }catch(e){} }
+}
+function menuGo(name){ setMenu(false); go(name); }
+/* Keep the menu honest about who is reading it. */
+function paintMenu(){
+  const inside = !!(session && session.registered);
+  const label = $("drawerWorkLabel");
+  if(label) label.textContent = inside ? "My profile" : "Register as a worker";
+  const y = $("yearMenu"); if(y) y.textContent = new Date().getFullYear();
+}
+
 window.addEventListener("popstate", e => {
   const st = e.state || { screen: screenFromHash() || "home" };
   /* back closes whatever sheet is up before it leaves the screen */
+  if(st.modal === "drawer") setMenu(true); else setMenu(false);
   document.querySelectorAll(".overlay.open").forEach(o => {
     if(o.id === st.modal) return;
     if(o.id === "camOverlay") stopCamera(); else o.classList.remove("open");
@@ -4034,10 +4247,8 @@ function paintWorkDoor(){
   sub.textContent = inside ? "Your ID card, work and reviews" : "Set your rates and get bookings";
 }
 function initHome(){
-  /* the link only appears once there is something behind it */
-  const link = $("myBookingsLink");
-  if(link) link.hidden = !myBookings().length;
   paintWorkDoor();
+  refreshChatBadge();     /* the dot on the menu button, if there is anything unread */
   if(homeReady) return;
   homeReady = true;
   $("figServices").textContent = SKILLS.length;
@@ -4356,6 +4567,7 @@ function initRegister(){
   $("regSaveBtn").textContent = editing ? "Save changes" : "Publish my profile";
   /* consent is recorded once, when the profile is first published */
   $("consentBlock").hidden = !!editing;
+  const alt = $("uploadAlt"); if(alt) alt.hidden = true;   /* only after the camera fails */
   if(!editing){ $("consentPublish").checked = false; $("consentAge").checked = false; }
   picked = w ? (w.skills||[]).map(s=>s.skill) : [];
   selfieData = w ? w.selfie : null;
@@ -4603,13 +4815,21 @@ function collectSkills(){
   }));
 }
 function renderSelfie(){
-  $("selfieCircle").innerHTML = selfieData
+  const btn = $("photoBtn"), thumb = $("photoThumb"), label = $("photoBtnLabel");
+  if(!btn) return;
+  btn.classList.toggle("done", !!selfieData);
+  label.textContent = selfieData ? "Take again" : "Open camera";
+  thumb.innerHTML = selfieData
     ? `<img src="${selfieData}" alt="Your photo">`
-    : `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>`;
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>`;
 }
+/* Only offer the upload route once the camera has actually let somebody down.
+   Offering it up front invites a gallery photo of somebody else. */
+function offerUpload(){ const a = $("uploadAlt"); if(a) a.hidden = false; }
 let camStream = null;
 async function startCamera(){
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    offerUpload();
     toast("Camera not available — you can upload a photo instead");
     return;
   }
@@ -4623,6 +4843,7 @@ async function startCamera(){
     $("camShot").disabled = false;
   }catch(e){
     stopCamera();
+    offerUpload();
     toast("Camera permission denied — allow the camera, or upload a photo instead");
   }
 }
@@ -5734,7 +5955,7 @@ function onJobAccepted(st){
                       worker_name: st.worker_name, skill: j.skill,
                       created_at: new Date().toISOString() });
     try{ localStorage.setItem("nearse_job_v1", JSON.stringify(j)); }catch(e){}
-    const link = $("myBookingsLink"); if(link) link.hidden = false;
+    refreshChatBadge();
   }
   const chat = $("jobChatBtn");
   if(chat) chat.disabled = !j.threadCode;
@@ -6657,6 +6878,7 @@ async function openChat(code, side, backTo){
 function leaveChat(){
   stopChatPolling();
   go(chatBackTo);
+  refreshChatBadge();
 }
 function startChatPolling(){
   stopChatPolling();
@@ -6959,6 +7181,86 @@ function timeAgo(d){
   if(s < 86400) return Math.floor(s/3600) + " hr";
   if(s < 604800) return Math.floor(s/86400) + "d";
   return d.toLocaleDateString("en-IN", {day:"numeric", month:"short"});
+}
+
+/* ---------- every conversation, both sides ----------
+   A person can be a customer on Monday and a worker on Tuesday. Splitting
+   their conversations across two screens by which role they happened to be
+   in makes them hunt for a thread they know exists. This is one list, newest
+   first, with a word saying which side of the job each one was. */
+async function renderChats(){
+  const host = $("chatsCard");
+  host.innerHTML = `<h2>My chats</h2><div class="skeleton"></div>`;
+  const rows = await myConversations();
+  paintChatBadge(rows.reduce((n, t) => n + (Number(t.unread) || 0), 0));
+
+  if(!rows.length){
+    host.innerHTML = `<h2>My chats</h2>
+      <div class="empty" style="margin:14px 0 0"><b>No conversations yet</b>
+        Book someone, or register your own skills, and every conversation lands here.</div>
+      <button class="btn btn-brand btn-block" style="margin-top:16px" onclick="go('hire')">Find a worker</button>
+      ${session && session.registered ? "" :
+        `<button class="btn btn-outline btn-block btn-sm" style="margin-top:10px" onclick="go('work')">Register as a worker</button>`}`;
+    return;
+  }
+
+  host.innerHTML = `<h2>My chats</h2>
+    <p class="hint">${rows.length} ${rows.length === 1 ? "conversation" : "conversations"}</p>` +
+    rows.map(t => {
+      const st = THREAD_STATE[t.status] || THREAD_STATE.requested;
+      return `<button class="thread-row${t.unread ? " unread" : ""}"
+                onclick="openChat('${jsq(t.code)}','${t.side}','chats')">
+        <span class="tr-main">
+          <b>${esc(t.who)}${t.unread ? `<i class="dot-n">${t.unread}</i>` : ""}</b>
+          <span class="tr-skill">${esc(t.sub)}</span>
+          <span class="tr-prev">${esc(t.preview || "")}</span>
+        </span>
+        <span class="tr-side">
+          <span class="chat-state ${st.tone}">${st.label}</span>
+          <i>${esc(t.side === "worker" ? "you worked" : "you booked")} · ${esc(timeAgo(t.when))}</i>
+        </span>
+      </button>`;
+    }).join("");
+}
+
+/* Both sides, merged and sorted. Used by the chats screen and by the unread
+   dot on the menu button, so the two can never disagree.
+   (Not `allThreads` — that name is already the preview-mode local store.) */
+async function myConversations(){
+  const asWorker = !!(session && session.registered);
+  const saved = myBookings();
+  const [mine, theirs] = await Promise.all([
+    asWorker ? api.workerThreads(session.phone, session.pin).catch(() => []) : Promise.resolve([]),
+    Promise.all(saved.map(b =>
+      api.threadView(b.code, b.token).then(v => v ? {...v, token:b.token} : null).catch(() => null)))
+  ]);
+  const when = t => new Date(t.last_message_at || t.created_at || 0);
+  return [
+    ...(mine || []).map(t => ({...t, side:"worker",
+      who: t.customer_name || "Customer",
+      sub: [t.skill, t.customer_area].filter(Boolean).join(" · "),
+      when: when(t)})),
+    ...theirs.filter(Boolean).map(t => ({...t, side:"customer",
+      who: t.worker_name || "Worker",
+      sub: [t.skill, t.detail].filter(Boolean).join(" · "),
+      when: when(t)}))
+  ].sort((a, b) => b.when - a.when);
+}
+
+/* The dot on the three-dot button. Only asks the server when there is
+   something to ask about — a visitor who has never booked anybody costs
+   nothing. */
+async function refreshChatBadge(){
+  const asWorker = !!(session && session.registered);
+  if(!asWorker && !myBookings().length) return;
+  let rows = [];
+  try{ rows = await myConversations(); }catch(e){ return; }
+  paintChatBadge(rows.reduce((n, t) => n + (Number(t.unread) || 0), 0));
+}
+function paintChatBadge(unread){
+  const dot = $("menuDot"), badge = $("chatsBadge");
+  if(dot) dot.hidden = !unread;
+  if(badge){ badge.hidden = !unread; badge.textContent = unread; }
 }
 
 /* ---------- the customer's bookings ---------- */
@@ -7785,7 +8087,9 @@ async function installApp(){
 /* ---------- init ---------- */
 $("year").textContent = new Date().getFullYear();
 document.addEventListener("keydown", e => {
-  if(e.key === "Escape") document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id));
+  if(e.key !== "Escape") return;
+  if(menuIsOpen()){ closeMenu(); return; }
+  document.querySelectorAll(".overlay.open").forEach(o=>closeModal(o.id));
 });
 
 /* A worker with the app open should not have to go looking. This checks for
