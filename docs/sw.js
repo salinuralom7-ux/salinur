@@ -1,7 +1,7 @@
 /* Repto service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls always go to the network. */
-const CACHE = "repto-shell-v34";
+const CACHE = "repto-shell-v35";
 const SHELL = [
   "./",
   "./index.html",
@@ -10,6 +10,7 @@ const SHELL = [
   "./icons/icon-512.png?v=2",
   "./icons/maskable-512.png?v=2",
   "./icons/logo.png?v=2",
+  "./fonts/plus-jakarta-sans-latin.woff2",
   "./icons/wordmark.png?v=3"
 ];
 

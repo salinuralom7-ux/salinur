@@ -28,7 +28,24 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+/* Plus Jakarta Sans, self-hosted. One variable file, 27 KB, every weight the
+   app uses. It is served from our own origin for three reasons: the ID card can
+   only be exported as a faithful image if the font can be read by script, and a
+   cross-origin stylesheet cannot be; a Guwahati phone on a slow connection
+   saves a third-party round trip before any text appears; and Google no longer
+   sees the IP address of everybody who opens a page. Licensed under the SIL
+   Open Font License 1.1 — see fonts/OFL.txt. */
+@font-face{
+  font-family:'Plus Jakarta Sans';
+  font-style:normal;
+  font-weight:400 800;              /* one variable file covers the range */
+  font-display:swap;
+  src:url("fonts/plus-jakarta-sans-latin.woff2") format("woff2");
+}
+</style>
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -6275,6 +6292,10 @@ function renderCard(){
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>
         Print or save as PDF
       </button>
+      <button class="btn btn-outline" id="saveCardBtn" onclick="saveCardImage()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13A1.5 1.5 0 0 1 18.5 20h-13A1.5 1.5 0 0 1 4 18.5z"/><circle cx="9" cy="9.5" r="1.6"/><path d="m4.5 17 5-5 4 4 2.5-2.5 3.5 3.5"/></svg>
+        Save as image
+      </button>
       <button class="btn btn-outline" onclick="copyWorkerId()">Copy my ID number</button>
     </div>
 
@@ -6382,6 +6403,130 @@ async function printCard(){
   setTimeout(() => frame.remove(), 60000);
   restore();
   if(!opened) toast("This browser won't open a print dialog — try opening nearse.in in Chrome");
+}
+
+/* ---------- the card as an image ----------
+   Nothing is stored on our side: the card is drawn on this phone and saved to
+   this phone. The only traffic is the font and the photo, both of which are
+   already loaded.
+
+   The method is an SVG foreignObject holding a copy of the card, rasterised
+   through a canvas. Three things had to be got right, each found by testing:
+
+     * A blob: URL for the SVG TAINTS the canvas in Chromium when it contains a
+       foreignObject, so toDataURL throws. A data: URL of the same bytes does
+       not. It has to be a data URL.
+     * The stylesheet has bare ampersands in its comments and a bare & is not
+       valid XML, so the CSS goes in a CDATA section.
+     * Relative URLs have nothing to resolve against inside the SVG, and a
+       cross-origin photo would taint the canvas even if it did load. Every
+       image is fetched and inlined first.
+
+   The font is inlined too. body{font-family} does not reach a wrapper div, and
+   an SVG document does not inherit the page's loaded fonts, so without this the
+   whole card comes out in Times. */
+async function cardImageBlob(scale){
+  const card = $("idCard");
+  if(!card) throw new Error("Open your card first");
+  const W = 1027, H = Math.round(W * 54 / 85.6);   /* CR80 at about 300dpi */
+
+  const clone = card.cloneNode(true);
+  Object.assign(clone.style, { width:W+"px", height:H+"px", maxWidth:"none", aspectRatio:"auto" });
+
+  const asDataUrl = async (url) => {
+    const res = await fetch(url, { mode:"cors" });
+    if(!res.ok) throw new Error("fetch " + res.status);
+    const blob = await res.blob();
+    return await new Promise((ok, no) => {
+      const fr = new FileReader();
+      fr.onload = () => ok(fr.result);
+      fr.onerror = () => no(new Error("could not read"));
+      fr.readAsDataURL(blob);
+    });
+  };
+
+  for(const im of clone.querySelectorAll("img")){
+    const src = im.getAttribute("src") || "";
+    if(src.startsWith("data:")) continue;
+    try{ im.setAttribute("src", await asDataUrl(new URL(src, location.href).href)); }
+    catch(e){ im.removeAttribute("src"); }   /* one missing image, not no card */
+  }
+
+  let fontCss = "";
+  try{
+    const woff = await asDataUrl(new URL("fonts/plus-jakarta-sans-latin.woff2", location.href).href);
+    fontCss = `@font-face{font-family:'Plus Jakarta Sans';font-style:normal;` +
+              `font-weight:400 800;src:url(${woff}) format("woff2");}`;
+  }catch(e){ /* falls back to the system sans rather than failing the export */ }
+
+  const pageCss = [...document.querySelectorAll("style")].map(s => s.textContent).join("\n");
+  const bodyFont = getComputedStyle(document.body).fontFamily;
+
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">` +
+    `<foreignObject width="100%" height="100%">` +
+    `<div xmlns="http://www.w3.org/1999/xhtml" style="font-family:${esc(bodyFont)};` +
+    `width:${W}px;height:${H}px">` +
+    `<style><![CDATA[${fontCss}\n${pageCss}]]></style>` +
+    new XMLSerializer().serializeToString(clone) +
+    `</div></foreignObject></svg>`;
+
+  const img = new Image();
+  img.decoding = "sync";
+  await new Promise((ok, no) => {
+    img.onload = ok;
+    img.onerror = () => no(new Error("The card could not be drawn on this browser"));
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  });
+  if(img.decode){ try{ await img.decode(); }catch(e){} }
+
+  const S = Math.max(1, Math.min(scale || 1.5, 3));
+  const cv = document.createElement("canvas");
+  cv.width = Math.round(W * S); cv.height = Math.round(H * S);
+  const ctx = cv.getContext("2d");
+  /* Paint the ground in first so the PNG carries no alpha. The card has rounded
+     corners, and a transparent PNG shared on WhatsApp gets composited against
+     whatever that client feels like — usually black, sometimes white. It also
+     compresses considerably better without an alpha channel. */
+  ctx.fillStyle = "#0A0806";
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.scale(S, S);
+  ctx.drawImage(img, 0, 0);
+
+  return await new Promise((ok, no) => {
+    try{
+      cv.toBlob(b => b ? ok(b) : no(new Error("Could not save the image")), "image/png");
+    }catch(e){ no(new Error("This browser will not let the card be saved as an image")); }
+  });
+}
+
+async function saveCardImage(){
+  const btn = $("saveCardBtn");
+  const label = btn ? btn.innerHTML : "";
+  if(btn){ btn.disabled = true; btn.textContent = "Making the image…"; }
+  try{
+    const blob = await cardImageBlob(1.5);
+    const w = (session && session.worker) || {};
+    const name = ("Repto ID " + (w.name || "card")).replace(/[^\w \-]/g, "").trim() + ".png";
+    const file = new File([blob], name, { type:"image/png" });
+
+    /* On a phone the share sheet is the useful thing: it saves to the gallery,
+       and it sends the card on WhatsApp without a round trip through storage. */
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      await navigator.share({ files:[file], title:"My Repto ID" });
+    }else{
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+      toast("Saved to your downloads");
+    }
+  }catch(e){
+    if(e && e.name === "AbortError"){ /* they closed the share sheet */ }
+    else toast((e && e.message) || "Could not save the image");
+  }
+  if(btn){ btn.disabled = false; btn.innerHTML = label; }
 }
 
 async function copyWorkerId(){
