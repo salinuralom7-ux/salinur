@@ -36,13 +36,21 @@ body{
 }
 a{color:var(--brand-2);text-decoration:none}
 a:hover{text-decoration:underline;text-underline-offset:3px}
-.wrap{max-width:760px;margin:0 auto;padding:0 20px;width:100%}
+/* max() rather than a flat 20px: these pages open inside the installed app,
+   where the notch eats one side on a rotated phone. */
+.wrap{max-width:760px;margin:0 auto;width:100%;
+  padding-left:max(20px, env(safe-area-inset-left));
+  padding-right:max(20px, env(safe-area-inset-right));
+}
 
 header{
   border-bottom:1px solid var(--line);background:rgba(12,10,7,.88);
   backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;
 }
-.masthead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:16px;padding-bottom:16px}
+/* The status bar is drawn over the page in the installed app, so the header
+   needs to start below it or the wordmark hides under the clock. */
+.masthead{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-top:calc(16px + env(safe-area-inset-top));padding-bottom:16px}
 .brand{display:inline-flex;align-items:center;gap:10px;color:var(--ink)}
 .brand:hover{text-decoration:none}
 .brand img{height:33px;width:auto;display:block}
@@ -103,7 +111,7 @@ td:first-child{color:var(--ink);font-weight:600;white-space:nowrap}
 }
 .back-home:hover{border-color:var(--brand);color:var(--brand-2);text-decoration:none}
 
-footer{border-top:1px solid var(--line);padding:26px 0 34px}
+footer{border-top:1px solid var(--line);padding:26px 0 calc(34px + env(safe-area-inset-bottom))}
 footer .wrap{display:flex;flex-direction:column;gap:14px;color:var(--muted);font-size:.83rem}
 .foot-top,.foot-bottom{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
 .foot-bottom{padding-top:13px;border-top:1px solid var(--line)}
