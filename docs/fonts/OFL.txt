@@ -1,0 +1,10 @@
+Plus Jakarta Sans is Copyright (c) 2020 Tokotype (https://github.com/tokotype/PlusJakartaSans)
+and is licensed under the SIL Open Font License, Version 1.1.
+
+The licence permits the font to be used, studied, modified and redistributed
+freely, including bundled with a website, provided this notice travels with it.
+The full text is at https://openfontlicense.org and is reproduced in the
+upstream repository above.
+
+Repto self-hosts the latin subset (plus-jakarta-sans-latin.woff2, a variable
+file covering weights 400-800) rather than loading it from a third party.

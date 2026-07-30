@@ -17,7 +17,24 @@
 <link rel="icon" type="image/png" sizes="512x512" href="../icons/icon-512.png?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<style>
+/* Plus Jakarta Sans, self-hosted. One variable file, 27 KB, every weight the
+   app uses. It is served from our own origin for three reasons: the ID card can
+   only be exported as a faithful image if the font can be read by script, and a
+   cross-origin stylesheet cannot be; a Guwahati phone on a slow connection
+   saves a third-party round trip before any text appears; and Google no longer
+   sees the IP address of everybody who opens a page. Licensed under the SIL
+   Open Font License 1.1 — see fonts/OFL.txt. */
+@font-face{
+  font-family:'Plus Jakarta Sans';
+  font-style:normal;
+  font-weight:400 800;              /* one variable file covers the range */
+  font-display:swap;
+  src:url("../fonts/plus-jakarta-sans-latin.woff2") format("woff2");
+}
+</style>
+
 <link rel="stylesheet" href="../page.css">
 </head>
 <body>
@@ -125,7 +142,7 @@
     <ul>
       <li><strong>Supabase</strong> — hosts our database. Profiles and booking records are stored there.</li>
       <li><strong>GitHub Pages</strong> — serves the website itself.</li>
-      <li><strong>Google Fonts</strong> — supplies the two typefaces the site uses. Your browser fetches them from Google, which means Google can see your IP address when a page loads.</li>
+      <li><strong>Google Fonts</strong> — supplies one of the two typefaces the site uses, the serif in the headings. Your browser fetches it from Google, which means Google can see your IP address when a page loads. The main typeface is now served from our own site, so it no longer involves anybody else.</li>
       <li><strong>WhatsApp (Meta)</strong> — carries your booking message. What you send through WhatsApp is covered by WhatsApp's own privacy policy, not ours.</li>
     </ul>
 
