@@ -860,91 +860,143 @@ header{
 .report-link:hover{color:var(--danger)}
 
 /* ---------- the worker ID card ----------
-   A portrait badge on a lanyard rather than a bank card: it is worn, not
-   carried, and the photo has to be big enough to compare with a face at a
-   door. Proportioned 1:1.6 so it prints on a standard badge blank. */
+   Landscape, gold frame, chamfered top-right corner, gold footer with a
+   diagonal break — drawn to match the reference card exactly.
+
+   Every dimension is in cqw (percent of the card's own width), so the one
+   set of rules holds at any size: 340px on a phone, 640px on a desktop, and
+   85.6mm on card stock. Nothing needs a second breakpoint and nothing
+   drifts between screen and print. */
 .badge{
-  position:relative;margin:18px auto 0;width:100%;max-width:330px;aspect-ratio:1/1.58;
-  border-radius:18px;overflow:hidden;color:#F6F2E8;
-  padding:26px 20px 16px;display:flex;flex-direction:column;align-items:center;
-  background:linear-gradient(168deg,#191512 0%,#0B0906 58%,#100D09 100%);
-  box-shadow:0 22px 50px rgba(0,0,0,.55);
+  position:relative;margin:18px auto 0;width:100%;max-width:640px;
+  aspect-ratio:85.6/54;                      /* CR80, the standard ID card */
   container-type:inline-size;
+  border-radius:2.1cqw;overflow:hidden;color:#F6F2E8;
+  background:linear-gradient(150deg,#F6D687 0%,#EABB51 44%,#C9993A 100%);
+  padding:0.8cqw;                            /* this padding IS the gold frame */
+  box-shadow:0 22px 50px rgba(0,0,0,.55);
 }
-/* the lanyard slot */
-.bd-slot{
-  position:absolute;top:11px;left:50%;transform:translateX(-50%);
-  width:23%;height:9px;border-radius:5px;background:#000;
-  box-shadow:inset 0 1px 2px rgba(255,255,255,.14);
+/* the black face, inset inside the gold frame */
+.bd-face{
+  position:relative;width:100%;height:100%;border-radius:1.5cqw;overflow:hidden;
+  background:linear-gradient(158deg,#141210 0%,#0A0806 52%,#0F0C08 100%);
+  display:flex;flex-direction:column;
 }
-/* the gold sweep down the right edge, with the mark set into it */
-.bd-swoosh{
-  position:absolute;top:0;right:0;width:30%;height:78%;
-  background:linear-gradient(196deg,#F6D687 0%,#EABB51 46%,#C9993A 100%);
-  /* tapers to a point rather than stopping on a hard horizontal edge */
-  clip-path:polygon(50% 0, 100% 0, 100% 84%, 0 100%);
-  display:block;
+/* the gold triangle bitten out of the top-right corner */
+.bd-chamfer{
+  position:absolute;top:0;right:0;width:7cqw;height:7cqw;
+  background:linear-gradient(200deg,#F6D687 0%,#EABB51 55%,#D2A340 100%);
+  clip-path:polygon(100% 0, 100% 100%, 0 0);
 }
-.bd-swoosh i{
-  position:absolute;top:20%;left:52%;transform:translateX(-50%) rotate(90deg);
-  font-style:normal;font-weight:800;font-size:1.15rem;letter-spacing:.34em;
-  color:rgba(12,10,7,.17);white-space:nowrap;
+/* the mark, very faint, sitting behind the QR column */
+.bd-watermark{
+  position:absolute;top:15%;right:4.4cqw;width:20cqw;height:auto;
+  /* it has to read as a ghost, not a grey shape: at .05 with no brightness
+     lift it is only just there, which is the point */
+  opacity:.05;filter:grayscale(1);pointer-events:none;
 }
-/* the gold corner the site name sits on, as on the reference badge */
-.bd-corner{
-  position:absolute;right:0;bottom:0;width:46%;height:12%;
-  background:linear-gradient(160deg,#F3D07C 0%,#EABB51 60%,#D2A340 100%);
-  clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
+.bd-body{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;padding:3.4cqw 4cqw 0}
+
+/* ---- header: mark + wordmark left, ID block right ---- */
+.bd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:2cqw}
+.bd-brand{display:flex;align-items:center;gap:1.4cqw}
+.bd-logo{flex:0 0 auto;height:7.4cqw;width:auto}
+.bd-wordmark{flex:0 0 auto;height:5.1cqw;width:auto}
+.bd-idblock{text-align:right;padding-right:5.4cqw}   /* clears the chamfer */
+.bd-idlabel{
+  display:block;font-size:1.72cqw;font-weight:600;letter-spacing:.26em;
+  color:var(--brand);white-space:nowrap;
 }
-.bd-upper{
-  width:100%;padding-right:15%;display:flex;flex-direction:column;align-items:center;
-  position:relative;z-index:2;
+.bd-idnum{
+  display:block;margin-top:.5cqw;font-size:3.5cqw;font-weight:800;letter-spacing:.05em;
+  color:#FFFFFF;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.05;
 }
-.bd-head{display:flex;align-items:center;gap:9px;margin-top:4px}
-.bd-logo{flex:0 0 auto;height:38px;width:auto}
-.bd-word b{display:block;font-size:1.5rem;font-weight:800;letter-spacing:.2em;color:var(--brand);line-height:1}
-.bd-word span{display:block;font-size:.44rem;letter-spacing:.24em;color:var(--brand-quiet);margin-top:3px}
+.bd-idnum i{font-style:normal;color:var(--brand)}
+.bd-idrule{display:block;height:.2cqw;margin-top:.9cqw;background:var(--brand);border-radius:.1cqw}
+.bd-idstatus{
+  display:inline-block;margin-top:.85cqw;font-size:1.3cqw;font-weight:700;letter-spacing:.17em;
+  border-radius:.5cqw;
+}
+/* approved is the ordinary case, so it stays a line of type — the reference
+   card has nothing here and an approved card should look like it */
+.bd-idstatus.approved{color:var(--brand-quiet)}
+.bd-idstatus.approved::before{content:"✓ ";color:var(--ok);font-weight:800}
+.bd-idstatus.pending{background:rgba(232,146,74,.18);color:#F0AE73;border:.12cqw solid rgba(232,146,74,.55);padding:.45cqw 1.1cqw}
+.bd-idstatus.rejected{background:rgba(232,112,127,.18);color:#F09AA6;border:.12cqw solid rgba(232,112,127,.55);padding:.45cqw 1.1cqw}
+
+/* ---- the three columns ---- */
+.bd-main{flex:1;display:flex;gap:3cqw;padding-top:2.4cqw;min-height:0}
 .bd-photo{
-  position:relative;z-index:2;width:48%;aspect-ratio:1;border-radius:50%;overflow:hidden;
-  margin:14px 0 10px;border:3px solid var(--brand);background:var(--surface-2);
-  box-shadow:0 6px 18px rgba(0,0,0,.45);
+  flex:0 0 auto;width:24.5cqw;height:36cqw;border-radius:1.3cqw;overflow:hidden;
+  border:.34cqw solid var(--brand);background:var(--surface-2);
+  box-shadow:0 .6cqw 1.8cqw rgba(0,0,0,.5);
 }
 .bd-photo img{width:100%;height:100%;object-fit:cover}
+
+.bd-info{flex:1;min-width:0;display:flex;flex-direction:column}
 .bd-name{
-  position:relative;z-index:2;font-size:1.2rem;font-weight:800;color:var(--brand-2);
-  text-align:center;line-height:1.15;letter-spacing:-.01em;max-width:100%;
+  font-size:3.3cqw;font-weight:800;color:var(--brand-2);line-height:1.1;letter-spacing:-.01em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.bd-rule{position:relative;z-index:2;width:70%;height:1px;background:rgba(234,187,81,.5);margin:7px 0;display:flex;justify-content:center}
-.bd-rule i{width:16px;height:5px;background:var(--brand);transform:translateY(-2px) rotate(45deg);border-radius:1px}
-.bd-trade{position:relative;z-index:2;font-size:.88rem;color:#F6F2E8;text-align:center;line-height:1.25}
-.bd-trade2{position:relative;z-index:2;font-size:.66rem;color:var(--muted);text-align:center;margin-top:2px}
-.bd-grid{
-  position:relative;z-index:2;display:flex;gap:10px;align-items:center;width:100%;
-  margin-top:auto;padding-top:10px;
+/* the heavier dash and the hairline that follows it, as on the reference */
+.bd-rule{display:flex;align-items:center;gap:.9cqw;margin:1.3cqw 0 1.1cqw;width:72%}
+.bd-rule i{flex:0 0 auto;width:7cqw;height:.42cqw;background:var(--brand);border-radius:.21cqw}
+.bd-rule s{flex:1;height:.12cqw;background:rgba(234,187,81,.45);text-decoration:none}
+.bd-trade{
+  font-size:2.05cqw;color:#F6F2E8;line-height:1.25;font-weight:500;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.bd-rows{flex:1;min-width:0;display:flex;flex-direction:column}
-.bd-rows > div{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(234,187,81,.22)}
-.bd-rows > div:last-child{border-bottom:0}
-.bd-ico{flex:0 0 auto;width:21px;height:21px;border:1px solid rgba(234,187,81,.55);border-radius:4px;
-  display:grid;place-items:center;color:var(--brand)}
-.bd-ico svg{width:13px;height:13px}
-.bd-rows dt{font-size:.42rem;letter-spacing:.16em;color:var(--brand-quiet)}
-.bd-rows dd{font-size:.74rem;font-weight:700;color:#F6F2E8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bd-rows dd.mono{font-variant-numeric:tabular-nums;letter-spacing:.04em}
-.bd-qr{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px}
-.bd-qr svg{width:66px;height:66px;border:2px solid var(--brand);border-radius:5px;display:block}
-.bd-qr span{font-size:.38rem;letter-spacing:.14em;color:var(--brand-quiet)}
+.bd-rows{margin-top:1.8cqw;display:flex;flex-direction:column;gap:1.35cqw}
+.bd-rows > div{display:flex;align-items:center;gap:1.3cqw;min-width:0}
+.bd-ico{
+  flex:0 0 auto;width:3.6cqw;height:3.6cqw;border-radius:50%;
+  border:.14cqw solid rgba(234,187,81,.62);display:grid;place-items:center;color:var(--brand);
+}
+.bd-ico svg{width:1.9cqw;height:1.9cqw}
+.bd-rows i.bar{flex:0 0 auto;width:.1cqw;height:3.3cqw;background:rgba(234,187,81,.4)}
+.bd-rows > div > div{min-width:0}
+.bd-rows dt{
+  font-size:1.42cqw;font-weight:600;letter-spacing:.16em;color:var(--brand);
+  white-space:nowrap;line-height:1.2;
+}
+.bd-rows dd{
+  font-size:1.92cqw;color:#F6F2E8;line-height:1.3;margin-top:.15cqw;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.bd-rows dd.mono{font-variant-numeric:tabular-nums;letter-spacing:.03em}
+
+.bd-verify{
+  position:relative;flex:0 0 auto;width:17cqw;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-end;padding-left:2.6cqw;
+}
+.bd-verify::before{
+  content:"";position:absolute;left:0;top:13%;bottom:-1%;
+  width:.1cqw;background:rgba(234,187,81,.34);
+}
+.bd-qr{
+  width:14.6cqw;height:14.6cqw;border:.34cqw solid var(--brand);border-radius:.9cqw;
+  overflow:hidden;background:#fff;
+}
+.bd-qr svg{width:100%;height:100%;display:block}
+.bd-verify span{
+  margin-top:.9cqw;font-size:1.32cqw;font-weight:600;letter-spacing:.2em;
+  color:var(--brand);white-space:nowrap;
+}
+
+/* ---- the gold footer, broken by a black diagonal ---- */
 .bd-foot{
-  position:relative;z-index:3;display:flex;align-items:center;gap:8px;width:100%;
-  margin-top:10px;padding-top:9px;border-top:1px solid rgba(234,187,81,.22);
+  position:relative;flex:0 0 auto;height:5.4cqw;margin-top:2cqw;
+  background:linear-gradient(150deg,#F6D687 0%,#EABB51 48%,#D2A340 100%);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4cqw;overflow:hidden;
 }
-.bd-status{font-size:.44rem;font-weight:800;letter-spacing:.14em;padding:3px 7px;border-radius:3px}
-.bd-status.approved{background:var(--ok);color:#062B16}
-.bd-status.pending{background:var(--warn);color:#2B1608}
-.bd-status.rejected{background:var(--danger);color:#2B0810}
-.bd-since{flex:1;font-size:.46rem;letter-spacing:.08em;color:var(--muted)}
-.bd-site{position:relative;z-index:3;font-size:.62rem;font-weight:800;color:#14100A;letter-spacing:.02em}
+.bd-foot::before{                            /* the diagonal slab */
+  content:"";position:absolute;top:0;bottom:0;right:19cqw;width:9cqw;
+  background:#0A0806;transform:skewX(-24deg);
+}
+.bd-tag,.bd-site{position:relative;z-index:2;color:#14100A;white-space:nowrap}
+.bd-tag{font-size:1.65cqw;font-weight:600;letter-spacing:.24em}
+.bd-site{font-size:2cqw;font-weight:700;letter-spacing:.01em}
 
 .card-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
 .card-actions .btn{flex:1 1 160px;padding:12px}
@@ -991,8 +1043,10 @@ header{
   body > header, body > footer, body > .demo-note, .no-print, .back,
   .screen:not(.on), .overlay, .toast{display:none !important}
   .wrap-sm{max-width:none;padding:0}
+  /* CR80 landscape — the size a card printer and every plastic blank uses */
+  @page{ size:85.6mm 54mm; margin:0 }
   .badge{
-    margin:0;width:54mm;height:86mm;max-width:none;aspect-ratio:auto;
+    margin:0;width:85.6mm;height:54mm;max-width:none;aspect-ratio:auto;
     border-radius:3mm;box-shadow:none;
     -webkit-print-color-adjust:exact;print-color-adjust:exact;
   }
@@ -1589,6 +1643,54 @@ body.in-chat > .demo-note{display:none}
   box-shadow:var(--shadow);max-width:92vw;text-align:center;
 }
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.with-action{display:flex;align-items:center;gap:14px;padding:10px 10px 10px 20px;text-align:left}
+.toast.with-action > span{white-space:nowrap}
+.toast-btn{
+  background:var(--brand);color:var(--brand-ink);border:0;border-radius:999px;
+  padding:8px 16px;font-weight:800;font-size:.83rem;white-space:nowrap;
+}
+.toast-btn:hover{background:var(--brand-2)}
+
+/* ---------- admin: search, photo, rejection ---------- */
+.admin-search{
+  display:flex;align-items:center;gap:10px;margin-top:16px;
+  background:var(--surface-2);border:1px solid var(--line-strong);
+  border-radius:var(--r-sm);padding:0 13px;color:var(--muted);
+}
+.admin-search input{
+  flex:1;background:none;border:0;outline:none;padding:12px 0;font-size:.92rem;
+}
+.admin-search input::-webkit-search-cancel-button{display:none}
+.admin-search .clear{
+  background:none;border:0;color:var(--muted);font-size:.9rem;padding:6px;
+}
+.admin-search .clear:hover{color:var(--ink)}
+
+.admin-card .avatar.shot{
+  position:relative;padding:0;border:0;background:var(--surface-2);
+  border-radius:12px;overflow:hidden;flex:0 0 auto;
+}
+.admin-card .avatar.shot .zoom{
+  position:absolute;right:4px;bottom:4px;width:22px;height:22px;border-radius:50%;
+  background:rgba(12,10,7,.82);color:var(--brand-2);display:grid;place-items:center;
+}
+.admin-card .avatar.shot:hover{box-shadow:0 0 0 2px var(--brand)}
+
+.shot-stage{
+  background:var(--bg-2);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;display:grid;place-items:center;min-height:180px;
+}
+.shot-stage img{width:100%;max-width:340px;height:auto;display:block}
+.shot-none{color:var(--muted);font-size:.88rem;padding:56px 0}
+.shot-actions{display:flex;gap:10px;margin-top:18px}
+.shot-actions .btn{flex:1;padding:13px}
+
+.reject-list{display:flex;flex-direction:column;gap:8px}
+.reject-opt{
+  text-align:left;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:12px 14px;font-size:.87rem;line-height:1.45;color:var(--ink-2);
+}
+.reject-opt:hover{border-color:var(--danger);color:var(--ink);background:rgba(232,112,127,.09)}
 footer{border-top:1px solid var(--line);padding:26px 0 34px;margin-top:auto}
 footer .wrap{
   display:flex;flex-direction:column;gap:14px;
@@ -2382,6 +2484,28 @@ footer a:hover{color:var(--brand)}
   </div>
 </div>
 
+<div class="overlay" id="shotOverlay" onclick="if(event.target===this)closeModal('shotOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('shotOverlay')" aria-label="Close">✕</button>
+    <div id="shotBody"></div>
+  </div>
+</div>
+
+<div class="overlay" id="rejectOverlay" onclick="if(event.target===this)closeModal('rejectOverlay')">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="closeModal('rejectOverlay')" aria-label="Close">✕</button>
+    <h3>Why is this being rejected?</h3>
+    <p class="sub" id="rejectWho"></p>
+    <p class="hint" style="margin-bottom:10px">The worker sees exactly these words, and can fix it and resubmit.</p>
+    <div class="reject-list" id="rejectList"></div>
+    <div class="field" style="margin-top:14px">
+      <label for="rejectOther">Or write your own</label>
+      <textarea id="rejectOther" rows="2" placeholder="Keep it clear and factual."></textarea>
+    </div>
+    <button class="btn btn-outline btn-block" onclick="sendReject('')">Reject with this reason</button>
+  </div>
+</div>
+
 <div class="overlay" id="camOverlay" onclick="if(event.target===this)stopCamera()">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="stopCamera()" aria-label="Close">✕</button>
@@ -2936,8 +3060,32 @@ function esc(s){ return String(s??"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"
 function jsq(s){ return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }
 function toast(msg){
   const t = $("toast");
-  t.textContent = msg; t.classList.add("show");
+  t.textContent = msg; t.classList.remove("with-action"); t.classList.add("show");
   clearTimeout(t._h); t._h = setTimeout(()=>t.classList.remove("show"), 3400);
+}
+/* A toast you can act on, with the seconds left counting down on the button.
+   Used for undo: a mis-tapped Reject sends a real message to a real person,
+   so there has to be a way back that does not involve finding them again. */
+function toastAction(msg, label, seconds, fn){
+  const t = $("toast");
+  let left = seconds;
+  const paint = () => {
+    t.innerHTML = `<span>${esc(msg)}</span>`;
+    const b = document.createElement("button");
+    b.className = "toast-btn";
+    b.textContent = `${label} (${left})`;
+    b.onclick = () => { clearTimeout(t._h); clearInterval(t._t); t.classList.remove("show"); fn(); };
+    t.appendChild(b);
+  };
+  paint();
+  t.classList.add("show", "with-action");
+  clearTimeout(t._h); clearInterval(t._t);
+  t._t = setInterval(() => {
+    left--;
+    if(left <= 0){ clearInterval(t._t); t.classList.remove("show"); return; }
+    const b = t.querySelector(".toast-btn");
+    if(b) b.textContent = `${label} (${left})`;
+  }, 1000);
 }
 /* Sheets get a history entry too, so back closes the sheet rather than
    jumping a whole screen — the behaviour people expect on Android.
@@ -5879,51 +6027,72 @@ function renderCard(){
   try{ qr = qrSvg(verifyUrl, {size:96, fg:"#0C0A07", bg:"#FFFFFF", label:"Scan to verify this ID"}); }
   catch(e){ qr = ""; }
 
+  /* The number splits white | gold the way RP|0001 does on the reference:
+     the first group of four stays white, the rest picks up the brand gold. */
+  const code = idPretty(w.worker_code) || "";
+  const parts = code.split(" ");
+  const idHtml = code
+    ? esc(parts[0]) + (parts.length > 1 ? ` <i>${esc(parts.slice(1).join(" "))}</i>` : "")
+    : "—";
+
   host.innerHTML = `
     <div class="badge" id="idCard">
-      <span class="bd-slot" aria-hidden="true"></span>
-      <span class="bd-swoosh" aria-hidden="true"><i>REPTO</i></span>
+      <div class="bd-face">
+        <span class="bd-chamfer" aria-hidden="true"></span>
+        <img class="bd-watermark" src="icons/logo.png?v=2" alt="" aria-hidden="true">
 
-      <div class="bd-upper">
-      <div class="bd-head">
-        <img class="bd-logo" src="icons/logo.png?v=2" alt="" width="42" height="54">
-        <div class="bd-word">
-          <b>REPTO</b>
-          <span>YOUR SKILL. NEAR YOU.</span>
+        <div class="bd-body">
+          <div class="bd-head">
+            <div class="bd-brand">
+              <img class="bd-logo" src="icons/logo.png?v=2" alt="" width="42" height="54">
+              <img class="bd-wordmark" src="icons/wordmark.png?v=3" alt="Repto" width="447" height="132">
+            </div>
+            <div class="bd-idblock">
+              <span class="bd-idlabel">WORKER ID</span>
+              <span class="bd-idnum">${idHtml}</span>
+              <span class="bd-idrule" aria-hidden="true"></span>
+              <span class="bd-idstatus ${st}">${st === "approved" ? "VERIFIED" : st === "pending" ? "PENDING" : "NOT VALID"}</span>
+            </div>
+          </div>
+
+          <div class="bd-main">
+            <div class="bd-photo"><img src="${avatarOf(w)}" alt=""></div>
+
+            <div class="bd-info">
+              <h3 class="bd-name">${esc(w.name)}</h3>
+              <div class="bd-rule" aria-hidden="true"><i></i><s></s></div>
+              <p class="bd-trade">${esc(trades[0] || "—")}</p>
+              <dl class="bd-rows">
+                <div>
+                  <span class="bd-ico">${ICON_PHONE}</span><i class="bar" aria-hidden="true"></i>
+                  <div><dt>PHONE</dt><dd>${esc(w.phone || "—")}</dd></div>
+                </div>
+                <div>
+                  <span class="bd-ico">${ICON_PIN}</span><i class="bar" aria-hidden="true"></i>
+                  <div><dt>LOCATION</dt><dd>${esc([w.area, w.city].filter(Boolean).join(", ") || "—")}</dd></div>
+                </div>
+                <div>
+                  <span class="bd-ico">${ICON_TOOLS}</span><i class="bar" aria-hidden="true"></i>
+                  <div><dt>SERVICES</dt><dd>${esc(trades.join(" · ") || "—")}</dd></div>
+                </div>
+                <div>
+                  <span class="bd-ico">${ICON_CAL}</span><i class="bar" aria-hidden="true"></i>
+                  <div><dt>JOINED</dt><dd>${esc(since)}</dd></div>
+                </div>
+              </dl>
+            </div>
+
+            <div class="bd-verify">
+              <div class="bd-qr">${qr}</div>
+              <span>SCAN TO VERIFY</span>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="bd-photo"><img src="${avatarOf(w)}" alt=""></div>
-
-      <h3 class="bd-name">${esc(w.name)}</h3>
-      <div class="bd-rule" aria-hidden="true"><i></i></div>
-      <p class="bd-trade">${esc(trades[0] || "—")}</p>
-      ${trades.length > 1 ? `<p class="bd-trade2">${esc(trades.slice(1).join(" · "))}</p>` : ""}
-      </div>
-
-      <div class="bd-grid">
-        <dl class="bd-rows">
-          <div>
-            <span class="bd-ico">${ICON_ID}</span>
-            <div><dt>WORKER ID</dt><dd class="mono">${esc(idPretty(w.worker_code) || "—")}</dd></div>
-          </div>
-          <div>
-            <span class="bd-ico">${ICON_PHONE}</span>
-            <div><dt>PHONE</dt><dd>${esc(w.phone || "—")}</dd></div>
-          </div>
-          <div>
-            <span class="bd-ico">${ICON_PIN}</span>
-            <div><dt>LOCATION</dt><dd>${esc([w.area, w.city].filter(Boolean).join(", ") || "—")}</dd></div>
-          </div>
-        </dl>
-        <div class="bd-qr">${qr}<span>SCAN TO VERIFY</span></div>
-      </div>
-
-      <span class="bd-corner" aria-hidden="true"></span>
-      <div class="bd-foot">
-        <span class="bd-status ${st}">${st === "approved" ? "VERIFIED" : st === "pending" ? "PENDING" : "NOT VALID"}</span>
-        <span class="bd-since">Member since ${esc(since)}</span>
-        <span class="bd-site">nearse.in</span>
+        <div class="bd-foot">
+          <span class="bd-tag">YOUR SKILL. NEAR YOU.</span>
+          <span class="bd-site">nearse.in</span>
+        </div>
       </div>
     </div>
 
@@ -5946,12 +6115,17 @@ function renderCard(){
         <b>nearse.in</b> → <b>Check a Repto Worker ID</b>, and see your name, your trade, your locality and
         how many jobs you have finished — nothing else. Your number never changes, even if you change
         your rates, your photo or your trade.</p>
-      <p>Prints at ID-badge size with a slot for a lanyard. Thick paper if you have it.</p>
+      <p>Prints at standard card size — 85.6 × 54 mm, the same as a debit card, so it fits any
+        card holder or lanyard sleeve. Thick paper if you have it, or take it to any print shop.</p>
     </div>`;
 }
 const ICON_ID = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><circle cx="8.5" cy="11" r="2.1"/><path d="M5.2 16c.5-1.3 1.8-2 3.3-2s2.8.7 3.3 2"/><path d="M15 10h4M15 13.5h4"/></svg>';
 const ICON_PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3h3l1.5 4-2 1.4a12 12 0 0 0 5.6 5.6L16 12l4 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4 6.2 2 2 0 0 1 6.5 3z"/></svg>';
 const ICON_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+/* the reference card carries EMAIL here; a worker's email is private and is
+   never shown to anyone, so the row is their trades instead */
+const ICON_TOOLS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.2a1 1 0 0 0 0 1.4l1.4 1.4a1 1 0 0 0 1.4 0l3.3-3.3a5.6 5.6 0 0 1-7.4 7.4l-6.4 6.4a2 2 0 0 1-2.8-2.8l6.4-6.4a5.6 5.6 0 0 1 7.4-7.4z"/></svg>';
+const ICON_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg>';
 
 async function copyWorkerId(){
   const code = idPretty((session.worker || {}).worker_code);
@@ -6609,6 +6783,37 @@ async function clearReport(id){
 let adminTab = "stats";
 function setAdminTab(t){ adminTab = t; renderAdmin(); }
 
+/* The queue is held here between renders so that typing in the search box
+   filters what is already loaded instead of asking the server again on every
+   keystroke. */
+let adminRows = null;
+let adminQuery = "";
+let adminUndo = null;      /* {id, status, note} — the state before the last decision */
+
+/* Why a profile gets turned away. Free text meant every rejection was worded
+   differently and, at fifty a day, mostly not written at all. */
+const REJECT_REASONS = [
+  "The photo is not a clear picture of your face",
+  "The photo looks like it is not of you",
+  "The photo is taken from a gallery, not the camera",
+  "The name does not look like a real name",
+  "The WhatsApp code did not arrive, or came from a different number",
+  "The rate is not realistic for this service",
+  "This looks like a duplicate of another profile",
+  "The services chosen do not match the details given"
+];
+
+function adminSearchInput(el){
+  adminQuery = el.value.trim().toLowerCase();
+  paintReview();                       /* no refetch: filter what is in hand */
+}
+function adminMatches(w){
+  if(!adminQuery) return true;
+  const hay = [w.name, w.phone, w.area, w.city, w.reg_number,
+               (w.skills||[]).map(s=>s.skill).join(" ")].join(" ").toLowerCase();
+  return adminQuery.split(/\s+/).every(word => hay.includes(word));
+}
+
 async function renderAdmin(){
   const host = $("adminPanel");
   host.innerHTML = '<div class="skeleton"></div>';
@@ -6634,19 +6839,38 @@ async function renderAdmin(){
     return;
   }
 
-  let all = [];
-  try{ all = await api.reviewQueue(); }
+  try{ adminRows = await api.reviewQueue(); }
   catch(e){ host.innerHTML = tabs + `<p class="hint">Could not load profiles — ${esc(e.message||"")}</p>` + exit; return; }
   await loadWaCodes();
-  const reports = await loadReports();
-  const exits = await loadExits();
-  const pending  = all.filter(w => statusOf(w) === "pending");
-  const approved = all.filter(w => statusOf(w) === "approved");
-  const rejected = all.filter(w => statusOf(w) === "rejected");
+  adminReportsCache = await loadReports();
+  adminExitsCache = await loadExits();
+  paintReview();
+}
+
+/* Drawing the review tab is separate from loading it, so searching and acting
+   on one card do not cost four network round trips and a jump back to the top
+   of the page. */
+let adminReportsCache = [], adminExitsCache = [];
+function paintReview(){
+  const host = $("adminPanel");
+  const all = adminRows || [];
+  const reports = adminReportsCache, exits = adminExitsCache;
+  const tabs = `<div class="tabs admin-tabs">
+      <button class="tab" onclick="setAdminTab('stats')">Dashboard</button>
+      <button class="tab on" onclick="setAdminTab('review')">Review</button>
+      <button class="tab" onclick="setAdminTab('activity')">Activity</button>
+    </div>`;
+  const exit = `<button class="btn btn-quiet btn-block btn-sm" style="margin-top:18px" onclick="adminPin=null;go('home')">Exit admin</button>`;
+
+  const hit = all.filter(adminMatches);
+  const pending  = hit.filter(w => statusOf(w) === "pending");
+  const approved = hit.filter(w => statusOf(w) === "approved");
+  const rejected = hit.filter(w => statusOf(w) === "rejected");
   const section = (label, list, hint) => list.length
     ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px"><b>${label}</b>${hint ? " — " + hint : ""}</p>` +
       list.map(adminCard).join("")
     : "";
+  const y = window.scrollY;
   host.innerHTML = tabs + `
     <h2>Profile review</h2>
     ${reports.length ? `<div class="reports">
@@ -6679,7 +6903,15 @@ async function renderAdmin(){
         <span class="hint" id="bulkHint">${pending.length} waiting</span>
       </div>
     </div>` : ""}
-    <p class="hint">${pending.length} awaiting approval · ${approved.length} live · ${rejected.length} rejected</p>
+    <div class="admin-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="adminQ" placeholder="Find by name, number, locality or trade"
+             value="${esc(adminQuery)}" oninput="adminSearchInput(this)" autocomplete="off">
+      ${adminQuery ? `<button class="clear on" onclick="adminQuery='';paintReview()" aria-label="Clear">✕</button>` : ""}
+    </div>
+    <p class="hint">${adminQuery
+      ? `${hit.length} of ${all.length} profiles match “${esc(adminQuery)}”`
+      : `${pending.length} awaiting approval · ${approved.length} live · ${rejected.length} rejected`}</p>
 
     <div class="switch-row" style="margin-top:16px">
       <div><b>Automatic code delivery</b><span>${LIVE
@@ -6691,9 +6923,15 @@ async function renderAdmin(){
 
     ${pending.length
       ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px"><b>Awaiting approval</b></p>` + pending.map(adminCard).join("")
-      : `<div class="divider"></div><div class="empty" style="margin:0"><b>Nothing to review</b>New profiles will appear here.</div>`}
+      : `<div class="divider"></div><div class="empty" style="margin:0"><b>${adminQuery ? "Nothing waiting matches that" : "Nothing to review"}</b>${adminQuery ? "Live and rejected profiles that match are below." : "New profiles will appear here."}</div>`}
     ${section("Live profiles", approved)}
     ${section("Rejected", rejected, "not visible to customers")}` + exit;
+
+  /* keep the page where it was: approving the fourth card should not throw
+     you back to the top of a list of fifty */
+  window.scrollTo(0, y);
+  const q = $("adminQ");
+  if(q && adminQuery){ q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
 }
 /* ---------- dashboard ---------- */
 const nf = n => (n == null ? "—" : Number(n).toLocaleString("en-IN"));
@@ -6833,8 +7071,12 @@ function adminCard(w){
     rejected: `<button class="btn btn-brand btn-sm" onclick="adminSet('${jsq(w.id)}','approved')">Approve</button>
                <button class="btn btn-outline btn-sm" onclick="adminSet('${jsq(w.id)}','pending')">To review</button>`
   }[st];
-  return `<div class="admin-card">
-    <span class="avatar"><img src="${avatarOf(w)}" alt=""></span>
+  return `<div class="admin-card" data-id="${esc(w.id)}" data-status="${esc(st)}">
+    <button class="avatar shot" onclick="openAdminPhoto('${jsq(w.id)}')" title="See the photo full size"
+            aria-label="See ${esc(w.name)}'s photo full size">
+      <img src="${avatarOf(w)}" alt="">
+      ${w.selfie ? `<span class="zoom"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M11 8.5v5M8.5 11h5"/></svg></span>` : ""}
+    </button>
     <div style="flex:1;min-width:0">
       <h4>${esc(w.name)} ${w.phone_verified
         ? '<span class="verified-badge">✓ Number verified</span>'
@@ -6908,12 +7150,56 @@ async function bulkApprove(){
   renderAdmin();
 }
 
+/* ---------- the photo, at a size you can actually judge ----------
+   The whole promise to customers is that a person looked at this photo. At
+   76 pixels in the queue you cannot tell a face from a stock image, so the
+   decision buttons live next to the full-size picture too. */
+let adminPhotoId = null;
+function openAdminPhoto(id){
+  const w = (adminRows || []).find(x => x.id === id);
+  if(!w) return;
+  adminPhotoId = id;
+  const st = statusOf(w);
+  $("shotBody").innerHTML = `
+    <div class="shot-stage">${w.selfie
+      ? `<img src="${esc(w.selfie)}" alt="Verification photo of ${esc(w.name)}">`
+      : `<div class="shot-none">No photo on this profile</div>`}</div>
+    <h3 style="margin-top:14px">${esc(w.name)}</h3>
+    <p class="sub" style="margin:2px 0 0">${esc(w.area ? w.area + ", " : "")}${esc(w.city||"")} · ${esc(w.phone||"")}</p>
+    <p class="hint" style="margin-top:8px">${esc((w.skills||[]).map(x=>x.skill + " — ₹" + x.price + " " + x.unit).join(" · "))}</p>
+    ${waCodes[w.id] ? `<div class="wa-expect" style="margin-top:12px">Check WhatsApp for <b>${esc(waCodes[w.id])}</b> from <b>${esc(w.phone||"")}</b>.</div>` : ""}
+    <div class="shot-actions">
+      ${st !== "approved" ? `<button class="btn btn-brand" onclick="closeModal('shotOverlay');adminSet('${jsq(w.id)}','approved')">Approve</button>` : ""}
+      <button class="btn btn-outline" onclick="closeModal('shotOverlay');adminReject('${jsq(w.id)}')">Reject</button>
+    </div>`;
+  openModal("shotOverlay");
+}
+
+/* ---------- rejection, from a list ----------
+   This used to be a prompt() the reviewer typed into. Fifty times a day that
+   is either not done or written differently every time, and the worker is the
+   one who has to make sense of it. */
+let rejectId = null;
 function adminReject(id){
-  const note = prompt("Why is this profile being rejected?\nThe worker will see this, so keep it clear and factual.");
-  if(note === null) return;
+  const w = (adminRows || []).find(x => x.id === id);
+  rejectId = id;
+  $("rejectWho").textContent = w ? w.name + (w.phone ? " · " + w.phone : "") : "";
+  $("rejectList").innerHTML = REJECT_REASONS.map(r =>
+    `<button class="reject-opt" onclick="sendReject('${jsq(r)}')">${esc(r)}</button>`).join("");
+  $("rejectOther").value = "";
+  openModal("rejectOverlay");
+}
+function sendReject(reason){
+  const note = (reason || $("rejectOther").value).trim();
+  if(!note){ toast("Choose a reason, or write one"); return; }
+  const id = rejectId;
+  closeModal("rejectOverlay");
   adminSet(id, "rejected", note);
 }
+
 async function adminSet(id, status, note){
+  const before = (adminRows || []).find(x => x.id === id);
+  const prev = before ? { status: statusOf(before), note: before.review_note || null } : null;
   try{
     if(LIVE){
       await sb("rpc/admin_set_status", {method:"POST",
@@ -6928,8 +7214,21 @@ async function adminSet(id, status, note){
         demoSave(all);
       }
     }
-    toast({approved:"Profile approved", rejected:"Profile rejected", pending:"Moved back to review"}[status]);
-    renderAdmin();
+    /* update the row in hand and repaint, rather than refetching the whole
+       queue, the codes, the reports and the exit reasons all over again */
+    if(before){
+      before.status = status;
+      before.verified = (status === "approved");
+      before.review_note = (note||"").trim() || null;
+      if(status === "approved" && waCodes[id]) before.phone_verified = true;
+    }
+    if(adminTab === "review") paintReview(); else renderAdmin();
+
+    const said = {approved:"Profile approved", rejected:"Profile rejected", pending:"Moved back to review"}[status];
+    if(prev && prev.status !== status){
+      adminUndo = { id, ...prev };
+      toastAction(said, "Undo", 10, () => adminSet(id, prev.status, prev.note));
+    }else toast(said);
   }catch(e){ toast(e.message); }
 }
 async function verifyReg(id){

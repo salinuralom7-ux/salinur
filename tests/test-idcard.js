@@ -91,12 +91,47 @@ const ok = (label, cond, extra) =>
   ok('Card carries a scannable code', await p.locator('.bd-qr svg').count() === 1);
   ok('A print button is offered', await p.locator('.card-actions .btn-brand').count() === 1);
 
-  // bank-card proportions, so the print matches the screen
+  // CR80 landscape — the card matches the reference design and prints on a
+  // standard blank, and the whole layout is sized in cqw so screen and print
+  // are the same drawing at different scales
   const shape = await p.evaluate(() => {
     const r = document.querySelector('.badge').getBoundingClientRect();
     return +(r.width / r.height).toFixed(2);
   });
-  ok('Badge is portrait, lanyard-shaped', Math.abs(shape - 1/1.58) < 0.04, shape);
+  ok('Card is CR80 landscape', Math.abs(shape - 85.6 / 54) < 0.03, shape);
+
+  // the parts of the reference design that have to be present
+  for (const [what, sel] of [
+    ['gold chamfer at the top-right', '.bd-chamfer'],
+    ['mark and wordmark in the header', '.bd-brand .bd-logo, .bd-brand .bd-wordmark'],
+    ['ID block with its rule', '.bd-idlabel, .bd-idnum, .bd-idrule'],
+    ['photo with a gold edge', '.bd-photo img'],
+    ['name, dash rule and trade', '.bd-name, .bd-rule i, .bd-trade'],
+    ['four labelled rows', '.bd-rows > div'],
+    ['ghosted mark behind the code', '.bd-watermark'],
+    ['gold footer with tagline and domain', '.bd-foot .bd-tag, .bd-foot .bd-site'],
+  ]) {
+    const n = await p.locator(sel).count();
+    const want = sel === '.bd-rows > div' ? 4 : sel.split(',').length;
+    ok('Card has the ' + what, n === want, n + ' of ' + want);
+  }
+
+  // it holds its shape and stays inside itself at both extremes
+  for (const width of [340, 900]) {
+    await p.setViewportSize({ width, height: 900 });
+    await p.waitForTimeout(250);
+    const fits = await p.evaluate(() => {
+      const c = document.querySelector('.badge');
+      const cb = c.getBoundingClientRect();
+      return [...c.querySelectorAll('*')].every(el => {
+        const b = el.getBoundingClientRect();
+        return b.width === 0 || (b.right <= cb.right + 1.5 && b.left >= cb.left - 1.5);
+      });
+    });
+    ok('Nothing overflows the card at ' + width + 'px', fits);
+  }
+  await p.setViewportSize({ width: 390, height: 900 });
+  await p.waitForTimeout(250);
 
   // a profile still under review says so on its own card
   await p.evaluate(() => { session.worker = {...session.worker, status:'pending', verified:false}; renderCard(); });

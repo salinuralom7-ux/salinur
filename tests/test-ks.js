@@ -221,12 +221,15 @@ const srv = http.createServer((req, res) => {
   console.log('Code shown matches the one issued:', expect.includes(waCode) && expect.includes('9435012345'));
 
   // reject first, with a reason, then approve
-  adminPage.removeAllListeners('dialog');
-  adminPage.on('dialog', d => d.accept(d.type() === 'prompt' ? 'Photo is not a clear face' : '4242'));
+  // rejection is now a list of reasons, not a free-text prompt
   await adminPage.locator('.admin-card').first().locator('button', { hasText: 'Reject' }).click();
+  await adminPage.waitForTimeout(400);
+  console.log('Reject sheet offers reasons:', await adminPage.locator('.reject-opt').count());
+  const REASON = 'The photo is not a clear picture of your face';
+  await adminPage.locator('.reject-opt', { hasText: REASON }).click();
   await adminPage.waitForTimeout(700);
   console.log('Rejected section appears:', (await adminPage.locator('#adminPanel').innerText()).includes('Rejected'));
-  console.log('Reason recorded:', (await adminPage.locator('#adminPanel').innerText()).includes('Photo is not a clear face'));
+  console.log('Reason recorded:', (await adminPage.locator('#adminPanel').innerText()).includes(REASON));
 
   // worker sees the rejection and the reason
   await page.reload();
@@ -234,7 +237,7 @@ const srv = http.createServer((req, res) => {
   await page.evaluate(() => go('me'));
   await page.waitForTimeout(500);
   console.log('Worker sees rejection:', await page.locator('.vstatus.rejected').count() === 1);
-  console.log('Worker sees the reason:', (await page.locator('.vstatus.rejected').innerText()).includes('Photo is not a clear face'));
+  console.log('Worker sees the reason:', (await page.locator('.vstatus.rejected').innerText()).includes(REASON));
 
   await adminPage.evaluate(() => renderAdmin());
   await adminPage.waitForTimeout(600);
