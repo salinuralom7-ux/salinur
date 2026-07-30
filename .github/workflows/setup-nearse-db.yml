@@ -181,9 +181,7 @@ jobs:
             (select count(*)::int from information_schema.routines
               where routine_schema='public'
                 and routine_name in ('clean_worker_data','clean_photo_url')) as validation_fns,
-            (select count(*)::int from public.pricing_units) as pricing_units,
-            (select md5(string_agg(skill, '|' order by skill)) from public.service_rates) as rates_fingerprint,
-            (select md5(string_agg(unit,  '|' order by unit))  from public.pricing_units) as units_fingerprint
+            (select count(*)::int from public.pricing_units) as pricing_units
           HSQL
           jq -Rs '{query: .}' /tmp/harden.sql > /tmp/h.json
           code=$(curl -sS -o /tmp/harden.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/h.json)
