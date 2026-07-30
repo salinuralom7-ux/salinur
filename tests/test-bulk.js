@@ -30,6 +30,9 @@ const srv = http.createServer((q,r)=>{r.writeHead(200,{'Content-Type':'text/html
   p.on('dialog', d => d.accept(d.type()==='prompt' ? '4242' : ''));
   await p.goto('http://localhost:8803/#admin'); await p.waitForTimeout(1500);
   console.log('Admin open:', await p.locator('#scr-admin.on').count() === 1);
+  // admin opens on the Dashboard now; the queue and the bulk box live under Review
+  await p.locator('.tab', { hasText: 'Review' }).click();
+  await p.waitForTimeout(900);
   console.log('Bulk box present:', await p.locator('#bulkCodes').count() === 1);
   console.log('Queue size before:', (await p.locator('#bulkHint').textContent()).trim());
 

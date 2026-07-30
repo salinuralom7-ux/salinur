@@ -90,45 +90,99 @@ const SEED = `
     return w.name;
   });
   ok('Nearest worker is asked first', firstAsked === 'Near Sparks', firstAsked);
-  ok('Customer is told how many have been asked',
-     (await cust.locator('#searchBody').innerText()).includes('Asked'));
-  ok('No worker name is shown before anyone accepts',
-     !(await cust.locator('#searchBody').innerText()).includes('Near Sparks'));
 
-  // an expired offer must move to the next worker without anybody doing anything
+  /* A named booking goes to that worker and nobody else. This is deliberate —
+     the customer tapped a face and expects that face — so the screen names
+     them and there is no broadcast count. These assertions used to expect the
+     opposite and were left behind when the behaviour changed. */
+  const body = async () => (await cust.locator('#searchBody').innerText());
+  ok('Customer is told it went to the person they chose',
+     (await body()).includes('Near Sparks'));
+  ok('…and that nobody else was asked', /nobody else/i.test(await body()));
+  ok('No broadcast count is shown for a named booking', !/Asked\s+\d/.test(await body()));
+
+  // ---------- the named worker's side ----------
+  const worker = await ctx.newPage();
+  worker.on('pageerror', e => errors.push('worker: ' + e.message));
+  await worker.goto('http://localhost:8815/');
+  await worker.waitForTimeout(700);
+  const signInAs = async (id) => {
+    await worker.evaluate(wid => {
+      const w = JSON.parse(localStorage.getItem('nearse_workers_v1')).find(x => x.id === wid);
+      session = { phone:w.phone, pin:"1111", name:w.name, registered:true, worker:w };
+      saveSession(); go('me');
+    }, id);
+    await worker.waitForTimeout(700);
+    await worker.bringToFront();   // a worker looking at their phone has it in front
+  };
+  await worker.bringToFront();
+  await signInAs('w01');
+  ok('Worker sees the "available right now" switch', await worker.locator('#onlineSwitch').count() === 1);
+  await worker.evaluate(() => pollOffers());
+  await worker.waitForTimeout(1000);
+  ok('The offer reaches the worker who was named', await worker.locator('.offer').count() === 1);
+  {
+    const t = await worker.locator('.offer').innerText();
+    ok("Offer shows the job, not the customer's number",
+       t.includes('Electrician') && !t.includes('9876500000'), t.replace(/\n/g, ' / '));
+    ok('Offer shows a countdown', /\d+\s*seconds/i.test(t));
+  }
+
+  // ---------- ignored, it must not quietly go to a stranger ----------
+  await cust.bringToFront();
   await cust.evaluate(() => {
     const l = JSON.parse(localStorage.getItem('nearse_jobs_v1'));
     l[0].offer.expires = Date.now() - 1;
     localStorage.setItem('nearse_jobs_v1', JSON.stringify(l));
   });
   await cust.waitForTimeout(3200);
-  const secondAsked = await cust.evaluate(() => {
-    const j = JSON.parse(localStorage.getItem('nearse_jobs_v1'))[0];
-    const w = JSON.parse(localStorage.getItem('nearse_workers_v1')).find(x => x.id === j.offer.workerId);
-    return { name: w.name, asked: j.asked.length };
-  });
-  ok('An unanswered offer rolls on by itself', secondAsked.name === 'Mid Sparks',
-     `${secondAsked.name}, asked ${secondAsked.asked}`);
+  const afterIgnored = await cust.evaluate(() =>
+    JSON.parse(localStorage.getItem('nearse_jobs_v1'))[0].asked.length);
+  ok('A named booking nobody answers is not handed on', afterIgnored === 1, 'asked ' + afterIgnored);
+  ok('The customer is told, by name', (await body()).includes('Near Sparks'));
+  ok('…and it is their choice to widen it',
+     await cust.locator('#searchBody .btn-brand').count() === 1);
 
-  // ---------- the worker's side ----------
-  const worker = await ctx.newPage();
-  worker.on('pageerror', e => errors.push('worker: ' + e.message));
-  await worker.goto('http://localhost:8815/');
-  await worker.waitForTimeout(700);
-  await worker.evaluate(() => {
-    const w = JSON.parse(localStorage.getItem('nearse_workers_v1')).find(x => x.id === 'w02');
-    session = { phone:w.phone, pin:"1111", name:w.name, registered:true, worker:w };
-    saveSession(); go('me');
+  // ---------- widening turns it into an open search ----------
+  await cust.locator('#searchBody .btn-brand').click();
+  await cust.waitForTimeout(1200);
+  ok('Widening asks more workers', /Asked\s*\d/.test((await body()).replace(/\s+/g, ' ')));
+  ok('…and stops naming anybody',
+     !(await body()).includes('Near Sparks') && !(await body()).includes('Mid Sparks'));
+
+  // ---------- an unanswered OPEN offer rolls on by itself ----------
+  /* Run against its own throwaway job so the live one is untouched. An open
+     request is what you get when no worker was named. */
+  const rolled = await cust.evaluate(async () => {
+    const res = await api.createJob({ skill:'Electrician', name:'Roll Test', phone:'9876500009',
+                                      area:'Jalukbari', note:'', workerId:null,
+                                      lat:26.1445, lng:91.7362 });
+    const at = () => {
+      const j = JSON.parse(localStorage.getItem('nearse_jobs_v1')).find(x => x.code === res.code);
+      const w = JSON.parse(localStorage.getItem('nearse_workers_v1')).find(x => x.id === j.offer.workerId);
+      return { name: w.name, asked: j.asked.length };
+    };
+    const first = at();
+    const l = JSON.parse(localStorage.getItem('nearse_jobs_v1'));
+    l.find(x => x.code === res.code).offer.expires = Date.now() - 1;
+    localStorage.setItem('nearse_jobs_v1', JSON.stringify(l));
+    await api.jobState(res.code);            // advancing is exactly what a poll does
+    const second = at();
+    const keep = JSON.parse(localStorage.getItem('nearse_jobs_v1')).filter(x => x.code !== res.code);
+    localStorage.setItem('nearse_jobs_v1', JSON.stringify(keep));
+    return { open: res.direct === false, first, second };
   });
-  await worker.waitForTimeout(800);
-  ok('Worker sees the "available right now" switch', await worker.locator('#onlineSwitch').count() === 1);
+  ok('A request with nobody named is an open one', rolled.open);
+  ok('It asks the nearest first', rolled.first.name === 'Near Sparks', rolled.first.name);
+  ok('An unanswered offer rolls on by itself',
+     rolled.second.name === 'Mid Sparks' && rolled.second.asked === 2,
+     `${rolled.second.name}, asked ${rolled.second.asked}`);
+
+  // ---------- the widened offer reaches the next worker ----------
+  await signInAs('w02');
   await worker.evaluate(() => pollOffers());
   await worker.waitForTimeout(1200);
-  ok('The offer reaches the worker', await worker.locator('.offer').count() === 1);
-  const offerText = await worker.locator('.offer').innerText();
-  ok('Offer shows the job, not the customer\'s number',
-     offerText.includes('Electrician') && !offerText.includes('9876500000'), offerText.replace(/\n/g, ' / '));
-  ok('Offer shows a countdown', /\d+\s*seconds/i.test(offerText));
+  ok('The widened offer reaches the next worker', await worker.locator('.offer').count() === 1);
 
   // accept it, committing to an arrival window
   worker.on('dialog', d => d.accept('25'));
