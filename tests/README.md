@@ -15,6 +15,7 @@ node tests/test-ks.js
 | `test-modes.js` | The four booking modes: instant dispatch with auto-divert, appointment slots, punctuality, registration numbers |
 | `dispatch-verify.sql` | The same, against a real Postgres — offer rotation, double-accept, slot collisions, table privileges |
 | `test-hardening.js` | Back-button navigation, manifest shortcuts, rating limits, reporting, admin PIN |
+| `test-bubbles.js` | Chat bubbles: the read receipt, the WhatsApp meta row, day dividers, no zoom |
 | `test-lifecycle.js` | The core loop from both sides: book → accept → work → finish → confirm → review |
 | `test-auth-punct.js` | Worker calls travel on a session token, and the punctuality question |
 | `test-browse.js` | The browse screen: one category control, removable filters |
