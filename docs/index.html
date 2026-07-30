@@ -895,7 +895,12 @@ header{
      lift it is only just there, which is the point */
   opacity:.05;filter:grayscale(1);pointer-events:none;
 }
-.bd-body{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;padding:3.4cqw 4cqw 0}
+.bd-body{
+  position:relative;z-index:2;flex:1;min-height:0;display:flex;flex-direction:column;
+  /* the bottom padding reserves the footer's height: the footer is pinned, so
+     it can never be pushed off the card by anything above it */
+  padding:2.8cqw 4cqw 6.8cqw;
+}
 
 /* ---- header: mark + wordmark left, ID block right ---- */
 .bd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:2cqw}
@@ -925,9 +930,9 @@ header{
 .bd-idstatus.rejected{background:rgba(232,112,127,.18);color:#F09AA6;border:.12cqw solid rgba(232,112,127,.55);padding:.45cqw 1.1cqw}
 
 /* ---- the three columns ---- */
-.bd-main{flex:1;display:flex;gap:3cqw;padding-top:2.4cqw;min-height:0}
+.bd-main{flex:1;display:flex;gap:3cqw;padding-top:1.8cqw;min-height:0}
 .bd-photo{
-  flex:0 0 auto;width:24.5cqw;height:36cqw;border-radius:1.3cqw;overflow:hidden;
+  flex:0 0 auto;width:24.5cqw;height:33cqw;border-radius:1.3cqw;overflow:hidden;
   border:.34cqw solid var(--brand);background:var(--surface-2);
   box-shadow:0 .6cqw 1.8cqw rgba(0,0,0,.5);
 }
@@ -985,7 +990,7 @@ header{
 
 /* ---- the gold footer, broken by a black diagonal ---- */
 .bd-foot{
-  position:relative;flex:0 0 auto;height:5.4cqw;margin-top:2cqw;
+  position:absolute;left:0;right:0;bottom:0;z-index:3;height:5.4cqw;
   background:linear-gradient(150deg,#F6D687 0%,#EABB51 48%,#D2A340 100%);
   display:flex;align-items:center;justify-content:space-between;
   padding:0 4cqw;overflow:hidden;
@@ -1038,13 +1043,17 @@ header{
 
 /* ---------- printing ----------
    Everything except the card is furniture. */
+/* CR80 landscape — the size a card printer and every plastic blank uses. */
+@page{ size:85.6mm 54mm; margin:0 }
 @media print{
-  html,body{background:#fff !important}
+  html,body{background:#fff !important;margin:0 !important;padding:0 !important}
   body > header, body > footer, body > .demo-note, .no-print, .back,
   .screen:not(.on), .overlay, .toast{display:none !important}
   .wrap-sm{max-width:none;padding:0}
-  /* CR80 landscape — the size a card printer and every plastic blank uses */
-  @page{ size:85.6mm 54mm; margin:0 }
+  /* .screen carries 72px of bottom padding for the app's own scrolling. Left
+     in, it made the printed page 73mm tall against a 54mm sheet, so every
+     print came out as the card plus a blank second page. */
+  .screen{padding:0 !important}
   .badge{
     margin:0;width:85.6mm;height:54mm;max-width:none;aspect-ratio:auto;
     border-radius:3mm;box-shadow:none;
@@ -6097,7 +6106,7 @@ function renderCard(){
     </div>
 
     <div class="card-actions no-print">
-      <button class="btn btn-brand" onclick="window.print()">
+      <button class="btn btn-brand" id="printCardBtn" onclick="printCard()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg>
         Print or save as PDF
       </button>
@@ -6116,7 +6125,10 @@ function renderCard(){
         how many jobs you have finished — nothing else. Your number never changes, even if you change
         your rates, your photo or your trade.</p>
       <p>Prints at standard card size — 85.6 × 54 mm, the same as a debit card, so it fits any
-        card holder or lanyard sleeve. Thick paper if you have it, or take it to any print shop.</p>
+        card holder or lanyard sleeve. Thick paper if you have it, or take it to any print shop.
+        In the print dialog choose <b>Save as PDF</b> to keep a copy on your phone.</p>
+      <p><b>On an iPhone</b>, printing does not work from the installed app — Apple does not allow it.
+        Open <b>nearse.in</b> in Safari instead, sign in, and use <b>Share → Print</b>.</p>
     </div>`;
 }
 const ICON_ID = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><circle cx="8.5" cy="11" r="2.1"/><path d="M5.2 16c.5-1.3 1.8-2 3.3-2s2.8.7 3.3 2"/><path d="M15 10h4M15 13.5h4"/></svg>';
@@ -6126,6 +6138,86 @@ const ICON_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
    never shown to anyone, so the row is their trades instead */
 const ICON_TOOLS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.2a1 1 0 0 0 0 1.4l1.4 1.4a1 1 0 0 0 1.4 0l3.3-3.3a5.6 5.6 0 0 1-7.4 7.4l-6.4 6.4a2 2 0 0 1-2.8-2.8l6.4-6.4a5.6 5.6 0 0 1 7.4-7.4z"/></svg>';
 const ICON_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg>';
+
+/* ---------- printing the card ----------
+   window.print() on the page was not enough. Two things were wrong with it:
+
+     * It printed the whole app screen, and .screen carries 72px of bottom
+       padding, so every print came out as the card plus a blank second page.
+     * In an app installed to the home screen it can do nothing at all —
+       on iOS, print() from a standalone window is a silent no-op. A button
+       that silently does nothing is indistinguishable from a broken one.
+
+   So the card is printed from a document that contains only the card, where
+   the page size IS the card, and the one platform that genuinely cannot open
+   a print dialog is told so instead of being left guessing. */
+function cardPrintDoc(){
+  const card = $("idCard");
+  if(!card) return null;
+  const css = [...document.querySelectorAll("style")].map(s => s.textContent).join("\n");
+  const fonts = [...document.querySelectorAll('link[rel="stylesheet"]')]
+    .map(l => `<link rel="stylesheet" href="${esc(l.href)}">`).join("");
+  const who = (session && session.worker && session.worker.name) || "Worker";
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<title>Repto Worker ID — ${esc(who)}</title>
+<base href="${esc(location.origin + location.pathname)}">
+${fonts}
+<style>${css}</style>
+<style>
+  /* nothing here but the card, so the sheet is exactly the card */
+  @page{ size:85.6mm 54mm; margin:0 }
+  html,body{margin:0;padding:0;background:#fff;width:85.6mm;height:54mm;overflow:hidden}
+  #idCard{
+    margin:0;width:85.6mm;height:54mm;max-width:none;aspect-ratio:auto;
+    border-radius:3mm;box-shadow:none;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .no-print{display:none !important}
+</style></head><body>${card.outerHTML}</body></html>`;
+}
+
+async function printCard(){
+  const html = cardPrintDoc();
+  if(!html){ toast("Open your card first"); return; }
+  const btn = $("printCardBtn");
+  const label = btn ? btn.innerHTML : "";
+  const restore = () => { if(btn){ btn.disabled = false; btn.innerHTML = label; } };
+  if(btn){ btn.disabled = true; btn.textContent = "Preparing…"; }
+
+  if(isIOS() && isStandalone()){
+    restore();
+    toast("iPhone can't print from the installed app — open nearse.in in Safari, then Share → Print");
+    return;
+  }
+
+  const frame = document.createElement("iframe");
+  frame.setAttribute("aria-hidden", "true");
+  frame.title = "Repto Worker ID, ready to print";
+  frame.style.cssText = "position:fixed;left:-10000px;top:0;width:120mm;height:90mm;border:0;opacity:0";
+  document.body.appendChild(frame);
+
+  /* wait for the frame, but never hang on a webfont that will not arrive */
+  await new Promise(res => {
+    let settled = false;
+    const go = () => { if(!settled){ settled = true; res(); } };
+    frame.onload = () => setTimeout(go, 400);
+    setTimeout(go, 2500);
+    frame.srcdoc = html;
+  });
+
+  let opened = false;
+  try{
+    frame.contentWindow.focus();
+    frame.contentWindow.print();
+    opened = true;
+  }catch(e){
+    try{ window.print(); opened = true; }catch(e2){}
+  }
+  /* the dialog reads from the frame, so it has to outlive this function */
+  setTimeout(() => frame.remove(), 60000);
+  restore();
+  if(!opened) toast("This browser won't open a print dialog — try opening nearse.in in Chrome");
+}
 
 async function copyWorkerId(){
   const code = idPretty((session.worker || {}).worker_code);
