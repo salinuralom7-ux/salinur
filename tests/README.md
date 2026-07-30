@@ -15,6 +15,7 @@ node tests/test-ks.js
 | `test-modes.js` | The four booking modes: instant dispatch with auto-divert, appointment slots, punctuality, registration numbers |
 | `dispatch-verify.sql` | The same, against a real Postgres — offer rotation, double-accept, slot collisions, table privileges |
 | `test-hardening.js` | Back-button navigation, manifest shortcuts, rating limits, reporting, admin PIN |
+| `test-auth-punct.js` | Worker calls travel on a session token, and the punctuality question |
 | `test-browse.js` | The browse screen: one category control, removable filters |
 | `sweep.js` | Screenshots every screen and reports words / controls / height per screen |
 | `test-menu.js` | The side menu, the combined chat list, and the one-button photo step |
@@ -33,6 +34,22 @@ applies `docs/supabase-workers-setup.sql` on every push and then queries the
 live database to confirm the result. The file is applied whole each time, so
 **every statement in it must be safe to run again** — test with three
 consecutive applications before pushing.
+
+Two things the file checks about itself, at the end, and both exist because
+they were violated:
+
+* **No function may have two overloads.** PostgREST resolves an RPC by name,
+  so a second overload makes every call to that name fail with "is not
+  unique" — and a test that calls with explicit argument types never notices.
+* **`lock_public_functions()` must be the last statement.** Supabase grants
+  EXECUTE on every new function to PUBLIC and to anon, so anything defined
+  after that call stays reachable by any visitor holding the public key.
+
+And one rule the schema cannot check for you: **a function that verifies a PIN
+must not RAISE when the PIN is wrong.** PostgREST wraps an RPC in one
+transaction, so the raise rolls back the row `auth_note` just wrote, the
+attempt is never counted, and the lockout never fires. Return no rows or null
+instead; the client already reads that as "wrong number or PIN".
 
 ## Schema
 
