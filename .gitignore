@@ -27,3 +27,4 @@ dist-ssr
 ks-*.png
 pg-*.png
 tests/node_modules/
+tests/shots/

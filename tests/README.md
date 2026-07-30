@@ -15,6 +15,7 @@ node tests/test-ks.js
 | `test-modes.js` | The four booking modes: instant dispatch with auto-divert, appointment slots, punctuality, registration numbers |
 | `dispatch-verify.sql` | The same, against a real Postgres — offer rotation, double-accept, slot collisions, table privileges |
 | `test-hardening.js` | Back-button navigation, manifest shortcuts, rating limits, reporting, admin PIN |
+| `test-menu.js` | The side menu, the combined chat list, and the one-button photo step |
 | `test-pages.js` | About, privacy, terms, cancellations, account deletion — links, styling, overflow |
 | `test-pwa.js` | Manifest, icons, offline shell, install prompt |
 | `test-landing.js` | Landing page across five viewports, reduced motion |
