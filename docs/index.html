@@ -1552,15 +1552,19 @@ body.in-chat > .demo-note{display:none}
   color:var(--muted);margin:26px 0 10px;
 }
 .row-label.quiet{margin-top:22px;color:rgba(138,151,160,.75)}
-.cat-row{display:flex;gap:9px;overflow-x:auto;padding:0 0 8px;scrollbar-width:none}
-.cat-row::-webkit-scrollbar{display:none}
-.cat-chip{
-  flex:0 0 auto;border:1px solid var(--line-strong);background:var(--surface-2);
-  border-radius:999px;padding:11px 19px;font-size:.92rem;font-weight:700;color:var(--ink);
-  letter-spacing:-.01em;transition:all .14s ease;box-shadow:var(--shadow-sm);
+/* What is narrowing the list right now, each one removable. Tapping an active
+   tile again clears it too, but a toggle nobody can see is not a control. */
+.active-filter{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.active-filter:empty{display:none}
+.fpill{
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--brand);background:var(--brand-soft);color:var(--brand-2);
+  border-radius:999px;padding:7px 13px;font-size:.83rem;font-weight:700;letter-spacing:-.01em;
 }
-.cat-chip:hover{border-color:var(--brand);color:var(--brand-2);background:var(--raise)}
-.cat-chip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:700}
+.fpill:hover{background:var(--brand);color:var(--brand-ink)}
+.fpill svg{opacity:.8}
+.fpill.clear-all{border-style:dashed;background:none;color:var(--muted)}
+.fpill.clear-all:hover{color:var(--ink);background:var(--surface-2)}
 .result-meta{
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
   padding:24px 0 4px;border-top:1px solid var(--line);margin-top:22px;color:var(--muted);font-size:.84rem;font-weight:600;
@@ -1615,6 +1619,11 @@ body.in-chat > .demo-note{display:none}
 .tile.on .t-ico{background:var(--brand);color:var(--brand-ink)}
 .tile b{font-size:.78rem;font-weight:600;line-height:1.25;color:var(--ink-2);letter-spacing:-.01em}
 .tile.on b{color:var(--ink)}
+/* the fold, styled as a tile so the grid stays one thing */
+.tile.more{border-style:dashed;border-color:var(--line-strong)}
+.tile.more .t-ico{background:transparent;color:var(--muted)}
+.tile.more b{color:var(--muted)}
+.tile.more:hover .t-ico,.tile.more:hover b{color:var(--brand-2)}
 
 /* ---------- trust strip ---------- */
 .trust-strip{
@@ -1864,7 +1873,7 @@ footer a:hover{color:var(--brand)}
       <img class="mark" src="icons/logo.png?v=2" alt="" width="26" height="33"><img class="wordmark" src="icons/wordmark.png?v=3" alt="Repto" width="447" height="132">
     </a>
     <div style="display:flex;align-items:center;gap:12px">
-      <a class="header-link" href="#" onclick="go('hire');return false">Browse workers</a>
+      <a class="header-link" id="browseLink" href="#" onclick="go('hire');return false">Browse workers</a>
       <button class="menu-btn" id="menuBtn" onclick="openMenu()" aria-label="Menu" aria-expanded="false">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>
@@ -2473,11 +2482,13 @@ footer a:hover{color:var(--brand)}
       <div class="suggest-row" id="suggests"></div>
     </div>
 
+    <!-- One category control. There used to be twelve tiles AND a second row
+         of seventeen chips covering the same eighteen categories, so the same
+         choice was offered twice and six categories were reachable only from
+         the row nobody scrolled. -->
     <div class="tile-grid" id="tileGrid"></div>
 
-    <div class="row-label" id="moreLabel">All categories</div>
-    <div class="cat-row" id="catRow"></div>
-
+    <div class="active-filter" id="activeFilter"></div>
     <div class="result-meta" id="resultMeta"></div>
     <div class="results" id="results"></div>
 
@@ -2492,7 +2503,7 @@ footer a:hover{color:var(--brand)}
       </div>
       <div class="trust-item">
         <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-        <div><b>Talk directly</b><span>Your request goes straight to the worker on WhatsApp.</span></div>
+        <div><b>Talk directly</b><span>Chat with the worker inside Repto, or carry on over WhatsApp — whichever suits you.</span></div>
       </div>
     </div>
   </div>
@@ -2693,6 +2704,19 @@ footer a:hover{color:var(--brand)}
          phone, and more of somebody who reads little. -->
     <div class="eta-grid" id="etaGrid"></div>
     <p class="hint" style="margin-top:12px;text-align:center">You are asked afterwards whether you kept it, and customers can see it.</p>
+  </div>
+</div>
+
+<div class="overlay" id="punctOverlay" onclick="if(event.target===this)answerPunctuality(null)">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="close" onclick="answerPunctuality(null)" aria-label="Close">✕</button>
+    <h3>One quick question</h3>
+    <p class="sub" id="punctWho">Did they arrive when they said they would?</p>
+    <p class="hint" style="margin-bottom:16px">Turning up on time is the thing customers ask us about most, so we
+      keep it separate from the stars. Saying nothing counts against nobody.</p>
+    <button class="btn btn-brand btn-block" style="padding:14px" onclick="answerPunctuality(true)">Yes, on time</button>
+    <button class="btn btn-outline btn-block" style="padding:14px;margin-top:9px" onclick="answerPunctuality(false)">No, they were late</button>
+    <button class="btn btn-quiet btn-block btn-sm" style="margin-top:9px" onclick="answerPunctuality(null)">Skip this</button>
   </div>
 </div>
 
@@ -3502,7 +3526,7 @@ const api = {
   },
   async update(phone, pin, data){
     if(LIVE){
-      const rows = await sb("rpc/update_worker", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin, p_data:data})});
+      const rows = await sb("rpc/update_worker", {method:"POST", body:JSON.stringify(workerAuth({p_data:data}))});
       const row = Array.isArray(rows) ? rows[0] : rows;
       if(!row) throw new Error("Wrong phone number or PIN");
       return row;
@@ -3576,8 +3600,8 @@ const api = {
   /* the worker's push endpoint, so the dispatcher can reach them in seconds */
   async savePush(phone, pin, sub){
     if(LIVE) return await sb("rpc/save_push_subscription", {method:"POST",
-      body:JSON.stringify({p_phone:phone, p_pin:pin, p_endpoint:sub.endpoint,
-                           p_p256dh:sub.p256dh, p_auth:sub.auth})});
+      body:JSON.stringify(workerAuth({p_endpoint:sub.endpoint,
+                           p_p256dh:sub.p256dh, p_auth:sub.auth}))});
   },
   /* ---- instant dispatch ---- */
   async createJob(o){
@@ -3591,9 +3615,10 @@ const api = {
     return demoCreateJob(o);
   },
   /* only ever called because the customer asked for it */
-  async widenJob(code){
+  async widenJob(code, token){
     if(LIVE){
-      const rows = await sb("rpc/widen_job", {method:"POST", body:JSON.stringify({p_code:code})});
+      const rows = await sb("rpc/widen_job", {method:"POST",
+        body:JSON.stringify({p_code:code, p_token:token || null})});
       return Array.isArray(rows) ? rows[0] : rows;
     }
     return demoWidenJob(code);
@@ -3609,34 +3634,39 @@ const api = {
     }
     return demoJobState(code, token);
   },
-  async cancelJob(code){
-    if(LIVE) return await sb("rpc/cancel_job", {method:"POST", body:JSON.stringify({p_code:code})});
+  async cancelJob(code, token){
+    if(LIVE) return await sb("rpc/cancel_job", {method:"POST",
+      body:JSON.stringify({p_code:code, p_token:token || null})});
     return demoCancelJob(code);
   },
   async myOffers(phone, pin){
-    if(LIVE) return await sb("rpc/my_offers", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})}) || [];
+    /* polled while a worker is online, so it must not cost a bcrypt round */
+    if(LIVE) return await sb("rpc/my_offers", {method:"POST", body:JSON.stringify(workerAuth({}))}) || [];
     return demoMyOffers(phone);
   },
   async acceptOffer(phone, pin, code, eta){
     if(LIVE){
       const rows = await sb("rpc/accept_offer", {method:"POST",
-        body:JSON.stringify({p_phone:phone, p_pin:pin, p_code:code, p_eta:eta})});
-      return Array.isArray(rows) ? rows[0] : rows;
+        body:JSON.stringify(workerAuth({p_code:code, p_eta:eta}))});
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      if(!row) throw new Error("Please sign in again");
+      return row;
     }
     return demoAcceptOffer(phone, code, eta);
   },
   async declineOffer(phone, pin, code){
-    if(LIVE) return await sb("rpc/decline_offer", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin, p_code:code})});
+    if(LIVE) return await sb("rpc/decline_offer", {method:"POST", body:JSON.stringify(workerAuth({p_code:code}))});
     return demoDeclineOffer(phone, code);
   },
   async setOnline(phone, pin, minutes){
-    if(LIVE) return await sb("rpc/set_online", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin, p_minutes:minutes})});
+    if(LIVE) return await sb("rpc/set_online", {method:"POST", body:JSON.stringify(workerAuth({p_minutes:minutes}))});
     const all = demoAll(); const w = all.find(x=>x.phone===phone);
     if(w){ w.online_until = minutes ? Date.now() + minutes*60000 : null; demoSave(all); }
     return w && w.online_until;
   },
-  async ratePunctuality(code, onTime){
-    if(LIVE) return await sb("rpc/rate_punctuality", {method:"POST", body:JSON.stringify({p_code:code, p_on_time:onTime})});
+  async ratePunctuality(code, onTime, token){
+    if(LIVE) return await sb("rpc/rate_punctuality", {method:"POST",
+      body:JSON.stringify({p_code:code, p_on_time:onTime, p_token:token || null})});
     return demoRatePunctuality(code, onTime);
   },
   /* ---- appointments ---- */
@@ -3654,7 +3684,7 @@ const api = {
     return demoBookSlot(workerId, skill, date, time, name, phone, note);
   },
   async myAppointments(phone, pin){
-    if(LIVE) return await sb("rpc/my_appointments", {method:"POST", body:JSON.stringify({p_phone:phone, p_pin:pin})}) || [];
+    if(LIVE) return await sb("rpc/my_appointments", {method:"POST", body:JSON.stringify(workerAuth({}))}) || [];
     return demoMyAppointments(phone);
   },
   /* ---------- conversations ----------
@@ -3777,8 +3807,16 @@ const api = {
   },
   async book(rec){
     if(LIVE){
-      try{ await sb("bookings", {method:"POST", body:JSON.stringify(rec), headers:{Prefer:"return=minimal"}}); }
-      catch(e){ console.error(e); }
+      /* Through record_booking, not a direct insert. INSERT on bookings was
+         revoked from the public roles when the table got a rate limit, so the
+         insert had been failing for every booking since — silently, because
+         this catch swallowed it. No record was kept of anything. */
+      try{
+        await sb("rpc/record_booking", {method:"POST", body:JSON.stringify({
+          p_worker: rec.worker_id || null, p_worker_name: rec.worker_name || "",
+          p_customer_name: rec.customer_name || "", p_customer_phone: rec.customer_phone || "",
+          p_note: rec.note || "" })});
+      }catch(e){ console.error("booking record failed", e); }
       return;
     }
     /* preview keeps them too, so the admin dashboard has something to show */
@@ -4153,6 +4191,8 @@ function go(name, viaHistory){
   /* the conversation is a full-screen surface — the site header and footer
      would otherwise sit on top of its own header bar */
   document.body.classList.toggle("in-chat", name === "chat");
+  /* no point offering the screen somebody is already looking at */
+  const bl = $("browseLink"); if(bl) bl.hidden = (name === "hire");
   if(!viaHistory){
     /* admin is private — it gets a history entry but never a shareable URL */
     const url = (name === "home" || name === "admin")
@@ -5424,6 +5464,9 @@ const CAT_ICON = {
   facility:'<path d="M12 3l8 3v6c0 4.5-3.2 8.5-8 9.5C7.2 20.5 4 16.5 4 12V6z"/>',
   health:'<path d="M4.5 12.5h3l2-4 3 8 2-4h5"/><path d="M20.5 9.5a4.6 4.6 0 0 0-8.5-2.4A4.6 4.6 0 0 0 3.5 9.5c0 4.2 5.9 8 8.5 10.3 2.6-2.3 8.5-6.1 8.5-10.3z"/>'
 };
+/* The eight people actually open first; the rest are one tap away. Ordered by
+   what gets booked, not alphabetically. */
+const TILE_PRIMARY = ["home","repair","cook","care","beauty","tutor","build","vehicle"];
 const TILE_CATS = ["home","cook","repair","build","care","health","beauty","tutor","vehicle","event","move","tech"];
 const TILE_LABEL = {
   home:"Cleaning", cook:"Cooking", repair:"Repairs", build:"Building", care:"Care",
@@ -5439,21 +5482,59 @@ let pageOffset = 0, resultTotal = 0, loadingPage = false, searchSeq = 0;
 
 async function initHire(){
   renderTiles();
-  renderCats();
   renderSuggests();
   renderAreaFilter();
   if(!myLoc) requestLocation(false);
   renderResults();
 }
+let tilesOpen = false;
 function renderTiles(){
-  $("tileGrid").innerHTML = TILE_CATS.map(k=>{
+  const all = CATALOGUE.map(c => c[0]);
+  /* whatever is selected stays on screen even when the rest are folded away */
+  const shown = tilesOpen ? all
+    : [...new Set([...TILE_PRIMARY, ...(hireCat ? [hireCat] : [])])];
+  const tile = k => {
     const label = CAT_LABEL[k] || k;
     const short = TILE_LABEL[k] || label.split(" & ")[0];
-    return `<button class="tile${hireCat===k?" on":""}" onclick="setCat('${hireCat===k?"":k}')" aria-label="${esc(label)}">
+    return `<button class="tile${hireCat===k?" on":""}" onclick="setCat('${hireCat===k?"":k}')"
+      aria-pressed="${hireCat===k}" aria-label="${esc(label)}">
       <span class="t-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${CAT_ICON[k]||""}</svg></span>
       <b>${esc(short)}</b>
     </button>`;
-  }).join("");
+  };
+  const more = `<button class="tile more" onclick="toggleTiles()" aria-expanded="${tilesOpen}">
+    <span class="t-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${
+      tilesOpen ? '<path d="M18 15l-6-6-6 6"/>' : '<path d="M6 9l6 6 6-6"/>'}</svg></span>
+    <b>${tilesOpen ? "Less" : (all.length - shown.length) + " more"}</b>
+  </button>`;
+  $("tileGrid").innerHTML = shown.map(tile).join("") + (all.length > shown.length || tilesOpen ? more : "");
+}
+function toggleTiles(){ tilesOpen = !tilesOpen; renderTiles(); }
+
+/* What is currently narrowing the list, and one tap to stop it. Clicking an
+   active tile again also clears it, but nothing on screen said so. */
+function renderActiveFilter(){
+  const host = $("activeFilter"); if(!host) return;
+  const area = $("areaFilter") ? $("areaFilter").value : "";
+  const q = $("hireSearch") ? $("hireSearch").value.trim() : "";
+  const pills = [];
+  if(hireCat) pills.push([esc(CAT_LABEL[hireCat] || hireCat), "setCat('')"]);
+  if(area)    pills.push([esc(area), "document.getElementById('areaFilter').value='';renderResults()"]);
+  if(q)       pills.push(["“" + esc(q) + "”", "clearSearch()"]);
+  host.innerHTML = pills.length
+    ? pills.map(([label, act]) => `<button class="fpill" onclick="${act}">
+        ${label}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>`).join("") +
+      (pills.length > 1 ? `<button class="fpill clear-all" onclick="clearAllFilters()">Clear all</button>` : "")
+    : "";
+}
+function clearAllFilters(){
+  hireCat = "";
+  if($("areaFilter")) $("areaFilter").value = "";
+  if($("hireSearch")) $("hireSearch").value = "";
+  if($("clearSearch")) $("clearSearch").classList.remove("on");
+  renderTiles(); renderResults();
 }
 /* Now that results are paged, the browser never sees the whole worker list, so
    the filter offers every locality and the query decides what actually exists. */
@@ -5463,17 +5544,12 @@ function renderAreaFilter(){
   sel.innerHTML = '<option value="">All localities</option>' + areaOptions(cur);
   sel.value = cur || "";
 }
-function renderCats(){
-  $("catRow").innerHTML =
-    `<button class="cat-chip${hireCat===""?" on":""}" onclick="setCat('')">All services</button>` +
-    CATALOGUE.map(([key,label])=>`<button class="cat-chip${hireCat===key?" on":""}" onclick="setCat('${key}')">${esc(label)}</button>`).join("");
-}
 function renderSuggests(){
   $("suggests").innerHTML = '<span class="suggest-lead">Popular</span>' +
     POPULAR.slice(0,5).map(s=>`<button class="suggest" onclick="searchFor('${jsq(s)}')">${esc(s)}</button>`).join("");
 }
-function setCat(k){ hireCat = k; renderTiles(); renderCats(); renderResults(); }
-function searchFor(s){ $("hireSearch").value = s; hireCat = ""; renderTiles(); renderCats(); onSearchInput(); }
+function setCat(k){ hireCat = k; renderTiles(); renderResults(); }
+function searchFor(s){ $("hireSearch").value = s; hireCat = ""; renderTiles(); onSearchInput(); }
 function clearSearch(){ $("hireSearch").value = ""; onSearchInput(); }
 function onSearchInput(){
   $("clearSearch").classList.toggle("on", !!$("hireSearch").value);
@@ -5529,6 +5605,7 @@ async function loadPage(reset){
   resultTotal = page.total;
   pageOffset = workers.length;
   paintResults(q, areaPick);
+  renderActiveFilter();
 }
 
 function paintResults(q, areaPick){
@@ -5960,7 +6037,7 @@ function onJobAccepted(st){
   const chat = $("jobChatBtn");
   if(chat) chat.disabled = !j.threadCode;
 
-  if(!st.worker_phone){ try{ localStorage.setItem("nearse_job_done_v1", j.code); }catch(e){} return; }
+  if(!st.worker_phone){ rememberForPunctuality(j); return; }
   const msg =
 `*Repto booking ${j.code}*
 
@@ -5976,7 +6053,7 @@ Hello ${(st.worker_name||"").split(" ")[0]}, thank you for accepting.
     btn.href = "https://wa.me/91" + st.worker_phone + "?text=" + encodeURIComponent(msg);
     btn.hidden = false;
   }
-  try{ localStorage.setItem("nearse_job_done_v1", j.code); }catch(e){}
+  rememberForPunctuality(j);
 }
 
 /* Only ever reached by the customer tapping "Find someone else nearby".
@@ -5984,7 +6061,7 @@ Hello ${(st.worker_name||"").split(" ")[0]}, thank you for accepting.
 async function widenSearch(){
   if(!nowJob) return closeSearch();
   try{
-    await api.widenJob(nowJob.code);
+    await api.widenJob(nowJob.code, nowJob.token);
     nowJob.askedFor = null;
     $("searchBody").innerHTML = `<div class="finding">
       <div class="radar" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -5995,7 +6072,7 @@ async function widenSearch(){
 
 async function cancelNowJob(){
   if(!nowJob) return closeSearch();
-  try{ await api.cancelJob(nowJob.code); }catch(e){}
+  try{ await api.cancelJob(nowJob.code, nowJob.token); }catch(e){}
   closeSearch();
   toast("Stopped looking");
 }
@@ -6121,20 +6198,47 @@ Hello ${w.name.split(" ")[0]}, I have booked an appointment.
    One question, asked once, about the thing customers actually complain
    about. Kept apart from the quality stars because they are not the same
    promise, and a worker's on-time figure is what makes the promise real. */
+const PUNCT_KEY = "nearse_job_done_v1";
+function rememberForPunctuality(j){
+  /* the code alone is not enough any more: casting the vote needs the job's
+     own token, so that a guessed code cannot cast it for somebody else */
+  try{ localStorage.setItem(PUNCT_KEY, JSON.stringify({code:j.code, token:j.token || null})); }catch(e){}
+}
+function punctualityPending(){
+  let raw = null;
+  try{ raw = localStorage.getItem(PUNCT_KEY); }catch(e){}
+  if(!raw) return null;
+  try{
+    const v = JSON.parse(raw);
+    return (v && v.code) ? v : null;
+  }catch(e){ return { code: raw, token: null }; }   /* written before tokens */
+}
+function clearPunctuality(){ try{ localStorage.removeItem(PUNCT_KEY); }catch(e){} }
+
+/* This used to be a confirm(): "OK = yes, on time. Cancel = no, they were
+   late." Cancel is also what a browser does when somebody presses Escape or
+   taps outside — so anybody who dismissed the box without reading it recorded
+   a black mark against a worker's on-time score. There was no way to decline
+   to answer. Three buttons, and saying nothing costs the worker nothing. */
 function maybeAskPunctuality(){
-  let code = null;
-  try{ code = localStorage.getItem("nearse_job_done_v1"); }catch(e){}
-  if(!code) return;
+  const j = punctualityPending();
+  if(!j) return;
   setTimeout(() => {
-    if(!confirm("Did they arrive when they said they would?\n\nOK = yes, on time.\nCancel = no, they were late or did not come.")) {
-      api.ratePunctuality(code, false).catch(()=>{});
-      toast("Thank you — that counts against their on-time score");
-    }else{
-      api.ratePunctuality(code, true).catch(()=>{});
-      toast("Thank you");
-    }
-    try{ localStorage.removeItem("nearse_job_done_v1"); }catch(e){}
+    if(!punctualityPending()) return;           /* answered in the meantime */
+    $("punctWho").textContent = j.worker_name
+      ? "Did " + j.worker_name.split(" ")[0] + " arrive when they said they would?"
+      : "Did they arrive when they said they would?";
+    openModal("punctOverlay");
   }, 1200);
+}
+async function answerPunctuality(onTime){
+  const j = punctualityPending();
+  clearPunctuality();
+  closeModal("punctOverlay");
+  if(!j) return;
+  if(onTime === null){ toast("No problem — skipped"); return; }
+  try{ await api.ratePunctuality(j.code, onTime, j.token); }catch(e){}
+  toast(onTime ? "Thank you" : "Thank you — that counts against their on-time score");
 }
 const onTimeText = w => (w.on_time_total || 0) >= 3
   ? `<span class="ontime${Math.round(100*w.on_time_yes/w.on_time_total) >= 80 ? " good" : " poor"}">On time ${Math.round(100*w.on_time_yes/w.on_time_total)}%</span>`

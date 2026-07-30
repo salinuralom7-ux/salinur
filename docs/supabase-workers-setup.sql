@@ -5512,3 +5512,800 @@ language sql stable security definer set search_path = public, extensions as $$
     from jobs j left join workers w on w.id = j.worker_id
    where j.code = upper(btrim(p_code));
 $$;
+
+-- ============================================================
+-- MIGRATION 23 — the doors nobody thought to lock
+--
+-- Supabase grants EXECUTE on every function in `public` to `anon` by default,
+-- and this file has grown to 74 functions. Twenty-four of them are internal —
+-- helpers, triggers, maintenance — and every one was callable by any visitor
+-- with the public key. Verified against a seeded copy, as `anon`:
+--
+--   1. auth_note('login', <number>, true) wipes the failed-attempt counter.
+--      Migration 16 turned a forty-second PIN grind into eleven years by
+--      locking an account after six wrong guesses; this hands the attacker an
+--      eraser. Interleave one call per six guesses and the lockout never
+--      fires. The same function with `false` locks any worker out of their own
+--      account at will, which needs nothing but their phone number.
+--   2. purge_expired_data() runs on demand. `revoke all ... from public` was
+--      written for it, and does nothing, because the privilege came from a
+--      grant made directly to `anon` — revoking from PUBLIC does not touch it.
+--   3. offer_next / widen_job / next_job_candidate let an outsider drive the
+--      dispatch queue.
+--   4. worker_auth is a PIN oracle. The lockout limits it, and 1 makes the
+--      lockout optional.
+--
+-- Two more, unrelated to the grants:
+--
+--   5. create_job had no ceiling. Forty jobs from one number in one loop, and
+--      forty offers pushed at real workers with a sixty-second timer on each.
+--      Migration 16.6 put a limit on bookings and reports and missed this one,
+--      which is the expensive one — it does not just fill a table, it rings
+--      every phone in Guwahati.
+--   6. job_state still returned the worker's phone number to anybody holding
+--      a job code. Migration 22 exists to stop exactly that, and gated the
+--      conversation while leaving the number beside it. cancel_job and
+--      widen_job took a bare code too, so a guessed code could call off
+--      somebody else's search.
+-- ============================================================
+
+-- ---------- 23.1 create_job gets a ceiling ----------
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'create_job'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
+
+create function public.create_job(
+  p_skill text, p_name text, p_phone text, p_area text, p_note text default null,
+  p_lat double precision default null, p_lng double precision default null,
+  p_city text default 'Guwahati', p_minutes int default 20,
+  p_worker uuid default null)
+returns table (code text, worker_id uuid, asked int, direct boolean, customer_token uuid)
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid; c text; cand uuid; wanted uuid; is_direct boolean := false; tok uuid;
+        mine int; everyone int;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit mobile number';
+  end if;
+  if btrim(coalesce(p_name,'')) = '' then
+    raise exception 'Please enter your name';
+  end if;
+
+  -- Nobody books eight workers in an hour. Someone sending a hundred is not a
+  -- customer, and each one rings a real phone.
+  select count(*) into mine from jobs
+   where customer_phone = p_phone and created_at > now() - interval '1 hour';
+  if mine >= 8 then
+    raise exception 'That is a lot of requests in one hour. Please finish one before starting another.';
+  end if;
+  select count(*) into everyone from jobs where created_at > now() - interval '1 minute';
+  if everyone >= 200 then
+    raise exception 'Repto is unusually busy right now. Please try again in a minute.';
+  end if;
+
+  if p_worker is not null then
+    select w.id into wanted from workers w
+     where w.id = p_worker and w.status = 'approved' and w.available
+       and exists (select 1 from jsonb_array_elements(w.skills) s where s->>'skill' = p_skill);
+    is_direct := wanted is not null;
+  end if;
+
+  loop
+    c := upper(substr(encode(gen_random_bytes(8), 'hex'), 1, 10));
+    exit when not exists (select 1 from jobs where jobs.code = c);
+  end loop;
+
+  insert into jobs (code, skill, city, area, lat, lng, customer_name, customer_phone, note,
+                    search_until, requested_worker, direct)
+  values (c, p_skill, p_city, p_area, p_lat, p_lng, btrim(p_name), p_phone,
+          nullif(btrim(coalesce(p_note,'')),''),
+          now() + make_interval(mins => greatest(2, least(p_minutes, 60))),
+          wanted, is_direct)
+  returning id, jobs.customer_token into jid, tok;
+
+  cand := offer_next(jid, 60);
+  return query select c, cand, (select asked_count from jobs where id = jid), is_direct, tok;
+end;
+$$;
+
+-- ---------- 23.2 the job's own token guards everything about the job ----------
+-- The number, the name and the area go to whoever booked the job, not to
+-- whoever can type a code. Status and the countdown stay open: they identify
+-- nobody, and a customer who has cleared their browser can still see that the
+-- search is running.
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'job_state'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
+
+create function public.job_state(p_code text, p_token uuid default null)
+returns table (status text, asked int, worker_name text, worker_phone text,
+               worker_area text, eta_minutes int, seconds_left int, skill text,
+               direct boolean, requested_name text,
+               thread_code text, thread_token uuid)
+language sql stable security definer set search_path = public, extensions as $$
+  select j.status, j.asked_count,
+         case when mine then w.name end,
+         case when mine and j.status = 'accepted' then w.phone end,
+         case when mine then w.area end,
+         j.eta_minutes,
+         greatest(0, extract(epoch from (
+           coalesce((select o.expires_at from job_offers o
+                      where o.job_id = j.id and o.status = 'pending'
+                      order by o.rank desc limit 1), j.search_until) - now()))::int),
+         j.skill,
+         j.direct,
+         case when mine then (select rw.name from workers rw where rw.id = j.requested_worker) end,
+         case when mine then (select t.code from threads t where t.job_id = j.id limit 1) end,
+         case when mine then (select t.customer_token from threads t where t.job_id = j.id limit 1) end
+    from jobs j
+    left join workers w on w.id = j.worker_id
+    cross join lateral (select p_token is not null and p_token = j.customer_token as mine) g
+   where j.code = upper(btrim(p_code));
+$$;
+
+-- Calling off or reopening somebody else's search needs the same proof.
+create or replace function public.cancel_job(p_code text, p_token uuid default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid;
+begin
+  select j.id into jid from jobs j
+   where j.code = upper(btrim(p_code)) and j.status = 'searching'
+     and (p_token is null or j.customer_token = p_token);
+  -- a token that does not match is silently nothing, exactly like a bad code
+  if jid is null then return; end if;
+  if p_token is null and exists (select 1 from jobs where id = jid and customer_token is not null) then
+    return;                       -- new-style job: the token is required
+  end if;
+  update jobs set status = 'cancelled' where id = jid;
+end;
+$$;
+drop function if exists public.cancel_job(text);
+
+create or replace function public.widen_job(p_code text, p_minutes int default 15, p_token uuid default null)
+returns table (status text, asked int)
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid;
+begin
+  select j.id into jid from jobs j
+   where j.code = upper(btrim(p_code)) and j.status in ('no_answer', 'searching')
+     and (j.customer_token is null or j.customer_token = p_token);
+  if jid is null then
+    raise exception 'That search cannot be reopened';
+  end if;
+  update jobs j
+     set direct = false,
+         status = 'searching',
+         search_until = greatest(j.search_until, now() + make_interval(mins => greatest(2, least(p_minutes, 60))))
+   where j.id = jid;
+  perform offer_next(jid, 60);
+  return query select j.status, j.asked_count from jobs j where j.id = jid;
+end;
+$$;
+drop function if exists public.widen_job(text, int);
+
+-- ---------- 23.3 an allow-list, instead of everything ----------
+-- Revoke EXECUTE on every function in public from the two public roles, then
+-- grant back only what the app actually calls. A SECURITY DEFINER function
+-- runs as its owner, so the internal helpers keep working when called from
+-- inside another function — they simply stop being reachable from outside.
+--
+-- ADDING A FUNCTION THE CLIENT CALLS? Add its name to client_rpcs below, or
+-- it will be refused in production and work perfectly in every test that
+-- connects as the owner.
+create or replace function public.lock_public_functions()
+returns void
+language plpgsql
+set search_path = public as $lock$
+declare
+  r text;
+  f record;
+  client_rpcs text[] := array[
+    -- profiles and sign-in
+    'register_worker','login_worker','update_worker','delete_worker','phone_taken',
+    'worker_session_start','worker_session_end','worker_pending','worker_stats',
+    -- browsing and contact
+    'search_workers','request_worker_contact','verify_worker_id','report_worker',
+    'record_booking',
+    -- instant jobs
+    'create_job','job_state','cancel_job','widen_job','advance_jobs',
+    'my_offers','accept_offer','decline_offer','set_online','save_push_subscription',
+    -- appointments
+    'taken_slots','book_slot','my_appointments','rate_punctuality',
+    -- conversations
+    'start_thread','thread_view','thread_messages','post_message','customer_set_thread',
+    'worker_threads','worker_thread_messages','worker_post_message','worker_set_thread',
+    'review_thread','worker_reviews',
+    -- the admin screens, every one of which checks the PIN itself
+    'admin_check','admin_session_start','admin_queue','admin_stats','admin_recent',
+    'admin_reports','admin_clear_report','admin_wa_codes','admin_set_status',
+    'admin_set_require_otp','admin_verify_registration','admin_exit_reasons',
+    'admin_exit_notes','admin_hide_review'
+  ];
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.prokind = 'f'
+    loop
+      -- BOTH of these matter. Postgres grants EXECUTE on a new function to
+      -- PUBLIC, and Supabase additionally grants it to anon; revoking one
+      -- leaves the other, which is precisely why the revoke written for
+      -- purge_expired_data never did anything.
+      execute format('revoke all on function %s from public', f.sig);
+      execute format('revoke all on function %s from %I', f.sig, r);
+    end loop;
+
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.prokind = 'f'
+               and p.proname = any(client_rpcs)
+    loop
+      execute format('grant execute on function %s to %I', f.sig, r);
+    end loop;
+  end loop;
+end $lock$;
+
+-- MUST BE THE LAST STATEMENT OF THE LAST MIGRATION. Anything defined after it
+-- keeps the default grant to PUBLIC and is reachable by any visitor.
+select public.lock_public_functions();
+
+-- Belt as well as braces: this one is destructive and is called by pg_cron,
+-- which runs as the owner and needs no grant at all.
+revoke all on function public.purge_expired_data() from public;
+
+-- ============================================================
+-- MIGRATION 24 — the side doors on the PIN, and a vote nobody owned
+--
+--   1. Migration 16 put a lockout on the front door: six wrong PINs in
+--      fifteen minutes and the account stops answering. Five functions never
+--      went through it. save_push_subscription, set_online, my_offers,
+--      decline_offer and my_appointments each verified the PIN inline with
+--      their own `pin_hash = crypt(...)`, counting nothing. Any of them is an
+--      unlimited oracle: my_appointments('<number>','0000') either raises or
+--      returns, ten thousand times, with no lockout at any point. The front
+--      door was bolted and five windows left open.
+--
+--      They also could not accept a session token, so a worker's phone was
+--      sending its PIN — and paying for a bcrypt round — on every poll of
+--      my_offers. That is the cost migration 16.2 set out to remove and only
+--      removed for half the app.
+--
+--   2. rate_punctuality took a job code and nothing else. Anybody who
+--      guessed one could cast the single allowed punctuality vote against a
+--      worker, and the same call marks the job done — ending somebody else's
+--      job on their behalf. It now needs the job's own token, like
+--      cancel_job.
+--
+--   3. book_slot had no ceiling. An appointment trade's whole calendar can be
+--      filled with invented bookings, one per slot, and there is a unique
+--      constraint per slot so each one denies a real customer. That is not
+--      filling a table, it is closing a business.
+-- ============================================================
+
+-- ---------- 24.1 every worker call goes through the guarded path ----------
+-- Each one gains the lockout, and a p_token so a signed-in phone stops
+-- sending its PIN. Dropped by name first: adding a parameter would otherwise
+-- leave the old unguarded overload in place and callable.
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public'
+             and p.proname in ('save_push_subscription','set_online','my_offers',
+                               'decline_offer','my_appointments')
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
+
+create function public.save_push_subscription(
+  p_phone text default null, p_pin text default null,
+  p_endpoint text default null, p_p256dh text default null, p_auth text default null,
+  p_token uuid default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if coalesce(btrim(p_endpoint),'') = '' then raise exception 'No push endpoint given'; end if;
+  insert into worker_push (worker_id, endpoint, p256dh, auth)
+  values (wid, p_endpoint, p_p256dh, p_auth)
+  on conflict (worker_id) do update
+    set endpoint = excluded.endpoint, p256dh = excluded.p256dh,
+        auth = excluded.auth, updated_at = now();
+end;
+$$;
+
+create function public.set_online(p_phone text default null, p_pin text default null,
+                                  p_minutes int default 240, p_token uuid default null)
+returns timestamptz
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; until timestamptz;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  until := case when coalesce(p_minutes,0) <= 0 then null
+                else now() + make_interval(mins => least(p_minutes, 720)) end;
+  update workers set online_until = until where id = wid;
+  return until;
+end;
+$$;
+
+create function public.my_offers(p_phone text default null, p_pin text default null,
+                                 p_token uuid default null)
+returns table (code text, skill text, area text, note text, customer_name text,
+               distance_km double precision, seconds_left int, price int, unit text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  return query
+    select j.code, j.skill, j.area, j.note, j.customer_name,
+           case when j.lat is null or w.lat is null then null else
+             6371 * 2 * asin(sqrt(
+               power(sin(radians(w.lat - j.lat) / 2), 2) +
+               cos(radians(j.lat)) * cos(radians(w.lat)) *
+               power(sin(radians(w.lng - j.lng) / 2), 2))) end,
+           greatest(0, extract(epoch from (o.expires_at - now()))::int),
+           (select (s->>'price')::int from jsonb_array_elements(w.skills) s
+             where s->>'skill' = j.skill limit 1),
+           (select s->>'unit' from jsonb_array_elements(w.skills) s
+             where s->>'skill' = j.skill limit 1)
+      from job_offers o
+      join jobs j on j.id = o.job_id
+      join workers w on w.id = o.worker_id
+     where o.worker_id = wid and o.status = 'pending' and o.expires_at > now()
+       and j.status = 'searching'
+     order by o.expires_at;
+end;
+$$;
+
+create function public.decline_offer(p_phone text default null, p_pin text default null,
+                                     p_code text default null, p_token uuid default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; jid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  select id into jid from jobs where code = upper(btrim(p_code));
+  if jid is null then return; end if;
+  update job_offers set status = 'declined'
+   where job_id = jid and worker_id = wid and status = 'pending';
+  if (select status from jobs where id = jid) = 'searching' then
+    perform offer_next(jid, 60);
+  end if;
+end;
+$$;
+
+create function public.my_appointments(p_phone text default null, p_pin text default null,
+                                       p_token uuid default null)
+returns table (id uuid, skill text, slot_date date, slot_time text,
+               customer_name text, customer_phone text, note text, status text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  return query
+    select a.id, a.skill, a.slot_date, a.slot_time, a.customer_name,
+           a.customer_phone, a.note, a.status
+      from appointments a
+     where a.worker_id = wid and a.slot_date >= current_date - 1
+     order by a.slot_date, a.slot_time;
+end;
+$$;
+
+-- ---------- 24.2 the punctuality vote belongs to whoever booked ----------
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'rate_punctuality'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
+
+create function public.rate_punctuality(p_code text, p_on_time boolean, p_token uuid default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; c text; tok uuid;
+begin
+  c := upper(btrim(p_code));
+  select worker_id, customer_token into wid, tok
+    from jobs where code = c and status in ('accepted','done');
+  if wid is null then raise exception 'That job cannot be rated'; end if;
+  -- jobs from before tokens existed have one, defaulted, that nobody holds;
+  -- those simply cannot be voted on any more, which is the safe direction
+  if tok is null or p_token is null or p_token <> tok then
+    raise exception 'That job cannot be rated';
+  end if;
+  if exists (select 1 from punctuality_votes where job_code = c) then return; end if;
+  insert into punctuality_votes (job_code, worker_id, on_time) values (c, wid, p_on_time);
+  update workers
+     set on_time_total = on_time_total + 1,
+         on_time_yes   = on_time_yes + case when p_on_time then 1 else 0 end
+   where id = wid;
+  update jobs set status = 'done' where code = c and status = 'accepted';
+end;
+$$;
+
+-- ---------- 24.3 a calendar cannot be filled by a stranger ----------
+create or replace function public.book_slot(
+  p_worker uuid, p_skill text, p_date date, p_time text,
+  p_name text, p_phone text, p_note text default null)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare num text; mine int; everyone int;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit mobile number';
+  end if;
+  if btrim(coalesce(p_name,'')) = '' then
+    raise exception 'Please enter your name';
+  end if;
+  if p_date < current_date then
+    raise exception 'That day has already passed';
+  end if;
+  if p_date > current_date + 90 then
+    raise exception 'Please pick a date within the next three months';
+  end if;
+
+  select count(*) into mine from appointments
+   where customer_phone = p_phone and created_at > now() - interval '1 day'
+     and status = 'booked';
+  if mine >= 6 then
+    raise exception 'That is a lot of appointments in one day. Please keep the ones you have.';
+  end if;
+  select count(*) into everyone from appointments
+   where worker_id = p_worker and created_at > now() - interval '1 hour';
+  if everyone >= 20 then
+    raise exception 'This calendar is being booked unusually fast. Please try again shortly.';
+  end if;
+
+  select phone into num from workers
+   where id = p_worker and status = 'approved' and available;
+  if num is null then raise exception 'That worker is not taking appointments'; end if;
+  begin
+    insert into appointments (worker_id, skill, slot_date, slot_time, customer_name, customer_phone, note)
+    values (p_worker, p_skill, p_date, p_time, btrim(p_name), p_phone,
+            nullif(btrim(coalesce(p_note,'')),''));
+  exception when unique_violation then
+    raise exception 'Someone has just taken that time — please choose another';
+  end;
+  return num;
+end;
+$$;
+
+-- always last: everything above was created with the default grant on it
+select public.lock_public_functions();
+
+-- ============================================================
+-- MIGRATION 25 — the lockout was rolled back every time it fired
+--
+-- Migration 16 counts wrong PINs in auth_attempts and refuses the seventh in
+-- fifteen minutes. It works for sign-in and for nothing else, and the reason
+-- is one word: RAISE.
+--
+-- worker_auth records the failure and returns null. worker_auth_required then
+-- raises. Both happen inside the one transaction PostgREST wraps an RPC in, so
+-- the raise aborts it and takes the INSERT into auth_attempts with it. The
+-- attempt is never counted, the guard never sees a sixth failure, and the
+-- account never locks.
+--
+-- Measured on a seeded copy: three wrong PINs through login_worker, which
+-- returns no rows and never raises, leave three rows in auth_attempts. Three
+-- wrong PINs through my_appointments, which raises, leave zero. Every one of
+-- the thirteen functions behind worker_auth_required was therefore an
+-- unlimited PIN oracle, and an attacker only needs the cheapest one.
+--
+-- The file already knew this. login_worker carries the comment "MUST NOT
+-- raise: see above" for exactly this reason; worker_auth_required, written
+-- later, put the raise back for everybody else.
+--
+-- So: a wrong PIN no longer raises. It returns null, the note commits, and
+-- the seventh attempt is refused by auth_guard — whose raise is safe because
+-- it has nothing to write. A bad or expired session TOKEN still raises, since
+-- that path records nothing and the client already handles it by signing in
+-- again.
+--
+-- Most callers need no change: they use the worker id in a WHERE clause, so a
+-- null quietly yields nothing, which the client already reads as "wrong
+-- number or PIN". The six that would have raised on their own get an explicit
+-- early exit below, because their raise would roll the note back just as
+-- surely as the old one did.
+-- ============================================================
+
+create or replace function public.worker_auth_required(p_phone text, p_pin text, p_token uuid default null)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  -- No raise on a wrong PIN. Returning null is what lets worker_auth's
+  -- auth_note survive to be counted; see the migration note above.
+  return public.worker_auth(p_phone, p_pin, p_token);
+end;
+$$;
+
+-- ---------- the six that raise on their own ----------
+create or replace function public.set_online(p_phone text default null, p_pin text default null,
+                                             p_minutes int default 240, p_token uuid default null)
+returns timestamptz
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; until timestamptz;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return null; end if;      -- and do not claim they are online
+  until := case when coalesce(p_minutes,0) <= 0 then null
+                else now() + make_interval(mins => least(p_minutes, 720)) end;
+  update workers set online_until = until where id = wid;
+  return until;
+end;
+$$;
+
+create or replace function public.save_push_subscription(
+  p_phone text default null, p_pin text default null,
+  p_endpoint text default null, p_p256dh text default null, p_auth text default null,
+  p_token uuid default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return; end if;           -- a null worker_id would raise
+  if coalesce(btrim(p_endpoint),'') = '' then return; end if;
+  insert into worker_push (worker_id, endpoint, p256dh, auth)
+  values (wid, p_endpoint, p_p256dh, p_auth)
+  on conflict (worker_id) do update
+    set endpoint = excluded.endpoint, p256dh = excluded.p256dh,
+        auth = excluded.auth, updated_at = now();
+end;
+$$;
+
+create or replace function public.worker_thread_messages(
+  p_phone text default null, p_pin text default null, p_code text default null,
+  p_after bigint default 0, p_token uuid default null)
+returns table (id bigint, sender text, body text, created_at timestamptz)
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; wid uuid; top bigint;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return; end if;
+  select t.id into tid from threads t where t.code = upper(btrim(p_code)) and t.worker_id = wid;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  select coalesce(max(m.id), 0) into top from messages m where m.thread_id = tid;
+  update threads set worker_unread = 0,
+                     worker_read_id = greatest(worker_read_id, top)
+   where threads.id = tid;
+  return query
+    select m.id, m.sender, m.body, m.created_at from messages m
+     where m.thread_id = tid and m.id > coalesce(p_after, 0)
+     order by m.id;
+end;
+$$;
+
+create or replace function public.worker_post_message(
+  p_phone text default null, p_pin text default null, p_code text default null,
+  p_body text default null, p_token uuid default null)
+returns bigint
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; wid uuid; st text; mid bigint; burst int;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return null; end if;
+  select t.id, t.status into tid, st from threads t
+   where t.code = upper(btrim(p_code)) and t.worker_id = wid;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  if st in ('declined','cancelled','closed') then raise exception 'This conversation is closed'; end if;
+  if btrim(coalesce(p_body,'')) = '' then raise exception 'Type a message first'; end if;
+  if length(p_body) > 2000 then raise exception 'That message is too long'; end if;
+
+  select count(*) into burst from messages
+   where thread_id = tid and sender = 'worker' and created_at > now() - interval '1 minute';
+  if burst >= 20 then raise exception 'Slow down a moment'; end if;
+
+  insert into messages (thread_id, sender, body) values (tid, 'worker', btrim(p_body))
+    returning id into mid;
+  update threads set last_message_at = now(), customer_unread = customer_unread + 1 where id = tid;
+  return mid;
+end;
+$$;
+
+create or replace function public.worker_set_thread(
+  p_phone text default null, p_pin text default null, p_code text default null,
+  p_status text default null, p_reason text default null, p_token uuid default null)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; wid uuid; st text; wname text;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return null; end if;
+  select w.name into wname from workers w where w.id = wid;
+  select t.id, t.status into tid, st from threads t
+   where t.code = upper(btrim(p_code)) and t.worker_id = wid;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  if st in ('cancelled','closed') then raise exception 'This one is already finished'; end if;
+
+  if p_status = 'accepted' then
+    if st <> 'requested' then raise exception 'Only a new request can be accepted'; end if;
+    update threads set status = 'accepted', accepted_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body) values (tid, 'system', wname || ' accepted this job.');
+  elsif p_status = 'declined' then
+    if st <> 'requested' then raise exception 'Only a new request can be declined'; end if;
+    update threads set status = 'declined', closed_at = now(), last_message_at = now(),
+                       decline_reason = nullif(btrim(coalesce(p_reason,'')),'')
+     where id = tid;
+    insert into messages (thread_id, sender, body)
+      values (tid, 'system', wname || ' could not take this job'
+              || coalesce(' — ' || nullif(btrim(coalesce(p_reason,'')),''), '.'));
+  elsif p_status = 'working' then
+    if st <> 'accepted' then raise exception 'Accept the job first'; end if;
+    update threads set status = 'working', started_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body) values (tid, 'system', wname || ' has started work.');
+  elsif p_status = 'done' then
+    if st not in ('accepted','working') then raise exception 'This job has not started'; end if;
+    update threads set status = 'done', done_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body)
+      values (tid, 'system', wname || ' marked the work finished. Please confirm.');
+  else
+    raise exception 'A worker cannot set that';
+  end if;
+  update threads set customer_unread = customer_unread + 1 where id = tid;
+  return p_status;
+end;
+$$;
+
+drop function if exists public.accept_offer(text, text, text, int);
+create function public.accept_offer(p_phone text default null, p_pin text default null,
+                                    p_code text default null, p_eta int default 30,
+                                    p_token uuid default null)
+returns table (customer_name text, customer_phone text, area text, note text, skill text,
+               thread_code text, thread_token uuid)
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wid uuid; jid uuid; tid uuid; c text; tok uuid; px int; un text;
+  jrow jobs;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return; end if;
+
+  select j.id into jid from jobs j where j.code = upper(btrim(p_code)) for update;
+  if jid is null then raise exception 'That job no longer exists'; end if;
+
+  if not exists (select 1 from job_offers o
+                  where o.job_id = jid and o.worker_id = wid
+                    and o.status = 'pending' and o.expires_at > now()) then
+    raise exception 'That job has already gone to someone else';
+  end if;
+  if (select status from jobs where id = jid) <> 'searching' then
+    raise exception 'That job has already gone to someone else';
+  end if;
+
+  update job_offers set status = 'accepted' where job_id = jid and worker_id = wid;
+  update job_offers set status = 'expired'
+   where job_id = jid and worker_id <> wid and status = 'pending';
+  update jobs set status = 'accepted', worker_id = wid, accepted_at = now(),
+                  eta_minutes = greatest(5, least(coalesce(p_eta, 30), 240))
+   where id = jid;
+
+  select * into jrow from jobs where id = jid;
+
+  select t.id, t.code, t.customer_token into tid, c, tok
+    from threads t where t.job_id = jid limit 1;
+
+  if tid is null then
+    select (s->>'price')::int, s->>'unit' into px, un
+      from workers w, jsonb_array_elements(w.skills) s
+     where w.id = wid and s->>'skill' = jrow.skill limit 1;
+
+    loop
+      c := upper(substr(encode(gen_random_bytes(8), 'hex'), 1, 10));
+      exit when not exists (select 1 from threads where threads.code = c);
+    end loop;
+
+    insert into threads (code, worker_id, skill, mode, detail, note, price, unit,
+                         customer_name, customer_phone, customer_area, job_id,
+                         status, accepted_at, worker_unread, customer_unread)
+    values (c, wid, jrow.skill, 'now',
+            'Arriving in about ' || greatest(5, least(coalesce(p_eta, 30), 240)) || ' minutes',
+            nullif(btrim(coalesce(jrow.note,'')),''), px, un,
+            jrow.customer_name, jrow.customer_phone, nullif(btrim(coalesce(jrow.area,'')),''), jid,
+            'accepted', now(), 0, 1)
+    returning id, threads.customer_token into tid, tok;
+
+    insert into messages (thread_id, sender, body)
+    values (tid, 'system',
+            format('%s accepted this job and said about %s minutes.',
+                   (select w.name from workers w where w.id = wid),
+                   greatest(5, least(coalesce(p_eta, 30), 240))));
+  end if;
+
+  return query select jrow.customer_name, jrow.customer_phone, jrow.area, jrow.note, jrow.skill, c, tok;
+end;
+$$;
+
+-- update_worker used to depend on worker_auth_required raising. It does not
+-- any more, so say what happens instead: no rows, which the client already
+-- reads as "wrong number or PIN".
+--
+-- Every overload goes first. Adding p_token beside the existing three-argument
+-- version left both in place, and PostgREST calls by name — so a perfectly
+-- ordinary profile save came back "function public.update_worker(unknown,
+-- unknown, jsonb) is not unique". Caught by the overload check at the end of
+-- this file, which exists because of it.
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'update_worker'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
+
+create function public.update_worker(p_phone text, p_pin text, p_data jsonb,
+                                     p_token uuid default null)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; is_edit boolean; identity_changed boolean; clean jsonb;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return; end if;
+
+  clean := public.clean_worker_data(p_data);
+  if clean ? 'skills' then perform check_rate_bands(clean->'skills'); end if;
+
+  is_edit := (clean ?| array['name','selfie','area','about','skills']);
+
+  select (clean->>'name'   is not null and clean->>'name'   is distinct from w.name)
+      or (clean->>'selfie' is not null and clean->>'selfie' is distinct from w.selfie)
+    into identity_changed
+    from workers w where w.id = wid;
+
+  update workers set
+    name = coalesce(clean->>'name', name),
+    selfie = coalesce(clean->>'selfie', selfie),
+    thumb = coalesce(clean->>'thumb', thumb),
+    city = coalesce(clean->>'city', city),
+    area = coalesce(clean->>'area', area),
+    about = coalesce(clean->>'about', about),
+    lat = coalesce((clean->>'lat')::double precision, lat),
+    lng = coalesce((clean->>'lng')::double precision, lng),
+    skills = coalesce(clean->'skills', skills),
+    available = coalesce((clean->>'available')::boolean, available),
+    status = case
+               when identity_changed then 'pending'
+               when is_edit and status = 'rejected' then 'pending'
+               else status
+             end,
+    review_note = case
+               when identity_changed then null
+               when is_edit and status = 'rejected' then null
+               else review_note
+             end
+  where id = wid;
+  return query select * from workers where id = wid;
+end;
+$$;
+
+-- ---------- 25.1 no function may have two overloads ----------
+-- PostgREST resolves an RPC by name and named arguments. Two functions with
+-- the same name make every call to it fail with "is not unique", and nothing
+-- in a test that calls with explicit types would notice.
+do $$
+declare dup text;
+begin
+  select string_agg(proname || ' (' || n || ')', ', ')
+    into dup
+    from (select p.proname, count(*) as n
+            from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
+           where ns.nspname = 'public' and p.prokind = 'f'
+             -- pgcrypto and friends legitimately overload; only ours matter
+             and not exists (select 1 from pg_depend d
+                              where d.objid = p.oid and d.deptype = 'e')
+           group by p.proname having count(*) > 1) d;
+  if dup is not null then
+    raise exception 'Two overloads of the same function name, which PostgREST cannot resolve: %', dup;
+  end if;
+  raise notice 'no duplicate function names';
+end $$;
+
+-- always last
+select public.lock_public_functions();
