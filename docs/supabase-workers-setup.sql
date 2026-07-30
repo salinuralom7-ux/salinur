@@ -5512,3 +5512,245 @@ language sql stable security definer set search_path = public, extensions as $$
     from jobs j left join workers w on w.id = j.worker_id
    where j.code = upper(btrim(p_code));
 $$;
+
+-- ============================================================
+-- MIGRATION 23 — the doors nobody thought to lock
+--
+-- Supabase grants EXECUTE on every function in `public` to `anon` by default,
+-- and this file has grown to 74 functions. Twenty-four of them are internal —
+-- helpers, triggers, maintenance — and every one was callable by any visitor
+-- with the public key. Verified against a seeded copy, as `anon`:
+--
+--   1. auth_note('login', <number>, true) wipes the failed-attempt counter.
+--      Migration 16 turned a forty-second PIN grind into eleven years by
+--      locking an account after six wrong guesses; this hands the attacker an
+--      eraser. Interleave one call per six guesses and the lockout never
+--      fires. The same function with `false` locks any worker out of their own
+--      account at will, which needs nothing but their phone number.
+--   2. purge_expired_data() runs on demand. `revoke all ... from public` was
+--      written for it, and does nothing, because the privilege came from a
+--      grant made directly to `anon` — revoking from PUBLIC does not touch it.
+--   3. offer_next / widen_job / next_job_candidate let an outsider drive the
+--      dispatch queue.
+--   4. worker_auth is a PIN oracle. The lockout limits it, and 1 makes the
+--      lockout optional.
+--
+-- Two more, unrelated to the grants:
+--
+--   5. create_job had no ceiling. Forty jobs from one number in one loop, and
+--      forty offers pushed at real workers with a sixty-second timer on each.
+--      Migration 16.6 put a limit on bookings and reports and missed this one,
+--      which is the expensive one — it does not just fill a table, it rings
+--      every phone in Guwahati.
+--   6. job_state still returned the worker's phone number to anybody holding
+--      a job code. Migration 22 exists to stop exactly that, and gated the
+--      conversation while leaving the number beside it. cancel_job and
+--      widen_job took a bare code too, so a guessed code could call off
+--      somebody else's search.
+-- ============================================================
+
+-- ---------- 23.1 create_job gets a ceiling ----------
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'create_job'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
+
+create function public.create_job(
+  p_skill text, p_name text, p_phone text, p_area text, p_note text default null,
+  p_lat double precision default null, p_lng double precision default null,
+  p_city text default 'Guwahati', p_minutes int default 20,
+  p_worker uuid default null)
+returns table (code text, worker_id uuid, asked int, direct boolean, customer_token uuid)
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid; c text; cand uuid; wanted uuid; is_direct boolean := false; tok uuid;
+        mine int; everyone int;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit mobile number';
+  end if;
+  if btrim(coalesce(p_name,'')) = '' then
+    raise exception 'Please enter your name';
+  end if;
+
+  -- Nobody books eight workers in an hour. Someone sending a hundred is not a
+  -- customer, and each one rings a real phone.
+  select count(*) into mine from jobs
+   where customer_phone = p_phone and created_at > now() - interval '1 hour';
+  if mine >= 8 then
+    raise exception 'That is a lot of requests in one hour. Please finish one before starting another.';
+  end if;
+  select count(*) into everyone from jobs where created_at > now() - interval '1 minute';
+  if everyone >= 200 then
+    raise exception 'Repto is unusually busy right now. Please try again in a minute.';
+  end if;
+
+  if p_worker is not null then
+    select w.id into wanted from workers w
+     where w.id = p_worker and w.status = 'approved' and w.available
+       and exists (select 1 from jsonb_array_elements(w.skills) s where s->>'skill' = p_skill);
+    is_direct := wanted is not null;
+  end if;
+
+  loop
+    c := upper(substr(encode(gen_random_bytes(8), 'hex'), 1, 10));
+    exit when not exists (select 1 from jobs where jobs.code = c);
+  end loop;
+
+  insert into jobs (code, skill, city, area, lat, lng, customer_name, customer_phone, note,
+                    search_until, requested_worker, direct)
+  values (c, p_skill, p_city, p_area, p_lat, p_lng, btrim(p_name), p_phone,
+          nullif(btrim(coalesce(p_note,'')),''),
+          now() + make_interval(mins => greatest(2, least(p_minutes, 60))),
+          wanted, is_direct)
+  returning id, jobs.customer_token into jid, tok;
+
+  cand := offer_next(jid, 60);
+  return query select c, cand, (select asked_count from jobs where id = jid), is_direct, tok;
+end;
+$$;
+
+-- ---------- 23.2 the job's own token guards everything about the job ----------
+-- The number, the name and the area go to whoever booked the job, not to
+-- whoever can type a code. Status and the countdown stay open: they identify
+-- nobody, and a customer who has cleared their browser can still see that the
+-- search is running.
+do $drop$ declare r record; begin
+  for r in select p.oid::regprocedure as sig from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+           where n.nspname = 'public' and p.proname = 'job_state'
+  loop execute 'drop function if exists ' || r.sig || ' cascade'; end loop;
+end $drop$;
+
+create function public.job_state(p_code text, p_token uuid default null)
+returns table (status text, asked int, worker_name text, worker_phone text,
+               worker_area text, eta_minutes int, seconds_left int, skill text,
+               direct boolean, requested_name text,
+               thread_code text, thread_token uuid)
+language sql stable security definer set search_path = public, extensions as $$
+  select j.status, j.asked_count,
+         case when mine then w.name end,
+         case when mine and j.status = 'accepted' then w.phone end,
+         case when mine then w.area end,
+         j.eta_minutes,
+         greatest(0, extract(epoch from (
+           coalesce((select o.expires_at from job_offers o
+                      where o.job_id = j.id and o.status = 'pending'
+                      order by o.rank desc limit 1), j.search_until) - now()))::int),
+         j.skill,
+         j.direct,
+         case when mine then (select rw.name from workers rw where rw.id = j.requested_worker) end,
+         case when mine then (select t.code from threads t where t.job_id = j.id limit 1) end,
+         case when mine then (select t.customer_token from threads t where t.job_id = j.id limit 1) end
+    from jobs j
+    left join workers w on w.id = j.worker_id
+    cross join lateral (select p_token is not null and p_token = j.customer_token as mine) g
+   where j.code = upper(btrim(p_code));
+$$;
+
+-- Calling off or reopening somebody else's search needs the same proof.
+create or replace function public.cancel_job(p_code text, p_token uuid default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid;
+begin
+  select j.id into jid from jobs j
+   where j.code = upper(btrim(p_code)) and j.status = 'searching'
+     and (p_token is null or j.customer_token = p_token);
+  -- a token that does not match is silently nothing, exactly like a bad code
+  if jid is null then return; end if;
+  if p_token is null and exists (select 1 from jobs where id = jid and customer_token is not null) then
+    return;                       -- new-style job: the token is required
+  end if;
+  update jobs set status = 'cancelled' where id = jid;
+end;
+$$;
+drop function if exists public.cancel_job(text);
+
+create or replace function public.widen_job(p_code text, p_minutes int default 15, p_token uuid default null)
+returns table (status text, asked int)
+language plpgsql security definer set search_path = public, extensions as $$
+declare jid uuid;
+begin
+  select j.id into jid from jobs j
+   where j.code = upper(btrim(p_code)) and j.status in ('no_answer', 'searching')
+     and (j.customer_token is null or j.customer_token = p_token);
+  if jid is null then
+    raise exception 'That search cannot be reopened';
+  end if;
+  update jobs j
+     set direct = false,
+         status = 'searching',
+         search_until = greatest(j.search_until, now() + make_interval(mins => greatest(2, least(p_minutes, 60))))
+   where j.id = jid;
+  perform offer_next(jid, 60);
+  return query select j.status, j.asked_count from jobs j where j.id = jid;
+end;
+$$;
+drop function if exists public.widen_job(text, int);
+
+-- ---------- 23.3 an allow-list, instead of everything ----------
+-- Revoke EXECUTE on every function in public from the two public roles, then
+-- grant back only what the app actually calls. A SECURITY DEFINER function
+-- runs as its owner, so the internal helpers keep working when called from
+-- inside another function — they simply stop being reachable from outside.
+--
+-- ADDING A FUNCTION THE CLIENT CALLS? Add its name to client_rpcs below, or
+-- it will be refused in production and work perfectly in every test that
+-- connects as the owner.
+do $lock$
+declare
+  r text;
+  f record;
+  client_rpcs text[] := array[
+    -- profiles and sign-in
+    'register_worker','login_worker','update_worker','delete_worker','phone_taken',
+    'worker_session_start','worker_session_end','worker_pending','worker_stats',
+    -- browsing and contact
+    'search_workers','request_worker_contact','verify_worker_id','report_worker',
+    'record_booking',
+    -- instant jobs
+    'create_job','job_state','cancel_job','widen_job','advance_jobs',
+    'my_offers','accept_offer','decline_offer','set_online','save_push_subscription',
+    -- appointments
+    'taken_slots','book_slot','my_appointments','rate_punctuality',
+    -- conversations
+    'start_thread','thread_view','thread_messages','post_message','customer_set_thread',
+    'worker_threads','worker_thread_messages','worker_post_message','worker_set_thread',
+    'review_thread','worker_reviews',
+    -- the admin screens, every one of which checks the PIN itself
+    'admin_check','admin_session_start','admin_queue','admin_stats','admin_recent',
+    'admin_reports','admin_clear_report','admin_wa_codes','admin_set_status',
+    'admin_set_require_otp','admin_verify_registration','admin_exit_reasons',
+    'admin_exit_notes','admin_hide_review'
+  ];
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.prokind = 'f'
+    loop
+      -- BOTH of these matter. Postgres grants EXECUTE on a new function to
+      -- PUBLIC, and Supabase additionally grants it to anon; revoking one
+      -- leaves the other, which is precisely why the revoke written for
+      -- purge_expired_data never did anything.
+      execute format('revoke all on function %s from public', f.sig);
+      execute format('revoke all on function %s from %I', f.sig, r);
+    end loop;
+
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.prokind = 'f'
+               and p.proname = any(client_rpcs)
+    loop
+      execute format('grant execute on function %s to %I', f.sig, r);
+    end loop;
+  end loop;
+end $lock$;
+
+-- Belt as well as braces: this one is destructive and is called by pg_cron,
+-- which runs as the owner and needs no grant at all.
+revoke all on function public.purge_expired_data() from public;
