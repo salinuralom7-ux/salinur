@@ -860,91 +860,143 @@ header{
 .report-link:hover{color:var(--danger)}
 
 /* ---------- the worker ID card ----------
-   A portrait badge on a lanyard rather than a bank card: it is worn, not
-   carried, and the photo has to be big enough to compare with a face at a
-   door. Proportioned 1:1.6 so it prints on a standard badge blank. */
+   Landscape, gold frame, chamfered top-right corner, gold footer with a
+   diagonal break — drawn to match the reference card exactly.
+
+   Every dimension is in cqw (percent of the card's own width), so the one
+   set of rules holds at any size: 340px on a phone, 640px on a desktop, and
+   85.6mm on card stock. Nothing needs a second breakpoint and nothing
+   drifts between screen and print. */
 .badge{
-  position:relative;margin:18px auto 0;width:100%;max-width:330px;aspect-ratio:1/1.58;
-  border-radius:18px;overflow:hidden;color:#F6F2E8;
-  padding:26px 20px 16px;display:flex;flex-direction:column;align-items:center;
-  background:linear-gradient(168deg,#191512 0%,#0B0906 58%,#100D09 100%);
-  box-shadow:0 22px 50px rgba(0,0,0,.55);
+  position:relative;margin:18px auto 0;width:100%;max-width:640px;
+  aspect-ratio:85.6/54;                      /* CR80, the standard ID card */
   container-type:inline-size;
+  border-radius:2.1cqw;overflow:hidden;color:#F6F2E8;
+  background:linear-gradient(150deg,#F6D687 0%,#EABB51 44%,#C9993A 100%);
+  padding:0.8cqw;                            /* this padding IS the gold frame */
+  box-shadow:0 22px 50px rgba(0,0,0,.55);
 }
-/* the lanyard slot */
-.bd-slot{
-  position:absolute;top:11px;left:50%;transform:translateX(-50%);
-  width:23%;height:9px;border-radius:5px;background:#000;
-  box-shadow:inset 0 1px 2px rgba(255,255,255,.14);
+/* the black face, inset inside the gold frame */
+.bd-face{
+  position:relative;width:100%;height:100%;border-radius:1.5cqw;overflow:hidden;
+  background:linear-gradient(158deg,#141210 0%,#0A0806 52%,#0F0C08 100%);
+  display:flex;flex-direction:column;
 }
-/* the gold sweep down the right edge, with the mark set into it */
-.bd-swoosh{
-  position:absolute;top:0;right:0;width:30%;height:78%;
-  background:linear-gradient(196deg,#F6D687 0%,#EABB51 46%,#C9993A 100%);
-  /* tapers to a point rather than stopping on a hard horizontal edge */
-  clip-path:polygon(50% 0, 100% 0, 100% 84%, 0 100%);
-  display:block;
+/* the gold triangle bitten out of the top-right corner */
+.bd-chamfer{
+  position:absolute;top:0;right:0;width:7cqw;height:7cqw;
+  background:linear-gradient(200deg,#F6D687 0%,#EABB51 55%,#D2A340 100%);
+  clip-path:polygon(100% 0, 100% 100%, 0 0);
 }
-.bd-swoosh i{
-  position:absolute;top:20%;left:52%;transform:translateX(-50%) rotate(90deg);
-  font-style:normal;font-weight:800;font-size:1.15rem;letter-spacing:.34em;
-  color:rgba(12,10,7,.17);white-space:nowrap;
+/* the mark, very faint, sitting behind the QR column */
+.bd-watermark{
+  position:absolute;top:15%;right:4.4cqw;width:20cqw;height:auto;
+  /* it has to read as a ghost, not a grey shape: at .05 with no brightness
+     lift it is only just there, which is the point */
+  opacity:.05;filter:grayscale(1);pointer-events:none;
 }
-/* the gold corner the site name sits on, as on the reference badge */
-.bd-corner{
-  position:absolute;right:0;bottom:0;width:46%;height:12%;
-  background:linear-gradient(160deg,#F3D07C 0%,#EABB51 60%,#D2A340 100%);
-  clip-path:polygon(26% 0, 100% 0, 100% 100%, 0 100%);
+.bd-body{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;padding:3.4cqw 4cqw 0}
+
+/* ---- header: mark + wordmark left, ID block right ---- */
+.bd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:2cqw}
+.bd-brand{display:flex;align-items:center;gap:1.4cqw}
+.bd-logo{flex:0 0 auto;height:7.4cqw;width:auto}
+.bd-wordmark{flex:0 0 auto;height:5.1cqw;width:auto}
+.bd-idblock{text-align:right;padding-right:5.4cqw}   /* clears the chamfer */
+.bd-idlabel{
+  display:block;font-size:1.72cqw;font-weight:600;letter-spacing:.26em;
+  color:var(--brand);white-space:nowrap;
 }
-.bd-upper{
-  width:100%;padding-right:15%;display:flex;flex-direction:column;align-items:center;
-  position:relative;z-index:2;
+.bd-idnum{
+  display:block;margin-top:.5cqw;font-size:3.5cqw;font-weight:800;letter-spacing:.05em;
+  color:#FFFFFF;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.05;
 }
-.bd-head{display:flex;align-items:center;gap:9px;margin-top:4px}
-.bd-logo{flex:0 0 auto;height:38px;width:auto}
-.bd-word b{display:block;font-size:1.5rem;font-weight:800;letter-spacing:.2em;color:var(--brand);line-height:1}
-.bd-word span{display:block;font-size:.44rem;letter-spacing:.24em;color:var(--brand-quiet);margin-top:3px}
+.bd-idnum i{font-style:normal;color:var(--brand)}
+.bd-idrule{display:block;height:.2cqw;margin-top:.9cqw;background:var(--brand);border-radius:.1cqw}
+.bd-idstatus{
+  display:inline-block;margin-top:.85cqw;font-size:1.3cqw;font-weight:700;letter-spacing:.17em;
+  border-radius:.5cqw;
+}
+/* approved is the ordinary case, so it stays a line of type — the reference
+   card has nothing here and an approved card should look like it */
+.bd-idstatus.approved{color:var(--brand-quiet)}
+.bd-idstatus.approved::before{content:"✓ ";color:var(--ok);font-weight:800}
+.bd-idstatus.pending{background:rgba(232,146,74,.18);color:#F0AE73;border:.12cqw solid rgba(232,146,74,.55);padding:.45cqw 1.1cqw}
+.bd-idstatus.rejected{background:rgba(232,112,127,.18);color:#F09AA6;border:.12cqw solid rgba(232,112,127,.55);padding:.45cqw 1.1cqw}
+
+/* ---- the three columns ---- */
+.bd-main{flex:1;display:flex;gap:3cqw;padding-top:2.4cqw;min-height:0}
 .bd-photo{
-  position:relative;z-index:2;width:48%;aspect-ratio:1;border-radius:50%;overflow:hidden;
-  margin:14px 0 10px;border:3px solid var(--brand);background:var(--surface-2);
-  box-shadow:0 6px 18px rgba(0,0,0,.45);
+  flex:0 0 auto;width:24.5cqw;height:36cqw;border-radius:1.3cqw;overflow:hidden;
+  border:.34cqw solid var(--brand);background:var(--surface-2);
+  box-shadow:0 .6cqw 1.8cqw rgba(0,0,0,.5);
 }
 .bd-photo img{width:100%;height:100%;object-fit:cover}
+
+.bd-info{flex:1;min-width:0;display:flex;flex-direction:column}
 .bd-name{
-  position:relative;z-index:2;font-size:1.2rem;font-weight:800;color:var(--brand-2);
-  text-align:center;line-height:1.15;letter-spacing:-.01em;max-width:100%;
+  font-size:3.3cqw;font-weight:800;color:var(--brand-2);line-height:1.1;letter-spacing:-.01em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.bd-rule{position:relative;z-index:2;width:70%;height:1px;background:rgba(234,187,81,.5);margin:7px 0;display:flex;justify-content:center}
-.bd-rule i{width:16px;height:5px;background:var(--brand);transform:translateY(-2px) rotate(45deg);border-radius:1px}
-.bd-trade{position:relative;z-index:2;font-size:.88rem;color:#F6F2E8;text-align:center;line-height:1.25}
-.bd-trade2{position:relative;z-index:2;font-size:.66rem;color:var(--muted);text-align:center;margin-top:2px}
-.bd-grid{
-  position:relative;z-index:2;display:flex;gap:10px;align-items:center;width:100%;
-  margin-top:auto;padding-top:10px;
+/* the heavier dash and the hairline that follows it, as on the reference */
+.bd-rule{display:flex;align-items:center;gap:.9cqw;margin:1.3cqw 0 1.1cqw;width:72%}
+.bd-rule i{flex:0 0 auto;width:7cqw;height:.42cqw;background:var(--brand);border-radius:.21cqw}
+.bd-rule s{flex:1;height:.12cqw;background:rgba(234,187,81,.45);text-decoration:none}
+.bd-trade{
+  font-size:2.05cqw;color:#F6F2E8;line-height:1.25;font-weight:500;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.bd-rows{flex:1;min-width:0;display:flex;flex-direction:column}
-.bd-rows > div{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(234,187,81,.22)}
-.bd-rows > div:last-child{border-bottom:0}
-.bd-ico{flex:0 0 auto;width:21px;height:21px;border:1px solid rgba(234,187,81,.55);border-radius:4px;
-  display:grid;place-items:center;color:var(--brand)}
-.bd-ico svg{width:13px;height:13px}
-.bd-rows dt{font-size:.42rem;letter-spacing:.16em;color:var(--brand-quiet)}
-.bd-rows dd{font-size:.74rem;font-weight:700;color:#F6F2E8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bd-rows dd.mono{font-variant-numeric:tabular-nums;letter-spacing:.04em}
-.bd-qr{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px}
-.bd-qr svg{width:66px;height:66px;border:2px solid var(--brand);border-radius:5px;display:block}
-.bd-qr span{font-size:.38rem;letter-spacing:.14em;color:var(--brand-quiet)}
+.bd-rows{margin-top:1.8cqw;display:flex;flex-direction:column;gap:1.35cqw}
+.bd-rows > div{display:flex;align-items:center;gap:1.3cqw;min-width:0}
+.bd-ico{
+  flex:0 0 auto;width:3.6cqw;height:3.6cqw;border-radius:50%;
+  border:.14cqw solid rgba(234,187,81,.62);display:grid;place-items:center;color:var(--brand);
+}
+.bd-ico svg{width:1.9cqw;height:1.9cqw}
+.bd-rows i.bar{flex:0 0 auto;width:.1cqw;height:3.3cqw;background:rgba(234,187,81,.4)}
+.bd-rows > div > div{min-width:0}
+.bd-rows dt{
+  font-size:1.42cqw;font-weight:600;letter-spacing:.16em;color:var(--brand);
+  white-space:nowrap;line-height:1.2;
+}
+.bd-rows dd{
+  font-size:1.92cqw;color:#F6F2E8;line-height:1.3;margin-top:.15cqw;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.bd-rows dd.mono{font-variant-numeric:tabular-nums;letter-spacing:.03em}
+
+.bd-verify{
+  position:relative;flex:0 0 auto;width:17cqw;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-end;padding-left:2.6cqw;
+}
+.bd-verify::before{
+  content:"";position:absolute;left:0;top:13%;bottom:-1%;
+  width:.1cqw;background:rgba(234,187,81,.34);
+}
+.bd-qr{
+  width:14.6cqw;height:14.6cqw;border:.34cqw solid var(--brand);border-radius:.9cqw;
+  overflow:hidden;background:#fff;
+}
+.bd-qr svg{width:100%;height:100%;display:block}
+.bd-verify span{
+  margin-top:.9cqw;font-size:1.32cqw;font-weight:600;letter-spacing:.2em;
+  color:var(--brand);white-space:nowrap;
+}
+
+/* ---- the gold footer, broken by a black diagonal ---- */
 .bd-foot{
-  position:relative;z-index:3;display:flex;align-items:center;gap:8px;width:100%;
-  margin-top:10px;padding-top:9px;border-top:1px solid rgba(234,187,81,.22);
+  position:relative;flex:0 0 auto;height:5.4cqw;margin-top:2cqw;
+  background:linear-gradient(150deg,#F6D687 0%,#EABB51 48%,#D2A340 100%);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 4cqw;overflow:hidden;
 }
-.bd-status{font-size:.44rem;font-weight:800;letter-spacing:.14em;padding:3px 7px;border-radius:3px}
-.bd-status.approved{background:var(--ok);color:#062B16}
-.bd-status.pending{background:var(--warn);color:#2B1608}
-.bd-status.rejected{background:var(--danger);color:#2B0810}
-.bd-since{flex:1;font-size:.46rem;letter-spacing:.08em;color:var(--muted)}
-.bd-site{position:relative;z-index:3;font-size:.62rem;font-weight:800;color:#14100A;letter-spacing:.02em}
+.bd-foot::before{                            /* the diagonal slab */
+  content:"";position:absolute;top:0;bottom:0;right:19cqw;width:9cqw;
+  background:#0A0806;transform:skewX(-24deg);
+}
+.bd-tag,.bd-site{position:relative;z-index:2;color:#14100A;white-space:nowrap}
+.bd-tag{font-size:1.65cqw;font-weight:600;letter-spacing:.24em}
+.bd-site{font-size:2cqw;font-weight:700;letter-spacing:.01em}
 
 .card-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
 .card-actions .btn{flex:1 1 160px;padding:12px}
@@ -991,8 +1043,10 @@ header{
   body > header, body > footer, body > .demo-note, .no-print, .back,
   .screen:not(.on), .overlay, .toast{display:none !important}
   .wrap-sm{max-width:none;padding:0}
+  /* CR80 landscape — the size a card printer and every plastic blank uses */
+  @page{ size:85.6mm 54mm; margin:0 }
   .badge{
-    margin:0;width:54mm;height:86mm;max-width:none;aspect-ratio:auto;
+    margin:0;width:85.6mm;height:54mm;max-width:none;aspect-ratio:auto;
     border-radius:3mm;box-shadow:none;
     -webkit-print-color-adjust:exact;print-color-adjust:exact;
   }
@@ -5973,51 +6027,72 @@ function renderCard(){
   try{ qr = qrSvg(verifyUrl, {size:96, fg:"#0C0A07", bg:"#FFFFFF", label:"Scan to verify this ID"}); }
   catch(e){ qr = ""; }
 
+  /* The number splits white | gold the way RP|0001 does on the reference:
+     the first group of four stays white, the rest picks up the brand gold. */
+  const code = idPretty(w.worker_code) || "";
+  const parts = code.split(" ");
+  const idHtml = code
+    ? esc(parts[0]) + (parts.length > 1 ? ` <i>${esc(parts.slice(1).join(" "))}</i>` : "")
+    : "—";
+
   host.innerHTML = `
     <div class="badge" id="idCard">
-      <span class="bd-slot" aria-hidden="true"></span>
-      <span class="bd-swoosh" aria-hidden="true"><i>REPTO</i></span>
+      <div class="bd-face">
+        <span class="bd-chamfer" aria-hidden="true"></span>
+        <img class="bd-watermark" src="icons/logo.png?v=2" alt="" aria-hidden="true">
 
-      <div class="bd-upper">
-      <div class="bd-head">
-        <img class="bd-logo" src="icons/logo.png?v=2" alt="" width="42" height="54">
-        <div class="bd-word">
-          <b>REPTO</b>
-          <span>YOUR SKILL. NEAR YOU.</span>
+        <div class="bd-body">
+          <div class="bd-head">
+            <div class="bd-brand">
+              <img class="bd-logo" src="icons/logo.png?v=2" alt="" width="42" height="54">
+              <img class="bd-wordmark" src="icons/wordmark.png?v=3" alt="Repto" width="447" height="132">
+            </div>
+            <div class="bd-idblock">
+              <span class="bd-idlabel">WORKER ID</span>
+              <span class="bd-idnum">${idHtml}</span>
+              <span class="bd-idrule" aria-hidden="true"></span>
+              <span class="bd-idstatus ${st}">${st === "approved" ? "VERIFIED" : st === "pending" ? "PENDING" : "NOT VALID"}</span>
+            </div>
+          </div>
+
+          <div class="bd-main">
+            <div class="bd-photo"><img src="${avatarOf(w)}" alt=""></div>
+
+            <div class="bd-info">
+              <h3 class="bd-name">${esc(w.name)}</h3>
+              <div class="bd-rule" aria-hidden="true"><i></i><s></s></div>
+              <p class="bd-trade">${esc(trades[0] || "—")}</p>
+              <dl class="bd-rows">
+                <div>
+                  <span class="bd-ico">${ICON_PHONE}</span><i class="bar" aria-hidden="true"></i>
+                  <div><dt>PHONE</dt><dd>${esc(w.phone || "—")}</dd></div>
+                </div>
+                <div>
+                  <span class="bd-ico">${ICON_PIN}</span><i class="bar" aria-hidden="true"></i>
+                  <div><dt>LOCATION</dt><dd>${esc([w.area, w.city].filter(Boolean).join(", ") || "—")}</dd></div>
+                </div>
+                <div>
+                  <span class="bd-ico">${ICON_TOOLS}</span><i class="bar" aria-hidden="true"></i>
+                  <div><dt>SERVICES</dt><dd>${esc(trades.join(" · ") || "—")}</dd></div>
+                </div>
+                <div>
+                  <span class="bd-ico">${ICON_CAL}</span><i class="bar" aria-hidden="true"></i>
+                  <div><dt>JOINED</dt><dd>${esc(since)}</dd></div>
+                </div>
+              </dl>
+            </div>
+
+            <div class="bd-verify">
+              <div class="bd-qr">${qr}</div>
+              <span>SCAN TO VERIFY</span>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="bd-photo"><img src="${avatarOf(w)}" alt=""></div>
-
-      <h3 class="bd-name">${esc(w.name)}</h3>
-      <div class="bd-rule" aria-hidden="true"><i></i></div>
-      <p class="bd-trade">${esc(trades[0] || "—")}</p>
-      ${trades.length > 1 ? `<p class="bd-trade2">${esc(trades.slice(1).join(" · "))}</p>` : ""}
-      </div>
-
-      <div class="bd-grid">
-        <dl class="bd-rows">
-          <div>
-            <span class="bd-ico">${ICON_ID}</span>
-            <div><dt>WORKER ID</dt><dd class="mono">${esc(idPretty(w.worker_code) || "—")}</dd></div>
-          </div>
-          <div>
-            <span class="bd-ico">${ICON_PHONE}</span>
-            <div><dt>PHONE</dt><dd>${esc(w.phone || "—")}</dd></div>
-          </div>
-          <div>
-            <span class="bd-ico">${ICON_PIN}</span>
-            <div><dt>LOCATION</dt><dd>${esc([w.area, w.city].filter(Boolean).join(", ") || "—")}</dd></div>
-          </div>
-        </dl>
-        <div class="bd-qr">${qr}<span>SCAN TO VERIFY</span></div>
-      </div>
-
-      <span class="bd-corner" aria-hidden="true"></span>
-      <div class="bd-foot">
-        <span class="bd-status ${st}">${st === "approved" ? "VERIFIED" : st === "pending" ? "PENDING" : "NOT VALID"}</span>
-        <span class="bd-since">Member since ${esc(since)}</span>
-        <span class="bd-site">nearse.in</span>
+        <div class="bd-foot">
+          <span class="bd-tag">YOUR SKILL. NEAR YOU.</span>
+          <span class="bd-site">nearse.in</span>
+        </div>
       </div>
     </div>
 
@@ -6040,12 +6115,17 @@ function renderCard(){
         <b>nearse.in</b> → <b>Check a Repto Worker ID</b>, and see your name, your trade, your locality and
         how many jobs you have finished — nothing else. Your number never changes, even if you change
         your rates, your photo or your trade.</p>
-      <p>Prints at ID-badge size with a slot for a lanyard. Thick paper if you have it.</p>
+      <p>Prints at standard card size — 85.6 × 54 mm, the same as a debit card, so it fits any
+        card holder or lanyard sleeve. Thick paper if you have it, or take it to any print shop.</p>
     </div>`;
 }
 const ICON_ID = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><circle cx="8.5" cy="11" r="2.1"/><path d="M5.2 16c.5-1.3 1.8-2 3.3-2s2.8.7 3.3 2"/><path d="M15 10h4M15 13.5h4"/></svg>';
 const ICON_PHONE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3h3l1.5 4-2 1.4a12 12 0 0 0 5.6 5.6L16 12l4 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4 6.2 2 2 0 0 1 6.5 3z"/></svg>';
 const ICON_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+/* the reference card carries EMAIL here; a worker's email is private and is
+   never shown to anyone, so the row is their trades instead */
+const ICON_TOOLS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.2a1 1 0 0 0 0 1.4l1.4 1.4a1 1 0 0 0 1.4 0l3.3-3.3a5.6 5.6 0 0 1-7.4 7.4l-6.4 6.4a2 2 0 0 1-2.8-2.8l6.4-6.4a5.6 5.6 0 0 1 7.4-7.4z"/></svg>';
+const ICON_CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg>';
 
 async function copyWorkerId(){
   const code = idPretty((session.worker || {}).worker_code);
