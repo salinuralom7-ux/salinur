@@ -101,7 +101,7 @@ Regenerate them any time the app changes:
 |---|---|
 | Privacy policy | `https://nearse.in/privacy/` |
 | Account deletion | `https://nearse.in/delete-account/` |
-| Support email | `salinuralom7@gmail.com` |
+| Support email | `hello.repto@gmail.com` |
 | Website | `https://nearse.in/` |
 
 The account deletion URL is mandatory for any app that lets people create an

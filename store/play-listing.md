@@ -60,7 +60,7 @@ Repto is on an experimental launch in Guwahati, Assam. Tell us what is broken an
 
 **App category:** Business
 **Tags:** Home services, Jobs, Local
-**Contact email:** salinuralom7@gmail.com
+**Contact email:** hello.repto@gmail.com
 **Contact phone:** +91 70865 99367
 **Website:** https://nearse.in/
 **Privacy policy:** https://nearse.in/privacy/
