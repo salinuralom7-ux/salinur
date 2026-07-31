@@ -293,7 +293,7 @@ body.menu-open{overflow:hidden}
 .demo-note.on{display:block}
 
 /* ---------- screens ---------- */
-.screen{display:none;padding-bottom:72px}
+.screen{display:none;padding-bottom:20px}   /* 72px left a hole above the footer */
 .screen.on{display:block;animation:fade .3s ease}
 @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .back{
@@ -353,7 +353,11 @@ body.menu-open{overflow:hidden}
   content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.045;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-.landing{padding:clamp(30px,6vw,62px) 0 clamp(30px,5vw,50px);text-align:center}
+/* padding-top/bottom, not the shorthand: `padding: X 0 Y` also set the
+   horizontal padding to zero, cancelling .wrap's and letting the doors and
+   the one-tap grid run flush to both screen edges while every other block
+   stayed inset 20px. */
+.landing{padding-top:clamp(30px,6vw,62px);padding-bottom:clamp(30px,5vw,50px);text-align:center}
 .landing h1{
   position:relative;
   font-family:var(--serif);font-weight:600;
@@ -446,11 +450,38 @@ body.menu-open{overflow:hidden}
   background:var(--surface);
 }
 
+/* ---------- book in one tap ---------- */
+.quick{margin:clamp(18px,3vw,26px) auto 0;max-width:520px;text-align:left}
+.quick-lead{
+  font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:9px;
+}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.qtile{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:12px 4px 10px;border-radius:14px;
+  border:1px solid var(--line);background:var(--surface);
+  color:var(--ink-2);font-size:.69rem;font-weight:700;line-height:1.22;text-align:center;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;
+  transition:transform .2s cubic-bezier(.2,.8,.3,1),border-color .2s ease,
+             background .2s ease,color .2s ease;
+}
+.qtile svg{width:19px;height:19px;color:var(--brand-2);flex:0 0 auto}
+.qtile:hover{transform:translateY(-2px);border-color:rgba(234,187,81,.42);
+  background:var(--surface-2);color:var(--ink)}
+.qtile:active{transform:translateY(1px) scale(.965)}
+.qtile:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+@media(max-width:360px){
+  .quick-grid{gap:6px}
+  .qtile{padding:10px 3px 9px;font-size:.65rem}
+}
+
 /* ---------- how it works ----------
    Three boxes across, at every width. It used to be three stacked paragraphs
    that ran most of a phone screen to say something a reader already assumed —
    search, send, agree — and pushed everything after it below the fold. */
-.steps{padding:clamp(24px,4vw,38px) 0 0}
+.steps{padding:clamp(18px,3vw,28px) 0 0}
 .steps .row-label{margin:0 0 11px}
 .stepbar{
   list-style:none;margin:0;padding:0;
@@ -608,7 +639,7 @@ body.menu-open{overflow:hidden}
 /* the same four promises as chips: one wrapped row instead of a tall grid */
 .assure{
   display:flex;flex-wrap:wrap;justify-content:center;gap:8px;
-  margin:16px 0 clamp(26px,4vw,36px);
+  margin:14px 0 clamp(16px,2.5vw,22px);
   color:var(--muted);font-size:.78rem;font-weight:600;
 }
 .assure span{
@@ -1943,7 +1974,7 @@ body.in-chat > .demo-note{display:none}
 footer{
   position:relative;overflow:hidden;margin-top:auto;
   border-top:1px solid var(--line);
-  padding:34px 0 calc(36px + env(safe-area-inset-bottom));
+  padding:26px 0 calc(26px + env(safe-area-inset-bottom));
 }
 /* a slow gold sweep along the top edge — the only thing in the footer that
    moves on its own, so it reads as a highlight rather than as noise */
@@ -2017,7 +2048,7 @@ footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
 .reach:active{transform:translateY(-1px)}
 .reach:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
 .foot-fine{
-  position:relative;text-align:center;margin:22px 0 0;
+  position:relative;text-align:center;margin:16px 0 0;
   color:var(--muted);font-size:.78rem;
 }
 @media (max-width:380px){
@@ -2193,6 +2224,13 @@ footer a{color:var(--ink-2)}
             <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
           </span>
         </button>
+      </div>
+
+      <!-- Somebody who already knows what they need should not have to open a
+           screen, then search, then read. One tap from here to the results. -->
+      <div class="quick reveal" data-r="5">
+        <div class="quick-lead">Book in one tap</div>
+        <div class="quick-grid" id="quickGrid"></div>
       </div>
 
     </div>
@@ -4473,8 +4511,35 @@ function paintWorkDoor(){
   t.textContent   = inside ? "Visit your profile" : "Register as a worker";
   sub.textContent = inside ? "Your ID card, work and reviews" : "Free for your first 30 days";
 }
+/* the eight trades people actually open the app for */
+const QUICK_PICKS = [
+  ["Electrician","repair","Electrician"],
+  ["Plumber","repair","Plumber"],
+  ["Carpenter","build","Carpenter"],
+  ["Housemaid (Daily)","home","Maid"],
+  ["Home Cook (Daily Meals)","cook","Cook"],
+  ["Home Tutor (Class 6\u201310)","tutor","Tutor"],
+  ["AC Service & Repair","repair","AC repair"],
+  ["Beautician (At Home)","beauty","Beautician"]
+];
+function renderQuick(){
+  const host = $("quickGrid"); if(!host) return;
+  host.innerHTML = QUICK_PICKS.map(([skill, cat, label]) =>
+    `<button class="qtile" onclick="jumpTo('${jsq(skill)}')" aria-label="Find a ${esc(label)}">
+       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+            stroke-linecap="round" stroke-linejoin="round">${CAT_ICON[cat]||""}</svg>
+       <span>${esc(label)}</span>
+     </button>`).join("");
+}
+/* straight from the landing page into results for that one trade */
+function jumpTo(skill){
+  go("hire");
+  searchFor(skill);
+}
+
 function initHome(){
   paintWorkDoor();
+  renderQuick();
   refreshChatBadge();     /* the dot on the menu button, if there is anything unread */
   if(homeReady) return;
   homeReady = true;
