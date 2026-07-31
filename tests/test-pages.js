@@ -38,8 +38,9 @@ const srv=http.createServer((q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]
   await a.close();
   // footer of the app must link out to all three
   const app=await ctx.newPage(); await app.goto('http://localhost:8796/'); await app.waitForTimeout(1000);
-  console.log('App footer links:', await app.$$eval('.foot-links a', as=>as.map(x=>x.getAttribute('href')).join(', ')));
-  console.log('App shows experimental note:', (await app.innerText('footer')).includes('Experimental launch'));
+  console.log('App footer is contact-only:', await app.$$eval('.foot-reach a', as=>as.map(x=>x.className.replace('reach ','')).join(', ')));
+  console.log('No nav links left in the footer:', await app.$$eval('footer a', as=>as.every(x=>/^(https:|mailto:)/.test(x.getAttribute('href')))));
+  console.log('Legal pages reachable from the top nav:', await app.$$eval('.drawer-row', as=>as.length) > 0);
   console.log('JS errors:', errors.length?errors:'none');
   await b.close(); srv.close();
 })();

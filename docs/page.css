@@ -13,6 +13,7 @@
   --brand:#EABB51;
   --brand-2:#F3D07C;
   --brand-quiet:#C4B48C;
+  --brand-ink:#14100A;
   --brand-soft:rgba(234,187,81,.15);
   --warn:#E8924A;
   --r-sm:10px;
@@ -58,6 +59,26 @@ header{
 .brand .wordmark{height:22px;width:auto;display:block;flex:0 0 auto}
 .header-link{font-size:.88rem;font-weight:600;color:var(--muted)}
 .header-link:hover{color:var(--ink);text-decoration:none}
+
+/* These pages have no side menu of their own — the app's menu lives in the
+   app — so the links between them sit at the top rather than repeating in
+   the footer. The row scrolls sideways on a narrow phone instead of wrapping. */
+.page-nav{
+  display:flex;gap:6px;overflow-x:auto;padding-bottom:11px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.page-nav::-webkit-scrollbar{display:none}
+.page-nav a{
+  flex:0 0 auto;padding:7px 14px;border-radius:999px;white-space:nowrap;
+  font-size:.83rem;font-weight:600;color:var(--muted);
+  border:1px solid transparent;
+  transition:color .2s ease,background .2s ease,border-color .2s ease;
+}
+.page-nav a:hover{color:var(--ink);background:var(--surface);text-decoration:none}
+.page-nav a[aria-current="page"]{
+  color:var(--brand-ink);background:var(--brand);border-color:var(--brand);font-weight:700;
+}
+.page-nav a[aria-current="page"]:hover{background:var(--brand-2);color:var(--brand-ink)}
 
 main{flex:1;padding:44px 0 64px}
 .eyebrow{
@@ -111,20 +132,91 @@ td:first-child{color:var(--ink);font-weight:600;white-space:nowrap}
 }
 .back-home:hover{border-color:var(--brand);color:var(--brand-2);text-decoration:none}
 
-footer{border-top:1px solid var(--line);padding:26px 0 calc(34px + env(safe-area-inset-bottom))}
-footer .wrap{display:flex;flex-direction:column;gap:14px;color:var(--muted);font-size:.83rem}
-.foot-top,.foot-bottom{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
-.foot-bottom{padding-top:13px;border-top:1px solid var(--line)}
-.foot-links{display:flex;gap:18px;flex-wrap:wrap}
-.foot-links a{color:var(--ink-2);font-weight:600}
-.foot-links a:hover{color:var(--brand-2)}
-.foot-beta{color:var(--brand-quiet);font-weight:600}
-.foot-social{
-  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-  padding:13px 0;border-top:1px solid var(--line);
+footer{
+  position:relative;overflow:hidden;margin-top:auto;
+  border-top:1px solid var(--line);
+  padding:34px 0 calc(36px + env(safe-area-inset-bottom));
 }
-.foot-social .fs-lead{color:var(--muted);font-size:.86rem;font-weight:600}
-.foot-social a{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:.9rem}
+/* a slow gold sweep along the top edge — the only thing in the footer that
+   moves on its own, so it reads as a highlight rather than as noise */
+footer::before{
+  content:"";position:absolute;inset:0 0 auto;height:1px;
+  background:linear-gradient(90deg,transparent,var(--brand),transparent);
+  background-size:46% 100%;background-repeat:no-repeat;
+  animation:footSweep 8s ease-in-out infinite;
+}
+@keyframes footSweep{
+  0%{background-position:-50% 0}
+  100%{background-position:150% 0}
+}
+footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
+/* warmth behind the buttons, breathing slowly */
+.foot-glow{
+  position:absolute;left:50%;top:-14px;width:min(540px,92%);height:170px;
+  transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(closest-side, rgba(234,187,81,.17), transparent 74%);
+  animation:footBreathe 9s ease-in-out infinite;
+}
+@keyframes footBreathe{
+  0%,100%{opacity:.5;transform:translateX(-50%) scale(.92)}
+  50%{opacity:1;transform:translateX(-50%) scale(1.06)}
+}
+.foot-reach{
+  position:relative;display:flex;justify-content:center;gap:10px;
+  max-width:420px;margin:0 auto;      /* four across on any phone, never wrapped */
+}
+.reach{
+  display:inline-flex;flex-direction:column;align-items:center;gap:9px;
+  flex:1 1 0;min-width:0;max-width:100px;padding:15px 6px 13px;border-radius:17px;
+  border:1px solid var(--line);background:var(--surface);
+  color:var(--ink-2);font-size:.78rem;font-weight:700;letter-spacing:-.01em;
+  animation:reachIn .55s cubic-bezier(.2,.75,.3,1) both;
+  transition:transform .26s cubic-bezier(.2,.75,.3,1),border-color .26s ease,
+             background .26s ease,color .26s ease;
+}
+.reach:nth-child(1){animation-delay:.04s}
+.reach:nth-child(2){animation-delay:.12s}
+.reach:nth-child(3){animation-delay:.20s}
+.reach:nth-child(4){animation-delay:.28s}
+@keyframes reachIn{
+  from{opacity:0;transform:translateY(16px) scale(.93)}
+  to{opacity:1;transform:none}
+}
+.reach-ico{
+  width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  position:relative;background:var(--surface-2);color:var(--brand-2);
+  transition:transform .3s cubic-bezier(.2,.75,.3,1),background .26s ease,
+             color .26s ease,box-shadow .26s ease;
+}
+/* one quiet ring on WhatsApp: it is the fastest way to reach a real person */
+.reach.wa .reach-ico::after{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(37,211,102,.55);
+  animation:footPing 3.4s cubic-bezier(.2,.7,.3,1) infinite;
+}
+@keyframes footPing{
+  0%{transform:scale(1);opacity:.65}
+  70%,100%{transform:scale(1.5);opacity:0}
+}
+.reach:hover{transform:translateY(-5px);border-color:var(--line-strong);
+  background:var(--surface-2);color:var(--ink);text-decoration:none}
+.reach:hover .reach-ico{transform:scale(1.09)}
+/* each one lights up in its own colour, so the row is recognisable at a glance */
+.reach.wa:hover   .reach-ico{background:#25D366;color:#062B16;box-shadow:0 9px 24px rgba(37,211,102,.36)}
+.reach.mail:hover .reach-ico{background:var(--brand);color:#14100A;box-shadow:0 9px 24px rgba(234,187,81,.36)}
+.reach.ig:hover   .reach-ico{background:linear-gradient(45deg,#F9CE34 4%,#EE2A7B 54%,#6228D7);color:#fff;box-shadow:0 9px 24px rgba(238,42,123,.34)}
+.reach.fb:hover   .reach-ico{background:#1877F2;color:#fff;box-shadow:0 9px 24px rgba(24,119,242,.34)}
+.reach:active{transform:translateY(-1px)}
+.reach:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+.foot-fine{
+  position:relative;text-align:center;margin:22px 0 0;
+  color:var(--muted);font-size:.78rem;
+}
+@media (max-width:380px){
+  .foot-reach{gap:7px}
+  .reach{padding:13px 3px 11px;font-size:.72rem}
+  .reach-ico{width:40px;height:40px}
+}
 
 @media (max-width:560px){
   .contact-line b{min-width:0;display:block}

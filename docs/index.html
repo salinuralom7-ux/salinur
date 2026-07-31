@@ -1896,25 +1896,91 @@ body.in-chat > .demo-note{display:none}
 }
 .reject-opt:hover{border-color:var(--danger);color:var(--ink);background:rgba(232,112,127,.09)}
 footer{
-  border-top:1px solid var(--line);margin-top:auto;
-  padding:26px 0 calc(34px + env(safe-area-inset-bottom));
+  position:relative;overflow:hidden;margin-top:auto;
+  border-top:1px solid var(--line);
+  padding:34px 0 calc(36px + env(safe-area-inset-bottom));
 }
-footer .wrap{
-  display:flex;flex-direction:column;gap:14px;
-  color:var(--muted);font-size:.83rem;
+/* a slow gold sweep along the top edge — the only thing in the footer that
+   moves on its own, so it reads as a highlight rather than as noise */
+footer::before{
+  content:"";position:absolute;inset:0 0 auto;height:1px;
+  background:linear-gradient(90deg,transparent,var(--brand),transparent);
+  background-size:46% 100%;background-repeat:no-repeat;
+  animation:footSweep 8s ease-in-out infinite;
 }
-.foot-top,.foot-bottom{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}
-.foot-bottom{padding-top:13px;border-top:1px solid var(--line)}
-.foot-links{display:flex;gap:18px;flex-wrap:wrap}
-.foot-beta{color:var(--brand-quiet);font-weight:600}
-.foot-social{
-  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-  padding:13px 0;border-top:1px solid var(--line);
+@keyframes footSweep{
+  0%{background-position:-50% 0}
+  100%{background-position:150% 0}
 }
-.foot-social .fs-lead{color:var(--muted);font-size:.86rem;font-weight:600}
-.foot-social a{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:.9rem}
-footer a{color:var(--ink-2);font-weight:600}
-footer a:hover{color:var(--brand)}
+footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
+/* warmth behind the buttons, breathing slowly */
+.foot-glow{
+  position:absolute;left:50%;top:-14px;width:min(540px,92%);height:170px;
+  transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(closest-side, rgba(234,187,81,.17), transparent 74%);
+  animation:footBreathe 9s ease-in-out infinite;
+}
+@keyframes footBreathe{
+  0%,100%{opacity:.5;transform:translateX(-50%) scale(.92)}
+  50%{opacity:1;transform:translateX(-50%) scale(1.06)}
+}
+.foot-reach{
+  position:relative;display:flex;justify-content:center;gap:10px;
+  max-width:420px;margin:0 auto;      /* four across on any phone, never wrapped */
+}
+.reach{
+  display:inline-flex;flex-direction:column;align-items:center;gap:9px;
+  flex:1 1 0;min-width:0;max-width:100px;padding:15px 6px 13px;border-radius:17px;
+  border:1px solid var(--line);background:var(--surface);
+  color:var(--ink-2);font-size:.78rem;font-weight:700;letter-spacing:-.01em;
+  animation:reachIn .55s cubic-bezier(.2,.75,.3,1) both;
+  transition:transform .26s cubic-bezier(.2,.75,.3,1),border-color .26s ease,
+             background .26s ease,color .26s ease;
+}
+.reach:nth-child(1){animation-delay:.04s}
+.reach:nth-child(2){animation-delay:.12s}
+.reach:nth-child(3){animation-delay:.20s}
+.reach:nth-child(4){animation-delay:.28s}
+@keyframes reachIn{
+  from{opacity:0;transform:translateY(16px) scale(.93)}
+  to{opacity:1;transform:none}
+}
+.reach-ico{
+  width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  position:relative;background:var(--surface-2);color:var(--brand-2);
+  transition:transform .3s cubic-bezier(.2,.75,.3,1),background .26s ease,
+             color .26s ease,box-shadow .26s ease;
+}
+/* one quiet ring on WhatsApp: it is the fastest way to reach a real person */
+.reach.wa .reach-ico::after{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  border:1px solid rgba(37,211,102,.55);
+  animation:footPing 3.4s cubic-bezier(.2,.7,.3,1) infinite;
+}
+@keyframes footPing{
+  0%{transform:scale(1);opacity:.65}
+  70%,100%{transform:scale(1.5);opacity:0}
+}
+.reach:hover{transform:translateY(-5px);border-color:var(--line-strong);
+  background:var(--surface-2);color:var(--ink);text-decoration:none}
+.reach:hover .reach-ico{transform:scale(1.09)}
+/* each one lights up in its own colour, so the row is recognisable at a glance */
+.reach.wa:hover   .reach-ico{background:#25D366;color:#062B16;box-shadow:0 9px 24px rgba(37,211,102,.36)}
+.reach.mail:hover .reach-ico{background:var(--brand);color:#14100A;box-shadow:0 9px 24px rgba(234,187,81,.36)}
+.reach.ig:hover   .reach-ico{background:linear-gradient(45deg,#F9CE34 4%,#EE2A7B 54%,#6228D7);color:#fff;box-shadow:0 9px 24px rgba(238,42,123,.34)}
+.reach.fb:hover   .reach-ico{background:#1877F2;color:#fff;box-shadow:0 9px 24px rgba(24,119,242,.34)}
+.reach:active{transform:translateY(-1px)}
+.reach:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+.foot-fine{
+  position:relative;text-align:center;margin:22px 0 0;
+  color:var(--muted);font-size:.78rem;
+}
+@media (max-width:380px){
+  .foot-reach{gap:7px}
+  .reach{padding:13px 3px 11px;font-size:.72rem}
+  .reach-ico{width:40px;height:40px}
+}
+footer a{color:var(--ink-2)}
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.001ms !important;transition-duration:.001ms !important}
@@ -2589,32 +2655,26 @@ footer a:hover{color:var(--brand)}
 
 <footer>
   <div class="wrap">
-    <div class="foot-top">
-      <span>© <span id="year"></span> Repto · Local services, done right</span>
-      <nav class="foot-links">
-        <a href="about/">About us</a>
-        <a href="privacy/">Privacy policy</a>
-        <a href="terms/">Terms of use</a>
-        <a href="cancellation/">Cancellations</a>
-        <a href="delete-account/">Delete account</a>
-        <a href="about/#contact">Contact</a>
-      </nav>
-    </div>
-    <div class="foot-social">
-      <span class="fs-lead">Follow us on</span>
-      <a href="https://www.instagram.com/repto.insta" target="_blank" rel="noopener me" aria-label="Repto on Instagram">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg>
-        Instagram
+    <span class="foot-glow" aria-hidden="true"></span>
+    <nav class="foot-reach" aria-label="Contact Repto">
+      <a class="reach wa" href="https://wa.me/917086599367" target="_blank" rel="noopener" aria-label="Message Repto on WhatsApp">
+        <span class="reach-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24m4.52 10.35c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.38.1-.5.11-.11.25-.29.37-.44.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.13-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.28"/></svg></span>
+        <span>WhatsApp</span>
       </a>
-      <a href="https://www.facebook.com/share/1Es9BgSP29/" target="_blank" rel="noopener me" aria-label="Repto on Facebook">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94"/></svg>
-        Facebook
+      <a class="reach mail" href="mailto:hello.repto@gmail.com" aria-label="Email Repto">
+        <span class="reach-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3.2 6.4 7.5 5.6a2.2 2.2 0 0 0 2.6 0l7.5-5.6"/></svg></span>
+        <span>Email</span>
       </a>
-    </div>
-    <div class="foot-bottom">
-      <span>Guwahati, Assam</span>
-      <span class="foot-beta">Experimental launch — we are just getting started</span>
-    </div>
+      <a class="reach ig" href="https://www.instagram.com/repto.insta" target="_blank" rel="noopener me" aria-label="Repto on Instagram">
+        <span class="reach-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg></span>
+        <span>Instagram</span>
+      </a>
+      <a class="reach fb" href="https://www.facebook.com/share/1Es9BgSP29/" target="_blank" rel="noopener me" aria-label="Repto on Facebook">
+        <span class="reach-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.5-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94"/></svg></span>
+        <span>Facebook</span>
+      </a>
+    </nav>
+    <p class="foot-fine">© <span id="year"></span> Repto · Guwahati, Assam</p>
   </div>
 </footer>
 
