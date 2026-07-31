@@ -19,15 +19,19 @@ const srv=http.createServer((q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]
         .filter(e => e.getBoundingClientRect().right > window.innerWidth + 1)
         .map(e => e.tagName + '.' + (e.className||'').toString().split(' ')[0]);
       const figs = [...document.querySelectorAll('.fig')].map(f => f.getBoundingClientRect().top);
-      const steps = [...document.querySelectorAll('.steplist li')].map(f => Math.round(f.getBoundingClientRect().top));
+      const stepEls = [...document.querySelectorAll('.stepbar li')];
+      const steps = stepEls.map(f => Math.round(f.getBoundingClientRect().top));
       return { overflow, wide: [...new Set(wide)].slice(0,4),
                figRows: new Set(figs.map(t=>Math.round(t))).size,
-               stepCols: new Set(steps).size === 1 ? 3 : 1,
+               stepCount: stepEls.length,
+               stepCols: stepEls.length && new Set(steps).size === 1 ? 3 : 1,
+               stepsPx: Math.round((document.querySelector('.steps')||{getBoundingClientRect:()=>({height:0})}).getBoundingClientRect().height),
+               pagePx: document.documentElement.scrollHeight,
                ticks: document.querySelectorAll('.tick').length,
                services: document.getElementById('figServices').textContent,
                areas: document.getElementById('figAreas').textContent };
     });
-    console.log(`${label.padEnd(10)} ${String(w).padStart(4)}px  overflow:${o.overflow?'YES':'no '}  figures on ${o.figRows} row  steps ${o.stepCols}-across  ticker chips ${o.ticks}` +
+    console.log(`${label.padEnd(10)} ${String(w).padStart(4)}px  overflow:${o.overflow?'YES':'no '}  figures on ${o.figRows} row  steps ${o.stepCount}-in-${o.stepCols}-across (${o.stepsPx}px)  page ${o.pagePx}px  ticker chips ${o.ticks}` +
                 (o.wide.length ? `  bleeding: ${o.wide.join(', ')}` : ''));
     if (errs.length) console.log('   errors:', errs);
     await ctx.close();

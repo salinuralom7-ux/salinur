@@ -444,27 +444,36 @@ body.menu-open{overflow:hidden}
   background:var(--surface);
 }
 
-/* ---------- how it works ---------- */
-.steps{padding:clamp(40px,6vw,62px) 0 0}
-.steplist{list-style:none;margin:0;padding:0;display:grid;gap:2px}
-.steplist li{display:flex;gap:18px;padding:20px 0;position:relative}
-.steplist li+li{border-top:1px solid var(--line)}
-/* three abreast once there is room, so the section stops looking half-empty */
-@media(min-width:820px){
-  .steps .row-label{margin-bottom:18px}
-  .steplist{grid-template-columns:repeat(3,1fr);gap:0 34px}
-  .steplist li{padding:24px 0 0;border-top:1px solid var(--line)}
-  .steplist li+li{border-top:1px solid var(--line)}
-  .steplist p{max-width:none}
+/* ---------- how it works ----------
+   Three boxes across, at every width. It used to be three stacked paragraphs
+   that ran most of a phone screen to say something a reader already assumed —
+   search, send, agree — and pushed everything after it below the fold. */
+.steps{padding:clamp(24px,4vw,38px) 0 0}
+.steps .row-label{margin:0 0 11px}
+.stepbar{
+  list-style:none;margin:0;padding:0;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
 }
-.steplist .sn{
-  width:30px;height:30px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
-  border:1px solid var(--line-strong);background:var(--surface);
-  font-size:.8rem;font-weight:800;color:var(--brand-2);
-  font-variant-numeric:tabular-nums;margin-top:1px;
+.stepbar li{
+  border:1px solid var(--line);border-radius:var(--r);background:var(--surface);
+  padding:16px 11px 15px;
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;
+  transition:transform .22s ease,border-color .22s ease,background .22s ease;
 }
-.steplist b{display:block;font-size:1.02rem;letter-spacing:-.02em;margin-bottom:5px}
-.steplist p{color:var(--muted);font-size:.9rem;line-height:1.62;max-width:56ch}
+.stepbar li:hover{transform:translateY(-2px);border-color:var(--line-strong);background:var(--surface-2)}
+.stepbar .sn{
+  width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  background:var(--brand-soft);border:1px solid rgba(234,187,81,.34);
+  font-size:.73rem;font-weight:800;color:var(--brand-2);font-variant-numeric:tabular-nums;
+}
+.stepbar b{font-size:.96rem;letter-spacing:-.02em;line-height:1.2}
+.stepbar li span:last-child{color:var(--muted);font-size:.76rem;line-height:1.45}
+@media(max-width:390px){
+  .stepbar{gap:7px}
+  .stepbar li{padding:14px 7px 13px;gap:6px}
+  .stepbar b{font-size:.9rem}
+  .stepbar li span:last-child{font-size:.71rem}
+}
 
 /* ---------- staggered entrance ---------- */
 .reveal{opacity:0;transform:translate3d(0,14px,0);animation:rise .68s cubic-bezier(.22,1,.36,1) forwards}
@@ -564,13 +573,17 @@ body.menu-open{overflow:hidden}
   .art-find .scan,.art-worker .arm,.art-worker .figure,
   .cta.primary::after{animation:none !important}
 }
+/* the same four promises as chips: one wrapped row instead of a tall grid */
 .assure{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:14px 26px;margin:clamp(34px,5vw,44px) 0 clamp(30px,4vw,40px);
-  padding-top:clamp(24px,3.5vw,30px);border-top:1px solid var(--line);
-  color:var(--muted);font-size:.83rem;font-weight:600;
+  display:flex;flex-wrap:wrap;justify-content:center;gap:8px;
+  margin:16px 0 clamp(26px,4vw,36px);
+  color:var(--muted);font-size:.78rem;font-weight:600;
 }
-.assure span{display:inline-flex;align-items:center;gap:9px}
+.assure span{
+  display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--line);border-radius:999px;padding:6px 13px;
+  background:var(--surface);
+}
 .assure .dot{width:5px;height:5px;border-radius:50%;background:var(--brand);opacity:.55}
 
 /* ---------- worker banner ---------- */
@@ -2168,17 +2181,17 @@ footer a{color:var(--ink-2)}
   <div class="wrap">
     <div class="steps">
       <div class="row-label">How it works</div>
-      <ol class="steplist">
-        <li><span class="sn">1</span><div><b>Search what you need</b><p>Browse by trade or type it in. Workers closest to you come first, with their own rates already on the card.</p></div></li>
-        <li><span class="sn">2</span><div><b>Send the request</b><p>Pick the service, the day and the time. It arrives on the worker's WhatsApp with everything they need to know.</p></div></li>
-        <li><span class="sn">3</span><div><b>Agree it directly</b><p>You settle the final amount with them. No middleman, no platform fee, no commission taken from their earnings.</p></div></li>
+      <ol class="stepbar">
+        <li><span class="sn">1</span><b>Search</b><span>Nearest first, rates on the card</span></li>
+        <li><span class="sn">2</span><b>Request</b><span>Lands on their WhatsApp</span></li>
+        <li><span class="sn">3</span><b>Agree</b><span>You settle it, we take nothing</span></li>
       </ol>
     </div>
 
     <div class="assure">
-      <span><i class="dot"></i>Every profile verified before it goes live</span>
-      <span><i class="dot"></i>Nearest to you first</span>
-      <span><i class="dot"></i>Rates set by the worker</span>
+      <span><i class="dot"></i>Verified profiles</span>
+      <span><i class="dot"></i>Nearest first</span>
+      <span><i class="dot"></i>Worker sets the rate</span>
       <span><i class="dot"></i>No commission</span>
     </div>
   </div>
