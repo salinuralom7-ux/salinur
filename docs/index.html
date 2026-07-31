@@ -103,6 +103,11 @@
   --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
+/* An author rule like .btn{display:inline-flex} outranks the browser's own
+   [hidden]{display:none}, so anything given a display kept showing after it
+   was hidden — the alerts button stayed on screen after alerts were turned
+   on. One rule, rather than remembering it at every call site. */
+[hidden]{display:none !important}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
   font-family:var(--sans);
@@ -448,6 +453,21 @@ body.menu-open{overflow:hidden}
   border:1px solid var(--line);border-radius:999px;padding:7px 15px;
   font-size:.82rem;font-weight:600;color:var(--muted);white-space:nowrap;
   background:var(--surface);
+}
+
+/* the alerts row on a worker's own profile */
+.alert-row{
+  display:flex;align-items:flex-start;gap:14px;justify-content:space-between;
+  border:1px solid var(--line);background:var(--surface);border-radius:var(--r);
+  padding:15px 16px;margin-top:11px;
+}
+.alert-row > div{flex:1;min-width:0}
+.alert-row b{display:block;font-size:.94rem;margin-bottom:3px}
+.alert-row .push-state{display:block;color:var(--muted);font-size:.81rem;line-height:1.5}
+.alert-row .btn{flex:0 0 auto;white-space:nowrap}
+@media(max-width:420px){
+  .alert-row{flex-direction:column;align-items:stretch}
+  .alert-row .btn{width:100%}
 }
 
 /* ---------- book in one tap ---------- */
@@ -2472,8 +2492,8 @@ footer a{color:var(--ink-2)}
         <div class="mode-note">
           <b>You will be offered jobs that are needed straight away.</b>
           <span>When a customer near you needs this work now, we alert you and you have <b>60 seconds</b> to accept. Miss it and it goes to the next worker — so turn yourself <b>Available now</b> only when you can actually leave.</span>
-          <button type="button" class="btn btn-outline btn-sm" id="pushOptIn" onclick="enablePush()">Turn on job alerts</button>
-          <span class="hint" id="pushState" style="margin-top:8px"></span>
+          <button type="button" class="btn btn-outline btn-sm push-optin" onclick="enablePush()">Turn on alerts</button>
+          <span class="hint push-state" style="margin-top:8px"></span>
         </div>
       </div>
     </div>
@@ -5385,6 +5405,7 @@ async function saveProfile(){
 
 /* ---------- my profile ---------- */
 function renderMe(){
+  setTimeout(renderPushState, 0);      /* the card is rebuilt below; paint after */
   const w = session && session.worker; if(!w){ go("work"); return; }
   $("meCard").innerHTML = `
     <div class="profile-top">
@@ -5414,6 +5435,10 @@ function renderMe(){
     <div class="switch-row">
       <div><b>Available for work</b><span>Turn this off when you're busy — you won't appear in search.</span></div>
       <label class="switch"><input type="checkbox" id="avSwitch" ${w.available!==false?"checked":""} onchange="toggleAvailable(this.checked)"><span class="track"></span></label>
+    </div>
+    <div class="alert-row">
+      <div><b>Booking alerts</b><span class="push-state"></span></div>
+      <button type="button" class="btn btn-outline btn-sm push-optin" onclick="enablePush()" hidden>Turn on alerts</button>
     </div>
     ${workerModes(w).has("now") ? `
     <div class="switch-row online-row${isOnlineNow(w) ? " on" : ""}">
@@ -8380,18 +8405,18 @@ function urlBase64ToUint8Array(base64){
 async function enablePush(){
   if(!pushSupported()){
     if(isIOS() && !isStandalone()){ openModal("iosOverlay"); return; }
-    toast("This browser cannot show job alerts — you will get offers on WhatsApp instead");
+    toast("This browser cannot show alerts — open Repto now and then to check");
     renderPushState(); return;
   }
   if(isIOS() && !isStandalone()){ openModal("iosOverlay"); return; }
   if(!VAPID_PUBLIC){
-    toast("Alerts are not switched on yet — you will get offers on WhatsApp");
+    toast("Alerts are not configured on the server yet");
     renderPushState(); return;
   }
   try{
     const perm = await Notification.requestPermission();
     if(perm !== "granted"){
-      toast("Alerts blocked — offers will come on WhatsApp instead");
+      toast("Alerts blocked — you can allow them in your phone settings");
       renderPushState(); return;
     }
     const reg = await navigator.serviceWorker.ready;
@@ -8401,9 +8426,9 @@ async function enablePush(){
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
       });
     await savePushSubscription();
-    toast("Job alerts are on");
+    toast("Alerts are on — you will hear about bookings");
   }catch(e){
-    toast("Could not turn on alerts — offers will come on WhatsApp");
+    toast("Could not turn on alerts — please try again");
   }
   renderPushState();
 }
@@ -8418,22 +8443,31 @@ async function savePushSubscription(){
   }catch(e){ /* the WhatsApp path still works, so never block on this */ }
 }
 
+/* Written against every copy on the page, not one id: the same control now
+   appears on the profile as well as in the registration form, and a worker
+   who never picked an instant-dispatch service would otherwise never have
+   been offered notifications at all. */
 function renderPushState(){
-  const el = $("pushState"), btn = $("pushOptIn");
-  if(!el) return;
-  const on = pushSupported() && Notification.permission === "granted";
-  if(on){
-    el.textContent = "Job alerts are on for this phone.";
-    if(btn) btn.hidden = true;
+  const els = document.querySelectorAll(".push-state");
+  const btns = document.querySelectorAll(".push-optin");
+  if(!els.length) return;
+  const say = (text, label) => {
+    els.forEach(e => { e.textContent = text; });
+    btns.forEach(b => {
+      b.hidden = !label;
+      if(label) b.textContent = label;
+    });
+  };
+  if(pushSupported() && Notification.permission === "granted"){
+    say("Alerts are on for this phone. You will hear about a booking even when Repto is closed.", null);
   }else if(isIOS() && !isStandalone()){
-    el.textContent = "On iPhone, add Repto to your home screen first — then alerts can reach you.";
-    if(btn){ btn.hidden = false; btn.textContent = "Add to home screen"; }
+    say("On iPhone, add Repto to your home screen first — alerts cannot reach you from Safari.", "Add to home screen");
   }else if(pushSupported() && Notification.permission === "denied"){
-    el.textContent = "Alerts are blocked in your browser settings. Offers will still reach you on WhatsApp.";
-    if(btn) btn.hidden = true;
+    say("Alerts are blocked in your phone's settings for Repto. Turn them back on there and this will start working.", null);
+  }else if(!pushSupported()){
+    say("This browser cannot show alerts. Open Repto now and then to check for bookings.", null);
   }else{
-    el.textContent = "Without alerts we send offers on WhatsApp, which is slower — you may miss the 60 seconds.";
-    if(btn){ btn.hidden = false; btn.textContent = "Turn on job alerts"; }
+    say("Get told the moment a customer books you, even when Repto is closed.", "Turn on alerts");
   }
 }
 

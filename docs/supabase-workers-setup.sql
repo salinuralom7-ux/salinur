@@ -6307,5 +6307,206 @@ begin
   raise notice 'no duplicate function names';
 end $$;
 
+-- ============================================================
+-- MIGRATION 26 — the notification actually leaves the building
+--
+-- Everything for push was already here: worker_push holds the endpoint,
+-- save_push_subscription writes it, nearse_config carries the VAPID public
+-- key, and the service worker has a push handler. What was missing is the
+-- part that sends. Nothing in the database or anywhere else ever posted to
+-- a push service, so a worker learned about a booking only by opening the
+-- app and looking — which is exactly the complaint.
+--
+-- The shape: a trigger drops a row in push_outbox, an Edge Function drains
+-- it and does the actual Web Push. The queue sits in the middle on purpose.
+-- A trigger that called out over the network directly would make every
+-- booking wait on a third party, and would lose the notification entirely
+-- whenever that third party was down.
+-- ============================================================
+
+create table if not exists public.push_outbox (
+  id         bigserial primary key,
+  worker_id  uuid not null references public.workers(id) on delete cascade,
+  title      text not null,
+  body       text not null,
+  url        text,
+  tag        text,
+  created_at timestamptz not null default now(),
+  sent_at    timestamptz,
+  attempts   int  not null default 0,
+  last_error text
+);
+create index if not exists push_outbox_pending_idx
+  on public.push_outbox (created_at) where sent_at is null;
+alter table public.push_outbox enable row level security;   -- no policies
+
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on public.push_outbox from %I', r);
+      execute format('revoke all on sequence public.push_outbox_id_seq from %I', r);
+    end if;
+  end loop;
+end $$;
+
+-- Queue one, but only for a worker who has actually allowed notifications.
+-- Rows for everybody else would sit unsendable for ever.
+create or replace function public.enqueue_push(
+  p_worker uuid, p_title text, p_body text, p_url text default null, p_tag text default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if p_worker is null then return; end if;
+  if not exists (select 1 from worker_push where worker_id = p_worker) then
+    return;                       -- never subscribed, or withdrew permission
+  end if;
+  insert into push_outbox (worker_id, title, body, url, tag)
+  values (p_worker, p_title, left(coalesce(p_body,''), 180), p_url, p_tag);
+end;
+$$;
+
+-- ---------- what is worth waking somebody up for ----------
+
+-- A new booking request.
+create or replace function public.push_on_new_thread()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform public.enqueue_push(
+    new.worker_id,
+    'New booking request',
+    coalesce(new.customer_name,'A customer') || ' needs ' || coalesce(new.skill,'help')
+      || coalesce(' in ' || new.customer_area, ''),
+    './?src=push#inbox',
+    'thread-' || new.id::text);
+  return new;
+end;
+$$;
+drop trigger if exists threads_push_trg on public.threads;
+create trigger threads_push_trg after insert on public.threads
+  for each row execute function public.push_on_new_thread();
+
+-- A reply from the customer. The opening message arrives in the same breath
+-- as the thread itself, and the thread has already been announced, so
+-- anything within five seconds of it is skipped rather than buzzing twice.
+create or replace function public.push_on_customer_message()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare t record;
+begin
+  if new.sender <> 'customer' then return new; end if;
+  select worker_id, customer_name, created_at into t from threads where id = new.thread_id;
+  if t.worker_id is null then return new; end if;
+  if new.created_at - t.created_at < interval '5 seconds' then return new; end if;
+
+  perform public.enqueue_push(
+    t.worker_id,
+    coalesce(t.customer_name,'A customer') || ' replied',
+    new.body,
+    './?src=push#inbox',
+    'thread-' || new.thread_id::text);      -- replaces, never stacks
+  return new;
+end;
+$$;
+drop trigger if exists messages_push_trg on public.messages;
+create trigger messages_push_trg after insert on public.messages
+  for each row execute function public.push_on_customer_message();
+
+-- Approval is the other thing worth interrupting someone for: it is the
+-- moment they start being able to earn.
+create or replace function public.push_on_status()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if new.status = 'approved' and coalesce(old.status,'') <> 'approved' then
+    perform public.enqueue_push(new.id, 'Your profile is live',
+      'Customers near you can find you from now on.', './?src=push#me', 'status');
+  elsif new.status = 'rejected' and coalesce(old.status,'') <> 'rejected' then
+    perform public.enqueue_push(new.id, 'Your profile needs a change',
+      coalesce(new.review_note, 'Open Repto to see what to fix.'), './?src=push#me', 'status');
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists workers_push_status_trg on public.workers;
+create trigger workers_push_status_trg after update of status on public.workers
+  for each row execute function public.push_on_status();
+
+-- ---------- what the sender calls ----------
+-- These run as service_role from the Edge Function. lock_public_functions
+-- leaves them unreachable by anon and authenticated, which is the point:
+-- the queue is not something a visitor should be able to read or drain.
+
+create or replace function public.claim_push(p_limit int default 20)
+returns table (id bigint, title text, body text, url text, tag text,
+               endpoint text, p256dh text, auth text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  return query
+  with due as (
+    select o.id from push_outbox o
+     where o.sent_at is null
+       and o.attempts < 5
+       and o.created_at > now() - interval '1 day'   -- a day-old buzz helps nobody
+     order by o.id
+     limit greatest(1, least(p_limit, 100))
+     for update skip locked
+  ), bumped as (
+    update push_outbox o set attempts = o.attempts + 1
+      from due where o.id = due.id
+      returning o.*
+  )
+  select b.id, b.title, b.body, b.url, b.tag, p.endpoint, p.p256dh, p.auth
+    from bumped b join worker_push p on p.worker_id = b.worker_id;
+end;
+$$;
+
+create or replace function public.mark_push_sent(p_id bigint)
+returns void language sql security definer set search_path = public as $$
+  update push_outbox set sent_at = now(), last_error = null where id = p_id;
+$$;
+
+create or replace function public.mark_push_failed(p_id bigint, p_error text)
+returns void language sql security definer set search_path = public as $$
+  update push_outbox set last_error = left(coalesce(p_error,''), 300) where id = p_id;
+$$;
+
+-- 404 or 410 from the push service means the browser threw the subscription
+-- away. Keeping it guarantees a failure every time from then on.
+create or replace function public.drop_push_endpoint(p_endpoint text)
+returns void language sql security definer set search_path = public as $$
+  delete from worker_push where endpoint = p_endpoint;
+$$;
+
+-- Sent rows are of no interest after a week, and a queue nobody trims is a
+-- queue that eventually costs money.
+create or replace function public.purge_push_outbox()
+returns bigint
+language plpgsql security definer set search_path = public, extensions as $$
+declare n bigint;
+begin
+  delete from push_outbox
+   where (sent_at is not null and sent_at < now() - interval '7 days')
+      or created_at < now() - interval '30 days';
+  get diagnostics n = row_count;
+  return n;
+end;
+$$;
+
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    begin
+      perform cron.unschedule('repto-push-purge')
+        where exists (select 1 from cron.job where jobname = 'repto-push-purge');
+      perform cron.schedule('repto-push-purge', '20 3 * * *', 'select public.purge_push_outbox()');
+    exception when others then
+      raise notice 'pg_cron present but not schedulable here (%)', sqlerrm;
+    end;
+  end if;
+end $$;
+
 -- always last
 select public.lock_public_functions();

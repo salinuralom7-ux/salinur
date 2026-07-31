@@ -39,6 +39,116 @@ good. Changing it is the only fix.
 
 ---
 
+# Job 0.5 — switch on notifications outside the app
+
+Right now a worker only finds out about a booking by opening Repto and
+looking. Everything needed to fix that is built and deployed — the app asks
+for permission, the database queues the alert — but nothing sends it until
+you do the four steps below. **Until then no notification will ever arrive.**
+
+About 15 minutes, once.
+
+## Step 1 — make the key pair
+
+On any computer with Node:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+It prints a **Public Key** and a **Private Key**. Keep the window open.
+
+> The private key is a password. Do not put it in the repository, do not
+> send it to me, do not paste it into a chat. It only ever goes into
+> Supabase in Step 3.
+
+## Step 2 — tell the app the public half
+
+Supabase → **SQL Editor** → **New query**, paste, replace, **Run**:
+
+```sql
+update nearse_config set vapid_public = 'PASTE_THE_PUBLIC_KEY_HERE' where id = 1;
+```
+
+The public key is not a secret — the browser needs it to subscribe. That is
+why it lives in the database and not in a file: you never touch the code.
+
+## Step 3 — deploy the sender
+
+The sender lives in this repository at `supabase/functions/push`. On the same
+computer, from the project folder:
+
+```bash
+npm i -g supabase
+supabase login
+supabase link --project-ref mpufunsitqtdkqlibxof
+supabase secrets set VAPID_PUBLIC='the public key' \
+                     VAPID_PRIVATE='the private key' \
+                     VAPID_SUBJECT='mailto:hello.repto@gmail.com'
+supabase functions deploy push --no-verify-jwt
+```
+
+## Step 4 — make it fire
+
+Supabase → **Database** → **Webhooks** → **Create a new hook**:
+
+| Field | Value |
+|---|---|
+| Name | `send-push` |
+| Table | `push_outbox` |
+| Events | **Insert** only |
+| Type | **Supabase Edge Functions** |
+| Function | `push` |
+
+Then add a safety net so a failed send is retried instead of forgotten.
+Supabase → **Integrations** → **Cron** → **Create job**: every minute,
+calling the same `push` function.
+
+## Checking it works
+
+1. On your phone, open Repto, sign in as a worker, go to your profile.
+2. Under **Booking alerts**, tap **Turn on alerts** and allow the prompt.
+3. **Close Repto completely** — swipe it away, do not just go to the home
+   screen.
+4. From another phone, book that worker.
+5. The notification should arrive within a few seconds.
+
+If nothing arrives, look in Supabase → **Table Editor** → `push_outbox`:
+
+- **No row at all** — the worker never subscribed. Go back to step 2 above.
+- **A row with `sent_at` empty and `last_error` filled** — the sender ran and
+  the push service refused it. The error text says why; a wrong VAPID key is
+  the usual answer.
+- **A row with `sent_at` empty and `attempts` still 0** — the webhook is not
+  firing. Re-check Step 4.
+- **`sent_at` filled but no notification on the phone** — the phone is
+  blocking it. Android: Settings → Apps → Repto → Notifications.
+
+## What workers will see
+
+| | |
+|---|---|
+| A new booking request | "New booking request — Amit needs Carpenter in Beltola" |
+| A customer replies | "Amit replied — Are you free tomorrow?" |
+| You approve their profile | "Your profile is live" |
+| You reject it | "Your profile needs a change" plus your reason |
+
+A worker is never notified about their own messages, and a second message in
+the same conversation replaces the first notification rather than stacking up.
+
+## Two things worth knowing
+
+**iPhone.** Apple only delivers these to a PWA that has been **added to the
+home screen**, on iOS 16.4 or newer. From Safari it will never work, no
+matter what anyone allows. The app says so on the profile when it detects an
+iPhone that has not been installed.
+
+**Android app.** The Play build needs the notifications permission compiled
+in. `store/twa-manifest.json` already sets `enableNotifications: true`, so
+this is handled — but if you built the bundle before today, rebuild it.
+
+---
+
 **Use a laptop or desktop if you have one.** It all works on a phone, but the
 form in Step 4 has several boxes and is fiddly on a small screen.
 

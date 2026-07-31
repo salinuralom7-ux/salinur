@@ -12,7 +12,7 @@
   "navigationDividerColor": "#0C0A07",
   "navigationDividerColorDark": "#0C0A07",
   "backgroundColor": "#0C0A07",
-  "enableNotifications": false,
+  "enableNotifications": true,
   "startUrl": "/?src=app",
   "iconUrl": "https://nearse.in/icons/icon-512.png?v=2",
   "maskableIconUrl": "https://nearse.in/icons/maskable-512.png?v=2",
@@ -24,14 +24,26 @@
   "appVersionName": "1.0.0",
   "appVersionCode": 1,
   "shortcuts": [
-    { "name": "Find a worker", "shortName": "Find", "url": "/?src=app#find", "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=2" },
-    { "name": "Register as a worker", "shortName": "Register", "url": "/?src=app#work", "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=2" }
+    {
+      "name": "Find a worker",
+      "shortName": "Find",
+      "url": "/?src=app#find",
+      "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=2"
+    },
+    {
+      "name": "Register as a worker",
+      "shortName": "Register",
+      "url": "/?src=app#work",
+      "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=2"
+    }
   ],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://nearse.in/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {},
-  "alphaDependencies": { "enabled": false },
+  "alphaDependencies": {
+    "enabled": false
+  },
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
