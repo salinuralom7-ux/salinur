@@ -119,6 +119,12 @@ footer .wrap{display:flex;flex-direction:column;gap:14px;color:var(--muted);font
 .foot-links a{color:var(--ink-2);font-weight:600}
 .foot-links a:hover{color:var(--brand-2)}
 .foot-beta{color:var(--brand-quiet);font-weight:600}
+.foot-social{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:13px 0;border-top:1px solid var(--line);
+}
+.foot-social .fs-lead{color:var(--muted);font-size:.86rem;font-weight:600}
+.foot-social a{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:.9rem}
 
 @media (max-width:560px){
   .contact-line b{min-width:0;display:block}
