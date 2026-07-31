@@ -353,12 +353,12 @@ body.menu-open{overflow:hidden}
   content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.045;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-.landing{padding:clamp(52px,10vw,96px) 0 clamp(44px,7vw,68px);text-align:center}
+.landing{padding:clamp(30px,6vw,62px) 0 clamp(30px,5vw,50px);text-align:center}
 .landing h1{
   position:relative;
   font-family:var(--serif);font-weight:600;
-  font-size:clamp(2.05rem,5.4vw,3.35rem);letter-spacing:-.035em;line-height:1.08;
-  text-wrap:balance;margin-top:20px;
+  font-size:clamp(1.88rem,5.6vw,3.3rem);letter-spacing:-.035em;line-height:1.1;
+  text-wrap:balance;margin-top:16px;
 }
 /* A warm halo sitting behind the words, breathing slowly. It is what stops
    the headline reading as text pasted onto a flat dark rectangle. */
@@ -392,9 +392,11 @@ body.menu-open{overflow:hidden}
   0%,30%  {background-position:118% 0}
   72%,100%{background-position:-18% 0}
 }
+/* One line, not five. Everything this used to say is said again by the chips
+   further down; up here it was only pushing the two buttons off the screen. */
 .landing .sub{
-  color:var(--ink-2);margin:18px auto 0;font-size:1.01rem;line-height:1.65;
-  max-width:44ch;text-wrap:pretty;
+  color:var(--ink-2);margin:13px auto 0;font-size:.95rem;line-height:1.55;
+  max-width:34ch;text-wrap:balance;font-weight:500;
 }
 /* the live-in-Guwahati pill gets a real pulse, not a static dot */
 .pulse{position:relative;width:7px;height:7px;flex:0 0 auto}
@@ -484,22 +486,28 @@ body.menu-open{overflow:hidden}
 .reveal[data-r="5"]{animation-delay:.38s}
 @keyframes rise{to{opacity:1;transform:none}}
 .doors{
-  display:flex;flex-direction:column;gap:14px;
-  max-width:520px;margin:clamp(32px,6vw,46px) auto 0;
+  display:flex;flex-direction:column;gap:13px;align-items:stretch;
+  max-width:520px;margin:clamp(24px,4.5vw,34px) auto 0;
 }
+/* These two are the whole screen. They are sized to be hit with a thumb,
+   they depress when pressed rather than merely changing colour, and the grey
+   flash Android paints over a tapped element is turned off — that flash is
+   most of what makes a web app feel like a web page. */
 .cta{
-  display:flex;align-items:center;gap:16px;width:100%;text-align:left;
-  border-radius:var(--r);padding:20px 22px;font-family:inherit;
+  display:flex;align-items:center;gap:15px;width:100%;text-align:left;
+  border-radius:var(--r-lg);padding:19px 18px;font-family:inherit;
   border:1px solid transparent;cursor:pointer;
-  transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  transition:transform .18s cubic-bezier(.2,.8,.3,1),box-shadow .18s ease,
+             background .18s ease,border-color .18s ease;
 }
-.cta:active{transform:scale(.99)}
 .cta:focus-visible{outline:2px solid var(--brand-2);outline-offset:3px}
 .cta-ico{
-  width:60px;height:60px;border-radius:17px;display:grid;place-items:center;flex:0 0 auto;
+  width:58px;height:58px;border-radius:16px;display:grid;place-items:center;flex:0 0 auto;
   position:relative;
 }
-.art{width:34px;height:34px;overflow:visible}
+.art{width:33px;height:33px;overflow:visible}
 
 /* ---- "Find a worker": the head and binoculars sweep the horizon ---- */
 .art-find .scan{
@@ -530,9 +538,16 @@ body.menu-open{overflow:hidden}
 }
 @keyframes nod{0%,52%,100%{transform:translateY(0) rotate(0deg)}70%{transform:translateY(-1px) rotate(-2.5deg)}}
 .cta-text{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
-.cta-text b{font-size:1.12rem;font-weight:700;letter-spacing:-.02em;line-height:1.25}
-.cta-text i{font-style:normal;font-size:.84rem;font-weight:500;opacity:.72}
-.cta-arrow{flex:0 0 auto;opacity:.55}
+.cta-text b{font-size:1.19rem;font-weight:800;letter-spacing:-.025em;line-height:1.2}
+.cta-text i{font-style:normal;font-size:.85rem;font-weight:500;opacity:.74}
+/* the arrow sits in its own chip, so it reads as somewhere to press rather
+   than as decoration at the end of a line */
+.cta-go{
+  width:36px;height:36px;border-radius:50%;flex:0 0 auto;
+  display:grid;place-items:center;
+  transition:transform .24s cubic-bezier(.2,.8,.3,1),background .2s ease;
+}
+.cta-arrow{flex:0 0 auto}
 .cta.primary{
   position:relative;color:var(--brand-ink);
   background:linear-gradient(168deg,#F2CE79 0%,var(--brand) 52%,#D2A337 100%);
@@ -553,21 +568,38 @@ body.menu-open{overflow:hidden}
 @keyframes shine{0%,72%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
 .cta{position:relative;overflow:hidden}
 .cta>*{position:relative;z-index:1}
-.cta.primary .cta-ico{background:rgba(255,255,255,.16);backdrop-filter:blur(2px)}
-.cta.primary .cta-arrow{opacity:.8}
-.cta.primary:hover{transform:translateY(-2px);box-shadow:0 1px 0 rgba(255,255,255,.24) inset,
-  0 20px 44px -8px rgba(234,187,81,.40), 0 3px 10px rgba(0,0,0,.4)}
-.cta.primary:hover .cta-arrow{transform:translateX(3px)}
+.cta.primary .cta-ico{background:rgba(255,255,255,.20);backdrop-filter:blur(2px)}
+.cta.primary .cta-go{background:rgba(20,16,10,.14)}
+.cta.primary:hover .cta-go,.cta.primary:active .cta-go{background:rgba(20,16,10,.24)}
+.cta.primary:hover{transform:translateY(-3px);box-shadow:0 1px 0 rgba(255,255,255,.24) inset,
+  0 22px 48px -8px rgba(234,187,81,.46), 0 3px 10px rgba(0,0,0,.4)}
+.cta.primary:hover .cta-go{transform:translateX(4px)}
+/* The second door used to recede into the background, which made it look
+   disabled next to the gold one. It is half the business — it gets a gold
+   edge and its own glow, just quieter. */
 .cta.secondary{
-  background:linear-gradient(168deg,rgba(29,24,16,.9),rgba(21,17,9,.9));
-  color:var(--ink);border-color:var(--line-strong);
-  box-shadow:0 1px 0 rgba(255,255,255,.05) inset;
+  background:linear-gradient(168deg,rgba(35,29,18,.95),rgba(23,19,11,.95));
+  color:var(--ink);border-color:rgba(234,187,81,.30);
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset, 0 10px 26px -10px rgba(0,0,0,.7);
 }
 .cta.secondary .cta-ico{background:var(--brand-soft);color:var(--brand-2)}
-.cta.secondary:hover{border-color:var(--brand);transform:translateY(-2px);box-shadow:var(--shadow)}
-.cta.secondary:hover .cta-arrow{transform:translateX(3px)}
-.cta-arrow{transition:transform .22s cubic-bezier(.22,1,.36,1)}
-.cta:active{transform:scale(.985)}
+.cta.secondary .cta-go{background:var(--brand-soft);color:var(--brand-2)}
+.cta.secondary:hover{
+  border-color:var(--brand);transform:translateY(-3px);
+  box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 20px 40px -12px rgba(234,187,81,.24);
+}
+.cta.secondary:hover .cta-go{transform:translateX(4px);background:rgba(234,187,81,.24)}
+
+/* press physics: it goes down and the shadow collapses, the way a real
+   button does. scale alone reads as a hover, not a tap. */
+/* `.cta.primary:hover` is one class more specific than `.cta:active`, so a
+   pressed button stayed lifted instead of going down. The active rules match
+   the hover rules' specificity and come after them. */
+.cta:active{transform:translateY(2px) scale(.988)}
+.cta.primary:active,.cta.secondary:active{transform:translateY(2px) scale(.988)}
+.cta.primary:active{box-shadow:0 1px 0 rgba(255,255,255,.18) inset, 0 5px 14px -4px rgba(234,187,81,.34)}
+.cta.secondary:active{box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 4px 12px -6px rgba(0,0,0,.6)}
+.cta:active .cta-go{transform:translateX(2px)}
 .cta-text b{transition:none}
 @media (prefers-reduced-motion: reduce){
   .art-find .scan,.art-worker .arm,.art-worker .figure,
@@ -2110,7 +2142,7 @@ footer a{color:var(--ink-2)}
         Now live in Guwahati
       </span>
       <h1 class="reveal" data-r="2">Trusted people for every job,<br><em>right where you are.</em></h1>
-      <p class="sub reveal" data-r="3">Real people from your own locality. They set their price, you keep the whole conversation, and we take nothing from either side.</p>
+      <p class="sub reveal" data-r="3">They set the price. We take no commission.</p>
 
       <div class="doors reveal" data-r="4">
         <button class="cta primary" id="ctaHire" onclick="go('hire')">
@@ -2130,8 +2162,10 @@ footer a{color:var(--ink-2)}
               <path d="M17.6 35 22 39.4 26.4 35"/>
             </svg>
           </span>
-          <span class="cta-text"><b>Find a worker</b><i>Search verified people near you</i></span>
-          <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <span class="cta-text"><b>Find a worker</b><i>Verified, and near you</i></span>
+          <span class="cta-go" aria-hidden="true">
+            <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
+          </span>
         </button>
 
         <button class="cta secondary" id="ctaWork" onclick="go('work')">
@@ -2154,8 +2188,10 @@ footer a{color:var(--ink-2)}
               </g>
             </svg>
           </span>
-          <span class="cta-text"><b id="ctaWorkTitle">Register as a worker</b><i id="ctaWorkSub">Set your rates and get bookings</i></span>
-          <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <span class="cta-text"><b id="ctaWorkTitle">Register as a worker</b><i id="ctaWorkSub">Free for your first 30 days</i></span>
+          <span class="cta-go" aria-hidden="true">
+            <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
+          </span>
         </button>
       </div>
 
@@ -4435,7 +4471,7 @@ function paintWorkDoor(){
   if(!t || !sub) return;
   const inside = !!(session && session.registered);
   t.textContent   = inside ? "Visit your profile" : "Register as a worker";
-  sub.textContent = inside ? "Your ID card, work and reviews" : "Set your rates and get bookings";
+  sub.textContent = inside ? "Your ID card, work and reviews" : "Free for your first 30 days";
 }
 function initHome(){
   paintWorkDoor();
