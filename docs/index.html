@@ -455,6 +455,34 @@ body.menu-open{overflow:hidden}
   background:var(--surface);
 }
 
+/* A picture before the words: eighteen text-only boxes is a wall to read
+   through, and reading is the thing we are trying not to require. */
+.cat-tile{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.ct-ico{
+  width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+  background:var(--brand-soft);color:var(--brand-2);margin-bottom:6px;
+}
+.ct-ico svg{width:19px;height:19px}
+
+/* ---------- the registration wizard ---------- */
+.stepper{display:flex;gap:7px;margin:10px 0 4px}
+.sdot{
+  height:5px;flex:1;border-radius:999px;background:var(--surface-2);
+  transition:background .3s ease;
+}
+.sdot.done{background:rgba(234,187,81,.45)}
+.sdot.on{background:var(--brand)}
+.step-title{
+  font-size:1.22rem;font-weight:800;letter-spacing:-.025em;color:var(--ink);
+  margin:12px 0 16px;
+}
+.step-nav{display:flex;gap:10px;margin-top:20px}
+.step-nav .btn{flex:1;padding:15px;font-size:1rem;font-weight:800}
+.step-nav .btn[hidden]{display:none !important}
+
+/* the promise chips again at the foot of the results */
+.hire-assure{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+
 /* the alerts row on a worker's own profile */
 .alert-row{
   display:flex;align-items:flex-start;gap:14px;justify-content:space-between;
@@ -1677,13 +1705,13 @@ body.in-chat > .demo-note{display:none}
 .loc-btn.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:rgba(79,201,141,.08)}
 
 /* ---------- hire: search ---------- */
-.search-head{padding:34px 0 4px}
+.search-head{padding:14px 0 2px}
 .search-head h1{font-size:clamp(1.6rem,4.6vw,2.2rem);letter-spacing:-.03em}
 .search-head p{color:var(--muted);margin-top:8px;font-size:.95rem}
 .searchbar{
   display:flex;align-items:center;gap:12px;background:var(--surface);
   border:1px solid var(--line-strong);border-radius:var(--r);
-  padding:14px 18px;margin-top:20px;box-shadow:var(--shadow-sm);
+  padding:13px 16px;margin-top:11px;box-shadow:var(--shadow-sm);
   transition:border-color .15s,box-shadow .15s;
 }
 .searchbar:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(234,187,81,.24)}
@@ -1701,7 +1729,7 @@ body.in-chat > .demo-note{display:none}
 .row-label.quiet{margin-top:22px;color:rgba(138,151,160,.75)}
 /* What is narrowing the list right now, each one removable. Tapping an active
    tile again clears it too, but a toggle nobody can see is not a control. */
-.active-filter{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 0}
+.active-filter{display:flex;flex-wrap:wrap;gap:8px;margin:11px 0 0}
 .active-filter:empty{display:none}
 .fpill{
   display:inline-flex;align-items:center;gap:7px;
@@ -1714,14 +1742,20 @@ body.in-chat > .demo-note{display:none}
 .fpill.clear-all:hover{color:var(--ink);background:var(--surface-2)}
 .result-meta{
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-  padding:24px 0 4px;border-top:1px solid var(--line);margin-top:22px;color:var(--muted);font-size:.84rem;font-weight:600;
+  padding:13px 0 2px;border-top:1px solid var(--line);margin-top:13px;color:var(--muted);font-size:.83rem;font-weight:600;
 }
 .result-meta button{
   border:none;background:none;color:var(--brand);font-weight:700;font-size:.84rem;
   text-decoration:underline;text-underline-offset:2px;
 }
 .suggests{display:flex;flex-wrap:wrap;gap:7px}
-.suggest-row{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:12px}
+/* one line that scrolls sideways, rather than a block that wraps to three */
+.suggest-row{
+  display:flex;flex-wrap:nowrap;align-items:center;gap:7px;margin-top:10px;
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.suggest-row::-webkit-scrollbar{display:none}
+.suggest-row > *{flex:0 0 auto}
 .suggest-lead{
   font-size:.74rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
   color:var(--muted);margin-right:2px;
@@ -1734,8 +1768,8 @@ body.in-chat > .demo-note{display:none}
 
 /* ---------- location bar ---------- */
 .loc-bar{
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  padding:6px 0 16px;
+  display:flex;align-items:center;gap:9px;flex-wrap:nowrap;
+  padding:2px 0 0;
 }
 .loc-city{
   display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;color:var(--ink);
@@ -1751,23 +1785,30 @@ body.in-chat > .demo-note{display:none}
 .loc-area:focus{border-color:var(--brand)}
 
 /* ---------- category tiles ---------- */
+/* A four-by-three grid of categories pushed the first worker below the fold
+   — you opened Find a worker and saw no workers. One row that scrolls
+   sideways shows the same categories in a third of the height. */
 .tile-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px;
+  display:flex;gap:8px;margin-top:12px;overflow-x:auto;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;
 }
-@media(max-width:560px){.tile-grid{grid-template-columns:repeat(3,1fr);gap:8px}}
+.tile-grid::-webkit-scrollbar{display:none}
+.tile-grid > *{flex:0 0 auto;width:78px}
 .tile{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
-  padding:15px 9px 13px;display:flex;flex-direction:column;align-items:center;gap:9px;
-  transition:all .15s ease;text-align:center;
+  padding:11px 6px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease;text-align:center;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
 }
+.tile:active{transform:translateY(1px) scale(.97)}
 .tile:hover{border-color:var(--brand);background:var(--surface-2);transform:translateY(-2px)}
 .tile.on{border-color:var(--brand);background:var(--brand-soft)}
 .tile .t-ico{
-  width:40px;height:40px;border-radius:11px;display:grid;place-items:center;
+  width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
   background:var(--surface-2);color:var(--brand-2);
 }
 .tile.on .t-ico{background:var(--brand);color:var(--brand-ink)}
-.tile b{font-size:.78rem;font-weight:600;line-height:1.25;color:var(--ink-2);letter-spacing:-.01em}
+.tile b{font-size:.7rem;font-weight:700;line-height:1.2;color:var(--ink-2);letter-spacing:-.01em}
 .tile.on b{color:var(--ink)}
 /* the fold, styled as a tile so the grid stays one thing */
 .tile.more{border-style:dashed;border-color:var(--line-strong)}
@@ -2454,9 +2495,12 @@ footer a{color:var(--ink-2)}
   </div>
   <div class="panel wide">
     <h2 id="regTitle">Your worker profile</h2>
-    <p class="hint">Customers see exactly what you enter here.</p>
-    <div class="divider"></div>
+    <!-- One thing at a time. The whole form used to be one 2,400px page with
+         45 controls on it, which is a lot to face if reading is work. -->
+    <div class="stepper" id="regStepper" aria-hidden="true"></div>
+    <p class="step-title" id="regStepTitle"></p>
 
+    <div class="regstep" data-step="1">
     <div class="field">
       <label>
         Services you offer <span class="sublabel">— choose up to 3</span>
@@ -2524,8 +2568,9 @@ footer a{color:var(--ink-2)}
       </div>
     </div>
 
-    <div class="divider"></div>
+    </div><!-- /step 1 -->
 
+    <div class="regstep" data-step="2" hidden>
     <!-- One button. This used to be a circle, a button, a paragraph about what
          gets rejected and a fallback link, all at once — four things to read
          before the one thing to do. What the photo is for is explained inside
@@ -2544,6 +2589,9 @@ footer a{color:var(--ink-2)}
     </div>
 
 
+    </div><!-- /step 2 -->
+
+    <div class="regstep" data-step="3" hidden>
     <div class="grid-2">
       <div class="field">
         <label for="regCity">City</label>
@@ -2569,6 +2617,9 @@ footer a{color:var(--ink-2)}
       </button>
     </div>
 
+    </div><!-- /step 3 -->
+
+    <div class="regstep" data-step="4" hidden>
     <!-- Consent has to be given, not assumed: the DPDP Act asks for it to be
          specific, informed and demonstrable, so it is ticked here and the
          moment it was given is written to the profile. -->
@@ -2589,6 +2640,12 @@ footer a{color:var(--ink-2)}
 
     <button class="btn btn-brand btn-block" id="regSaveBtn" onclick="saveProfile()" style="padding:14px;margin-top:6px">Publish my profile</button>
     <p class="hint" style="margin-top:12px">Your 30 days free trial starts the day we approve your profile. No card, no UPI, nothing to cancel.</p>
+    </div><!-- /step 4 -->
+
+    <div class="step-nav" id="regNav">
+      <button class="btn btn-quiet" id="stepBack" onclick="regGo(regStep - 1)">Back</button>
+      <button class="btn btn-brand" id="stepNext" onclick="regNext()">Next</button>
+    </div>
   </div>
 </section>
 
@@ -2706,6 +2763,9 @@ footer a{color:var(--ink-2)}
       Back
     </button>
     <div class="search-head">
+      <!-- The headline said "What do you need help with?" directly above a box
+           whose placeholder says the same thing. The locality sits beside it
+           rather than on a line of its own. -->
       <div class="loc-bar">
         <span class="loc-city">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -2713,7 +2773,6 @@ footer a{color:var(--ink-2)}
         </span>
         <select id="areaFilter" class="loc-area" onchange="renderResults()" aria-label="Filter by area"></select>
       </div>
-      <h1>What do you need help with?</h1>
       <div class="searchbar">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input type="text" id="hireSearch" placeholder="Search: maid, cook, electrician…" oninput="onSearchInput()" autocomplete="off">
@@ -2732,22 +2791,13 @@ footer a{color:var(--ink-2)}
     <div class="result-meta" id="resultMeta"></div>
     <div class="results" id="results"></div>
 
-    <div class="trust-strip">
-      <div class="trust-item">
-        <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
-        <div><b>Verified by Repto</b><span>We check the photo, the details and the WhatsApp number before a profile goes live.</span></div>
-      </div>
-      <div class="trust-item">
-        <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-        <div><b>Clear rates, no fees</b><span>Workers set their own price. Repto charges no commission.</span></div>
-      </div>
-      <div class="trust-item">
-        <span class="ti-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-        <div><b>Talk directly</b><span>Chat with the worker inside Repto, or carry on over WhatsApp — whichever suits you.</span></div>
-      </div>
+    <div class="assure hire-assure">
+      <span><i class="dot"></i>Verified by Repto</span>
+      <span><i class="dot"></i>Rates set by the worker</span>
+      <span><i class="dot"></i>No commission</span>
+      <span><i class="dot"></i>Chat inside the app</span>
     </div>
-  </div>
-</section>
+  </section>
 
 <!-- ============================= ADMIN REVIEW (private) ============================= -->
 <section class="screen" id="scr-admin">
@@ -4878,7 +4928,7 @@ function initRegister(){
   $("regTitle").textContent = editing ? "Edit your profile" : "Your worker profile";
   $("regSaveBtn").textContent = editing ? "Save changes" : "Publish my profile";
   /* consent is recorded once, when the profile is first published */
-  $("consentBlock").hidden = !!editing;
+  regGo(1);
   const alt = $("uploadAlt"); if(alt) alt.hidden = true;   /* only after the camera fails */
   if(!editing){ $("consentPublish").checked = false; $("consentAge").checked = false; }
   picked = w ? (w.skills||[]).map(s=>s.skill) : [];
@@ -4991,6 +5041,61 @@ function renderSlotPreview(){
     list.slice(0,4).map(esc).join(", ")}${list.length>4 ? " … " + esc(list[list.length-1]) : ""}`;
 }
 let pickCat = "";
+
+/* ---------- the registration wizard ----------
+   Four questions, one screen each, in the order somebody would answer them
+   out loud. Nothing is validated until you try to leave the step it belongs
+   to, and the reason you cannot leave is said in words rather than by
+   turning a button grey. */
+const REG_STEPS = [
+  { n:1, title:"What work do you do?" },
+  { n:2, title:"Your photo" },
+  { n:3, title:"Where do you work?" },
+  { n:4, title:"Ready to publish" }
+];
+let regStep = 1;
+
+function regWhyNot(step){
+  if(step === 1){
+    const skills = collectSkills();
+    if(!skills.length) return "Choose at least one type of work";
+    const noPrice = skills.find(x => !x.price || x.price < 1);
+    if(noPrice) return "Add your rate for " + noPrice.skill;
+    const bad = rateOutOfBand(skills);
+    if(bad) return bad;
+    if(!$("regCredBlock").hidden && !$("regNumber").value.trim())
+      return "Add your registration number";
+  }
+  if(step === 2 && !selfieData) return "Take your photo — customers need to see who is coming";
+  if(step === 3 && !$("regArea").value.trim()) return "Choose the locality you work in";
+  return null;
+}
+
+function regGo(step){
+  step = Math.max(1, Math.min(REG_STEPS.length, step));
+  regStep = step;
+  document.querySelectorAll("#scr-register .regstep").forEach(el => {
+    el.hidden = Number(el.dataset.step) !== step;
+  });
+  const editing = !!(session && session.registered);
+  $("regStepTitle").textContent = REG_STEPS[step-1].title;
+  $("regStepper").innerHTML = REG_STEPS.map(x =>
+    `<span class="sdot${x.n === step ? " on" : (x.n < step ? " done" : "")}"></span>`).join("");
+  $("stepBack").hidden = step === 1;
+  const last = step === REG_STEPS.length;
+  $("stepNext").hidden = last;
+  $("regSaveBtn").hidden = !last;
+  /* the consent block is only for a first publish */
+  $("consentBlock").hidden = !!editing;
+  if(last && editing) $("regSaveBtn").hidden = false;
+  window.scrollTo({top:0});
+}
+
+function regNext(){
+  const why = regWhyNot(regStep);
+  if(why){ toast(why); return; }
+  regGo(regStep + 1);
+}
 function renderSkillPicker(){
   const q = $("skillSearch").value.trim().toLowerCase();
   const host = $("skillPicker");
@@ -5008,7 +5113,11 @@ function renderSkillPicker(){
     host.innerHTML = `<div class="pick-step">
       <div class="step-head"><h6>Choose the type of work you do</h6></div>
       <div class="cat-grid">${CATALOGUE.map(([key,label,items])=>
-        `<button class="cat-tile" onclick="openCat('${key}')"><b>${esc(label)}</b><span>${items.length} services</span></button>`).join("")}</div>
+        `<button class="cat-tile" onclick="openCat('${key}')">
+           <span class="ct-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round">${CAT_ICON[key]||""}</svg></span>
+           <b>${esc(label)}</b><span>${items.length} services</span>
+         </button>`).join("")}</div>
     </div>`;
     return;
   }
