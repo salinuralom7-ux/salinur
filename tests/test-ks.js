@@ -37,6 +37,7 @@ const srv = http.createServer((req, res) => {
   console.log('Card title and subtitle stack:', await page.evaluate(
     () => getComputedStyle(document.querySelector('.cta-text')).flexDirection));
   console.log('First is a real button:', await page.evaluate(() => document.querySelector('.cta').tagName));
+  console.log('Budget Cars strip gone:', await page.locator('#carsNote').count() === 0);
   console.log('Dark theme:', await page.evaluate(() => getComputedStyle(document.body).backgroundColor));
   console.log('Catalogue size:', await page.evaluate(() => SKILLS.length), 'services in',
               await page.evaluate(() => CATALOGUE.length), 'categories');
@@ -81,7 +82,7 @@ const srv = http.createServer((req, res) => {
   const waCode = (await page.locator('#waCode').textContent()).trim();
   console.log('Code is 6 digits:', /^\d{6}$/.test(waCode));
   const waHref = await page.locator('#waSendBtn').getAttribute('href');
-  console.log('Link targets the new Repto number:', waHref.startsWith('https://wa.me/917086599367?text='));
+  console.log('Link targets the new Nearse number:', waHref.startsWith('https://wa.me/917086599367?text='));
   const waMsg = decodeURIComponent(waHref.split('?text=')[1]);
   console.log('Prefilled message:', JSON.stringify(waMsg));
   console.log('Message carries name, number and code:',
@@ -128,9 +129,9 @@ const srv = http.createServer((req, res) => {
   }
   // price validation
   await cards.nth(0).locator('.sd-price').fill('');
-  await page.locator('#regSaveBtn').click();
+  await page.locator('#stepNext').click();
   await page.waitForTimeout(300);
-  console.log('Blocks empty rate:', await page.locator('#scr-register.on').count() === 1);
+  console.log('Blocks empty rate:', await page.evaluate(() => regStep) === 1);
 
   // a carpenter at Rs 9,000/day is nonsense and must be refused
   const carp = page.locator('.picked-card', { hasText: 'Carpenter' });
@@ -138,9 +139,9 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(250);
   console.log('Over-ceiling flagged live:', (await carp.locator('.band').innerText()).includes('Too high'));
   await cards.nth(0).locator('.sd-price').fill('450');
-  await page.locator('#regSaveBtn').click();
+  await page.locator('#stepNext').click();
   await page.waitForTimeout(400);
-  console.log('Blocks saving an over-ceiling rate:', await page.locator('#scr-register.on').count() === 1);
+  console.log('Blocks saving an over-ceiling rate:', await page.evaluate(() => regStep) === 1);
   await carp.locator('.sd-price').fill('50');
   await page.waitForTimeout(250);
   console.log('Under-floor flagged live:', (await carp.locator('.band').innerText()).includes('Too low'));
@@ -148,15 +149,18 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(250);
   console.log('Back in range clears the warning:', !(await carp.locator('.band').innerText()).includes('Too'));
 
+  await page.locator('#stepNext').click();
+  await page.waitForTimeout(500);
+  console.log('Wizard step after choosing work:', await page.evaluate(() => regStep));
+
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR4nGP8z8DwnwEKmBhQAAAA//8DVgn+/hZorNMAAAAASUVORK5CYII=', 'base64');
-  // the photo step is one button now; the upload route only appears once the
-  // camera has failed, which it does in a headless browser
-  await page.locator('#photoBtn').click();
-  await page.waitForTimeout(600);
+  await page.locator('#uploadAlt').click().catch(()=>{});
   await page.setInputFiles('#selfieInput', { name: 's.png', mimeType: 'image/png', buffer: png });
   await page.waitForTimeout(500);
-  console.log('Photo step is one button:', (await page.locator('#photoBtn').innerText()).trim());
-  console.log('Photo set:', await page.locator('#photoThumb img').count() === 1);
+  console.log('Photo set:', await page.locator('#selfieCircle img').count() === 1);
+  await page.locator('#stepNext').click();
+  await page.waitForTimeout(500);
+  console.log('Wizard step after the photo:', await page.evaluate(() => regStep));
   console.log('City locked:', await page.locator('#regCity').inputValue(), '/ readonly:', await page.locator('#regCity').getAttribute('readonly') !== null);
   await page.selectOption('#regArea', 'Jalukbari');
   console.log('Locality options:', await page.locator('#regArea option').count(),
@@ -175,6 +179,10 @@ const srv = http.createServer((req, res) => {
   console.log('Location captured:', (await page.locator('#regLocText').textContent()).includes('saved'));
   await page.screenshot({ path: 'ks-register.png' });
 
+  await page.locator('#stepNext').click();
+  await page.waitForTimeout(500);
+  console.log('Wizard step before publishing:', await page.evaluate(() => regStep));
+
   // consent must be given, not assumed
   console.log('Consent block shown on first publish:', await page.locator('#consentBlock:visible').count() === 1);
   await page.locator('#regSaveBtn').click();
@@ -190,7 +198,7 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(900);
   console.log('Congratulations screen shown:', await page.locator('#scr-done.on').count() === 1);
   console.log('  message:', (await page.locator('#scr-done .sub').innerText()).trim());
-  console.log('  mentions the free trial:', (await page.locator('#scr-done').innerText()).includes('30 days free'));
+  console.log('  mentions the free trial:', (await page.locator('#scr-done').innerText()).includes('3 months free'));
   console.log('  names the number to expect a reply on:', (await page.locator('#donePhone').innerText()).includes('9435012345'));
   await page.locator('#scr-done .btn-brand').click();
   await page.waitForTimeout(500);
@@ -213,11 +221,6 @@ const srv = http.createServer((req, res) => {
   await adminPage.goto('http://localhost:8777/#admin');
   await adminPage.waitForTimeout(1400);
   console.log('Admin screen opens with PIN:', await adminPage.locator('#scr-admin.on').count() === 1);
-  console.log('Dashboard is the landing tab:', await adminPage.locator('.stat-grid').count() > 0);
-  console.log('Dashboard flags what needs attention:',
-              (await adminPage.locator('.todo-bar').innerText()).replace(/\n/g, ' — '));
-  await adminPage.locator('.admin-tabs .tab', { hasText: 'Review' }).click();
-  await adminPage.waitForTimeout(900);
   console.log('Pending profile listed:', (await adminPage.locator('.admin-card').first().locator('h4').innerText()).replace(/\n/g,' '));
   console.log('Admin has OTP requirement toggle:', await adminPage.locator('#otpSwitch').count() === 1);
   const expect = (await adminPage.locator('.wa-expect').first().innerText()).replace(/\s+/g,' ').trim();
@@ -225,15 +228,12 @@ const srv = http.createServer((req, res) => {
   console.log('Code shown matches the one issued:', expect.includes(waCode) && expect.includes('9435012345'));
 
   // reject first, with a reason, then approve
-  // rejection is now a list of reasons, not a free-text prompt
+  adminPage.removeAllListeners('dialog');
+  adminPage.on('dialog', d => d.accept(d.type() === 'prompt' ? 'Photo is not a clear face' : '4242'));
   await adminPage.locator('.admin-card').first().locator('button', { hasText: 'Reject' }).click();
-  await adminPage.waitForTimeout(400);
-  console.log('Reject sheet offers reasons:', await adminPage.locator('.reject-opt').count());
-  const REASON = 'The photo is not a clear picture of your face';
-  await adminPage.locator('.reject-opt', { hasText: REASON }).click();
   await adminPage.waitForTimeout(700);
   console.log('Rejected section appears:', (await adminPage.locator('#adminPanel').innerText()).includes('Rejected'));
-  console.log('Reason recorded:', (await adminPage.locator('#adminPanel').innerText()).includes(REASON));
+  console.log('Reason recorded:', (await adminPage.locator('#adminPanel').innerText()).includes('Photo is not a clear face'));
 
   // worker sees the rejection and the reason
   await page.reload();
@@ -241,7 +241,7 @@ const srv = http.createServer((req, res) => {
   await page.evaluate(() => go('me'));
   await page.waitForTimeout(500);
   console.log('Worker sees rejection:', await page.locator('.vstatus.rejected').count() === 1);
-  console.log('Worker sees the reason:', (await page.locator('.vstatus.rejected').innerText()).includes(REASON));
+  console.log('Worker sees the reason:', (await page.locator('.vstatus.rejected').innerText()).includes('Photo is not a clear face'));
 
   await adminPage.evaluate(() => renderAdmin());
   await adminPage.waitForTimeout(600);
@@ -323,32 +323,17 @@ const srv = http.createServer((req, res) => {
   await page.locator('.wcard').first().click();
   await page.waitForTimeout(400);
   console.log('Detail rate rows:', await page.locator('.price-line').count());
-  // the pass-by rating box is gone: a score can only come from a job that
-  // finished, through the conversation
-  console.log('No pass-by rating box:', await page.locator('#rateStars').count() === 0);
-  // an electrician is dispatched instantly now, so this door opens the NOW sheet
-  console.log('Detail CTA reflects the mode:', (await page.locator('#bookCta').textContent()).trim(),
-              '|', (await page.locator('#bookCtaNote').textContent()).trim());
-  await page.locator('#bookCta').click();
-  await page.waitForTimeout(400);
-  console.log('Instant sheet opens for an electrician:', await page.locator('#nowOverlay.open').count() === 1);
-  console.log('Instant sheet never asks for a time:', await page.locator('#nowOverlay #bookWhen').count() === 0);
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-
-  // a monthly tutor is an enquiry, and still uses the date-and-slot sheet
-  await page.evaluate(() => go('hire'));
-  await page.waitForTimeout(600);
-  await page.fill('#hireSearch', 'Priya');
+  await page.locator('#rateStars span[data-s="5"]').click();
+  await page.locator('.rating-box button').click();
   await page.waitForTimeout(500);
-  await page.locator('.wcard').first().click();
-  await page.waitForTimeout(400);
-  console.log('Tutor CTA reflects the mode:', (await page.locator('#bookCta').textContent()).trim());
-  await page.locator('#bookCta').click();
+  console.log('Rating applied:', (await page.locator('#wDetail .stars').first().textContent()).trim());
+  await page.locator('#wDetail .btn-brand').click();
   await page.waitForTimeout(400);
   console.log('Booking: service options:', await page.locator('#bookServices .opt').count(),
               '| first preselected:', await page.locator('#bookServices .opt.on').count() === 1);
+  console.log('Booking: service shows price:', (await page.locator('#bookServices .opt small').first().textContent()).trim());
   console.log('Booking: when options:', (await page.locator('#bookWhen .opt').allTextContents()).map(t=>t.trim().split('\n')[0]).join(' | '));
+  console.log('Booking: slot options:', await page.locator('#bookSlot .opt').count());
   console.log('Booking: area options:', await page.locator('#bookArea option').count());
   console.log('Booking: quote visible:', await page.locator('#bookQuote.on').count() === 1);
   await page.locator('#bookWhen .opt', { hasText: 'Pick a date' }).click();
@@ -357,9 +342,15 @@ const srv = http.createServer((req, res) => {
   await page.locator('#bookWhen .opt', { hasText: 'Tomorrow' }).click();
   await page.waitForTimeout(200);
   console.log('Booking: date input hidden again:', !(await page.locator('#bookDate').isVisible()));
+  await page.locator('#bookSlot .opt', { hasText: 'Morning' }).click();
+  await page.locator('#bookServices .opt').nth(1).click();
+  await page.waitForTimeout(200);
+  console.log('Booking: quote after choices:', (await page.locator('#bookQuote').innerText()).replace(/\n+/g, ' / '));
   await page.fill('#bookName', 'Test Customer');
   await page.fill('#bookPhone', '9876543210');
+  await page.fill('#bookNote', 'Two ceiling fans');
   await page.screenshot({ path: 'ks-booking.png' });
+  // validation: area still unset -> must block
   await page.selectOption('#bookArea', '');
   await page.locator('#confirmBookBtn').click();
   await page.waitForTimeout(300);
@@ -398,33 +389,24 @@ const srv = http.createServer((req, res) => {
   console.log('Signed back in for deletion test:', await page.locator('#scr-me.on').count() === 1);
   console.log('Delete control present:', await page.locator('.danger-zone button').count() === 1);
 
-  // leaving is a sheet now, not a spelling test in a browser prompt
+  // a wrong confirmation word must NOT delete
   page.removeAllListeners('dialog');
-  let strayDialogs = 0;
-  page.on('dialog', d => { strayDialogs++; d.dismiss(); });
-
+  page.on('dialog', d => d.type() === 'confirm' ? d.accept() : d.accept('nope'));
   await page.locator('.danger-zone button').click();
   await page.waitForTimeout(600);
-  console.log('Leaving opens a sheet, not a prompt:', await page.locator('#leaveOverlay.open').count() === 1);
+  console.log('Survives a mistyped confirmation:', await page.locator('#scr-me.on').count() === 1);
 
-  // backing out must NOT delete
-  await page.locator('#leaveStep1 .btn-quiet').click();
-  await page.waitForTimeout(500);
-  console.log('Survives backing out:', await page.locator('#scr-me.on').count() === 1);
-
+  // cancelling the first dialog must NOT delete
+  page.removeAllListeners('dialog');
+  page.on('dialog', d => d.dismiss());
   await page.locator('.danger-zone button').click();
-  await page.waitForTimeout(400);
-  await page.locator('#leaveStep1 .btn-danger').click();
-  await page.waitForTimeout(500);
-  console.log('Asks why before it lets you go:', await page.locator('.leave-reason').count() >= 6);
-  await page.locator('.leave-reason').first().click();
-  await page.locator('#leaveGoBtn').click();
-  await page.waitForTimeout(1100);
-  console.log('Says goodbye kindly:',
-    (await page.locator('#leaveStep3').innerText()).toLowerCase().includes('sad to see you go'));
-  console.log('No browser prompts anywhere in leaving:', strayDialogs === 0);
-  await page.locator('#leaveStep3 .btn-brand').click();
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(600);
+  console.log('Survives cancelling:', await page.locator('#scr-me.on').count() === 1);
+
+  page.removeAllListeners('dialog');
+  page.on('dialog', d => d.type() === 'confirm' ? d.accept() : d.accept('DELETE'));
+  await page.locator('.danger-zone button').click();
+  await page.waitForTimeout(900);
   console.log('Deleted and returned home:', await page.locator('#scr-home.on').count() === 1);
   console.log('Profile really gone from store:', await page.evaluate(
     () => !JSON.parse(localStorage.getItem('nearse_workers_v1')).some(w => w.phone === '9435012345')));
