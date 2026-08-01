@@ -6510,3 +6510,299 @@ end $$;
 
 -- always last
 select public.lock_public_functions();
+
+-- ============================================================
+-- MIGRATION 27 — the customer hears back
+--
+-- Migration 26 got a notification out to the worker: a booking request wakes
+-- their phone whether or not Repto is open. The other direction was never
+-- built. A customer sent a request and then had to keep opening the app to
+-- find out whether anybody had accepted it, which is the worse half of the
+-- wait — the worker at least chose to be here.
+--
+-- The difficulty is that a customer has no account. They are identified by
+-- the random customer_token minted with their booking and kept on their
+-- device, so a subscription hangs off that token rather than off a person.
+-- One phone holding three bookings subscribes three times, once per token;
+-- the rows are small and it keeps the model honest — a notification can only
+-- ever reach the device that made that particular booking.
+-- ============================================================
+
+create table if not exists public.customer_push (
+  customer_token uuid not null,
+  endpoint       text not null,
+  p256dh         text not null,
+  auth           text not null,
+  updated_at     timestamptz not null default now(),
+  primary key (customer_token, endpoint)
+);
+alter table public.customer_push enable row level security;   -- no policies
+
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on public.customer_push from %I', r);
+    end if;
+  end loop;
+end $$;
+
+-- Proving you may subscribe means proving you own the booking: the code and
+-- the token have to agree, which is the same pair that already opens the
+-- conversation.
+create or replace function public.save_customer_push(
+  p_code text, p_token uuid, p_endpoint text, p_p256dh text, p_auth text)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare tok uuid;
+begin
+  select t.customer_token into tok
+    from threads t
+   where t.code = upper(btrim(p_code)) and t.customer_token = p_token;
+  if tok is null then
+    raise exception 'Conversation not found';
+  end if;
+  if coalesce(btrim(p_endpoint),'') = '' then
+    raise exception 'No push endpoint';
+  end if;
+
+  insert into customer_push (customer_token, endpoint, p256dh, auth)
+  values (tok, p_endpoint, p_p256dh, p_auth)
+  on conflict (customer_token, endpoint)
+    do update set p256dh = excluded.p256dh, auth = excluded.auth, updated_at = now();
+end;
+$$;
+
+-- ---------- one queue, two kinds of recipient ----------
+alter table public.push_outbox add column if not exists customer_token uuid;
+alter table public.push_outbox alter column worker_id drop not null;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'push_outbox_one_recipient') then
+    alter table public.push_outbox add constraint push_outbox_one_recipient
+      check (num_nonnulls(worker_id, customer_token) = 1);
+  end if;
+end $$;
+
+create or replace function public.enqueue_customer_push(
+  p_token uuid, p_title text, p_body text, p_url text default null, p_tag text default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if p_token is null then return; end if;
+  if not exists (select 1 from customer_push where customer_token = p_token) then
+    return;                       -- never subscribed, or withdrew permission
+  end if;
+  insert into push_outbox (customer_token, title, body, url, tag)
+  values (p_token, p_title, left(coalesce(p_body,''), 180), p_url, p_tag);
+end;
+$$;
+
+-- ---------- what a customer is woken for ----------
+-- Accepted and declined are the two the whole wait is about. Started and
+-- finished are worth one buzz each: one means somebody is on the way to your
+-- house, the other is the only moment a review makes sense.
+create or replace function public.push_on_thread_status()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wname text;
+  first text;
+  eta   text;
+begin
+  if new.status is not distinct from old.status then return new; end if;
+
+  select w.name into wname from workers w where w.id = new.worker_id;
+  first := coalesce(nullif(split_part(coalesce(wname,''), ' ', 1), ''), 'The worker');
+
+  -- the arrival window lives on the job, not the thread, and only instant
+  -- dispatch has one at all
+  eta := '';
+  if new.job_id is not null then
+    select case when j.eta_minutes is not null
+                then ' Arriving in about ' || j.eta_minutes || ' minutes.' else '' end
+      into eta
+      from jobs j where j.id = new.job_id;
+    eta := coalesce(eta, '');
+  end if;
+
+  if new.status = 'accepted' then
+    perform public.enqueue_customer_push(new.customer_token,
+      first || ' accepted your booking',
+      coalesce(new.skill, 'Your booking') || ' is confirmed.' || eta,
+      './?src=push#mine', 'thread-' || new.id::text);
+
+  elsif new.status = 'declined' then
+    perform public.enqueue_customer_push(new.customer_token,
+      first || ' could not take this one',
+      coalesce(nullif(new.decline_reason, ''), 'Open Repto to find somebody else nearby.'),
+      './?src=push#mine', 'thread-' || new.id::text);
+
+  elsif new.status = 'working' then
+    perform public.enqueue_customer_push(new.customer_token,
+      first || ' has started',
+      coalesce(new.skill, 'The work') || ' is under way.',
+      './?src=push#mine', 'thread-' || new.id::text);
+
+  elsif new.status in ('done', 'closed') then
+    perform public.enqueue_customer_push(new.customer_token,
+      'Work finished',
+      'How did ' || first || ' do? A rating helps the next person choose.',
+      './?src=push#mine', 'thread-' || new.id::text);
+
+  elsif new.status = 'cancelled' then
+    perform public.enqueue_customer_push(new.customer_token,
+      'Booking cancelled',
+      coalesce(new.skill, 'Your booking') || ' is no longer going ahead.',
+      './?src=push#mine', 'thread-' || new.id::text);
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists threads_customer_push_trg on public.threads;
+create trigger threads_customer_push_trg after update of status on public.threads
+  for each row execute function public.push_on_thread_status();
+
+-- The mirror of push_on_customer_message: a reply from the worker.
+create or replace function public.push_on_worker_message()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare t record; wname text;
+begin
+  if new.sender <> 'worker' then return new; end if;
+  select customer_token, worker_id into t from threads where id = new.thread_id;
+  if t.customer_token is null then return new; end if;
+  select w.name into wname from workers w where w.id = t.worker_id;
+
+  perform public.enqueue_customer_push(
+    t.customer_token,
+    coalesce(nullif(split_part(coalesce(wname,''), ' ', 1), ''), 'The worker') || ' replied',
+    new.body,
+    './?src=push#mine',
+    'thread-' || new.thread_id::text);       -- replaces, never stacks
+  return new;
+end;
+$$;
+drop trigger if exists messages_worker_push_trg on public.messages;
+create trigger messages_worker_push_trg after insert on public.messages
+  for each row execute function public.push_on_worker_message();
+
+-- ---------- the sender drains both ----------
+-- Same contract as before, so the Edge Function needs no change beyond
+-- knowing that an endpoint may now belong to a customer.
+create or replace function public.claim_push(p_limit int default 20)
+returns table (id bigint, title text, body text, url text, tag text,
+               endpoint text, p256dh text, auth text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  return query
+  with due as (
+    select o.id from push_outbox o
+     where o.sent_at is null
+       and o.attempts < 5
+       and o.created_at > now() - interval '1 day'   -- a day-old buzz helps nobody
+     order by o.id
+     limit greatest(1, least(p_limit, 100))
+     for update skip locked
+  ), bumped as (
+    update push_outbox o set attempts = o.attempts + 1
+      from due where o.id = due.id
+      returning o.*
+  )
+  select b.id, b.title, b.body, b.url, b.tag, s.endpoint, s.p256dh, s.auth
+    from bumped b
+    join lateral (
+      select p.endpoint, p.p256dh, p.auth
+        from worker_push p where p.worker_id = b.worker_id
+      union all
+      select c.endpoint, c.p256dh, c.auth
+        from customer_push c where c.customer_token = b.customer_token
+    ) s on true;
+end;
+$$;
+
+-- A dead endpoint has to go from wherever it lives, or every later send
+-- against it fails for ever.
+create or replace function public.drop_push_endpoint(p_endpoint text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  delete from worker_push   where endpoint = p_endpoint;
+  delete from customer_push where endpoint = p_endpoint;
+end;
+$$;
+
+-- A customer's subscription is personal data with no owner once the booking
+-- is gone, so it goes when the retention sweep takes the thread.
+create or replace function public.purge_push_outbox()
+returns bigint
+language plpgsql security definer set search_path = public, extensions as $$
+declare n bigint;
+begin
+  delete from push_outbox
+   where (sent_at is not null and sent_at < now() - interval '7 days')
+      or created_at < now() - interval '30 days';
+  get diagnostics n = row_count;
+
+  delete from customer_push c
+   where not exists (select 1 from threads t where t.customer_token = c.customer_token);
+  return n;
+end;
+$$;
+
+-- save_customer_push is called by a customer, who is anon. It has to be on
+-- the allow-list or the lockdown takes it away again on the next apply.
+create or replace function public.lock_public_functions()
+returns void
+language plpgsql
+set search_path = public as $lock$
+declare
+  r text;
+  f record;
+  client_rpcs text[] := array[
+    -- profiles and sign-in
+    'register_worker','login_worker','update_worker','delete_worker','phone_taken',
+    'worker_session_start','worker_session_end','worker_pending','worker_stats',
+    -- browsing and contact
+    'search_workers','request_worker_contact','verify_worker_id','report_worker',
+    'record_booking',
+    -- instant jobs
+    'create_job','job_state','cancel_job','widen_job','advance_jobs',
+    'my_offers','accept_offer','decline_offer','set_online','save_push_subscription',
+    'save_customer_push',
+    -- appointments
+    'taken_slots','book_slot','my_appointments','rate_punctuality',
+    -- conversations
+    'start_thread','thread_view','thread_messages','post_message','customer_set_thread',
+    'worker_threads','worker_thread_messages','worker_post_message','worker_set_thread',
+    'review_thread','worker_reviews',
+    -- the admin screens, every one of which checks the PIN itself
+    'admin_check','admin_session_start','admin_queue','admin_stats','admin_recent',
+    'admin_reports','admin_clear_report','admin_wa_codes','admin_set_status',
+    'admin_set_require_otp','admin_verify_registration','admin_exit_reasons',
+    'admin_exit_notes','admin_hide_review'
+  ];
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.prokind = 'f'
+    loop
+      execute format('revoke all on function %s from public', f.sig);
+      execute format('revoke all on function %s from %I', f.sig, r);
+    end loop;
+
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.prokind = 'f'
+               and p.proname = any(client_rpcs)
+    loop
+      execute format('grant execute on function %s to %I', f.sig, r);
+    end loop;
+  end loop;
+end;
+$lock$;
+select public.lock_public_functions();

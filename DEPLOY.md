@@ -136,6 +136,25 @@ If nothing arrives, look in Supabase → **Table Editor** → `push_outbox`:
 A worker is never notified about their own messages, and a second message in
 the same conversation replaces the first notification rather than stacking up.
 
+## What customers will see
+
+The same sender handles both directions, so these need no extra setup — they
+start working the moment Step 4 is done.
+
+| | |
+|---|---|
+| The worker accepts | "Bhaskar accepted your booking — Carpenter is confirmed. Arriving in about 30 minutes." |
+| The worker declines | "Bhaskar could not take this one" plus their reason |
+| The worker starts | "Bhaskar has started — Carpenter is under way." |
+| The job is finished | "Work finished — How did Bhaskar do?" |
+| The worker replies | "Bhaskar replied — On my way at 10." |
+
+A customer has no account, so the subscription is tied to the booking itself.
+They are asked once, on the **My bookings** screen; after they allow it, every
+later booking from that phone is registered automatically. Nobody is asked
+before they have made a booking — a permission prompt on a first visit is the
+fastest way to get refused for ever.
+
 ## Two things worth knowing
 
 **iPhone.** Apple only delivers these to a PWA that has been **added to the

@@ -1922,6 +1922,19 @@ body.in-chat > .demo-note{display:none}
 }
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
+/* the alerts opt-in above a customer's bookings — the same shape as a
+   switch-row, but the control is a button because the browser owns the
+   permission and we can only ask for it once */
+.push-card{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  border:1px solid var(--line-strong);background:var(--surface);
+  border-radius:var(--r);padding:14px 16px;margin:16px 0 6px;
+}
+.push-card > div{flex:1;min-width:180px}
+.push-card b{font-size:.94rem;display:block;margin-bottom:2px}
+.push-card span{display:block;color:var(--muted);font-size:.82rem;line-height:1.45}
+.push-card .btn{flex:0 0 auto}
+
 /* ---------- profile ---------- */
 .profile-top{display:flex;gap:18px;align-items:center}
 .profile-top .avatar{width:74px;height:74px}
@@ -3935,6 +3948,13 @@ const api = {
     if(LIVE) return await sb("rpc/save_push_subscription", {method:"POST",
       body:JSON.stringify(workerAuth({p_endpoint:sub.endpoint,
                            p_p256dh:sub.p256dh, p_auth:sub.auth}))});
+  },
+  /* A customer has no account, so the subscription hangs off the booking:
+     the code and the token together prove it is theirs. */
+  async saveCustomerPush(code, token, sub){
+    if(LIVE) return await sb("rpc/save_customer_push", {method:"POST",
+      body:JSON.stringify({p_code:code, p_token:token, p_endpoint:sub.endpoint,
+                           p_p256dh:sub.p256dh, p_auth:sub.auth})});
   },
   /* ---- instant dispatch ---- */
   async createJob(o){
@@ -6279,6 +6299,7 @@ async function confirmBooking(){
                     skill:s.skill, at:new Date().toISOString(),
                     workerPhone:started.worker_phone || w.phone || null,
                     detail:[when, area + ", Guwahati"].filter(Boolean).join(" · ") });
+  syncCustomerPush();         /* silent when they have already allowed alerts */
   hideModal("bookOverlay");   /* go('chat') consumes the sheet's history entry */
   toast("Request sent to " + w.name.split(" ")[0]);
   openChat(started.code, "customer", "hire");
@@ -7860,7 +7881,14 @@ async function renderMine(){
         These bookings are no longer available.</div>`;
     return;
   }
-  host.innerHTML = `<h2>My bookings</h2>` + live.map(t => {
+  const alertCard = `<div class="push-card">
+      <div>
+        <b>Alerts for your bookings</b>
+        <span class="cpush-state">Know the moment your booking is accepted, without keeping Repto open.</span>
+      </div>
+      <button class="btn btn-brand btn-sm cpush-optin" onclick="enableCustomerAlerts()">Turn on alerts</button>
+    </div>`;
+  host.innerHTML = `<h2>My bookings</h2>` + alertCard + live.map(t => {
     const st = THREAD_STATE[t.status] || THREAD_STATE.requested;
     return `<button class="thread-row${t.unread ? " unread" : ""}" onclick="openChat('${jsq(t.code)}','customer','mine')">
       <span class="tr-main">
@@ -7874,6 +7902,7 @@ async function renderMine(){
       </span>
     </button>`;
   }).join("");
+  renderCustomerPushState();
 }
 
 /* ---------- reporting a profile ----------
@@ -8640,6 +8669,81 @@ function renderPushState(){
   }
 }
 
+/* ---------- the customer's side of alerts ----------
+   The worker half of this was built first, because a booking nobody answers
+   is the worse failure. But the customer is the one actually waiting: they
+   have sent a request to a stranger and have no idea whether it landed. Left
+   without a notification they either sit on the app refreshing, or give up
+   and phone somebody else.
+
+   There is no account to hang a subscription on, so it hangs on the booking
+   itself — one row per (booking, device). A phone that allowed alerts once
+   is re-registered against every later booking automatically, which is what
+   syncCustomerPush does on start-up and after each new request. */
+async function customerSubscription(){
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription() ||
+    await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+    });
+  const j = sub.toJSON();
+  return { endpoint: j.endpoint, p256dh: j.keys && j.keys.p256dh, auth: j.keys && j.keys.auth };
+}
+
+async function syncCustomerPush(){
+  if(!pushSupported() || Notification.permission !== "granted" || !VAPID_PUBLIC) return;
+  const list = myBookings();
+  if(!list.length) return;
+  try{
+    const keys = await customerSubscription();
+    /* only the recent ones: an old finished job has nothing left to say */
+    await Promise.all(list.slice(0, 20).map(b =>
+      b.code && b.token ? api.saveCustomerPush(b.code, b.token, keys).catch(()=>{}) : null));
+  }catch(e){ /* the app still shows the reply when opened — never block on this */ }
+}
+
+async function enableCustomerAlerts(){
+  if(!pushSupported()){
+    if(isIOS() && !isStandalone()){ openModal("iosOverlay"); return; }
+    toast("This browser cannot show alerts — open Repto to check for a reply");
+    renderCustomerPushState(); return;
+  }
+  if(isIOS() && !isStandalone()){ openModal("iosOverlay"); return; }
+  if(!VAPID_PUBLIC){ toast("Alerts are not switched on yet"); return; }
+  try{
+    const perm = await Notification.requestPermission();
+    if(perm !== "granted"){
+      toast("Alerts blocked — you can allow them in your phone settings");
+      renderCustomerPushState(); return;
+    }
+    await syncCustomerPush();
+    toast("Alerts are on — you'll know the moment they reply");
+  }catch(e){ toast("Could not turn on alerts — please try again"); }
+  renderCustomerPushState();
+}
+
+function renderCustomerPushState(){
+  const els  = document.querySelectorAll(".cpush-state");
+  const btns = document.querySelectorAll(".cpush-optin");
+  if(!els.length) return;
+  const say = (text, label) => {
+    els.forEach(e => { e.textContent = text; });
+    btns.forEach(b => { b.hidden = !label; if(label) b.textContent = label; });
+  };
+  if(pushSupported() && Notification.permission === "granted"){
+    say("Alerts are on. You will hear when the worker accepts, declines or replies — even with Repto closed.", null);
+  }else if(isIOS() && !isStandalone()){
+    say("On iPhone, add Repto to your home screen first — alerts cannot reach you from Safari.", "Add to home screen");
+  }else if(pushSupported() && Notification.permission === "denied"){
+    say("Alerts are blocked in your phone's settings for Repto. Turn them back on there and this starts working.", null);
+  }else if(!pushSupported()){
+    say("This browser cannot show alerts. Open Repto now and then to check for a reply.", null);
+  }else{
+    say("Know the moment your booking is accepted, without keeping Repto open.", "Turn on alerts");
+  }
+}
+
 /* ---------- install as an app ---------- */
 let deferredInstall = null;
 const isStandalone = () =>
@@ -8793,6 +8897,7 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
       VAPID_PUBLIC = (rows && rows[0] && rows[0].vapid_public) || null;
     }catch(e){ REQUIRE_OTP = false; }
   }
+  syncCustomerPush();   /* re-register this device against any newer booking */
   if(session && session.registered){
     try{ session.worker = await api.login(session.phone, session.pin); saveSession(); }catch(e){}
     ensureWorkerSession();
