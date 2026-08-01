@@ -234,7 +234,12 @@ jobs:
               where not tgisinternal and tgname='push_outbox_poke_trg')      as poke_trigger,
             (select coalesce(btrim(push_url),'') <> '' from public.nearse_config where id=1) as sender_url_known,
             (select coalesce(max(extract(epoch from (now()-created_at))/60),0)::int
-               from public.push_outbox where sent_at is null)                as oldest_unsent_mins
+               from public.push_outbox where sent_at is null)                as oldest_unsent_mins,
+            -- Everything scheduled. pg_cron only arrived today, so until now
+            -- none of these jobs existed: retention, dispatch backstop, the
+            -- push sweep and both purges were all written and never running.
+            (select coalesce(string_agg(jobname, ' ' order by jobname), 'NONE')
+               from cron.job)                                                as cron_jobs
           PSQL
           jq -Rs '{query: .}' /tmp/push.sql > /tmp/p.json
           code=$(curl -sS -o /tmp/push.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/p.json)
