@@ -229,6 +229,48 @@ jobs:
           jq -Rs '{query: .}' /tmp/push.sql > /tmp/p.json
           code=$(curl -sS -o /tmp/push.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/p.json)
           note "verify push: HTTP $code — $(head -c 1200 /tmp/push.json)"
+
+          # ---- deploy the sender ----
+          # This used to be "paste 100 lines into the dashboard editor", which
+          # is a wall for anyone without a laptop — and impossible for someone
+          # locked out of the dashboard entirely. The token that already
+          # applies the schema can deploy a function just as well, so the
+          # sender ships with everything else and cannot drift from the
+          # repository.
+          FN=supabase/functions/push/index.ts
+          if [ ! -f "$FN" ]; then
+            note "sender: $FN is missing from the repository"
+          else
+            jq -n --arg slug push --arg name push --arg body "$(cat $FN)" \
+              '{slug:$slug, name:$name, body:$body, verify_jwt:false}' > /tmp/fn.json
+
+            code=$(curl -sS -o /tmp/fnres.json -w "%{http_code}" "${hdr[@]}" \
+                     -X POST "$api/projects/$ref/functions" -d @/tmp/fn.json)
+            if [ "$code" = "409" ] || [ "$code" = "400" ]; then
+              # already there: update it in place
+              code=$(curl -sS -o /tmp/fnres.json -w "%{http_code}" "${hdr[@]}" \
+                       -X PATCH "$api/projects/$ref/functions/push" -d @/tmp/fn.json)
+              note "sender: updated existing function — HTTP $code"
+            else
+              note "sender: created — HTTP $code"
+            fi
+            case "$code" in
+              2*) note "sender: deployed as https://$ref.supabase.co/functions/v1/push" ;;
+              *)  note "sender: DEPLOY FAILED — $(head -c 400 /tmp/fnres.json)" ;;
+            esac
+
+            # tell the database where to poke, so the trigger from Migration 29
+            # has somewhere to send to
+            printf 'update public.nearse_config set push_url = %s where id = 1;' \
+              "'https://$ref.supabase.co/functions/v1/push'" > /tmp/url.sql
+            jq -Rs '{query: .}' /tmp/url.sql > /tmp/u.json
+            code=$(curl -sS -o /tmp/url.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/u.json)
+            note "sender: url recorded for the trigger — HTTP $code"
+
+            # and give it a nudge, which also proves it answers
+            code=$(curl -sS -o /tmp/ping.json -w "%{http_code}" -X POST "https://$ref.supabase.co/functions/v1/push" -H "Content-Type: application/json" -d '{}')
+            note "sender: test call — HTTP $code — $(head -c 300 /tmp/ping.json)"
+          fi
           [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
           # these two are warnings, not failures: only the owner can fix them
           if grep -q '"admin_pin_still_published_change_it":true' /tmp/harden.json; then
