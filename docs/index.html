@@ -2030,6 +2030,41 @@ body.in-chat > .demo-note{display:none}
 }
 .toast-btn:hover{background:var(--brand-2)}
 
+/* ---------- notification setup ---------- */
+.setup-step{display:flex;gap:13px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)}
+.setup-step .sn{
+  flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
+  background:var(--surface-2);color:var(--muted);font-size:.78rem;font-weight:800;
+}
+.setup-step.done .sn{background:rgba(79,201,141,.16);color:var(--ok)}
+.setup-step > div{flex:1;min-width:0}
+/* only the step's own heading is a block — a <b> inside the instructions is
+   emphasis mid-sentence, and blocking it snapped every sentence into pieces */
+.setup-step > div > b:first-child{display:block;font-size:.93rem;margin-bottom:6px}
+.setup-step p b,.keybox b{display:inline;font-weight:700;color:var(--ink)}
+.setup-step p{color:var(--muted);font-size:.83rem;line-height:1.55;margin-bottom:6px}
+.setup-step code{
+  background:var(--surface-2);border-radius:5px;padding:1px 5px;font-size:.79rem;color:var(--brand-2);
+}
+.keybox{
+  border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface-2);
+  padding:12px;margin:8px 0 2px;font-size:.82rem;line-height:1.7;color:var(--ink-2);
+}
+.keybox label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:5px}
+.keybox textarea,.keybox input{
+  width:100%;background:var(--bg);border:1px solid var(--line-strong);border-radius:var(--r-sm);
+  padding:9px 10px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.76rem;
+  word-break:break-all;resize:vertical;margin-bottom:8px;
+}
+.health{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px;margin-top:14px}
+.health > div{
+  border:1px solid var(--line);border-radius:var(--r-sm);padding:10px;text-align:center;background:var(--surface);
+}
+.health > div.bad{border-color:rgba(232,112,127,.45)}
+.health b{display:block;font-size:1.3rem;font-weight:800;color:var(--brand-2);line-height:1.1}
+.health > div.bad b{color:var(--danger)}
+.health span{display:block;font-size:.68rem;color:var(--muted);line-height:1.35;margin-top:3px}
+
 /* ---------- admin: search, photo, rejection ---------- */
 .admin-search{
   display:flex;align-items:center;gap:10px;margin-top:16px;
@@ -8145,6 +8180,7 @@ async function renderAdmin(){
       <button class="tab${adminTab==="stats"?" on":""}" onclick="setAdminTab('stats')">Dashboard</button>
       <button class="tab${adminTab==="review"?" on":""}" onclick="setAdminTab('review')">Review</button>
       <button class="tab${adminTab==="activity"?" on":""}" onclick="setAdminTab('activity')">Activity</button>
+      <button class="tab${adminTab==="alerts"?" on":""}" onclick="setAdminTab('alerts')">Alerts</button>
     </div>`;
   const exit = `<button class="btn btn-quiet btn-block btn-sm" style="margin-top:18px" onclick="adminPin=null;go('home')">Exit admin</button>`;
 
@@ -8153,6 +8189,13 @@ async function renderAdmin(){
     try{ s = await loadStats(); }
     catch(e){ host.innerHTML = tabs + `<p class="hint">Could not load the numbers — ${esc(e.message||"")}</p>` + exit; return; }
     host.innerHTML = tabs + renderDashboard(s) + exit;
+    return;
+  }
+  if(adminTab === "alerts"){
+    let h;
+    try{ h = await loadPushHealth(); }
+    catch(e){ host.innerHTML = tabs + `<p class="hint">Could not read the alert status — ${esc(e.message||"")}</p>` + exit; return; }
+    host.innerHTML = tabs + renderAlertSetup(h) + exit;
     return;
   }
   if(adminTab === "activity"){
@@ -8667,6 +8710,156 @@ function renderPushState(){
   }else{
     say("Get told the moment a customer books you, even when Repto is closed.", "Turn on alerts");
   }
+}
+
+/* ---------- notification setup, on the admin screen ----------
+   Every piece of this was built and correct for weeks and not one
+   notification was ever delivered, because the VAPID key had never been set
+   and the sender had never been deployed. Nothing said so. A worker tapping
+   "Turn on alerts" got a toast that vanished in three seconds; the admin
+   screen, which is the only place the owner looks, said nothing at all.
+
+   So it says it here, in the order the steps have to happen, with the state
+   of each one read from the database rather than assumed. The key pair is
+   generated in this browser with WebCrypto — the private half never crosses
+   the network, which is exactly what you want of a signing key. */
+async function loadPushHealth(){
+  if(!LIVE) return { vapid_set:false, workers_subscribed:0, customers_subscribed:0,
+                     queued:0, unsent:0, given_up:0, sent_24h:0, oldest_unsent_mins:0, last_error:null };
+  const rows = await sb("rpc/admin_push_health", {method:"POST", body:JSON.stringify({p_pin:adminPin})});
+  return (rows && rows[0]) || {};
+}
+
+function b64url(bytes){
+  let raw = "";
+  for(const b of bytes) raw += String.fromCharCode(b);
+  return btoa(raw).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/* A VAPID pair is an ordinary P-256 key pair. The public half is the raw
+   uncompressed point, the private half is the JWK's d value — both already
+   base64url, which is the format web-push wants. */
+async function makeVapidKeys(){
+  const kp  = await crypto.subtle.generateKey({name:"ECDSA", namedCurve:"P-256"}, true, ["sign","verify"]);
+  const raw = await crypto.subtle.exportKey("raw", kp.publicKey);
+  const jwk = await crypto.subtle.exportKey("jwk", kp.privateKey);
+  return { publicKey: b64url(new Uint8Array(raw)), privateKey: jwk.d };
+}
+
+let generatedVapid = null;
+async function generateVapid(){
+  const btn = $("vapidGenBtn"); if(btn){ btn.disabled = true; btn.textContent = "Generating…"; }
+  try{
+    generatedVapid = await makeVapidKeys();
+    renderAdmin();
+    toast("Keys generated in this browser — nothing was sent anywhere");
+  }catch(e){
+    toast("This browser cannot generate the keys — use the command in DEPLOY.md");
+    if(btn){ btn.disabled = false; btn.textContent = "Generate a key pair"; }
+  }
+}
+
+async function saveVapidPublic(){
+  const key = ($("vapidPublicIn").value || "").trim();
+  if(!key){ toast("Paste the public key first"); return; }
+  try{
+    await sb("rpc/admin_set_vapid", {method:"POST", body:JSON.stringify({p_pin:adminPin, p_key:key})});
+    VAPID_PUBLIC = key;
+    toast("Saved — workers can now be asked for permission");
+    renderAdmin();
+  }catch(e){ toast(e.message || "Could not save that key"); }
+}
+
+function copyText(id){
+  const el = $(id); if(!el) return;
+  const text = el.value !== undefined ? el.value : el.textContent;
+  const done = () => toast("Copied");
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done, () => toast("Select it and copy by hand"));
+  }else{ toast("Select it and copy by hand"); }
+}
+
+function renderAlertSetup(h){
+  const step = (n, done, title, body) => `
+    <div class="setup-step${done ? " done" : ""}">
+      <span class="sn">${done ? "✓" : n}</span>
+      <div><b>${title}</b>${body}</div>
+    </div>`;
+
+  const gen = generatedVapid ? `
+    <div class="keybox">
+      <label>Public key <span class="sublabel">— not a secret</span></label>
+      <textarea id="vapidPubOut" rows="2" readonly>${esc(generatedVapid.publicKey)}</textarea>
+      <button class="btn btn-outline btn-sm" onclick="copyText('vapidPubOut')">Copy public key</button>
+      <label style="margin-top:12px">Private key <span class="sublabel">— treat this like a password</span></label>
+      <textarea id="vapidPrivOut" rows="2" readonly>${esc(generatedVapid.privateKey)}</textarea>
+      <button class="btn btn-outline btn-sm" onclick="copyText('vapidPrivOut')">Copy private key</button>
+      <p class="hint" style="margin-top:9px">Do not screenshot this, message it, or put it in the code. It goes into Supabase in step 3 and nowhere else. Leaving this screen forgets it — generate again if you need to.</p>
+    </div>` : `
+    <button class="btn btn-brand btn-sm" id="vapidGenBtn" onclick="generateVapid()">Generate a key pair</button>
+    <p class="hint" style="margin-top:8px">Made in this browser. Neither half is sent anywhere.</p>`;
+
+  const health = `
+    <div class="health">
+      <div><b>${h.workers_subscribed ?? 0}</b><span>workers subscribed</span></div>
+      <div><b>${h.customers_subscribed ?? 0}</b><span>customers subscribed</span></div>
+      <div><b>${h.sent_24h ?? 0}</b><span>sent today</span></div>
+      <div class="${(h.unsent || 0) > 0 ? "bad" : ""}"><b>${h.unsent ?? 0}</b><span>waiting to send</span></div>
+      <div class="${(h.given_up || 0) > 0 ? "bad" : ""}"><b>${h.given_up ?? 0}</b><span>gave up</span></div>
+    </div>
+    ${h.last_error ? `<div class="wa-expect" style="border-color:rgba(232,112,127,.4)">Last error from the push service: <b style="letter-spacing:0;font-size:.8rem">${esc(h.last_error)}</b></div>` : ""}
+    ${(h.unsent || 0) > 0 && (h.oldest_unsent_mins || 0) > 5
+      ? `<div class="wa-expect" style="border-color:rgba(232,146,74,.5)">Alerts have been waiting ${h.oldest_unsent_mins} minutes. The queue is filling but nothing is draining it — step 4 is the one to check.</div>` : ""}`;
+
+  const verdict = !h.vapid_set
+    ? `<div class="vstatus rejected"><span class="dotmark">!</span><div><b>Notifications are off</b>
+         <span>No key has been set, so the app cannot even ask a worker for permission. Nothing will arrive until steps 1 to 4 are done. This is why nobody has had an alert yet.</span></div></div>`
+    : (h.workers_subscribed || 0) === 0
+      ? `<div class="vstatus pending"><span class="dotmark">!</span><div><b>Key set, nobody subscribed yet</b>
+           <span>Workers are being asked now. Open Repto as a worker, go to your profile and tap <b>Turn on alerts</b>.</span></div></div>`
+      : (h.unsent || 0) > 0 && (h.oldest_unsent_mins || 0) > 5
+        ? `<div class="vstatus rejected"><span class="dotmark">!</span><div><b>Alerts are queuing but not sending</b>
+             <span>The database is doing its part. The sender is not running, or cannot sign. Check steps 3 and 4.</span></div></div>`
+        : `<div class="vstatus done"><span class="dotmark">✓</span><div><b>Notifications are working</b>
+             <span>Alerts are going out to phones with Repto closed.</span></div></div>`;
+
+  return `<h2>Alerts</h2>
+    ${verdict}
+    ${health}
+    <div class="divider"></div>
+    <p class="hint" style="margin-bottom:14px">Four steps, once. Steps 3 and 4 are done in the Supabase dashboard in a browser — no laptop or command line needed.</p>
+
+    ${step(1, !!generatedVapid || h.vapid_set, "Make a key pair", gen)}
+
+    ${step(2, h.vapid_set, "Give the app the public half", `
+      <div class="keybox">
+        <input type="text" id="vapidPublicIn" placeholder="Paste the public key" value="${esc(generatedVapid ? generatedVapid.publicKey : "")}">
+        <button class="btn btn-brand btn-sm" onclick="saveVapidPublic()">Save public key</button>
+        <p class="hint" style="margin-top:8px">${h.vapid_set
+          ? "A key is set. Saving a new one makes every existing subscription useless, so only do it if you are starting over."
+          : "Until this is saved the app cannot ask anybody for permission."}</p>
+      </div>`)}
+
+    ${step(3, false, "Deploy the sender", `
+      <p>Supabase dashboard → <b>Edge Functions</b> → <b>Deploy a new function</b> → name it <b>push</b>, and paste the contents of <code>supabase/functions/push/index.ts</code> from the repository.</p>
+      <p>Then <b>Edge Functions → Secrets</b>, and add these three:</p>
+      <div class="keybox">
+        <code>VAPID_PUBLIC</code> — the public key above<br>
+        <code>VAPID_PRIVATE</code> — the private key above<br>
+        <code>VAPID_SUBJECT</code> — <code>mailto:hello.repto@gmail.com</code>
+      </div>
+      <p class="hint" style="margin-top:8px">Turn off <b>Verify JWT</b> for this function. The webhook calls it without a user logged in, and it reads nothing from the request — it only ever drains the queue.</p>`)}
+
+    ${step(4, (h.sent_24h || 0) > 0, "Make it fire", `
+      <p>Supabase → <b>Database</b> → <b>Webhooks</b> → <b>Create a new hook</b>:</p>
+      <div class="keybox">
+        Name <b>send-push</b> · Table <b>push_outbox</b> · Events <b>Insert</b> only<br>
+        Type <b>Supabase Edge Functions</b> · Function <b>push</b>
+      </div>
+      <p style="margin-top:8px">Then <b>Integrations → Cron</b>, a job every minute calling the same <b>push</b> function, so a failed send is retried instead of forgotten.</p>`)}
+
+    <div class="divider"></div>
+    <p class="hint">On iPhone these only arrive if Repto has been added to the home screen, on iOS 16.4 or newer. From Safari they never will, whatever anybody allows.</p>`;
 }
 
 /* ---------- the customer's side of alerts ----------
