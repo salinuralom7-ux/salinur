@@ -4702,7 +4702,7 @@ function go(name, viaHistory){
   if(name === "verify") $("verifyResult").innerHTML = "";
   if(name === "mine") renderMine();
   if(name === "register") initRegister();
-  if(name === "done") renderPushState();      /* the alerts offer on that screen */
+  if(name === "done"){ renderPushState(); syncWorkerPush(); }   /* offer, and catch an earlier Allow */
   if(name === "otp") initOtp(); else stopResendCooldown();
   if(name === "home") initHome();
   paintWorkDoor();
@@ -5096,6 +5096,7 @@ async function signIn(){
     saveSession();
     await ensureWorkerSession();
     toast("Welcome back, " + w.name.split(" ")[0]);
+    syncWorkerPush();          /* they may have allowed alerts before signing in */
     paintMineLink();
     go("me");
     watchStatus();
@@ -8840,6 +8841,34 @@ async function enablePush(){
   renderPushState();
 }
 
+/* Granting permission and being registered are two different things, and the
+   gap between them is where every one of tonight's tests fell down. Somebody
+   taps Allow on the opening sheet before signing in: permission granted,
+   nobody to attach it to, nothing stored. Then they sign in as a worker and
+   nothing ever re-tries, because the only thing that ever called subscribe
+   was the button they had already used.
+
+   So it re-tries: on start-up and after signing in, if the permission is
+   already there, the subscription is created and stored without asking
+   anybody anything. */
+async function syncWorkerPush(){
+  if(!pushSupported() || Notification.permission !== "granted" || !VAPID_PUBLIC) return;
+  if(!session || !session.registered || !session.phone || !session.pin) return;
+  try{
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise(r => setTimeout(() => r(null), 4000))
+    ]);
+    if(!reg) return;
+    pushSub = await reg.pushManager.getSubscription() ||
+      await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+      });
+    await savePushSubscription();
+  }catch(e){ /* the app still shows the booking when opened */ }
+}
+
 async function savePushSubscription(){
   if(!pushSub || !session || !session.phone || !session.pin) return;
   const j = pushSub.toJSON();
@@ -9167,7 +9196,13 @@ async function acceptNotifyAsk(){
    is re-registered against every later booking automatically, which is what
    syncCustomerPush does on start-up and after each new request. */
 async function customerSubscription(){
-  const reg = await navigator.serviceWorker.ready;
+  /* raced for the same reason as everywhere else: serviceWorker.ready never
+     rejects, it just never resolves if no worker activates */
+  const reg = await Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise(r => setTimeout(() => r(null), 4000))
+  ]);
+  if(!reg) throw new Error("no service worker");
   const sub = await reg.pushManager.getSubscription() ||
     await reg.pushManager.subscribe({
       userVisibleOnly: true,
@@ -9179,10 +9214,15 @@ async function customerSubscription(){
 
 async function syncCustomerPush(){
   if(!pushSupported() || Notification.permission !== "granted" || !VAPID_PUBLIC) return;
-  const list = myBookings();
-  if(!list.length) return;
   try{
+    /* Make the browser subscription even with nothing to attach it to yet.
+       It used to return here when there were no bookings, which meant
+       somebody who allowed notifications on their very first visit ended up
+       with permission granted and no subscription anywhere — the app looked
+       willing and the server had nobody to send to. */
     const keys = await customerSubscription();
+    const list = myBookings();
+    if(!list.length) return;
     /* only the recent ones: an old finished job has nothing left to say */
     await Promise.all(list.slice(0, 20).map(b =>
       b.code && b.token ? api.saveCustomerPush(b.code, b.token, keys).catch(()=>{}) : null));
@@ -9384,6 +9424,7 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
     }catch(e){ REQUIRE_OTP = false; }
   }
   syncCustomerPush();   /* re-register this device against any newer booking */
+  syncWorkerPush();     /* and against the worker, if permission is already given */
   if(session && session.registered){
     try{ session.worker = await api.login(session.phone, session.pin); saveSession(); }catch(e){}
     ensureWorkerSession();
