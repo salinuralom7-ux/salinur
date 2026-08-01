@@ -2030,6 +2030,22 @@ body.in-chat > .demo-note{display:none}
 }
 .toast-btn:hover{background:var(--brand-2)}
 
+/* the per-device checklist: the first cross is always the answer */
+.alert-checks{margin:10px 0 4px}
+.checks{list-style:none}
+.checks li{display:flex;gap:9px;align-items:flex-start;padding:3px 0;font-size:.84rem;line-height:1.45}
+.checks li span{flex:0 0 auto;width:16px;font-weight:800}
+.checks li.ok{color:var(--ink-2)}
+.checks li.ok span{color:var(--ok)}
+.checks li.no{color:var(--ink)}
+.checks li.no span{color:var(--danger)}
+.fixnote{
+  margin-top:9px;border:1px solid rgba(232,146,74,.45);background:rgba(232,146,74,.08);
+  border-radius:var(--r-sm);padding:10px 12px;font-size:.82rem;line-height:1.55;color:var(--ink-2);
+}
+.fixnote.ok{border-color:rgba(79,201,141,.4);background:rgba(79,201,141,.08)}
+.fixnote b{color:var(--ink)}
+
 /* ---------- notification setup ---------- */
 .setup-step{display:flex;gap:13px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)}
 .setup-step .sn{
@@ -3986,6 +4002,10 @@ const api = {
   },
   /* A customer has no account, so the subscription hangs off the booking:
      the code and the token together prove it is theirs. */
+  async testPush(){
+    if(LIVE) return await sb("rpc/test_push", {method:"POST", body:JSON.stringify(workerAuth({}))});
+    return "queued";
+  },
   async saveCustomerPush(code, token, sub){
     if(LIVE) return await sb("rpc/save_customer_push", {method:"POST",
       body:JSON.stringify({p_code:code, p_token:token, p_endpoint:sub.endpoint,
@@ -5645,6 +5665,7 @@ function renderMe(){
       <div><b>Booking alerts</b><span class="push-state"></span></div>
       <button type="button" class="btn btn-outline btn-sm push-optin" onclick="enablePush()" hidden>Turn on alerts</button>
     </div>
+    <div class="alert-checks"></div>
     ${workerModes(w).has("now") ? `
     <div class="switch-row online-row${isOnlineNow(w) ? " on" : ""}">
       <div><b>Available right now</b><span id="onlineNote">${isOnlineNow(w)
@@ -8196,6 +8217,7 @@ async function renderAdmin(){
     try{ h = await loadPushHealth(); }
     catch(e){ host.innerHTML = tabs + `<p class="hint">Could not read the alert status — ${esc(e.message||"")}</p>` + exit; return; }
     host.innerHTML = tabs + renderAlertSetup(h) + exit;
+    renderAlertChecks();
     return;
   }
   if(adminTab === "activity"){
@@ -8688,7 +8710,81 @@ async function savePushSubscription(){
    appears on the profile as well as in the registration form, and a worker
    who never picked an instant-dispatch service would otherwise never have
    been offered notifications at all. */
+/* ---------- why alerts are not working on THIS phone ----------
+   The server side can be perfect — function deployed, keys set, triggers
+   firing — and still nobody gets a notification, because the subscription
+   never happened on the device. From the server that is indistinguishable
+   from nobody having tried. So the phone says so itself.
+
+   Every check below is a real capability test, in order. The first ✗ is the
+   answer; everything after it cannot pass until that one does. */
+async function deviceAlertChecks(){
+  const ios = isIOS(), installed = isStandalone();
+  const hasSW    = "serviceWorker" in navigator;
+  const hasPM    = "PushManager" in window;
+  const hasNotif = "Notification" in window;
+  let sub = null;
+  if(hasSW && hasPM){
+    /* serviceWorker.ready never rejects — if no worker ever activates it simply
+       hangs, and the checklist would stay blank at the exact moment somebody
+       needs it. Race it. */
+    try{
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise(r => setTimeout(() => r(null), 3000))
+      ]);
+      if(reg) sub = await reg.pushManager.getSubscription();
+    }catch(e){}
+  }
+  const perm = hasNotif ? Notification.permission : "unavailable";
+
+  return [
+    { ok: hasSW, label: "Browser can run background code",
+      fix: "This browser is too old or in private mode. Try Chrome, and not a private tab." },
+    { ok: !ios || installed, label: ios ? "Added to the home screen" : "Not an iPhone — no install needed",
+      fix: "On iPhone this is the one that matters. Safari share button → Add to Home Screen → then open Repto from that icon, not from Safari. Apple will not deliver notifications to a browser tab, ever." },
+    { ok: hasPM && hasNotif, label: "Phone supports notifications",
+      fix: ios && !installed ? "Fix the step above first — Safari hides this until Repto is installed."
+                             : "This browser cannot receive push notifications." },
+    { ok: !!VAPID_PUBLIC, label: "Server is set up",
+      fix: "The signing key is not set on the server. Admin → Alerts → steps 1 and 2." },
+    { ok: perm === "granted", label: "You allowed notifications",
+      fix: perm === "denied"
+        ? "You said No earlier, and the browser will not ask twice. iPhone: Settings → Notifications → Repto → Allow. Android: long-press the icon → App info → Notifications."
+        : "Tap Turn on alerts and choose Allow." },
+    { ok: !!sub, label: "This phone is registered with Repto",
+      fix: "Tap Turn on alerts. If everything above is ✓ and this stays ✗, tell me — that is a real bug." }
+  ];
+}
+
+async function renderAlertChecks(){
+  const hosts = document.querySelectorAll(".alert-checks");
+  if(!hosts.length) return;
+  const checks = await deviceAlertChecks();
+  const firstBad = checks.find(c => !c.ok);
+  const html = `
+    <ul class="checks">${checks.map(c =>
+      `<li class="${c.ok ? "ok" : "no"}"><span>${c.ok ? "✓" : "✗"}</span>${esc(c.label)}</li>`).join("")}</ul>
+    ${firstBad ? `<p class="fixnote"><b>Do this:</b> ${esc(firstBad.fix)}</p>`
+               : `<p class="fixnote ok"><b>All clear.</b> Send yourself a test to be certain.</p>`}
+    ${!firstBad ? `<button class="btn btn-outline btn-sm" onclick="sendTestAlert()" style="margin-top:10px">Send me a test alert</button>` : ""}`;
+  hosts.forEach(h => { h.innerHTML = html; });
+}
+
+async function sendTestAlert(){
+  toast("Sending…");
+  try{
+    const r = await api.testPush();
+    if(r === "not-subscribed"){
+      toast("This phone is not registered yet — tap Turn on alerts first");
+      return;
+    }
+    toast("Sent. Close Repto completely — it should arrive in a few seconds.");
+  }catch(e){ toast(e.message || "Could not send the test"); }
+}
+
 function renderPushState(){
+  renderAlertChecks();
   const els = document.querySelectorAll(".push-state");
   const btns = document.querySelectorAll(".push-optin");
   if(!els.length) return;
@@ -8826,6 +8922,9 @@ function renderAlertSetup(h){
   return `<h2>Alerts</h2>
     ${verdict}
     ${health}
+    <div class="divider"></div>
+    <p class="hint" style="margin-bottom:10px"><b>This phone</b></p>
+    <div class="alert-checks"></div>
     <div class="divider"></div>
     <p class="hint" style="margin-bottom:14px">Four steps, once. Steps 3 and 4 are done in the Supabase dashboard in a browser — no laptop or command line needed.</p>
 

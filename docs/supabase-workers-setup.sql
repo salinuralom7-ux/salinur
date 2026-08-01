@@ -6781,7 +6781,8 @@ declare
     'admin_check','admin_session_start','admin_queue','admin_stats','admin_recent',
     'admin_reports','admin_clear_report','admin_wa_codes','admin_set_status',
     'admin_set_require_otp','admin_verify_registration','admin_exit_reasons',
-    'admin_exit_notes','admin_hide_review','admin_push_health','admin_set_vapid'
+    'admin_exit_notes','admin_hide_review','admin_push_health','admin_set_vapid',
+    'test_push'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -6953,4 +6954,53 @@ begin
       raise notice 'could not schedule the push sweep (%) — the insert trigger still fires', sqlerrm;
     end;
   end if;
+end $$;
+
+-- ============================================================
+-- MIGRATION 30 — a worker can test their own alerts
+--
+-- Everything on the server is working: the function is deployed, it answers,
+-- the keys are set, the triggers fire. workers_subscribed is still 0, which
+-- means no phone has ever completed a subscription — and from here there is
+-- no way to tell which phone, or why.
+--
+-- So the worker gets a button that sends a notification to themselves. If it
+-- arrives, alerts work. If it does not, the error lands in push_outbox where
+-- the admin screen already reads it. That turns "it isn't working" into a
+-- specific answer in about five seconds.
+-- ============================================================
+
+create or replace function public.test_push(
+  p_phone text default null, p_pin text default null, p_token uuid default null)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth(p_phone, p_pin, p_token);
+  if wid is null then
+    raise exception 'Please sign in again';
+  end if;
+  if not exists (select 1 from worker_push where worker_id = wid) then
+    return 'not-subscribed';        -- the phone never registered; nothing to send to
+  end if;
+  perform public.enqueue_push(wid,
+    'Repto test alert',
+    'If you can read this with Repto closed, notifications are working.',
+    './?src=push#me', 'test');
+  return 'queued';
+end;
+$$;
+
+do $$
+declare r text; f record;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.proname = 'test_push'
+    loop
+      execute format('grant execute on function %s to %I', f.sig, r);
+    end loop;
+  end loop;
 end $$;
