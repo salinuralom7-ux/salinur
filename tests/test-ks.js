@@ -200,7 +200,7 @@ const srv = http.createServer((req, res) => {
   console.log('  message:', (await page.locator('#scr-done .sub').innerText()).trim());
   console.log('  mentions the free trial:', (await page.locator('#scr-done').innerText()).includes('30 days free'));
   console.log('  names the number to expect a reply on:', (await page.locator('#donePhone').innerText()).includes('9435012345'));
-  await page.locator('#scr-done .btn-brand').click();
+  await page.locator('#doneMine').click();
   await page.waitForTimeout(500);
   console.log('Profile published:', await page.locator('#scr-me.on').count() === 1);
   console.log('Profile lists rates:', await page.locator('.rate-item').count());
