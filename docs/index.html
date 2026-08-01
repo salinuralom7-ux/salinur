@@ -2037,6 +2037,15 @@ body.in-chat > .demo-note{display:none}
 .done-alerts > b{display:block;font-size:.96rem;margin-bottom:4px}
 .done-alerts > .push-state{display:block;color:var(--muted);font-size:.83rem;line-height:1.5}
 
+/* the notification request sheet */
+.notify-ask{text-align:center}
+.notify-mark{
+  width:60px;height:60px;border-radius:50%;margin:2px auto 14px;display:grid;place-items:center;
+  background:var(--brand-soft);color:var(--brand-2);
+}
+.notify-ask h3{font-size:1.12rem;line-height:1.3;margin-bottom:8px}
+.notify-ask .sub{margin-bottom:20px}
+
 /* where this price sits against everybody else in the trade */
 .price-tip{
   margin-top:6px;font-size:.78rem;line-height:1.5;border-radius:var(--r-sm);
@@ -2168,6 +2177,13 @@ footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
 @keyframes footBreathe{
   0%,100%{opacity:.5;transform:translateX(-50%) scale(.92)}
   50%{opacity:1;transform:translateX(-50%) scale(1.06)}
+}
+/* centred over the contact row, in the brand gold so it reads as a heading
+   rather than another line of small print */
+.foot-lead{
+  position:relative;text-align:center;margin-bottom:14px;
+  font-size:.74rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--brand-2);
 }
 .foot-reach{
   position:relative;display:flex;justify-content:center;gap:10px;
@@ -2946,6 +2962,7 @@ footer a{color:var(--ink-2)}
 <footer>
   <div class="wrap">
     <span class="foot-glow" aria-hidden="true"></span>
+    <p class="foot-lead">Connect with us on</p>
     <nav class="foot-reach" aria-label="Contact Repto">
       <a class="reach wa" href="https://wa.me/917086599367" target="_blank" rel="noopener" aria-label="Message Repto on WhatsApp">
         <span class="reach-ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24m4.52 10.35c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.24-1.47-1.38-1.72-.15-.25-.02-.38.1-.5.11-.11.25-.29.37-.44.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.13-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.28"/></svg></span>
@@ -3201,6 +3218,22 @@ footer a{color:var(--ink-2)}
     <div class="cam-stage"><video id="camVideo" autoplay playsinline muted></video><div class="cam-oval"></div></div>
     <p class="cam-tip" id="camTip">Only a live photo is accepted — this is how we keep Repto trustworthy.</p>
     <button class="btn btn-brand btn-block" id="camShot" onclick="captureFrame()" style="padding:14px">Capture photo</button>
+  </div>
+</div>
+
+<!-- Asked on opening, and again every time until it is answered. Deliberately
+     our own sheet and not the browser's: tapping "Don't allow" here costs
+     nothing, whereas a No to the real prompt is permanent — the browser never
+     asks a second time. Allow is what hands over to the real one. -->
+<div class="overlay" id="notifyOverlay" onclick="if(event.target===this)dismissNotifyAsk()">
+  <div class="modal notify-ask" role="dialog" aria-modal="true" aria-labelledby="notifyAskTitle">
+    <div class="notify-mark" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+    </div>
+    <h3 id="notifyAskTitle">Turn the notification on for better experience</h3>
+    <p class="sub" id="notifyAskWhy">Know the moment a worker replies or a booking arrives — even when Repto is closed.</p>
+    <button class="btn btn-brand btn-block" style="padding:14px" onclick="acceptNotifyAsk()">Allow</button>
+    <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="dismissNotifyAsk()">Don't allow</button>
   </div>
 </div>
 
@@ -9072,6 +9105,56 @@ function renderAlertSetup(h){
     <p class="hint">On iPhone these only arrive if Repto has been added to the home screen, on iOS 16.4 or newer. From Safari they never will, whatever anybody allows.</p>`;
 }
 
+/* ---------- asking for notifications, on opening ----------
+   Salinur wants this offered the moment somebody opens Repto, and offered
+   again every time until they answer. Two details make that safe to do.
+
+   First, this is our own sheet, not the browser's. A "Don't allow" here costs
+   nothing and can be asked again tomorrow; a No to the real prompt is
+   permanent, because no browser asks twice. The real prompt only appears
+   after somebody has already said yes to this one.
+
+   Second, it waits for the page to paint. A dialog over a blank screen is
+   the kind people dismiss without reading, and dismissing is the outcome we
+   are trying to avoid. */
+const NOTIFY_ASKED = "repto_notify_asked_v1";
+
+function notifyAskDue(){
+  if(!("Notification" in window)){
+    /* iPhone in Safari: notifications are not merely unpermitted, the API is
+       not there at all until Repto is on the home screen. Worth asking, but
+       the answer is an install, not a permission. */
+    return isIOS() && !isStandalone();
+  }
+  return Notification.permission === "default";
+}
+
+function maybeAskNotify(){
+  if(!notifyAskDue()) return;
+  if(document.querySelector(".overlay.open")) return;      /* never on top of something else */
+  if(currentScreen !== "home") return;                     /* they got on with something in the
+                                                              two seconds we waited — ask next time */
+  if(isIOS() && !isStandalone()){
+    $("notifyAskWhy").textContent =
+      "Add Repto to your home screen first — on iPhone that is the only way alerts can reach you.";
+  }
+  openModal("notifyOverlay");
+}
+
+function dismissNotifyAsk(){
+  /* remembered only so the count is visible to us; the sheet returns on the
+     next open, which is what was asked for */
+  try{ localStorage.setItem(NOTIFY_ASKED, String(Date.now())); }catch(e){}
+  closeModal("notifyOverlay");
+}
+
+async function acceptNotifyAsk(){
+  closeModal("notifyOverlay");
+  if(isIOS() && !isStandalone()){ openModal("iosOverlay"); return; }
+  if(session && session.registered){ await enablePush(); return; }   /* a worker */
+  await enableCustomerAlerts();                                      /* everybody else */
+}
+
 /* ---------- the customer's side of alerts ----------
    The worker half of this was built first, because a booking nobody answers
    is the worse failure. But the customer is the one actually waiting: they
@@ -9310,6 +9393,7 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
   initHome();
   /* the entry in the history stack the app started on */
   try{ history.replaceState({screen:"home"}, ""); }catch(e){}
+  setTimeout(maybeAskNotify, 2200);   /* after the first paint, not over it */
   const start = screenFromHash();          /* manifest shortcuts land here */
   if(start && start !== "home") go(start);
   checkAdminHash();
