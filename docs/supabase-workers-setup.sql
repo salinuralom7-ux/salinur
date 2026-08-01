@@ -7550,3 +7550,53 @@ begin
     end loop;
   end loop;
 end $$;
+
+-- ============================================================
+-- MIGRATION 34 — things the audit turned up
+--
+-- Found by reading the schema rather than by anything breaking, which is the
+-- only time worth finding them.
+-- ============================================================
+
+-- 1. Two different indexes were sharing a name. `if not exists` matches on the
+--    name alone, so the second one — mine, on customer_id — was silently never
+--    created, and the code reads as though it exists. Harmless today because
+--    customer_id has no client yet; a mystery next month.
+create index if not exists threads_customer_id_idx
+  on public.threads (customer_id, created_at desc);
+
+-- 2. purge_otp was written and never scheduled. One-time codes and the phone
+--    numbers they were sent to would have accumulated for ever, which is both
+--    a growing table and a growing pile of personal data the privacy policy
+--    says we do not keep.
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    begin
+      perform cron.unschedule('repto-otp-purge')
+        where exists (select 1 from cron.job where jobname = 'repto-otp-purge');
+      perform cron.schedule('repto-otp-purge', '10 3 * * *', 'select public.purge_otp()');
+      raise notice 'otp purge scheduled';
+    exception when others then
+      raise notice 'could not schedule the otp purge (%)', sqlerrm;
+    end;
+  end if;
+end $$;
+
+-- 3. claim_otp filters on sent_at is null and orders by id, against no index.
+--    The same partial index push_outbox has had all along.
+create index if not exists otp_outbox_pending_idx
+  on public.otp_outbox (id) where sent_at is null;
+
+-- 4. drop_push_endpoint deletes by endpoint, which is the second half of
+--    customer_push's primary key — so every dead subscription cost a full
+--    scan of the table. At launch numbers that is nothing; at a hundred
+--    thousand it is a scan per bounced notification.
+create index if not exists customer_push_endpoint_idx on public.customer_push (endpoint);
+
+-- 5. A worker's own alerts are looked up by endpoint too, for the same reason.
+create index if not exists worker_push_endpoint_idx on public.worker_push (endpoint);
+
+-- 6. The admin's open-reports queue filters on unhandled and sorts by date.
+create index if not exists worker_reports_open_idx
+  on public.worker_reports (created_at desc) where not handled;
