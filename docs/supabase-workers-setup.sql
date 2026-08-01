@@ -6782,7 +6782,11 @@ declare
     'admin_reports','admin_clear_report','admin_wa_codes','admin_set_status',
     'admin_set_require_otp','admin_verify_registration','admin_exit_reasons',
     'admin_exit_notes','admin_hide_review','admin_push_health','admin_set_vapid',
-    'test_push'
+    'test_push',
+    -- customer accounts and their one-time codes
+    'register_customer','login_customer','customer_me','customer_update',
+    'customer_sign_out','delete_customer','send_otp','verify_otp','admin_set_otp',
+    'skill_price_stats'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -6999,6 +7003,453 @@ begin
     for f in select p.oid::regprocedure as sig from pg_proc p
               join pg_namespace n on n.oid = p.pronamespace
              where n.nspname = 'public' and p.proname = 'test_push'
+    loop
+      execute format('grant execute on function %s to %I', f.sig, r);
+    end loop;
+  end loop;
+end $$;
+
+-- ============================================================
+-- MIGRATION 31 — customers get an account
+--
+-- A customer types their name, their number and their locality into every
+-- single booking. Nothing is remembered, on the device or anywhere else, so
+-- the tenth booking costs exactly as much effort as the first. It also means
+-- "my bookings" only exists on the phone that made them: change handset, or
+-- clear Safari, and every conversation is gone.
+--
+-- Accounts fix all of that, and they follow the shape workers already use —
+-- phone number, 4-digit PIN, bcrypt, a session token — because a second
+-- authentication model in one codebase is a second place for a mistake to
+-- hide.
+--
+-- Verification is separate on purpose. The account works from day one; the
+-- OTP turns on when a WhatsApp provider is connected, exactly as
+-- require_phone_otp already does for workers. Building the wall before the
+-- door exists would only mean nobody can book at all.
+-- ============================================================
+
+create table if not exists public.customers (
+  id             uuid primary key default gen_random_uuid(),
+  created_at     timestamptz not null default now(),
+  phone          text not null unique,
+  name           text not null,
+  area           text,
+  phone_verified boolean not null default false,
+  last_seen      timestamptz,
+  terms_version  text,
+  consent_at     timestamptz
+);
+create table if not exists public.customer_secrets (
+  customer_id uuid primary key references public.customers(id) on delete cascade,
+  pin_hash    text not null
+);
+create table if not exists public.customer_sessions (
+  token       uuid primary key default gen_random_uuid(),
+  customer_id uuid not null references public.customers(id) on delete cascade,
+  created_at  timestamptz not null default now(),
+  expires_at  timestamptz not null default now() + interval '90 days'
+);
+create index if not exists customer_sessions_cust_idx on public.customer_sessions (customer_id);
+
+alter table public.customers         enable row level security;
+alter table public.customer_secrets  enable row level security;
+alter table public.customer_sessions enable row level security;
+-- no policies on any of them: everything goes through the functions below
+
+do $$
+declare r text; t text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+    foreach t in array array['customers','customer_secrets','customer_sessions'] loop
+      execute format('revoke all on public.%I from %I', t, r);
+    end loop;
+  end loop;
+end $$;
+
+-- ---------- who is this ----------
+-- Same contract as worker_auth: a token if we have one, phone and PIN if not.
+create or replace function public.customer_auth(
+  p_phone text default null, p_pin text default null, p_token uuid default null)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare cid uuid;
+begin
+  if p_token is not null then
+    select s.customer_id into cid from customer_sessions s
+     where s.token = p_token and s.expires_at > now();
+    if cid is not null then
+      update customers set last_seen = now() where id = cid;
+      return cid;
+    end if;
+  end if;
+  if p_phone is null or p_pin is null then return null; end if;
+  select c.id into cid from customers c
+    join customer_secrets s on s.customer_id = c.id
+   where c.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+  if cid is not null then update customers set last_seen = now() where id = cid; end if;
+  return cid;
+end;
+$$;
+
+create or replace function public.register_customer(
+  p_phone text, p_pin text, p_name text, p_area text default null,
+  p_terms text default null)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare cid uuid; tok uuid; need_otp boolean; verified boolean;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit Indian mobile number';
+  end if;
+  if p_pin !~ '^\d{4}$' then
+    raise exception 'PIN must be exactly 4 digits';
+  end if;
+  if btrim(coalesce(p_name,'')) = '' then
+    raise exception 'Please enter your name';
+  end if;
+  if exists (select 1 from customers where phone = p_phone) then
+    raise exception 'This number already has an account — please sign in';
+  end if;
+
+  -- when a provider is connected the number must already have passed an OTP
+  select require_customer_otp into need_otp from nearse_config where id = 1;
+  verified := public.otp_is_verified(p_phone);
+  if coalesce(need_otp, false) and not verified then
+    raise exception 'Please confirm your number first';
+  end if;
+
+  insert into customers (phone, name, area, phone_verified, terms_version, consent_at)
+  values (p_phone, btrim(p_name), nullif(btrim(coalesce(p_area,'')), ''), verified,
+          nullif(p_terms,''), case when p_terms is not null then now() end)
+  returning id into cid;
+  insert into customer_secrets (customer_id, pin_hash) values (cid, crypt(p_pin, gen_salt('bf')));
+  insert into customer_sessions (customer_id) values (cid) returning token into tok;
+  return tok;
+end;
+$$;
+
+create or replace function public.login_customer(p_phone text, p_pin text)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare cid uuid; tok uuid;
+begin
+  cid := public.customer_auth(p_phone, p_pin, null);
+  if cid is null then return null; end if;
+  delete from customer_sessions where customer_id = cid and expires_at < now();
+  insert into customer_sessions (customer_id) values (cid) returning token into tok;
+  return tok;
+end;
+$$;
+
+-- What the app needs to fill a booking form without asking again.
+create or replace function public.customer_me(
+  p_phone text default null, p_pin text default null, p_token uuid default null)
+returns table (id uuid, phone text, name text, area text, phone_verified boolean)
+language plpgsql security definer set search_path = public, extensions as $$
+declare cid uuid;
+begin
+  cid := public.customer_auth(p_phone, p_pin, p_token);
+  if cid is null then return; end if;
+  return query select c.id, c.phone, c.name, c.area, c.phone_verified
+                 from customers c where c.id = cid;
+end;
+$$;
+
+create or replace function public.customer_update(
+  p_token uuid, p_name text default null, p_area text default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare cid uuid;
+begin
+  cid := public.customer_auth(null, null, p_token);
+  if cid is null then raise exception 'Please sign in again'; end if;
+  update customers set
+    name = coalesce(nullif(btrim(p_name), ''), name),
+    area = coalesce(nullif(btrim(p_area), ''), area)
+  where id = cid;
+end;
+$$;
+
+create or replace function public.customer_sign_out(p_token uuid)
+returns void language sql security definer set search_path = public as $$
+  delete from customer_sessions where token = p_token;
+$$;
+
+-- The DPDP erasure right applies to customers too, not only workers.
+create or replace function public.delete_customer(p_token uuid)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare cid uuid;
+begin
+  cid := public.customer_auth(null, null, p_token);
+  if cid is null then raise exception 'Please sign in again'; end if;
+  delete from customers where id = cid;      -- secrets and sessions cascade
+end;
+$$;
+
+-- ---------- threads belong to an account when there is one ----------
+alter table public.threads add column if not exists customer_id uuid
+  references public.customers(id) on delete set null;
+create index if not exists threads_customer_idx on public.threads (customer_id, created_at desc);
+
+-- ---------- the OTP itself ----------
+-- Codes are stored as a bcrypt hash, never in the clear. A leaked database
+-- should not hand somebody a list of live codes, and there is no reason to
+-- be able to read one back — the only question ever asked is "does this
+-- match", which crypt answers.
+alter table public.nearse_config add column if not exists require_customer_otp boolean not null default false;
+alter table public.nearse_config add column if not exists otp_provider text;
+
+create table if not exists public.otp_codes (
+  phone      text primary key,
+  code_hash  text not null,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '10 minutes',
+  attempts   int  not null default 0,
+  sends      int  not null default 1,
+  verified_at timestamptz
+);
+alter table public.otp_codes enable row level security;   -- no policies
+
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on public.otp_codes from %I', r);
+    end if;
+  end loop;
+end $$;
+
+-- Queued the same way push is, and drained by the same kind of Edge Function.
+-- The database never waits on a third party.
+create table if not exists public.otp_outbox (
+  id         bigserial primary key,
+  phone      text not null,
+  code       text not null,
+  created_at timestamptz not null default now(),
+  sent_at    timestamptz,
+  attempts   int not null default 0,
+  last_error text
+);
+alter table public.otp_outbox enable row level security;   -- no policies
+
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on public.otp_outbox from %I', r);
+      execute format('revoke all on sequence public.otp_outbox_id_seq from %I', r);
+    end if;
+  end loop;
+end $$;
+
+create or replace function public.otp_is_verified(p_phone text)
+returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from otp_codes
+     where phone = p_phone
+       and verified_at is not null
+       and verified_at > now() - interval '30 minutes');
+$$;
+
+-- Rate limited on both axes that matter: how often one number may be sent a
+-- code, and how many times a code may be guessed. Without the first this is
+-- a way to make Repto send messages to strangers at our expense.
+create or replace function public.send_otp(p_phone text)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare row otp_codes%rowtype; code text; provider text;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit Indian mobile number';
+  end if;
+
+  select * into row from otp_codes where phone = p_phone;
+  if found then
+    if row.created_at > now() - interval '60 seconds' then
+      raise exception 'Please wait a minute before asking for another code';
+    end if;
+    if row.sends >= 5 and row.created_at > now() - interval '1 hour' then
+      raise exception 'Too many codes sent to this number. Please try again later.';
+    end if;
+  end if;
+
+  code := lpad(floor(random() * 1000000)::text, 6, '0');
+  insert into otp_codes (phone, code_hash, sends)
+  values (p_phone, crypt(code, gen_salt('bf')), 1)
+  on conflict (phone) do update
+    set code_hash  = excluded.code_hash,
+        created_at = now(),
+        expires_at = now() + interval '10 minutes',
+        attempts   = 0,
+        verified_at = null,
+        sends = case when otp_codes.created_at > now() - interval '1 hour'
+                     then otp_codes.sends + 1 else 1 end;
+
+  select otp_provider into provider from nearse_config where id = 1;
+  if coalesce(btrim(provider), '') = '' then
+    -- No provider connected. Say so plainly rather than pretending to send:
+    -- a code that silently goes nowhere is the worst of both worlds.
+    return 'no-provider';
+  end if;
+
+  insert into otp_outbox (phone, code) values (p_phone, code);
+  return 'sent';
+end;
+$$;
+
+create or replace function public.verify_otp(p_phone text, p_code text)
+returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare row otp_codes%rowtype;
+begin
+  select * into row from otp_codes where phone = p_phone;
+  if not found then raise exception 'Ask for a code first'; end if;
+  if row.expires_at < now() then raise exception 'That code has expired — ask for a new one'; end if;
+  if row.attempts >= 6 then raise exception 'Too many wrong tries. Ask for a new code.'; end if;
+
+  update otp_codes set attempts = attempts + 1 where phone = p_phone;
+  if row.code_hash <> crypt(p_code, row.code_hash) then
+    return false;
+  end if;
+  update otp_codes set verified_at = now() where phone = p_phone;
+  update customers set phone_verified = true where phone = p_phone;
+  return true;
+end;
+$$;
+
+-- What the sender drains, mirroring claim_push.
+create or replace function public.claim_otp(p_limit int default 20)
+returns table (id bigint, phone text, code text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  return query
+  with due as (
+    select o.id from otp_outbox o
+     where o.sent_at is null and o.attempts < 3
+       and o.created_at > now() - interval '15 minutes'   -- older than the code's own life
+     order by o.id limit greatest(1, least(p_limit, 100))
+     for update skip locked
+  ), bumped as (
+    update otp_outbox o set attempts = o.attempts + 1
+      from due where o.id = due.id returning o.*
+  )
+  select b.id, b.phone, b.code from bumped b;
+end;
+$$;
+
+create or replace function public.mark_otp_sent(p_id bigint)
+returns void language sql security definer set search_path = public as $$
+  update otp_outbox set sent_at = now(), last_error = null where id = p_id;
+$$;
+
+create or replace function public.mark_otp_failed(p_id bigint, p_error text)
+returns void language sql security definer set search_path = public as $$
+  update otp_outbox set last_error = left(coalesce(p_error,''), 300) where id = p_id;
+$$;
+
+-- A code is a secret with a ten-minute life; nothing about it should outlive
+-- the day it was used.
+create or replace function public.purge_otp()
+returns bigint
+language plpgsql security definer set search_path = public, extensions as $$
+declare n bigint;
+begin
+  delete from otp_codes  where created_at < now() - interval '1 day';
+  delete from otp_outbox where created_at < now() - interval '1 day';
+  get diagnostics n = row_count;
+  return n;
+end;
+$$;
+
+create or replace function public.admin_set_otp(
+  p_pin text, p_provider text, p_require boolean default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then raise exception 'Wrong admin PIN'; end if;
+  update nearse_config
+     set otp_provider = nullif(btrim(coalesce(p_provider,'')), ''),
+         require_customer_otp = coalesce(p_require, require_customer_otp)
+   where id = 1;
+end;
+$$;
+
+do $$
+declare r text; f record;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public'
+               and p.proname in ('register_customer','login_customer','customer_me',
+                                 'customer_update','customer_sign_out','delete_customer',
+                                 'send_otp','verify_otp','admin_set_otp')
+    loop
+      execute format('grant execute on function %s to %I', f.sig, r);
+    end loop;
+  end loop;
+end $$;
+
+-- ============================================================
+-- MIGRATION 32 — tell a worker where their price actually sits
+--
+-- Everyone prices themselves at the top. It is not greed, it is that nobody
+-- has any idea what the going rate is, so the ceiling looks like a
+-- suggestion. The result is a marketplace where every carpenter asks 2,400
+-- and no customer books anybody — which reads, to a customer, as a platform
+-- with nothing on it.
+--
+-- The band already stops nonsense. This is the softer half: what workers in
+-- the same trade in this city are actually charging. A real number persuades
+-- where "please charge less" does not, and it costs the worker nothing to
+-- ignore.
+--
+-- Below five workers in a trade there is no market to report, and inventing
+-- one would be worse than saying nothing — so it falls back to the band and
+-- says only what is true.
+-- ============================================================
+
+create or replace function public.skill_price_stats(p_skills text[])
+returns table (skill text, n int, p25 int, median int, p75 int, band_min int, band_max int)
+language sql stable security definer set search_path = public, extensions as $$
+  with offered as (
+    select s->>'skill' as skill, (s->>'price')::numeric as price
+      from workers w, jsonb_array_elements(w.skills) s
+     where w.status = 'approved' and w.available
+       and s->>'skill' = any(p_skills)
+       and (s->>'price') ~ '^[0-9]+$'
+  )
+  select r.skill,
+         coalesce(o.n, 0)::int,
+         o.p25::int, o.median::int, o.p75::int,
+         r.min_price, r.max_price
+    from service_rates r
+    left join (
+      select skill,
+             count(*) as n,
+             percentile_cont(0.25) within group (order by price) as p25,
+             percentile_cont(0.50) within group (order by price) as median,
+             percentile_cont(0.75) within group (order by price) as p75
+        from offered group by skill
+    ) o on o.skill = r.skill
+   where r.skill = any(p_skills);
+$$;
+
+do $$
+declare r text; f record;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.proname = 'skill_price_stats'
     loop
       execute format('grant execute on function %s to %I', f.sig, r);
     end loop;
