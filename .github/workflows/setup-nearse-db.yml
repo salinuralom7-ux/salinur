@@ -224,7 +224,17 @@ jobs:
             (select count(*)::int from public.worker_push) as workers_subscribed,
             (select count(*)::int from public.customer_push) as customers_subscribed,
             (select coalesce(nullif(vapid_public,''), 'NOT SET — see DEPLOY.md Job 0.5') is distinct from
-                    'NOT SET — see DEPLOY.md Job 0.5' from public.nearse_config where id=1) as vapid_key_set
+                    'NOT SET — see DEPLOY.md Job 0.5' from public.nearse_config where id=1) as vapid_key_set,
+            -- what actually wakes the sender. An alert sits in the queue until
+            -- something calls the function, and this is the part that was
+            -- silently missing while everything else reported healthy.
+            (select count(*)::int from pg_extension where extname='pg_net')  as pg_net,
+            (select count(*)::int from pg_extension where extname='pg_cron') as pg_cron,
+            (select count(*)::int from pg_trigger
+              where not tgisinternal and tgname='push_outbox_poke_trg')      as poke_trigger,
+            (select coalesce(btrim(push_url),'') <> '' from public.nearse_config where id=1) as sender_url_known,
+            (select coalesce(max(extract(epoch from (now()-created_at))/60),0)::int
+               from public.push_outbox where sent_at is null)                as oldest_unsent_mins
           PSQL
           jq -Rs '{query: .}' /tmp/push.sql > /tmp/p.json
           code=$(curl -sS -o /tmp/push.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/p.json)

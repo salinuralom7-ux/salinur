@@ -6047,6 +6047,7 @@ async function confirmEta(mins){
   hideModal("etaOverlay");   /* go() consumes this sheet's history entry */
   try{
     const j = await api.acceptOffer(session.phone, session.pin, code, mins);
+    pokePush();
     /* Straight into the conversation, inside Repto. This used to open WhatsApp,
        which moved the job off the platform the moment it was accepted. */
     if(j && j.thread_code){
@@ -6059,7 +6060,7 @@ async function confirmEta(mins){
   }catch(e){ toast(e.message); pollOffers(); }
 }
 async function declineOffer(code){
-  try{ await api.declineOffer(session.phone, session.pin, code); }catch(e){}
+  try{ await api.declineOffer(session.phone, session.pin, code); pokePush(); }catch(e){}
   pollOffers();
 }
 
@@ -6500,6 +6501,7 @@ async function confirmBooking(){
                     skill:s.skill, at:new Date().toISOString(),
                     workerPhone:started.worker_phone || w.phone || null,
                     detail:[when, area + ", Guwahati"].filter(Boolean).join(" · ") });
+  pokePush();                 /* the worker's alert is queued — wake the sender now */
   syncCustomerPush();         /* silent when they have already allowed alerts */
   hideModal("bookOverlay");   /* go('chat') consumes the sheet's history entry */
   toast("Request sent to " + w.name.split(" ")[0]);
@@ -7799,6 +7801,7 @@ async function sendChat(e){
   try{
     if(chatSide === "customer") await api.postMessage(chatCode, chatToken, body);
     else await api.workerPostMessage(session.phone, session.pin, chatCode, body);
+    pokePush();
     await refreshChat(false);
   }catch(err){ box.value = body; toast(err.message || "Message not sent"); }
 }
@@ -7806,6 +7809,7 @@ async function sendChat(e){
 async function workerThread(status, reason){
   try{
     await api.workerSetThread(session.phone, session.pin, chatCode, status, reason);
+    pokePush();
     await refreshChat(false);
     await refreshChatHead();
     toast({accepted:"Job accepted", working:"Marked as started", done:"Marked finished",
@@ -8799,6 +8803,27 @@ async function adminRequireOtp(on){
    iOS only delivers Web Push to a PWA that has been added to the home
    screen, so on iPhone the install prompt has to come first. */
 let VAPID_PUBLIC = null;      /* read from nearse_config at start-up */
+let PUSH_URL = null;          /* the sender, so the browser can wake it */
+
+/* ---------- wake the sender ----------
+   An alert sits in a queue until something calls the function that drains it.
+   The database was meant to do that through pg_net, and quietly did not,
+   because Migration 29 checked for the extension instead of enabling it — so
+   three real alerts sat unsent until CI happened to call the function by
+   hand and all three went out at once.
+
+   This is the path that depends on nothing. The browser that just caused an
+   alert pokes the sender directly: no extension, no dashboard webhook, no
+   scheduler. Fire and forget — the queue is already safe, this only decides
+   whether delivery takes a second or a minute, so a failure here is not
+   worth telling anybody about. */
+function pokePush(){
+  if(!LIVE || !PUSH_URL) return;
+  try{
+    fetch(PUSH_URL, { method:"POST", headers:{"Content-Type":"application/json"},
+                      body:"{}", keepalive:true }).catch(()=>{});
+  }catch(e){}
+}
 let pushSub = null;
 
 const pushSupported = () =>
@@ -9418,9 +9443,10 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
   if(LIVE){
     /* off until an SMS/WhatsApp provider is connected — see the admin panel */
     try{
-      const rows = await sb("nearse_config?select=require_phone_otp,vapid_public&limit=1");
+      const rows = await sb("nearse_config?select=require_phone_otp,vapid_public,push_url&limit=1");
       REQUIRE_OTP  = !!(rows && rows[0] && rows[0].require_phone_otp);
       VAPID_PUBLIC = (rows && rows[0] && rows[0].vapid_public) || null;
+      PUSH_URL     = (rows && rows[0] && rows[0].push_url) || null;
     }catch(e){ REQUIRE_OTP = false; }
   }
   syncCustomerPush();   /* re-register this device against any newer booking */

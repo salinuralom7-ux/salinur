@@ -6786,7 +6786,7 @@ declare
     -- customer accounts and their one-time codes
     'register_customer','login_customer','customer_me','customer_update',
     'customer_sign_out','delete_customer','send_otp','verify_otp','admin_set_otp',
-    'skill_price_stats'
+    'skill_price_stats','push_endpoint'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -7450,6 +7450,101 @@ begin
     for f in select p.oid::regprocedure as sig from pg_proc p
               join pg_namespace n on n.oid = p.pronamespace
              where n.nspname = 'public' and p.proname = 'skill_price_stats'
+    loop
+      execute format('grant execute on function %s to %I', f.sig, r);
+    end loop;
+  end loop;
+end $$;
+
+-- ============================================================
+-- MIGRATION 33 — actually wake the sender
+--
+-- The evidence, from a live run: workers_subscribed 1, unsent 3, and the
+-- moment CI called the function by hand it returned {"sent":3}. Everything
+-- works. Nothing was calling it.
+--
+-- Migration 29 wrote a trigger that pokes the sender through pg_net, but
+-- guarded it on the extension already existing — and it does not, because
+-- nobody enabled it. So the guard quietly skipped, no trigger was created,
+-- and alerts piled up waiting for a nudge that never came.
+--
+-- Two changes. Enable the extension rather than checking for it. And stop
+-- relying on any single path: the browser that caused the alert also pokes
+-- the sender, which needs no extension, no dashboard, and no scheduler.
+-- Three independent ways to deliver, because this has failed too often to
+-- trust one.
+-- ============================================================
+
+do $$
+begin
+  begin
+    create extension if not exists pg_net with schema extensions;
+    raise notice 'pg_net ready';
+  exception when others then
+    raise notice 'could not enable pg_net (%) — the browser poke still works', sqlerrm;
+  end;
+  begin
+    create extension if not exists pg_cron;
+    raise notice 'pg_cron ready';
+  exception when others then
+    raise notice 'could not enable pg_cron (%) — no sweep, the other two paths remain', sqlerrm;
+  end;
+end $$;
+
+-- Re-run Migration 29's wiring now that the extension may exist. Same
+-- statement-level trigger: a hundred rows inserted together should wake the
+-- sender once and let it drain all hundred.
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_net') then
+    drop trigger if exists push_outbox_poke_trg on public.push_outbox;
+    create trigger push_outbox_poke_trg
+      after insert on public.push_outbox
+      for each statement execute function public.poke_push_sender();
+    raise notice 'push_outbox pokes the sender directly';
+  else
+    raise notice 'no pg_net — relying on the browser poke and the CI sweep';
+  end if;
+end $$;
+
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron')
+     and exists (select 1 from pg_extension where extname = 'pg_net') then
+    begin
+      perform cron.unschedule('repto-push-sweep')
+        where exists (select 1 from cron.job where jobname = 'repto-push-sweep');
+      perform cron.schedule('repto-push-sweep', '* * * * *', $sweep$
+        select net.http_post(
+          url     := (select push_url from public.nearse_config where id = 1),
+          body    := '{}'::jsonb,
+          headers := '{"Content-Type": "application/json"}'::jsonb)
+        where (select coalesce(btrim(push_url), '') <> '' from public.nearse_config where id = 1)
+          and exists (select 1 from public.push_outbox where sent_at is null and attempts < 5);
+      $sweep$);
+      raise notice 'push sweep scheduled every minute';
+    exception when others then
+      raise notice 'could not schedule the sweep (%)', sqlerrm;
+    end;
+  end if;
+end $$;
+
+-- The app needs the URL to poke it from the browser. It is not a secret: the
+-- function takes no input and only ever drains a queue.
+create or replace function public.push_endpoint()
+returns text
+language sql stable security definer set search_path = public as $$
+  select push_url from nearse_config where id = 1;
+$$;
+
+do $$
+declare r text; f record;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.proname = 'push_endpoint'
     loop
       execute format('grant execute on function %s to %I', f.sig, r);
     end loop;
