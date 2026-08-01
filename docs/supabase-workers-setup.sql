@@ -6785,7 +6785,8 @@ declare
     'test_push',
     -- customer accounts and their one-time codes
     'register_customer','login_customer','customer_me','customer_update',
-    'customer_sign_out','delete_customer','send_otp','verify_otp','admin_set_otp'
+    'customer_sign_out','delete_customer','send_otp','verify_otp','admin_set_otp',
+    'skill_price_stats'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -7390,6 +7391,65 @@ begin
                and p.proname in ('register_customer','login_customer','customer_me',
                                  'customer_update','customer_sign_out','delete_customer',
                                  'send_otp','verify_otp','admin_set_otp')
+    loop
+      execute format('grant execute on function %s to %I', f.sig, r);
+    end loop;
+  end loop;
+end $$;
+
+-- ============================================================
+-- MIGRATION 32 — tell a worker where their price actually sits
+--
+-- Everyone prices themselves at the top. It is not greed, it is that nobody
+-- has any idea what the going rate is, so the ceiling looks like a
+-- suggestion. The result is a marketplace where every carpenter asks 2,400
+-- and no customer books anybody — which reads, to a customer, as a platform
+-- with nothing on it.
+--
+-- The band already stops nonsense. This is the softer half: what workers in
+-- the same trade in this city are actually charging. A real number persuades
+-- where "please charge less" does not, and it costs the worker nothing to
+-- ignore.
+--
+-- Below five workers in a trade there is no market to report, and inventing
+-- one would be worse than saying nothing — so it falls back to the band and
+-- says only what is true.
+-- ============================================================
+
+create or replace function public.skill_price_stats(p_skills text[])
+returns table (skill text, n int, p25 int, median int, p75 int, band_min int, band_max int)
+language sql stable security definer set search_path = public, extensions as $$
+  with offered as (
+    select s->>'skill' as skill, (s->>'price')::numeric as price
+      from workers w, jsonb_array_elements(w.skills) s
+     where w.status = 'approved' and w.available
+       and s->>'skill' = any(p_skills)
+       and (s->>'price') ~ '^[0-9]+$'
+  )
+  select r.skill,
+         coalesce(o.n, 0)::int,
+         o.p25::int, o.median::int, o.p75::int,
+         r.min_price, r.max_price
+    from service_rates r
+    left join (
+      select skill,
+             count(*) as n,
+             percentile_cont(0.25) within group (order by price) as p25,
+             percentile_cont(0.50) within group (order by price) as median,
+             percentile_cont(0.75) within group (order by price) as p75
+        from offered group by skill
+    ) o on o.skill = r.skill
+   where r.skill = any(p_skills);
+$$;
+
+do $$
+declare r text; f record;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.proname = 'skill_price_stats'
     loop
       execute format('grant execute on function %s to %I', f.sig, r);
     end loop;

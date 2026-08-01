@@ -2037,6 +2037,18 @@ body.in-chat > .demo-note{display:none}
 .done-alerts > b{display:block;font-size:.96rem;margin-bottom:4px}
 .done-alerts > .push-state{display:block;color:var(--muted);font-size:.83rem;line-height:1.5}
 
+/* where this price sits against everybody else in the trade */
+.price-tip{
+  margin-top:6px;font-size:.78rem;line-height:1.5;border-radius:var(--r-sm);
+  padding:8px 10px;border:1px solid var(--line);
+}
+.price-tip b{font-weight:700}
+.price-tip.high{border-color:rgba(232,146,74,.5);background:rgba(232,146,74,.09);color:var(--ink-2)}
+.price-tip.high b{color:var(--warn)}
+.price-tip.low{border-color:rgba(79,201,141,.38);background:rgba(79,201,141,.08);color:var(--ink-2)}
+.price-tip.low b{color:var(--ok)}
+.price-tip.fair{color:var(--muted)}
+
 /* the per-device checklist: the first cross is always the answer */
 .alert-checks{margin:10px 0 4px}
 .checks{list-style:none}
@@ -4021,6 +4033,18 @@ const api = {
   },
   /* A customer has no account, so the subscription hangs off the booking:
      the code and the token together prove it is theirs. */
+  /* What workers in the same trade actually charge here. Only meaningful
+     once a handful have joined, which is why the caller checks n. */
+  async priceStats(skills){
+    if(!LIVE || !skills.length) return {};
+    try{
+      const rows = await sb("rpc/skill_price_stats", {method:"POST",
+        body:JSON.stringify({p_skills:skills})});
+      const out = {};
+      (rows||[]).forEach(r => { out[r.skill] = r; });
+      return out;
+    }catch(e){ return {}; }
+  },
   async testPush(){
     if(LIVE) return await sb("rpc/test_push", {method:"POST", body:JSON.stringify(workerAuth({}))});
     return "queued";
@@ -5063,6 +5087,7 @@ function initRegister(){
   const w = editing ? session.worker : null;
   $("regTitle").textContent = editing ? "Edit your profile" : "Your worker profile";
   $("regSaveBtn").textContent = editing ? "Save changes" : "Publish my profile";
+  window._pricesConfirmed = false;   /* a later edit gets asked again */
   /* consent is recorded once, when the profile is first published */
   regGo(1);
   const alt = $("uploadAlt"); if(alt) alt.hidden = true;   /* only after the camera fails */
@@ -5287,6 +5312,7 @@ function toggleSkill(name){
   renderSkillPicker();
   renderPicked();
   renderModeBlocks();
+  loadPriceStats();
 }
 /* Somebody who only edits video can live in Silchar or Sivasagar. Somebody
    who also fits ceiling fans cannot, so a mixed profile stays a Guwahati
@@ -5334,15 +5360,43 @@ function renderPicked(){
         <input class="sd-exp exp" type="text" maxlength="40" placeholder="Experience — e.g. 5 years" value="${esc(known.exp||"")}">
       </div>
       ${RATE_BAND[name] ? `<p class="band">Usual range in Guwahati: <b>${money0(RATE_BAND[name][0])} – ${money0(RATE_BAND[name][1])}</b> ${esc(unit)}</p>` : ""}
+      <p class="price-tip" hidden></p>
     </div>`;
   }).join("");
   host.querySelectorAll(".sd-price").forEach(checkRate);
 }
 
 /* live feedback while typing, so nobody meets the limit only on submit */
+/* What other workers in this trade charge, fetched once the picks settle. */
+let PRICE_STATS = {};
+async function loadPriceStats(){
+  if(!picked.length){ PRICE_STATS = {}; return; }
+  PRICE_STATS = await api.priceStats(picked);
+  document.querySelectorAll(".sd-price").forEach(checkRate);
+}
+
+/* Where a price sits: "low" | "fair" | "high", or null when we cannot say.
+   Five workers is the floor for claiming a market rate — below that there is
+   no market, and inventing one would be worse than saying nothing. */
+function priceStanding(skill, v){
+  const st = PRICE_STATS[skill];
+  if(st && st.n >= 5 && st.p75 != null){
+    if(v > st.p75)     return { level:"high", n:st.n, median:st.median };
+    if(v <= st.median) return { level:"low",  n:st.n, median:st.median };
+    return { level:"fair", n:st.n, median:st.median };
+  }
+  /* No market yet. The top of the allowed range is still worth a word, but
+     say only what is true — that it is near the ceiling, not that somebody
+     else charges less. */
+  const b = RATE_BAND[skill];
+  if(!b) return null;
+  return v > b[0] + (b[1] - b[0]) * 0.67 ? { level:"high", n:0 } : null;
+}
+
 function checkRate(input){
   const card = input.closest(".picked-card");
-  const band = RATE_BAND[card.dataset.skill];
+  const skill = card.dataset.skill;
+  const band = RATE_BAND[skill];
   const note = card.querySelector(".band");
   if(!band || !note) return;
   const v = +input.value;
@@ -5353,6 +5407,22 @@ function checkRate(input){
     ? (v < band[0] ? `Too low — the lowest allowed is ${money0(band[0])}`
                    : `Too high — the highest allowed is ${money0(band[1])}`)
     : `Usual range in Guwahati: ${money0(band[0])} – ${money0(band[1])}`;
+
+  /* the softer half: where this sits against everybody else */
+  const tip = card.querySelector(".price-tip");
+  if(!tip) return;
+  const st = (!bad && input.value !== "") ? priceStanding(skill, v) : null;
+  if(!st){ tip.hidden = true; tip.className = "price-tip"; return; }
+  tip.hidden = false;
+  tip.className = "price-tip " + st.level;
+  tip.innerHTML =
+    st.level === "high"
+      ? (st.n
+          ? `Higher than most. ${st.n} others in this trade charge around <b>${money0(st.median)}</b>. <b>The lower your price, the more bookings you get.</b>`
+          : `Near the top of what this trade charges. <b>The lower your price, the more bookings you get</b> — especially for your first few.`)
+      : st.level === "low"
+        ? `Well priced — under the ${money0(st.median)} most charge here. You will stand out against others.`
+        : `About average for this trade here (${money0(st.median)}).`;
 }
 function rateOutOfBand(skills){
   for(const s of skills){
@@ -5564,6 +5634,27 @@ async function saveProfile(){
   if(missing){ toast("Set your rate for " + missing.skill); return; }
   const badRate = rateOutOfBand(skills);
   if(badRate){ toast(badRate); return; }
+
+  /* Everyone prices at the ceiling, because nobody knows the going rate. One
+     last word before it becomes a live profile nobody books. */
+  const steep = skills.filter(x => {
+    const st = priceStanding(x.skill, x.price);
+    return st && st.level === "high";
+  });
+  if(steep.length && !window._pricesConfirmed){
+    const lines = steep.map(x => {
+      const st = PRICE_STATS[x.skill];
+      return st && st.n >= 5
+        ? `· ${x.skill}: you ${money0(x.price)} — most charge about ${money0(st.median)}`
+        : `· ${x.skill}: ${money0(x.price)} is near the top for this trade`;
+    }).join("\n");
+    const ok = confirm(
+      "The lower your price, the more bookings you get.\n\n" + lines +
+      "\n\nCustomers see the cheapest and nearest first, and your first few jobs are what earn you ratings. " +
+      "You can raise your price any time once you are busy.\n\nGo back and lower it, or publish at this price?");
+    if(ok){ window._pricesConfirmed = true; }
+    else return;                      /* they chose to go back and edit */
+  }
   if(!selfieData){ toast("Please take your verification photo"); return; }
   const area = $("regArea").value.trim();
   const remoteOnly = allRemote(skills.map(x => x.skill));
