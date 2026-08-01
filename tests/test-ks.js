@@ -229,13 +229,20 @@ const srv = http.createServer((req, res) => {
   console.log('Admin shows the code to match:', expect);
   console.log('Code shown matches the one issued:', expect.includes(waCode) && expect.includes('9435012345'));
 
-  // reject first, with a reason, then approve
-  adminPage.removeAllListeners('dialog');
-  adminPage.on('dialog', d => d.accept(d.type() === 'prompt' ? 'Photo is not a clear face' : '4242'));
+  // reject first, with a reason, then approve.
+  // Rejection is a sheet of preset reasons now, not a prompt() — picking from a
+  // list is what makes the reason the worker reads consistent and actionable.
   await adminPage.locator('.admin-card').first().locator('button', { hasText: 'Reject' }).click();
-  await adminPage.waitForTimeout(700);
+  await adminPage.waitForTimeout(600);
+  console.log('Reject sheet opens:', await adminPage.locator('#rejectOverlay.open').count() === 1);
+  const reasons = await adminPage.locator('.reject-opt').allTextContents();
+  console.log('Preset reasons offered:', reasons.length);
+  const REJECT_REASON = reasons[0].trim();
+  await adminPage.locator('.reject-opt').first().click();
+  await adminPage.waitForTimeout(900);
+  console.log('Reject sheet closes:', await adminPage.locator('#rejectOverlay.open').count() === 0);
   console.log('Rejected section appears:', (await adminPage.locator('#adminPanel').innerText()).includes('Rejected'));
-  console.log('Reason recorded:', (await adminPage.locator('#adminPanel').innerText()).includes('Photo is not a clear face'));
+  console.log('Reason recorded:', (await adminPage.locator('#adminPanel').innerText()).includes(REJECT_REASON));
 
   // worker sees the rejection and the reason
   await page.reload();
@@ -243,7 +250,7 @@ const srv = http.createServer((req, res) => {
   await page.evaluate(() => go('me'));
   await page.waitForTimeout(500);
   console.log('Worker sees rejection:', await page.locator('.vstatus.rejected').count() === 1);
-  console.log('Worker sees the reason:', (await page.locator('.vstatus.rejected').innerText()).includes('Photo is not a clear face'));
+  console.log('Worker sees the reason:', (await page.locator('.vstatus.rejected').innerText()).includes(REJECT_REASON));
 
   await adminPage.evaluate(() => renderAdmin());
   await adminPage.waitForTimeout(600);
@@ -310,57 +317,46 @@ const srv = http.createServer((req, res) => {
   await page.locator('#clearSearch').click();
   await page.waitForTimeout(300);
 
-  await page.locator('.cat-chip', { hasText: 'Tutors & Coaching' }).click();
-  await page.waitForTimeout(400);
+  // Categories are tiles now, not a row of chips; selecting one toggles it.
+  const tutorTile = page.locator('.tile', { hasText: 'Tutors' }).first();
+  await tutorTile.click();
+  await page.waitForTimeout(500);
   console.log('Category "Tutors" filter:', await page.locator('.wcard').count());
-  await page.locator('.cat-chip', { hasText: 'All services' }).click();
-  await page.waitForTimeout(300);
+  console.log('Selected tile is marked pressed:',
+              await page.locator('.tile.on[aria-pressed="true"]').count() === 1);
+  await tutorTile.click();                       // tapping it again clears the filter
+  await page.waitForTimeout(400);
+  console.log('Tapping it again clears the filter:',
+              await page.locator('.tile.on').count() === 0);
   await page.locator('.suggest', { hasText: 'Plumber' }).first().click();
   await page.waitForTimeout(400);
   console.log('Suggestion chip search works:', await page.locator('.wcard').count() > 0);
   await page.locator('#clearSearch').click();
   await page.waitForTimeout(300);
 
-  // detail + rating + booking
+  // detail + booking.
+  // There is deliberately no star box on the profile any more: anyone could
+  // rate anyone, as often as they liked. A review now comes off a finished
+  // booking instead, which test-threads covers end to end.
   await page.locator('.wcard').first().click();
   await page.waitForTimeout(400);
   console.log('Detail rate rows:', await page.locator('.price-line').count());
-  await page.locator('#rateStars span[data-s="5"]').click();
-  await page.locator('.rating-box button').click();
-  await page.waitForTimeout(500);
-  console.log('Rating applied:', (await page.locator('#wDetail .stars').first().textContent()).trim());
-  await page.locator('#wDetail .btn-brand').click();
+  console.log('No drive-by rating box on the profile:',
+              await page.locator('#rateStars').count() === 0);
+  await page.locator('#bookCta').click();
   await page.waitForTimeout(400);
-  console.log('Booking: service options:', await page.locator('#bookServices .opt').count(),
-              '| first preselected:', await page.locator('#bookServices .opt.on').count() === 1);
-  console.log('Booking: service shows price:', (await page.locator('#bookServices .opt small').first().textContent()).trim());
-  console.log('Booking: when options:', (await page.locator('#bookWhen .opt').allTextContents()).map(t=>t.trim().split('\n')[0]).join(' | '));
-  console.log('Booking: slot options:', await page.locator('#bookSlot .opt').count());
-  console.log('Booking: area options:', await page.locator('#bookArea option').count());
-  console.log('Booking: quote visible:', await page.locator('#bookQuote.on').count() === 1);
-  await page.locator('#bookWhen .opt', { hasText: 'Pick a date' }).click();
-  await page.waitForTimeout(200);
-  console.log('Booking: date input revealed:', await page.locator('#bookDate').isVisible());
-  await page.locator('#bookWhen .opt', { hasText: 'Tomorrow' }).click();
-  await page.waitForTimeout(200);
-  console.log('Booking: date input hidden again:', !(await page.locator('#bookDate').isVisible()));
-  await page.locator('#bookSlot .opt', { hasText: 'Morning' }).click();
-  await page.locator('#bookServices .opt').nth(1).click();
-  await page.waitForTimeout(200);
-  console.log('Booking: quote after choices:', (await page.locator('#bookQuote').innerText()).replace(/\n+/g, ' / '));
-  await page.fill('#bookName', 'Test Customer');
-  await page.fill('#bookPhone', '9876543210');
-  await page.fill('#bookNote', 'Two ceiling fans');
-  await page.screenshot({ path: 'ks-booking.png' });
-  // validation: area still unset -> must block
-  await page.selectOption('#bookArea', '');
-  await page.locator('#confirmBookBtn').click();
-  await page.waitForTimeout(300);
-  console.log('Booking: blocks missing area:', await page.locator('#bookOverlay.open').count() === 1);
-  await page.selectOption('#bookArea', 'Six Mile');
-  await page.waitForTimeout(200);
-  console.log('Booking: quote picks up area:', (await page.locator('#bookQuote').innerText()).includes('Six Mile'));
+  // The booking sheet was replaced by the request wizard, which asks for the
+  // job before it asks for you, and opens a thread rather than a WhatsApp
+  // link. tests/test-direct-booking.js and tests/test-wizard.js cover it in
+  // full, so this journey stops at the point where they take over.
+  console.log('Booking opens the request sheet:',
+              await page.locator('.overlay.open').count() > 0,
+              '|', await page.evaluate(() => {
+                const o = document.querySelector('.overlay.open');
+                return o ? o.id : 'none';
+              }));
   await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
 
   // ---- sign out / sign in / wrong pin ----
   await page.evaluate(() => go('me'));
@@ -391,25 +387,23 @@ const srv = http.createServer((req, res) => {
   console.log('Signed back in for deletion test:', await page.locator('#scr-me.on').count() === 1);
   console.log('Delete control present:', await page.locator('.danger-zone button').count() === 1);
 
-  // a wrong confirmation word must NOT delete
-  page.removeAllListeners('dialog');
-  page.on('dialog', d => d.type() === 'confirm' ? d.accept() : d.accept('nope'));
+  // Deletion runs through the leave flow now — what goes, then why you are
+  // leaving — rather than two browser dialogs. tests/test-leaving.js covers
+  // every branch; here we only check it ends in an erased profile.
   await page.locator('.danger-zone button').click();
+  await page.waitForTimeout(700);
+  console.log('Leave flow opens:', await page.locator('#leaveOverlay.open').count() === 1);
+  await page.locator('#leaveStep1 .btn-danger').click();
+  await page.waitForTimeout(500);
+  console.log('It asks why before it deletes:', await page.locator('#leaveStep2:visible').count() === 1);
+  await page.locator('.leave-reason').first().click();
+  await page.waitForTimeout(200);
+  await page.locator('#leaveGoBtn').click();
+  await page.waitForTimeout(1200);
+  console.log('Deleted:', await page.locator('#leaveStep3:visible').count() === 1);
+  await page.locator('#leaveStep3 .btn-brand').click();
   await page.waitForTimeout(600);
-  console.log('Survives a mistyped confirmation:', await page.locator('#scr-me.on').count() === 1);
-
-  // cancelling the first dialog must NOT delete
-  page.removeAllListeners('dialog');
-  page.on('dialog', d => d.dismiss());
-  await page.locator('.danger-zone button').click();
-  await page.waitForTimeout(600);
-  console.log('Survives cancelling:', await page.locator('#scr-me.on').count() === 1);
-
-  page.removeAllListeners('dialog');
-  page.on('dialog', d => d.type() === 'confirm' ? d.accept() : d.accept('DELETE'));
-  await page.locator('.danger-zone button').click();
-  await page.waitForTimeout(900);
-  console.log('Deleted and returned home:', await page.locator('#scr-home.on').count() === 1);
+  console.log('Returned home:', await page.locator('#scr-home.on').count() === 1);
   console.log('Profile really gone from store:', await page.evaluate(
     () => !JSON.parse(localStorage.getItem('nearse_workers_v1')).some(w => w.phone === '9435012345')));
   await page.evaluate(() => go('hire'));
