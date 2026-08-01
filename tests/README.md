@@ -70,13 +70,17 @@ unreadable in bulk, search returns no numbers, ratings are one per device,
 changing a photo sends a profile back for review, and deletion cascades.
 
 ```bash
-createdb nearse_test
-psql -d nearse_test -f docs/supabase-workers-setup.sql   # three times, it must be idempotent
-psql -d nearse_test -f tests/schema-verify.sql
+createdb repto_test
+psql -d repto_test -f tests/schema-pretest.sql           # roles Supabase provides
+psql -d repto_test -f docs/supabase-workers-setup.sql    # three times, it must be idempotent
+psql -d repto_test -f tests/schema-verify.sql
 ```
 
-It needs roles named `anon` and `authenticated` to exist, as they do on
-Supabase, or the column-grant block has nothing to apply to.
+`schema-pretest.sql` creates the `anon`, `authenticated` and `service_role`
+roles and grants them what Supabase grants by default. Without it the
+column-grant block in Migration 10 has no role to apply to, skips silently,
+and the verification still reports a pass — leaving the one property it exists
+to prove, that the public cannot read the phone column in bulk, untested.
 
 ## Scale and abuse
 

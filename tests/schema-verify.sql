@@ -75,15 +75,59 @@ do $$ begin
   end;
 end $$;
 
--- ---------- 6. one rating per device ----------
-select public.rate_worker(:'w1_id', 5, 'device-a');
-select public.rate_worker(:'w1_id', 5, 'device-a');
-select public.rate_worker(:'w1_id', 5, 'device-a');
-select rating_sum, rating_count from workers where phone='9435012345';   -- expect 5 / 1
-select public.rate_worker(:'w1_id', 3, 'device-a');                      -- changed mind
-select rating_sum, rating_count from workers where phone='9435012345';   -- expect 3 / 1
-select public.rate_worker(:'w1_id', 4, 'device-b');
-select rating_sum, rating_count from workers where phone='9435012345';   -- expect 7 / 2
+-- ---------- 6. the anonymous rating door is closed ----------
+-- This section used to call rate_worker(id, stars, rater). Migration 16.5
+-- dropped that function — a caller-supplied token could be reissued per
+-- request, so the "one rating per device" limit it enforced was worth
+-- nothing — and reviews now come only from a job that finished, through
+-- review_thread. The call left behind aborted this file on line 79 under
+-- ON_ERROR_STOP, so sections 7 to 10 below were silently never running.
+select count(*) as rate_worker_still_exists
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname = 'public' and p.proname = 'rate_worker';     -- expect 0
+
+-- ---------- 6b. public writes go through gated functions ----------
+set role anon;
+do $$ begin
+  begin
+    insert into public.bookings (worker_name, customer_name) values ('x','y');
+    raise exception 'FAIL: anon can insert bookings directly';
+  exception when insufficient_privilege then
+    raise notice 'PASS  anon cannot insert bookings directly';
+  end;
+end $$;
+do $$ begin
+  begin
+    insert into public.worker_reports (reason) values ('x');
+    raise exception 'FAIL: anon can insert reports directly';
+  exception when insufficient_privilege then
+    raise notice 'PASS  anon cannot insert reports directly';
+  end;
+end $$;
+reset role;
+
+-- the front door works, and cannot be used to fill the table
+select public.report_worker(:'w1_id', 'Fake or duplicate profile', 'raised by the schema test');
+select count(*) as reports_recorded from public.worker_reports where worker_id = :'w1_id';
+do $$
+declare i int; wid uuid;
+begin
+  -- looked up rather than interpolated: psql does not substitute :vars inside
+  -- a dollar-quoted body
+  select id into wid from workers where phone = '9435012345';
+  for i in 1..40 loop
+    begin
+      perform public.report_worker(wid, 'Fake or duplicate profile');
+    exception when others then
+      if sqlerrm like '%already been reported%' then
+        raise notice 'PASS  report flooding capped after % attempts', i;
+        return;
+      end if;
+      raise;
+    end;
+  end loop;
+  raise exception 'FAIL: report flooding was never capped';
+end $$;
 
 -- ---------- 7. changing the photo sends you back for review ----------
 select status from public.update_worker('9435012345','1234',
