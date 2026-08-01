@@ -44,19 +44,37 @@ good. Changing it is the only fix.
 Right now a worker only finds out about a booking by opening Repto and
 looking. Everything needed to fix that is built and deployed — the app asks
 for permission, the database queues the alert — but nothing sends it until
-you do the four steps below. **Until then no notification will ever arrive.**
+you do the four steps below. **Until then no notification will ever arrive**,
+in either direction, no matter what anybody taps.
 
-About 15 minutes, once.
+> **Do it from the app, not from here.** Open <https://nearse.in/#admin>,
+> enter your admin PIN, and go to the **Alerts** tab. It shows which of the
+> four steps is missing, reads the live state out of the database, generates
+> the key pair for you in your own browser, and saves the public half without
+> you touching the SQL editor. The steps below are the same thing written
+> out, for when you would rather see them on a page.
+
+About 15 minutes, once, and **no laptop is needed** — every step can be done
+in a browser.
 
 ## Step 1 — make the key pair
 
-On any computer with Node:
+**Easiest:** the **Alerts** tab of the admin screen has a *Generate a key
+pair* button. The keys are made by your own browser and neither half is sent
+anywhere — that is the whole point of a signing key.
+
+If you would rather use a computer with Node:
 
 ```bash
 npx web-push generate-vapid-keys
 ```
 
-It prints a **Public Key** and a **Private Key**. Keep the window open.
+Either way you end up with a **Public Key** (about 87 characters) and a
+**Private Key** (about 43). Keep them in front of you.
+
+> The private key is a password. Do not screenshot it, do not send it to me,
+> do not put it in the repository. It goes into Supabase in Step 3 and
+> nowhere else.
 
 > The private key is a password. Do not put it in the repository, do not
 > send it to me, do not paste it into a chat. It only ever goes into
@@ -64,19 +82,43 @@ It prints a **Public Key** and a **Private Key**. Keep the window open.
 
 ## Step 2 — tell the app the public half
 
-Supabase → **SQL Editor** → **New query**, paste, replace, **Run**:
+**Easiest:** paste it into the box on the **Alerts** tab and press *Save
+public key*. It is already filled in if you generated the pair there.
+
+Or, Supabase → **SQL Editor** → **New query**, paste, replace, **Run**:
 
 ```sql
 update nearse_config set vapid_public = 'PASTE_THE_PUBLIC_KEY_HERE' where id = 1;
 ```
+
+**Nothing works before this step.** With no key the app cannot even ask a
+worker for permission, so nobody is ever subscribed and the queue stays
+empty. If you have tested and had no notification, this is almost certainly
+why.
 
 The public key is not a secret — the browser needs it to subscribe. That is
 why it lives in the database and not in a file: you never touch the code.
 
 ## Step 3 — deploy the sender
 
-The sender lives in this repository at `supabase/functions/push`. On the same
-computer, from the project folder:
+**In the browser, no command line:**
+
+1. Supabase → **Edge Functions** → **Deploy a new function**
+2. Name it exactly **`push`**
+3. Paste in the contents of `supabase/functions/push/index.ts` from this
+   repository
+4. Turn **Verify JWT off** for it — the webhook calls it with nobody logged
+   in. That is safe: the function reads nothing from the request, it only
+   ever drains the queue.
+5. **Edge Functions → Secrets**, add three:
+
+| Name | Value |
+|---|---|
+| `VAPID_PUBLIC` | the public key |
+| `VAPID_PRIVATE` | the private key |
+| `VAPID_SUBJECT` | `mailto:hello.repto@gmail.com` |
+
+If you do have a computer with Node, the same thing from the project folder:
 
 ```bash
 npm i -g supabase
@@ -113,7 +155,12 @@ calling the same `push` function.
 4. From another phone, book that worker.
 5. The notification should arrive within a few seconds.
 
-If nothing arrives, look in Supabase → **Table Editor** → `push_outbox`:
+The **Alerts** tab tells you where it stopped without you reading any tables:
+whether a key is set, how many workers and customers are subscribed, how many
+alerts are waiting, how many gave up, and the last error the push service
+returned.
+
+If you would rather look yourself, Supabase → **Table Editor** → `push_outbox`:
 
 - **No row at all** — the worker never subscribed. Go back to step 2 above.
 - **A row with `sent_at` empty and `last_error` filled** — the sender ran and

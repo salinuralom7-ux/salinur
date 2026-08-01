@@ -6781,7 +6781,7 @@ declare
     'admin_check','admin_session_start','admin_queue','admin_stats','admin_recent',
     'admin_reports','admin_clear_report','admin_wa_codes','admin_set_status',
     'admin_set_require_otp','admin_verify_registration','admin_exit_reasons',
-    'admin_exit_notes','admin_hide_review'
+    'admin_exit_notes','admin_hide_review','admin_push_health','admin_set_vapid'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -6805,4 +6805,69 @@ begin
   end loop;
 end;
 $lock$;
+select public.lock_public_functions();
+
+-- ============================================================
+-- MIGRATION 28 — say out loud why no notification arrived
+--
+-- The plumbing has been complete and correct for a while and not one
+-- notification has been delivered, because the VAPID key was never set and
+-- the sender was never deployed. Nothing anywhere said so. A worker tapping
+-- "Turn on alerts" got a toast that vanished in three seconds, and the admin
+-- screen — the one place the owner actually looks — said nothing at all.
+--
+-- A feature that fails silently is worse than one that is missing.
+-- ============================================================
+
+create or replace function public.admin_push_health(p_pin text)
+returns table (
+  vapid_set            boolean,
+  workers_subscribed   int,
+  customers_subscribed int,
+  queued               int,
+  unsent               int,
+  given_up             int,
+  sent_24h             int,
+  oldest_unsent_mins   int,
+  last_error           text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  return query
+  select
+    (select coalesce(btrim(vapid_public), '') <> '' from nearse_config where id = 1),
+    (select count(*)::int from worker_push),
+    (select count(*)::int from customer_push),
+    (select count(*)::int from push_outbox),
+    (select count(*)::int from push_outbox where sent_at is null and attempts < 5),
+    (select count(*)::int from push_outbox where sent_at is null and attempts >= 5),
+    (select count(*)::int from push_outbox where sent_at > now() - interval '24 hours'),
+    (select coalesce(max(extract(epoch from (now() - created_at)) / 60), 0)::int
+       from push_outbox where sent_at is null),
+    -- aliased: last_error is also the name of this function's OUT parameter,
+    -- and plpgsql resolves the variable over the column without an alias
+    (select left(o.last_error, 200) from push_outbox o
+      where o.last_error is not null order by o.id desc limit 1);
+end;
+$$;
+
+-- Setting the public key from the admin screen saves a trip to the SQL
+-- editor, which is where this has been stuck. It is not a secret — the
+-- browser needs it to subscribe at all — but writing it still needs the PIN.
+create or replace function public.admin_set_vapid(p_pin text, p_key text)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  if p_key is not null and btrim(p_key) <> '' and length(btrim(p_key)) < 80 then
+    raise exception 'That does not look like a VAPID public key — it should be about 87 characters';
+  end if;
+  update nearse_config set vapid_public = nullif(btrim(p_key), '') where id = 1;
+end;
+$$;
+
 select public.lock_public_functions();
