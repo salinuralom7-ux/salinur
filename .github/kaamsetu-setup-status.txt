@@ -1,4 +1,4 @@
-run: 2026-08-01T13:28:56Z
+run: 2026-08-01T13:54:27Z
 secret: present (44 chars)
 list projects: HTTP 200
 project: mpufunsitqtdkqlibxof
@@ -6,7 +6,7 @@ run SQL: HTTP 201
 verify workers table: HTTP 201 — [{"n":6}]
 verify migration: HTTP 201 — [{"new_worker_cols":3,"new_functions":2,"email_leaked_to_public":0,"require_phone_otp":false,"approved_now":5,"private_cols":2,"wa_fn":1,"wa_code_leaked":0,"delete_fn":1,"coarse_loc_trigger":1,"precise_coords_left":0,"selfie_bucket":1,"selfie_size_cap":400000,"selfie_policies":2,"photos_still_in_db":1,"search_fn":1,"browse_index":1,"search_page_rows":5,"approved_and_available":5,"cities_hex":"476f7373616967616f6e | 4775776168617469","thumb_col":1,"photo_cols":2,"rate_bands":184,"carpenter_band":"400-2500","band_fn":1,"live_rates_out_of_band":1}]
 verify hardening: HTTP 201 — [{"admin_pin_still_published_change_it":false,"workers_policy_approved_only":1,"workers_policy_wide_open":0,"anon_can_read_phone":false,"anon_can_read_name":true,"consent_cols":3,"new_tables":3,"new_functions":6,"old_unlimited_rate_fn":0,"search_still_returns_phone":0,"open_reports":0,"fns_deleting_storage_directly":0,"delete_worker_overloads":1,"delete_worker_args":"p_phone text, p_pin text, p_reason text, p_note text","storage_delete_policy":1,"media_queue":1,"session_fns":6,"validation_fns":2,"pricing_units":13}]
-verify push: HTTP 201 — [{"push_tables":3,"push_fns":9,"push_triggers":5,"recipient_constraint":1,"claim_covers_customers":1,"anon_may_subscribe":true,"unsent":0,"given_up":0,"last_push_error":"none","workers_subscribed":0,"customers_subscribed":0,"vapid_key_set":false}]
+verify push: HTTP 201 — [{"push_tables":3,"push_fns":9,"push_triggers":5,"recipient_constraint":1,"claim_covers_customers":1,"anon_may_subscribe":true,"unsent":0,"given_up":0,"last_push_error":"none","workers_subscribed":0,"customers_subscribed":0,"vapid_key_set":true}]
 OK: nothing deletes from storage.objects in SQL any more
 read service_rates: HTTP 201
 app services: 184, priced in the database: 184
