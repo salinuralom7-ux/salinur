@@ -6871,3 +6871,86 @@ end;
 $$;
 
 select public.lock_public_functions();
+
+-- ============================================================
+-- MIGRATION 29 — the queue pokes the sender itself
+--
+-- Step 4 of the setup was "create a Database Webhook in the dashboard".
+-- That is a five-field form, and it has turned out to be a wall: the owner
+-- cannot get into the Supabase dashboard at all, so the last two steps of a
+-- finished feature have sat undone for days.
+--
+-- A Supabase Database Webhook is not magic. It is a trigger that calls
+-- pg_net. So the trigger is written here instead, where it is version
+-- controlled, applied by CI along with everything else, and needs nobody to
+-- fill in a form. The dashboard webhook remains a perfectly good alternative
+-- — if one already exists this simply pokes the same function twice, which
+-- is harmless because the sender drains a queue rather than acting on the
+-- request body.
+--
+-- Statement-level, not row-level: a hundred rows inserted at once should
+-- wake the sender once, and it will drain all hundred.
+-- ============================================================
+
+alter table public.nearse_config add column if not exists push_url text;
+
+create or replace function public.poke_push_sender()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare u text;
+begin
+  select push_url into u from nearse_config where id = 1;
+  if u is null or btrim(u) = '' then
+    return null;                       -- not deployed yet; the cron sweep will catch up
+  end if;
+  begin
+    perform net.http_post(
+      url     := u,
+      body    := '{}'::jsonb,
+      headers := '{"Content-Type": "application/json"}'::jsonb,
+      timeout_milliseconds := 5000);
+  exception when others then
+    -- never let a notification failure roll back the booking that caused it
+    raise notice 'could not poke the push sender: %', sqlerrm;
+  end;
+  return null;
+end;
+$$;
+
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_net') then
+    drop trigger if exists push_outbox_poke_trg on public.push_outbox;
+    create trigger push_outbox_poke_trg
+      after insert on public.push_outbox
+      for each statement execute function public.poke_push_sender();
+    raise notice 'push_outbox will poke the sender directly';
+  else
+    raise notice 'no pg_net — the sender needs a dashboard webhook or the cron sweep';
+  end if;
+end $$;
+
+-- The retry net. A push service that was briefly down, or a send that failed
+-- for any other reason, is picked up within the minute rather than never.
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron')
+     and exists (select 1 from pg_extension where extname = 'pg_net') then
+    begin
+      perform cron.unschedule('repto-push-sweep')
+        where exists (select 1 from cron.job where jobname = 'repto-push-sweep');
+      perform cron.schedule('repto-push-sweep', '* * * * *', $sweep$
+        select net.http_post(
+          url     := (select push_url from public.nearse_config where id = 1),
+          body    := '{}'::jsonb,
+          headers := '{"Content-Type": "application/json"}'::jsonb)
+        where (select coalesce(btrim(push_url), '') <> '' from public.nearse_config where id = 1)
+          and exists (select 1 from public.push_outbox
+                       where sent_at is null and attempts < 5);
+      $sweep$);
+      raise notice 'push sweep scheduled every minute';
+    exception when others then
+      raise notice 'could not schedule the push sweep (%) — the insert trigger still fires', sqlerrm;
+    end;
+  end if;
+end $$;
