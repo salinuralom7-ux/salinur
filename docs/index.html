@@ -500,6 +500,31 @@ body.menu-open{overflow:hidden}
 
 /* ---------- book in one tap ---------- */
 .quick{margin:clamp(18px,3vw,26px) auto 0;max-width:520px;text-align:left}
+/* the shortcut back into a booking already in flight — reads as a row, not
+   a third door, so it never competes with the two real choices above it */
+.mine-link{
+  width:100%;display:flex;align-items:center;gap:13px;
+  margin:14px 0 0;padding:13px 15px;
+  background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r);
+  text-align:left;transition:border-color .16s ease,background .16s ease;
+}
+.mine-link:hover{border-color:var(--brand);background:var(--surface-2)}
+.mine-link:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.ml-ico{
+  flex:0 0 auto;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+  background:var(--brand-soft);color:var(--brand-2);
+}
+.ml-ico svg{width:19px;height:19px}
+.ml-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ml-text b{font-size:.93rem;font-weight:700;letter-spacing:-.01em}
+.ml-text i{font-style:normal;font-size:.78rem;color:var(--muted);line-height:1.45}
+.ml-n{
+  flex:0 0 auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;
+  background:var(--brand);color:var(--brand-ink);
+  font-size:.72rem;font-weight:800;font-style:normal;display:grid;place-items:center;
+}
+.mine-link .cta-arrow{flex:0 0 auto;color:var(--muted)}
+
 .quick-lead{
   font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
   color:var(--muted);margin-bottom:9px;
@@ -2173,7 +2198,7 @@ footer a{color:var(--ink-2)}
     <div class="dg-label">You</div>
     <button class="drawer-row" id="drawerChats" onclick="menuGo('chats')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span>My chats</span><i class="row-n" id="chatsBadge" hidden></i>
+      <span>Bookings &amp; chats</span><i class="row-n" id="chatsBadge" hidden></i>
     </button>
     <button class="drawer-row" id="drawerWork" onclick="menuGo('work')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-1.5A5.5 5.5 0 0 1 9.5 14h5a5.5 5.5 0 0 1 5.5 5.5V21"/><circle cx="12" cy="8" r="4"/></svg>
@@ -2286,6 +2311,19 @@ footer a{color:var(--ink-2)}
           </span>
         </button>
       </div>
+
+      <!-- Once you have a booking in flight, the thing you open the app for is
+           that booking — not the two doors. Burying it in the menu meant people
+           could not find where to accept work or check whether anyone had
+           replied. Hidden until there is actually something to return to. -->
+      <button class="mine-link reveal" id="myBookingsLink" data-r="5" onclick="go('chats')" hidden>
+        <span class="ml-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </span>
+        <span class="ml-text"><b id="myBookingsTitle">Bookings &amp; chats</b><i id="myBookingsSub">See where your requests have got to</i></span>
+        <i class="ml-n" id="myBookingsDot" hidden></i>
+        <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
+      </button>
 
       <!-- Somebody who already knows what they need should not have to open a
            screen, then search, then read. One tap from here to the results. -->
@@ -4611,6 +4649,7 @@ function initHome(){
   paintWorkDoor();
   renderQuick();
   refreshChatBadge();     /* the dot on the menu button, if there is anything unread */
+  paintMineLink();        /* and the shortcut on the landing page */
   if(homeReady) return;
   homeReady = true;
   $("figServices").textContent = SKILLS.length;
@@ -4905,6 +4944,7 @@ async function signIn(){
     saveSession();
     await ensureWorkerSession();
     toast("Welcome back, " + w.name.split(" ")[0]);
+    paintMineLink();
     go("me");
     watchStatus();
     watchPending();
@@ -4917,6 +4957,7 @@ function signOut(){
   session = null;
   try{ localStorage.removeItem(SSTORE); }catch(e){}
   paintWorkDoor();                       // after the session goes, not before
+  paintMineLink();
   toast("Signed out");
   go("home");
 }
@@ -7333,6 +7374,7 @@ const saveMyBookings = list => { try{ localStorage.setItem(MYSTORE, JSON.stringi
 function rememberBooking(rec){
   const list = myBookings().filter(b => b.code !== rec.code);
   list.unshift(rec); saveMyBookings(list);
+  paintMineLink();
 }
 const myBooking = code => myBookings().find(b => b.code === code);
 
@@ -7704,22 +7746,22 @@ function timeAgo(d){
    first, with a word saying which side of the job each one was. */
 async function renderChats(){
   const host = $("chatsCard");
-  host.innerHTML = `<h2>My chats</h2><div class="skeleton"></div>`;
+  host.innerHTML = `<h2>Bookings &amp; chats</h2><div class="skeleton"></div>`;
   const rows = await myConversations();
   paintChatBadge(rows.reduce((n, t) => n + (Number(t.unread) || 0), 0));
 
   if(!rows.length){
-    host.innerHTML = `<h2>My chats</h2>
-      <div class="empty" style="margin:14px 0 0"><b>No conversations yet</b>
-        Book someone, or register your own skills, and every conversation lands here.</div>
+    host.innerHTML = `<h2>Bookings &amp; chats</h2>
+      <div class="empty" style="margin:14px 0 0"><b>No bookings yet</b>
+        Book someone, or register your own skills, and every request lands here — with where it has got to.</div>
       <button class="btn btn-brand btn-block" style="margin-top:16px" onclick="go('hire')">Find a worker</button>
       ${session && session.registered ? "" :
         `<button class="btn btn-outline btn-block btn-sm" style="margin-top:10px" onclick="go('work')">Register as a worker</button>`}`;
     return;
   }
 
-  host.innerHTML = `<h2>My chats</h2>
-    <p class="hint">${rows.length} ${rows.length === 1 ? "conversation" : "conversations"}</p>` +
+  host.innerHTML = `<h2>Bookings &amp; chats</h2>
+    <p class="hint">${rows.length} ${rows.length === 1 ? "booking" : "bookings"}</p>` +
     rows.map(t => {
       const st = THREAD_STATE[t.status] || THREAD_STATE.requested;
       return `<button class="thread-row${t.unread ? " unread" : ""}"
@@ -7772,9 +7814,27 @@ async function refreshChatBadge(){
   paintChatBadge(rows.reduce((n, t) => n + (Number(t.unread) || 0), 0));
 }
 function paintChatBadge(unread){
-  const dot = $("menuDot"), badge = $("chatsBadge");
+  const dot = $("menuDot"), badge = $("chatsBadge"), home = $("myBookingsDot");
   if(dot) dot.hidden = !unread;
   if(badge){ badge.hidden = !unread; badge.textContent = unread; }
+  if(home){ home.hidden = !unread; home.textContent = unread; }
+}
+
+/* The landing shortcut. A worker always has it — receiving requests is the
+   whole reason they are here. A customer gets it once they have booked
+   somebody, and not before, so a first-time visitor still sees two doors and
+   nothing else. */
+function paintMineLink(){
+  const link = $("myBookingsLink"); if(!link) return;
+  const asWorker = !!(session && session.registered);
+  const mine = myBookings().length;
+  link.hidden = !asWorker && !mine;
+  if(link.hidden) return;
+  $("myBookingsTitle").textContent = asWorker ? "My jobs & chats" : "Bookings & chats";
+  $("myBookingsSub").textContent = asWorker
+    ? "Accept or decline your requests"
+    : (mine === 1 ? "See where your request has got to"
+                  : "See where your " + mine + " requests have got to");
 }
 
 /* ---------- the customer's bookings ---------- */

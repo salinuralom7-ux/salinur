@@ -45,7 +45,7 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   const rows = (await page.locator('#drawer .drawer-row span:first-of-type, #drawer .drawer-row span')
     .allTextContents()).map(t => t.trim()).filter(Boolean);
   console.log('      menu:', [...new Set(rows)].join(' · '));
-  for (const want of ['My chats', 'About us', 'Contact us', 'Privacy policy',
+  for (const want of ['Bookings & chats', 'About us', 'Contact us', 'Privacy policy',
                       'Terms of use', 'Cancellations & refunds', 'Delete my account']) {
     ok(`"${want}" is in the menu`, rows.some(r => r === want));
   }
@@ -78,13 +78,13 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   await page.locator('#drawer .drawer-x').click(); await page.waitForTimeout(450);
   ok('The X closes it', await page.locator('#drawer.open').count() === 0);
 
-  // ---------- My chats ----------
+  // ---------- Bookings & chats ----------
   await page.locator('#menuBtn').click(); await page.waitForTimeout(400);
   await page.locator('#drawerChats').click(); await page.waitForTimeout(900);
   ok('Chats screen opens', await page.evaluate(() => (document.querySelector('.screen.on') || {}).id) === 'scr-chats');
   ok('Menu closed itself on the way', await page.locator('#drawer.open').count() === 0);
   ok('Empty state explains itself',
-     (await page.locator('#chatsCard').innerText()).includes('No conversations yet'));
+     (await page.locator('#chatsCard').innerText()).includes('No bookings yet'));
   await page.goBack(); await page.waitForTimeout(500);
   ok('One back press returns home',
      await page.evaluate(() => (document.querySelector('.screen.on') || {}).id) === 'scr-home');
@@ -113,7 +113,7 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   await page.waitForTimeout(900);
   ok('A reply lights the dot on the menu button', await page.evaluate(() =>
     !document.getElementById('menuDot').hidden));
-  ok('…and counts it beside My chats', await page.evaluate(() => {
+  ok('…and counts it beside Bookings & chats', await page.evaluate(() => {
     const b = document.getElementById('chatsBadge');
     return !b.hidden && Number(b.textContent) >= 1;
   }));
@@ -134,6 +134,8 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
     go('register');
   });
   await page.waitForTimeout(700);
+  await page.evaluate(() => regGo(2));      // the photo is step 2 of four
+  await page.waitForTimeout(400);
   ok('One camera button, not four things', await page.locator('#photoBtn').count() === 1);
   ok('It says exactly "Open camera"', (await page.locator('#photoBtnLabel').innerText()).trim() === 'Open camera');
   ok('Upload fallback hidden until the camera fails', await page.locator('#uploadAlt').isVisible() === false);
@@ -179,6 +181,8 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
     go('register');
   });
   await page.waitForTimeout(600);
+  await page.evaluate(() => regGo(2));      // the photo is step 2 of four
+  await page.waitForTimeout(400);
   await page.locator('#photoBtn').scrollIntoViewIfNeeded();
   await page.screenshot({ path: __dirname + '/shots/photo-step.png' });
 

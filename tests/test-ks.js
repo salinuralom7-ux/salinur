@@ -157,7 +157,7 @@ const srv = http.createServer((req, res) => {
   await page.locator('#uploadAlt').click().catch(()=>{});
   await page.setInputFiles('#selfieInput', { name: 's.png', mimeType: 'image/png', buffer: png });
   await page.waitForTimeout(500);
-  console.log('Photo set:', await page.locator('#selfieCircle img').count() === 1);
+  console.log('Photo set:', await page.locator('#photoThumb img').count() === 1);
   await page.locator('#stepNext').click();
   await page.waitForTimeout(500);
   console.log('Wizard step after the photo:', await page.evaluate(() => regStep));
@@ -198,7 +198,7 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(900);
   console.log('Congratulations screen shown:', await page.locator('#scr-done.on').count() === 1);
   console.log('  message:', (await page.locator('#scr-done .sub').innerText()).trim());
-  console.log('  mentions the free trial:', (await page.locator('#scr-done').innerText()).includes('3 months free'));
+  console.log('  mentions the free trial:', (await page.locator('#scr-done').innerText()).includes('30 days free'));
   console.log('  names the number to expect a reply on:', (await page.locator('#donePhone').innerText()).includes('9435012345'));
   await page.locator('#scr-done .btn-brand').click();
   await page.waitForTimeout(500);
@@ -221,6 +221,8 @@ const srv = http.createServer((req, res) => {
   await adminPage.goto('http://localhost:8777/#admin');
   await adminPage.waitForTimeout(1400);
   console.log('Admin screen opens with PIN:', await adminPage.locator('#scr-admin.on').count() === 1);
+  await adminPage.locator('#scr-admin .tab', { hasText: 'Review' }).click();
+  await adminPage.waitForTimeout(900);
   console.log('Pending profile listed:', (await adminPage.locator('.admin-card').first().locator('h4').innerText()).replace(/\n/g,' '));
   console.log('Admin has OTP requirement toggle:', await adminPage.locator('#otpSwitch').count() === 1);
   const expect = (await adminPage.locator('.wa-expect').first().innerText()).replace(/\s+/g,' ').trim();
