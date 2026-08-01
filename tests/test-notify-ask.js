@@ -45,8 +45,12 @@ const ok=(l,c,x)=>console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x:
   const reach = await p.locator('.foot-reach').first().boundingBox();
   ok('Sits directly above the contact row', box.y + box.height <= reach.y + 2);
   ok('Centred', Math.abs((box.x + box.width/2) - 195) < 3, Math.round(box.x + box.width/2) + 'px of 195');
-  ok('Brand colour', (await lead.evaluate(e => getComputedStyle(e).color)) === 'rgb(243, 208, 124)',
-     await lead.evaluate(e => getComputedStyle(e).color));
+  // read the variable rather than a literal, so a palette change is not a failure
+  ok('Brand colour', await lead.evaluate(e => {
+        const want = getComputedStyle(document.documentElement).getPropertyValue('--brand-2').trim();
+        const hex = n => '#' + n.match(/\d+/g).map(v => (+v).toString(16).padStart(2,'0')).join('');
+        return hex(getComputedStyle(e).color).toLowerCase() === want.toLowerCase();
+     }), await lead.evaluate(e => getComputedStyle(e).color));
   await p.locator('footer').screenshot({path:'footer.png'});
 
   ok('No JS errors', errs.length===0, errs.join(' | ')||'none');

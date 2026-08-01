@@ -1,4 +1,4 @@
-/* Shared styling for the standalone Repto pages (about, privacy, terms).
+/* Shared styling for the standalone MySheher pages (about, privacy, terms).
    These are plain HTML on purpose: they must render with no JavaScript, and
    the Play Store and search engines need to reach them at a stable URL. */
 :root{
@@ -10,11 +10,11 @@
   --muted:#978D79;
   --line:rgba(246,242,232,.10);
   --line-strong:rgba(246,242,232,.19);
-  --brand:#EABB51;
-  --brand-2:#F3D07C;
-  --brand-quiet:#C4B48C;
+  --brand:#F0B90B;
+  --brand-2:#FFD65C;
+  --brand-quiet:#C9AF6B;
   --brand-ink:#14100A;
-  --brand-soft:rgba(234,187,81,.15);
+  --brand-soft:rgba(240,185,11,.15);
   --warn:#E8924A;
   --r-sm:10px;
   --r:14px;
@@ -26,7 +26,7 @@ html{-webkit-text-size-adjust:100%}
 body{
   font-family:var(--sans);
   background:
-    radial-gradient(1100px 520px at 82% -12%, rgba(234,187,81,.13), transparent 62%),
+    radial-gradient(1100px 520px at 82% -12%, rgba(240,185,11,.13), transparent 62%),
     var(--bg);
   color:var(--ink);
   line-height:1.65;
@@ -154,7 +154,7 @@ footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
 .foot-glow{
   position:absolute;left:50%;top:-14px;width:min(540px,92%);height:170px;
   transform:translateX(-50%);pointer-events:none;
-  background:radial-gradient(closest-side, rgba(234,187,81,.17), transparent 74%);
+  background:radial-gradient(closest-side, rgba(240,185,11,.17), transparent 74%);
   animation:footBreathe 9s ease-in-out infinite;
 }
 @keyframes footBreathe{
@@ -203,7 +203,7 @@ footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
 .reach:hover .reach-ico{transform:scale(1.09)}
 /* each one lights up in its own colour, so the row is recognisable at a glance */
 .reach.wa:hover   .reach-ico{background:#25D366;color:#062B16;box-shadow:0 9px 24px rgba(37,211,102,.36)}
-.reach.mail:hover .reach-ico{background:var(--brand);color:#14100A;box-shadow:0 9px 24px rgba(234,187,81,.36)}
+.reach.mail:hover .reach-ico{background:var(--brand);color:#14100A;box-shadow:0 9px 24px rgba(240,185,11,.36)}
 .reach.ig:hover   .reach-ico{background:linear-gradient(45deg,#F9CE34 4%,#EE2A7B 54%,#6228D7);color:#fff;box-shadow:0 9px 24px rgba(238,42,123,.34)}
 .reach.fb:hover   .reach-ico{background:#1877F2;color:#fff;box-shadow:0 9px 24px rgba(24,119,242,.34)}
 .reach:active{transform:translateY(-1px)}

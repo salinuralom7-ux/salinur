@@ -1,17 +1,17 @@
-/* Repto service worker — app shell caching.
+/* MySheher service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls always go to the network. */
-const CACHE = "repto-shell-v57";
+const CACHE = "mysheher-shell-v1";
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./icons/icon-192.png?v=2",
-  "./icons/icon-512.png?v=2",
-  "./icons/maskable-512.png?v=2",
-  "./icons/logo.png?v=2",
+  "./icons/icon-192.png?v=4",
+  "./icons/icon-512.png?v=4",
+  "./icons/maskable-512.png?v=4",
+  "./icons/logo.png?v=4",
   "./fonts/plus-jakarta-sans-latin.woff2",
-  "./icons/wordmark.png?v=3"
+  "./icons/wordmark.png?v=4"
 ];
 
 self.addEventListener("install", e => {
@@ -34,11 +34,11 @@ self.addEventListener("activate", e => {
 self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data && e.data.text() }; }
-  const title = d.title || "New job on Repto";
+  const title = d.title || "New job on MySheher";
   e.waitUntil(self.registration.showNotification(title, {
     body: d.body || "A customer near you needs work done now.",
-    icon: "./icons/icon-192.png?v=2",
-    badge: "./icons/icon-192.png?v=2",
+    icon: "./icons/icon-192.png?v=4",
+    badge: "./icons/icon-192.png?v=4",
     tag: d.tag || "nearse-job",
     renotify: true,
     requireInteraction: true,
@@ -52,7 +52,7 @@ self.addEventListener("notificationclick", e => {
   const target = (e.notification.data && e.notification.data.url) || "./?src=push#job";
   e.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
-      // reuse a tab that already has Repto open rather than piling up windows
+      // reuse a tab that already has MySheher open rather than piling up windows
       for (const c of list) {
         if (c.url.includes(self.registration.scope) && "focus" in c) {
           c.navigate(target).catch(() => {});

@@ -85,7 +85,7 @@ const srv = http.createServer((q, r) => {
     <p>Verified local workers across Guwahati. They set their price, you keep the whole conversation.</p>
     <div class="row">
       <span class="chip on">0% commission</span>
-      <span class="chip">155 services</span>
+      <span class="chip">184 services</span>
       <span class="chip">124 localities</span>
       <span class="chip">Verified profiles</span>
     </div>

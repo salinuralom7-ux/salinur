@@ -151,7 +151,7 @@ $$;
 -- Nothing below maintains them any more.
 
 -- ============================================================
--- Repto: profile verification
+-- MySheher: profile verification
 --   * new profiles are hidden until an admin approves them
 --   * existing profiles are grandfathered in on first migration
 --   * admin actions are gated by a bcrypt-hashed PIN on the server
@@ -437,7 +437,7 @@ $$;
 -- MIGRATION 4 — WhatsApp click-to-chat verification
 --
 -- Instead of paying a provider to send a code TO the worker, the worker
--- sends a code FROM their own WhatsApp to the Repto business number. The
+-- sends a code FROM their own WhatsApp to the MySheher business number. The
 -- message arriving from that number is the proof: it can only have come
 -- through WhatsApp, and only from the account that controls it. No SMS
 -- gateway, no DLT registration, no Meta Business API.
@@ -505,7 +505,7 @@ end;
 $$;
 
 -- The admin panel shows, next to each profile awaiting review, the code that
--- should have arrived on the Repto WhatsApp from that worker's number.
+-- should have arrived on the MySheher WhatsApp from that worker's number.
 create or replace function public.admin_wa_codes(p_pin text)
 returns table (worker_id uuid, wa_code text)
 language plpgsql security definer set search_path = public, extensions as $$
@@ -897,7 +897,7 @@ $$;
 -- ============================================================
 -- MIGRATION 9 — sensible price bands per service
 --
--- Workers set their own rate, which is the point of Repto, but an
+-- Workers set their own rate, which is the point of MySheher, but an
 -- unbounded number invites nonsense listings and makes the marketplace
 -- untrustworthy — the same reason OLX will not let you list a phone for
 -- one rupee. Each service gets a floor and a ceiling drawn from what that
@@ -1217,7 +1217,7 @@ create or replace function public.pin_is_published(p_hash text)
 returns boolean
 language sql immutable set search_path = public as $$
   select p_hash in (
-    '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1MvfFFRq56oyGoPkG',  -- Repto admin
+    '$2a$06$wH.KLvESA51YLnv9I1O9UekJwfBnkw3xTNdh1MvfFFRq56oyGoPkG',  -- MySheher admin
     '$2a$06$9/jo6EBz7wlyObFoxBaZ8u8ljNrHKEON08C7uRxBzHc8xmPSvyOea'   -- retired Budget Cars owner
   );
 $$;
@@ -2467,7 +2467,7 @@ end $$;
 -- that already exist; nothing new is recorded about anybody.
 --
 -- One honest limit, stated here because the screen states it too: a booking
--- that goes out over WhatsApp leaves no completion signal. Repto sees the
+-- that goes out over WhatsApp leaves no completion signal. MySheher sees the
 -- request leave and never learns what happened. Only instant-dispatch jobs
 -- and appointments carry a real "done", so the screen reports those as
 -- completions and counts ratings separately as the softer evidence that a
@@ -2570,7 +2570,7 @@ begin
       ) from appointments),
 
     ------------------------------------------------------- jobs finished
-    -- the only completions Repto can actually observe
+    -- the only completions MySheher can actually observe
     'completed', jsonb_build_object(
         'today',  (select count(*) from jobs where status='done' and created_at >= d0)
                 + (select count(*) from appointments where status='done' and created_at >= d0),
@@ -2888,11 +2888,11 @@ language sql stable security definer set search_path = public, extensions as $$
 $$;
 
 -- ============================================================
--- MIGRATION 14 — the work happens inside Repto
+-- MIGRATION 14 — the work happens inside MySheher
 --
 -- Until now the app found a worker, handed over a phone number and stepped
 -- out of the way. Everything after that — was the job accepted, did anyone
--- turn up, was it any good — happened on WhatsApp, where Repto could not see
+-- turn up, was it any good — happened on WhatsApp, where MySheher could not see
 -- it. That made the platform a contact-number directory: no history for the
 -- worker, no record for the customer, nothing to show a new customer beyond
 -- a star rating with no words attached.
@@ -3350,7 +3350,7 @@ begin
        from t),
     (select count(*) from t where created_at > date_trunc('month', now()))::int,
     -- the listed rate on finished jobs. NOT earnings: the final amount is
-    -- agreed between the two of them and Repto never sees it.
+    -- agreed between the two of them and MySheher never sees it.
     (select coalesce(sum(price), 0) from t where status = 'closed')::int;
 end;
 $$;
@@ -3405,7 +3405,7 @@ $$;
 revoke all on function public.purge_expired_data() from public;
 
 -- ============================================================
--- MIGRATION 15 — the Repto Worker ID
+-- MIGRATION 15 — the MySheher Worker ID
 --
 -- Every worker gets a permanent identity number and a card they can show or
 -- print. It exists so that a worker standing at somebody's door has a way to
@@ -4815,7 +4815,7 @@ revoke all on function public.purge_expired_data() from public;
 --     locality, a 500-character pricing unit. One profile could be 200 KB,
 --     downloaded by every customer who browsed past it.
 --   * A PROFILE PHOTO POINTING ANYWHERE — https://example.com/tracker.png
---     was accepted, which serves somebody else's content under Repto's brand
+--     was accepted, which serves somebody else's content under MySheher's brand
 --     and hands them the IP address of every customer who scrolls past.
 --   * COORDINATES ANYWHERE ON EARTH, including 0,0. Coordinates decide who
 --     ranks as "nearest", so this is also ranking manipulation.
@@ -4857,11 +4857,11 @@ begin
   -- rows written before photos moved to Storage, and preview mode, are base64
   if p_url like 'data:image/%' then return p_url; end if;
   if p_url !~* '^https://' then
-    raise exception 'A profile photo has to be uploaded through Repto';
+    raise exception 'A profile photo has to be uploaded through MySheher';
   end if;
   h := lower(split_part(split_part(substring(p_url from 9), '/', 1), ':', 1));
   if not exists (select 1 from photo_hosts p where h like p.pattern) then
-    raise exception 'A profile photo has to be uploaded through Repto';
+    raise exception 'A profile photo has to be uploaded through MySheher';
   end if;
   return left(p_url, 500);
 end;
@@ -4922,7 +4922,7 @@ begin
       n := n + 1;
       if n > 3 then raise exception 'You can offer up to 3 services'; end if;
       if not exists (select 1 from service_rates r where r.skill = s->>'skill') then
-        raise exception 'That is not a service on Repto: %', left(coalesce(s->>'skill','(none)'), 60);
+        raise exception 'That is not a service on MySheher: %', left(coalesce(s->>'skill','(none)'), 60);
       end if;
       if not exists (select 1 from pricing_units u where u.unit = s->>'unit') then
         raise exception 'Choose how % is priced', s->>'skill';
@@ -5233,7 +5233,7 @@ end;
 $$;
 
 -- ============================================================
--- MIGRATION 21 — the conversation belongs in Repto, and it tells you
+-- MIGRATION 21 — the conversation belongs in MySheher, and it tells you
 --                when it has been read
 --
 -- Two things were wrong with an instant job once a worker accepted it:
@@ -5583,7 +5583,7 @@ begin
   end if;
   select count(*) into everyone from jobs where created_at > now() - interval '1 minute';
   if everyone >= 200 then
-    raise exception 'Repto is unusually busy right now. Please try again in a minute.';
+    raise exception 'MySheher is unusually busy right now. Please try again in a minute.';
   end if;
 
   if p_worker is not null then
@@ -6425,7 +6425,7 @@ begin
       'Customers near you can find you from now on.', './?src=push#me', 'status');
   elsif new.status = 'rejected' and coalesce(old.status,'') <> 'rejected' then
     perform public.enqueue_push(new.id, 'Your profile needs a change',
-      coalesce(new.review_note, 'Open Repto to see what to fix.'), './?src=push#me', 'status');
+      coalesce(new.review_note, 'Open MySheher to see what to fix.'), './?src=push#me', 'status');
   end if;
   return new;
 end;
@@ -6515,7 +6515,7 @@ select public.lock_public_functions();
 -- MIGRATION 27 — the customer hears back
 --
 -- Migration 26 got a notification out to the worker: a booking request wakes
--- their phone whether or not Repto is open. The other direction was never
+-- their phone whether or not MySheher is open. The other direction was never
 -- built. A customer sent a request and then had to keep opening the app to
 -- find out whether anybody had accepted it, which is the worse half of the
 -- wait — the worker at least chose to be here.
@@ -6637,7 +6637,7 @@ begin
   elsif new.status = 'declined' then
     perform public.enqueue_customer_push(new.customer_token,
       first || ' could not take this one',
-      coalesce(nullif(new.decline_reason, ''), 'Open Repto to find somebody else nearby.'),
+      coalesce(nullif(new.decline_reason, ''), 'Open MySheher to find somebody else nearby.'),
       './?src=push#mine', 'thread-' || new.id::text);
 
   elsif new.status = 'working' then
@@ -6988,8 +6988,8 @@ begin
     return 'not-subscribed';        -- the phone never registered; nothing to send to
   end if;
   perform public.enqueue_push(wid,
-    'Repto test alert',
-    'If you can read this with Repto closed, notifications are working.',
+    'MySheher test alert',
+    'If you can read this with MySheher closed, notifications are working.',
     './?src=push#me', 'test');
   return 'queued';
 end;
@@ -7259,7 +7259,7 @@ $$;
 
 -- Rate limited on both axes that matter: how often one number may be sent a
 -- code, and how many times a code may be guessed. Without the first this is
--- a way to make Repto send messages to strangers at our expense.
+-- a way to make MySheher send messages to strangers at our expense.
 create or replace function public.send_otp(p_phone text)
 returns text
 language plpgsql security definer set search_path = public, extensions as $$

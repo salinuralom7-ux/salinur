@@ -1,4 +1,4 @@
-# Repto — setup steps, in plain language
+# MySheher — setup steps, in plain language
 
 **Do Job 0 first. It takes two minutes and it is the only genuinely urgent
 thing in this file.** Then Job A (about 20 minutes, before launch) and Job B
@@ -41,7 +41,7 @@ good. Changing it is the only fix.
 
 # Job 0.5 — switch on notifications outside the app
 
-Right now a worker only finds out about a booking by opening Repto and
+Right now a worker only finds out about a booking by opening MySheher and
 looking. Everything needed to fix that is built and deployed — the app asks
 for permission, the database queues the alert — but nothing sends it until
 you do the four steps below. **Until then no notification will ever arrive**,
@@ -116,7 +116,7 @@ why it lives in the database and not in a file: you never touch the code.
 |---|---|
 | `VAPID_PUBLIC` | the public key |
 | `VAPID_PRIVATE` | the private key |
-| `VAPID_SUBJECT` | `mailto:hello.repto@gmail.com` |
+| `VAPID_SUBJECT` | `mailto:hello.mysheher@gmail.com` |
 
 If you do have a computer with Node, the same thing from the project folder:
 
@@ -126,7 +126,7 @@ supabase login
 supabase link --project-ref mpufunsitqtdkqlibxof
 supabase secrets set VAPID_PUBLIC='the public key' \
                      VAPID_PRIVATE='the private key' \
-                     VAPID_SUBJECT='mailto:hello.repto@gmail.com'
+                     VAPID_SUBJECT='mailto:hello.mysheher@gmail.com'
 supabase functions deploy push --no-verify-jwt
 ```
 
@@ -148,9 +148,9 @@ calling the same `push` function.
 
 ## Checking it works
 
-1. On your phone, open Repto, sign in as a worker, go to your profile.
+1. On your phone, open MySheher, sign in as a worker, go to your profile.
 2. Under **Booking alerts**, tap **Turn on alerts** and allow the prompt.
-3. **Close Repto completely** — swipe it away, do not just go to the home
+3. **Close MySheher completely** — swipe it away, do not just go to the home
    screen.
 4. From another phone, book that worker.
 5. The notification should arrive within a few seconds.
@@ -169,7 +169,7 @@ If you would rather look yourself, Supabase → **Table Editor** → `push_outbo
 - **A row with `sent_at` empty and `attempts` still 0** — the webhook is not
   firing. Re-check Step 4.
 - **`sent_at` filled but no notification on the phone** — the phone is
-  blocking it. Android: Settings → Apps → Repto → Notifications.
+  blocking it. Android: Settings → Apps → MySheher → Notifications.
 
 ## What workers will see
 

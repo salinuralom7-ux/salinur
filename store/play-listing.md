@@ -11,7 +11,7 @@ description oversells, and a rejection costs days.
 **App name** (30 max)
 
 ```
-Repto: Local Workers Nearby
+MySheher: Local Workers Nearby
 ```
 
 **Short description** (80 max)
@@ -23,16 +23,16 @@ Book trusted maids, cooks, electricians and tutors near you in Guwahati.
 **Full description** (4000 max)
 
 ```
-Repto connects you with skilled local workers who already live around you in Guwahati — and lets them set their own price and keep every rupee of it.
+MySheher connects you with skilled local workers who already live around you in Guwahati — and lets them set their own price and keep every rupee of it.
 
 FIND SOMEONE FOR THE JOB
-Search 155 services across 16 categories: maids, cooks, electricians, plumbers, carpenters, AC and appliance repair, home tutors, drivers, beauticians, tailors, photographers, packers and movers, and more. Workers closest to you appear first, with their rates already on the card.
+Search 184 services across 18 categories: maids, cooks, electricians, plumbers, carpenters, AC and appliance repair, home tutors, drivers, beauticians, tailors, photographers, packers and movers, and more. Workers closest to you appear first, with their rates already on the card.
 
 SEND THE REQUEST IN SECONDS
 Pick the service, the day and the time. Your request arrives on the worker's WhatsApp with everything they need to know — the job, when, and where. You agree the final amount with them directly.
 
 NO COMMISSION, EVER
-Repto takes nothing from a worker's earnings and charges customers nothing to book. The rate you see is the rate the worker set.
+MySheher takes nothing from a worker's earnings and charges customers nothing to book. The rate you see is the rate the worker set.
 
 EVERY PROFILE VERIFIED
 Not an algorithm. Someone reviews the photo, the details and the WhatsApp number before a profile goes live. Change your photo or your name later and it goes back for review.
@@ -55,12 +55,12 @@ We are a place to find each other, not an employer. Workers are independent — 
 YOUR DATA
 No ads, no analytics, no tracking cookies, nothing sold to anybody. Your location is rounded to about 100 metres before it is stored. You can delete your profile yourself, from inside the app, at any time — photo included.
 
-Repto is on an experimental launch in Guwahati, Assam. Tell us what is broken and we will fix it.
+MySheher is on an experimental launch in Guwahati, Assam. Tell us what is broken and we will fix it.
 ```
 
 **App category:** Business
 **Tags:** Home services, Jobs, Local
-**Contact email:** hello.repto@gmail.com
+**Contact email:** hello.mysheher@gmail.com
 **Contact phone:** +91 70865 99367
 **Website:** https://nearse.in/
 **Privacy policy:** https://nearse.in/privacy/

@@ -1,4 +1,4 @@
-# Publishing Repto
+# Publishing MySheher
 
 Everything here is ready to submit. Two things cannot be done from this
 repository — creating the developer accounts, and generating a signing key —
@@ -15,7 +15,7 @@ Read the honest summary first, because the two stores are not equally close.
 | Risk of rejection | Low | Real — see the App Store section |
 
 **Suggested order: ship Play now, and let iPhone users install the web app
-from Safari in the meantime.** Repto already installs to an iPhone home
+from Safari in the meantime.** MySheher already installs to an iPhone home
 screen and runs full screen; the app explains how the first time an iPhone
 visits. That covers iOS users on day one while you build a proper iOS app.
 
@@ -101,7 +101,7 @@ Regenerate them any time the app changes:
 |---|---|
 | Privacy policy | `https://nearse.in/privacy/` |
 | Account deletion | `https://nearse.in/delete-account/` |
-| Support email | `hello.repto@gmail.com` |
+| Support email | `hello.mysheher@gmail.com` |
 | Website | `https://nearse.in/` |
 
 The account deletion URL is mandatory for any app that lets people create an
@@ -146,7 +146,7 @@ Build these before submitting, not after a rejection:
 3. **Contacts / share sheet** so a booking can be shared natively.
 4. **Offline behaviour** — the service worker already does most of this.
 5. **Sign in with Apple** — required by Guideline 4.8 *only if* you add
-   third-party logins such as Google or Facebook. Repto uses a phone number
+   third-party logins such as Google or Facebook. MySheher uses a phone number
    and PIN, so this does not apply today. Keep it that way and you save the
    work.
 
@@ -154,7 +154,7 @@ Build these before submitting, not after a rejection:
 
 ```bash
 npm i @capacitor/core @capacitor/cli
-npx cap init Repto in.repto.app --web-dir=docs
+npx cap init MySheher in.mysheher.app --web-dir=docs
 npx cap add ios
 npx cap open ios        # requires macOS + Xcode
 ```
