@@ -14,8 +14,8 @@
   "backgroundColor": "#0C0A07",
   "enableNotifications": true,
   "startUrl": "/?src=app",
-  "iconUrl": "https://nearse.in/icons/icon-512.png?v=4",
-  "maskableIconUrl": "https://nearse.in/icons/maskable-512.png?v=4",
+  "iconUrl": "https://nearse.in/icons/icon-512.png?v=5",
+  "maskableIconUrl": "https://nearse.in/icons/maskable-512.png?v=5",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",
@@ -28,13 +28,13 @@
       "name": "Find a worker",
       "shortName": "Find",
       "url": "/?src=app#find",
-      "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=4"
+      "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=5"
     },
     {
       "name": "Register as a worker",
       "shortName": "Register",
       "url": "/?src=app#work",
-      "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=4"
+      "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=5"
     }
   ],
   "generatorApp": "bubblewrap-cli",

@@ -1,17 +1,17 @@
 /* MySheher service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls always go to the network. */
-const CACHE = "mysheher-shell-v1";
+const CACHE = "mysheher-shell-v2";
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./icons/icon-192.png?v=4",
-  "./icons/icon-512.png?v=4",
-  "./icons/maskable-512.png?v=4",
-  "./icons/logo.png?v=4",
+  "./icons/icon-192.png?v=5",
+  "./icons/icon-512.png?v=5",
+  "./icons/maskable-512.png?v=5",
+  "./icons/logo.png?v=5",
   "./fonts/plus-jakarta-sans-latin.woff2",
-  "./icons/wordmark.png?v=4"
+  "./icons/wordmark.png?v=5"
 ];
 
 self.addEventListener("install", e => {
@@ -37,8 +37,8 @@ self.addEventListener("push", e => {
   const title = d.title || "New job on MySheher";
   e.waitUntil(self.registration.showNotification(title, {
     body: d.body || "A customer near you needs work done now.",
-    icon: "./icons/icon-192.png?v=4",
-    badge: "./icons/icon-192.png?v=4",
+    icon: "./icons/icon-192.png?v=5",
+    badge: "./icons/icon-192.png?v=5",
     tag: d.tag || "nearse-job",
     renotify: true,
     requireInteraction: true,

@@ -95,6 +95,12 @@ Graphics are already generated and live in `docs/store/`:
 Regenerate them any time the app changes:
 `node tests/make-store-assets.js`.
 
+The icon itself is not hand-made. Every square icon, the header mark and the
+wordmark are cut from `brand/` by `python3 tools/make-brand.py`, so the icon on
+a phone can never drift from the logo in the app. Change the artwork, re-run
+that, then re-run the store assets — and bump the `?v=` on the icon URLs, or
+already-installed phones keep showing the old icon.
+
 ### Step 5 — URLs Play will ask for
 
 | Field | Value |
