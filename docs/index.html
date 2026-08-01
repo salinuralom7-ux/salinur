@@ -2030,6 +2030,13 @@ body.in-chat > .demo-note{display:none}
 }
 .toast-btn:hover{background:var(--brand-2)}
 
+.done-alerts{
+  border:1px solid var(--brand-soft);background:rgba(234,187,81,.06);
+  border-radius:var(--r);padding:15px 16px;margin:18px 0 4px;text-align:left;
+}
+.done-alerts > b{display:block;font-size:.96rem;margin-bottom:4px}
+.done-alerts > .push-state{display:block;color:var(--muted);font-size:.83rem;line-height:1.5}
+
 /* the per-device checklist: the first cross is always the answer */
 .alert-checks{margin:10px 0 4px}
 .checks{list-style:none}
@@ -2580,8 +2587,20 @@ footer a{color:var(--ink-2)}
         <div class="ds"><span class="dsn">3</span><div><b>Your free trial begins</b><span>30 days free from the day you are approved. No payment details needed, nothing to cancel.</span></div></div>
       </div>
 
+      <!-- The app never asked for notification permission anywhere. A worker
+           had to find a button buried on their own profile, which means the
+           people whose income depends on hearing about a booking were the
+           least likely to have it on. Ask here, where they have just finished
+           registering and the reason is obvious. -->
+      <div class="done-alerts">
+        <b>Turn on booking alerts</b>
+        <span class="push-state">A customer's request reaches you in seconds, even with Repto closed. Without this you have to keep opening the app to check.</span>
+        <button type="button" class="btn btn-brand btn-sm push-optin" onclick="enablePush()" style="margin-top:10px">Turn on alerts</button>
+        <div class="alert-checks"></div>
+      </div>
+
       <p class="hint" id="donePhone"></p>
-      <button class="btn btn-brand btn-block" style="padding:14px" onclick="go('me')">View my profile</button>
+      <button class="btn btn-brand btn-block" id="doneMine" style="padding:14px" onclick="go('me')">View my profile</button>
       <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="go('home')">Back to home</button>
     </div>
   </div>
@@ -4626,6 +4645,7 @@ function go(name, viaHistory){
   if(name === "verify") $("verifyResult").innerHTML = "";
   if(name === "mine") renderMine();
   if(name === "register") initRegister();
+  if(name === "done") renderPushState();      /* the alerts offer on that screen */
   if(name === "otp") initOtp(); else stopResendCooldown();
   if(name === "home") initHome();
   paintWorkDoor();
