@@ -186,6 +186,49 @@ jobs:
           jq -Rs '{query: .}' /tmp/harden.sql > /tmp/h.json
           code=$(curl -sS -o /tmp/harden.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/h.json)
           note "verify hardening: HTTP $code — $(head -c 1200 /tmp/harden.json)"
+
+          # ---- notifications, both directions ----
+          # The queue and the triggers are the whole feature. If a trigger is
+          # missing nothing is ever queued, and the failure is silent: the app
+          # looks fine and no notification ever arrives.
+          cat > /tmp/push.sql <<'PSQL'
+          select
+            (select count(*)::int from information_schema.tables
+              where table_schema='public'
+                and table_name in ('worker_push','customer_push','push_outbox')) as push_tables,
+            (select count(*)::int from information_schema.routines
+              where routine_schema='public'
+                and routine_name in ('save_push_subscription','save_customer_push',
+                                     'enqueue_push','enqueue_customer_push',
+                                     'claim_push','mark_push_sent','mark_push_failed',
+                                     'drop_push_endpoint','purge_push_outbox')) as push_fns,
+            (select count(*)::int from pg_trigger
+              where not tgisinternal
+                and tgname in ('threads_push_trg','messages_push_trg','workers_push_status_trg',
+                               'threads_customer_push_trg','messages_worker_push_trg')) as push_triggers,
+            -- a queue row must name exactly one recipient
+            (select count(*)::int from pg_constraint
+              where conname='push_outbox_one_recipient') as recipient_constraint,
+            -- claim_push must hand the sender an endpoint for both kinds
+            (select count(*)::int from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+              where n.nspname='public' and p.proname='claim_push'
+                and p.prosrc ~ 'customer_push') as claim_covers_customers,
+            -- a customer is anon, so this one has to survive the lockdown
+            (select has_function_privilege('anon',
+               'public.save_customer_push(text,uuid,text,text,text)', 'execute')) as anon_may_subscribe,
+            -- the outbox should not be silently piling up unsent
+            (select count(*)::int from public.push_outbox where sent_at is null) as unsent,
+            (select count(*)::int from public.push_outbox where attempts >= 5) as given_up,
+            (select coalesce(max(left(last_error, 120)), 'none')
+               from public.push_outbox where last_error is not null) as last_push_error,
+            (select count(*)::int from public.worker_push) as workers_subscribed,
+            (select count(*)::int from public.customer_push) as customers_subscribed,
+            (select coalesce(nullif(vapid_public,''), 'NOT SET — see DEPLOY.md Job 0.5') is distinct from
+                    'NOT SET — see DEPLOY.md Job 0.5' from public.nearse_config where id=1) as vapid_key_set
+          PSQL
+          jq -Rs '{query: .}' /tmp/push.sql > /tmp/p.json
+          code=$(curl -sS -o /tmp/push.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/p.json)
+          note "verify push: HTTP $code — $(head -c 1200 /tmp/push.json)"
           [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
           # these two are warnings, not failures: only the owner can fix them
           if grep -q '"admin_pin_still_published_change_it":true' /tmp/harden.json; then
