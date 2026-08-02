@@ -1,7 +1,7 @@
 /* MySheher service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls always go to the network. */
-const CACHE = "mysheher-shell-v11";
+const CACHE = "mysheher-shell-v12";
 const SHELL = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ const SHELL = [
   "./icons/maskable-512.png?v=6",
   "./icons/logo.png?v=6",
   "./fonts/plus-jakarta-sans-latin.woff2",
+  "./fonts/source-serif-4-latin.woff2",
   "./icons/wordmark.png?v=6"
 ];
 
@@ -31,11 +32,32 @@ self.addEventListener("activate", e => {
    to be loud and land straight on the job when tapped. requireInteraction
    keeps it on screen rather than fading after a few seconds, and the tag
    means a second offer replaces the first instead of stacking up. */
+/* ---------- the dot on the home-screen icon ----------
+   The notification itself is dismissed the moment somebody swipes the shade
+   away, and then nothing on the phone says a booking is still waiting. The
+   badge is what WhatsApp puts on its icon, and it survives that swipe — it
+   sits there until the app clears it. Set from the service worker, because
+   the app is closed when this matters; setAppBadge exists on the worker's own
+   navigator for exactly that reason.
+
+   Android shows a dot, and a count where the launcher supports one. iOS has
+   no badge for a web app at all, and Chrome on desktop shows it on the taskbar
+   icon — hence the guard: unsupported is the normal case, not an error. */
+function bumpBadge(n) {
+  if (!self.navigator || !self.navigator.setAppBadge) return Promise.resolve();
+  return self.navigator.setAppBadge(n).catch(() => {});
+}
+
 self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { body: e.data && e.data.text() }; }
   const title = d.title || "New job on MySheher";
-  e.waitUntil(self.registration.showNotification(title, {
+  /* The sender tells us how many things are waiting. Without a number a badge
+     is still worth showing — a dot that says "something" beats no dot — so
+     fall back to 1 rather than to nothing. */
+  e.waitUntil(Promise.all([
+    bumpBadge(Number(d.waiting) > 0 ? Number(d.waiting) : 1),
+    self.registration.showNotification(title, {
     body: d.body || "A customer near you needs work done now.",
     icon: "./icons/icon-192.png?v=6",
     badge: "./icons/icon-192.png?v=6",
@@ -44,7 +66,8 @@ self.addEventListener("push", e => {
     requireInteraction: true,
     vibrate: [200, 80, 200],
     data: { url: d.url || "./?src=push#job" }
-  }));
+  })
+  ]));
 });
 
 self.addEventListener("notificationclick", e => {
@@ -69,20 +92,9 @@ self.addEventListener("fetch", e => {
   if (req.method !== "GET") return;                       // never touch writes
   const url = new URL(req.url);
 
-  if (url.origin !== location.origin) {
-    if (url.hostname.endsWith("gstatic.com") || url.hostname.endsWith("googleapis.com")) {
-      e.respondWith(
-        caches.open(CACHE).then(async c => {
-          const hit = await c.match(req);
-          if (hit) return hit;
-          const res = await fetch(req);
-          if (res.ok) c.put(req, res.clone());
-          return res;
-        })
-      );
-    }
-    return;                                               // Supabase and everything else: live network
-  }
+  // Both fonts are served from this origin now, so there is nothing
+  // off-origin left to cache. Supabase and everything else: live network.
+  if (url.origin !== location.origin) return;
 
 
   if (req.mode === "navigate") {

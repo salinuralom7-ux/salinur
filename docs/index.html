@@ -28,9 +28,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=6">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=6">
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=6">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/source-serif-4-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* Plus Jakarta Sans, self-hosted. One variable file, 27 KB, every weight the
    app uses. It is served from our own origin for three reasons: the ID card can
@@ -39,6 +37,22 @@
    saves a third-party round trip before any text appears; and Google no longer
    sees the IP address of everybody who opens a page. Licensed under the SIL
    Open Font License 1.1 — see fonts/OFL.txt. */
+/* Both faces are served from this origin. Source Serif used to come from
+   fonts.googleapis.com through a render-blocking <link>, which meant the page
+   could not paint a single pixel until a DNS lookup, a TLS handshake and a
+   round trip to Google had all completed — and then a second set of the same
+   to fonts.gstatic.com for the file itself. On a good connection that is a
+   few hundred milliseconds of blank screen. On a bad one, or anywhere Google
+   Fonts is slow, it is however long the browser waits before giving up.
+   Measured here with the host unreachable: 12.8 seconds, and no first paint
+   at all. That is the "takes so much time to load" and it was one line. */
+@font-face{
+  font-family:'Source Serif 4';
+  font-style:normal;
+  font-weight:400 700;              /* one variable file covers the range */
+  font-display:swap;
+  src:url("fonts/source-serif-4-latin.woff2") format("woff2");
+}
 @font-face{
   font-family:'Plus Jakarta Sans';
   font-style:normal;
@@ -8174,11 +8188,22 @@ async function refreshChatBadge(){
 
 /* One count, painted in all three places at once, so the menu button, the
    drawer row and the landing card can never tell three different stories. */
+/* The dot on the home-screen icon, the one WhatsApp puts there. The service
+   worker sets it when a push arrives; this keeps it honest while the app is
+   open, and — the part that matters — clears it the moment there is nothing
+   waiting. A badge that only ever goes up is worse than none, because people
+   stop believing it. */
+function paintAppBadge(n){
+  if(!("setAppBadge" in navigator)) return;           /* iOS, and older Android */
+  try{ n > 0 ? navigator.setAppBadge(n) : navigator.clearAppBadge(); }catch(e){}
+}
+
 function paintChatBadge(rows){
   rows = rows || [];
   const seen    = seenForBadge(rows);
   const waiting = rows.filter(t => needsYou(t, seen));
   const n       = waiting.length;
+  paintAppBadge(n);
 
   const dot = $("menuDot"), badge = $("chatsBadge"), home = $("myBookingsDot");
   if(dot){ dot.hidden = !n; dot.classList.toggle("urgent", !!n); }
