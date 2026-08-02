@@ -79,9 +79,14 @@ const ok = (l, c, x) => console.log((c ? 'PASS  ' : 'FAIL  ') + l + (x !== undef
 
   // ---------- the promise matches what the app does ----------
   await page.evaluate(() => go('hire')); await page.waitForTimeout(900);
-  const trust = await page.locator('.trust-strip').innerText();
-  ok('Trust strip no longer claims WhatsApp is the only route',
-     /inside Repto/i.test(trust) && !/straight to the worker on WhatsApp/i.test(trust));
+  /* The three-column trust strip became the one-line .assure row. What the
+     assertion is really for is that the screen no longer promises WhatsApp is
+     the only way a booking travels, since it is not — so check the promise,
+     not the element that used to carry it. */
+  const trust = await page.locator('.hire-assure').innerText();
+  ok('The screen no longer claims WhatsApp is the only route',
+     /inside the app/i.test(trust) && !/straight to the worker on WhatsApp/i.test(trust),
+     trust.replace(/\n/g, ' / '));
 
   // ---------- still shorter than it was ----------
   const h = await page.evaluate(() => document.getElementById('scr-hire').scrollHeight);

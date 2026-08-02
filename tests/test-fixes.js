@@ -68,7 +68,10 @@ const IPHONE  = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWeb
     ok(`${name}: a copy fallback is offered`, await p.locator('#waCopyBtn:visible').count() === 1);
     ok(`${name}: "I've sent it" starts disabled`, await p.locator('#waDoneBtn').isDisabled());
     await p.locator('#waCopyBtn').click();
-    await p.waitForTimeout(400);
+    /* Wait for the condition, not for a guess. A fixed 400ms passed alone and
+       failed inside a full run — the clipboard call is async and the machine
+       is busier when thirty suites are going. */
+    await p.locator('#waDoneBtn:not([disabled])').waitFor({ timeout: 5000 }).catch(() => {});
     ok(`${name}: copying counts as having opened it`, !(await p.locator('#waDoneBtn').isDisabled()));
     ok(`${name}: the Repto number is spelled out`,
        (await p.locator('#waNumber').innerText()).includes('70865'));

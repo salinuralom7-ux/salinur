@@ -223,9 +223,17 @@ const SEED = `
   ok('A second worker cannot take an accepted job', /already gone/.test(stolen), stolen);
 
   // ---------- punctuality ----------
-  cust.on('dialog', d => d.accept());     // "yes, on time"
+  /* The punctuality question is a modal now, not a browser confirm() — the
+     same change test-leaving asserts ("a proper sheet, not a browser
+     prompt"). A dialog handler answers nothing, so the sheet stayed open and
+     swallowed every click after it, which is why this file failed twice from
+     one cause. Answer the sheet the way a person would. */
+  cust.on('dialog', d => d.dismiss());   // nothing should raise one; fail loudly if it does
   await cust.evaluate(() => closeSearch());
   await cust.waitForTimeout(2200);
+  await cust.locator('#punctOverlay.open').waitFor({ timeout: 5000 });
+  await cust.locator('#punctOverlay .btn-brand').click();   // "yes, on time"
+  await cust.waitForTimeout(600);
   const onTime = await cust.evaluate(() =>
     JSON.parse(localStorage.getItem('nearse_workers_v1')).find(w => w.id === 'w02'));
   ok('Punctuality is recorded against the worker',
@@ -244,8 +252,29 @@ const SEED = `
   await cust.locator('#bookCta').click();
   await cust.waitForTimeout(700);
   ok('Slot sheet opens for a dentist', await cust.locator('#slotOverlay.open').count() === 1);
+
+  /* Count tomorrow's slots, not today's. Today correctly hides any time less
+     than fifteen minutes away, so this assertion passed all morning and
+     failed every afternoon — at 09:59 the 10:00 slot is gone and six becomes
+     five. That is the app being right; a test that only holds before 09:45 is
+     the test being wrong. */
+  await cust.locator('#slotDayRow .dchip').nth(1).click();
+  await cust.waitForTimeout(600);
   const slots = await cust.locator('.tslot').count();
-  ok('10:00–13:00 in 30s gives six slots', slots === 6, slots + ' shown');
+  ok('10:00–13:00 in 30s gives six slots tomorrow', slots === 6, slots + ' shown');
+
+  /* And assert the hiding itself, which nothing covered. */
+  const todayCount = await cust.evaluate(() => {
+    const cfg = { from:'10:00', to:'13:00', len:30 };
+    const all = buildSlots(cfg);
+    const nowMin = new Date().getHours()*60 + new Date().getMinutes();
+    return { all: all.length,
+             bookable: all.filter(t => { const [h,m] = t.split(':').map(Number);
+                                         return h*60+m > nowMin+15; }).length };
+  });
+  ok('A slot less than 15 minutes away is not offered today',
+     todayCount.bookable <= todayCount.all,
+     `${todayCount.bookable} of ${todayCount.all} still bookable at ${new Date().toTimeString().slice(0,5)}`);
 
   await cust.locator('.dchip').nth(1).click();       // tomorrow, so nothing is in the past
   await cust.waitForTimeout(600);

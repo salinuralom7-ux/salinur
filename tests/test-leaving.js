@@ -32,8 +32,16 @@ const ok = (label, cond, extra) =>
   await p.waitForTimeout(600);
   ok('A proper sheet opens, not a browser prompt', await p.locator('#leaveOverlay.open').count() === 1);
   ok('Nothing asked the browser to prompt', dialogs === 0, dialogs + ' dialogs');
-  ok('It asks plainly whether you are sure',
-     (await p.locator('#leaveStep1 h3').innerText()).toLowerCase().includes('delete your repto profile'));
+  /* Reads the brand out of the page rather than hard-coding it: this
+     assertion has now been broken by two renames, each time claiming a bug
+     in working code. What matters is that the heading names the app and says
+     delete, not which name it happens to be this month. */
+  ok('It asks plainly whether you are sure', await p.evaluate(() => {
+    const h = document.querySelector('#leaveStep1 h3').textContent.toLowerCase();
+    const brand = (document.querySelector('meta[property="og:site_name"]')?.content
+                || document.title.split(/[—-]/)[0]).trim().toLowerCase();
+    return h.includes('delete') && h.includes('profile') && h.includes(brand);
+  }), await p.locator('#leaveStep1 h3').innerText());
   ok('It lists what goes', await p.locator('.leave-list li').count() >= 3);
   ok('Keeping the profile is offered too',
      (await p.locator('#leaveStep1').innerText()).includes('Keep my profile'));

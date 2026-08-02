@@ -1882,19 +1882,9 @@ body.in-chat > .demo-note{display:none}
 .tile.more b{color:var(--muted)}
 .tile.more:hover .t-ico,.tile.more:hover b{color:var(--brand-2)}
 
-/* ---------- trust strip ---------- */
-.trust-strip{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
-  margin-top:34px;padding-top:26px;border-top:1px solid var(--line);
-}
-@media(max-width:680px){.trust-strip{grid-template-columns:1fr;gap:16px}}
-.trust-item{display:flex;gap:11px;align-items:flex-start}
-.ti-ico{
-  width:32px;height:32px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;
-  background:var(--brand-soft);color:var(--brand-2);
-}
-.trust-item b{display:block;font-size:.88rem;margin-bottom:2px}
-.trust-item span{color:var(--muted);font-size:.79rem;line-height:1.5;display:block}
+/* The trust strip that used to sit under the results is gone; the four-item
+   .assure row at the bottom of the screen says the same things in a line
+   rather than three columns. Its CSS outlived it by some months. */
 
 /* ---------- booking options ---------- */
 .opt-row{display:flex;flex-wrap:wrap;gap:7px}
@@ -5014,8 +5004,22 @@ function openWaBusiness(){
 async function copyWaMessage(){
   const text = waMessage || "";
   let ok = false;
+  /* Enable "I've sent it" before touching the clipboard, not after. Tapping
+     Copy is the intent to go and send it; whether the clipboard obliged is a
+     separate question, and the toast below answers it either way. Gated on
+     the await instead, a clipboard call that is slow to settle — an unfocused
+     page, a permission prompt, a WebView that never answers — leaves somebody
+     stuck on the verification step with a button that will not enable, which
+     is the one screen they cannot get past. */
+  markWaOpened();
   try{
-    if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); ok = true; }
+    if(navigator.clipboard && window.isSecureContext){
+      /* and never wait forever on it */
+      await Promise.race([
+        navigator.clipboard.writeText(text).then(() => { ok = true; }),
+        new Promise(r => setTimeout(r, 1500))
+      ]);
+    }
   }catch(e){}
   if(!ok){
     const ta = document.createElement("textarea");

@@ -42,6 +42,12 @@ const FORCE = `
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const ctx = await b.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2, reducedMotion: 'reduce' });
+  /* The notification sheet opens over everything on a first visit and keeps
+     asking until it is answered — deliberate, and it sits on top of the
+     controls this file measures. The gate is the real permission, not a
+     stored flag, so being a returning visitor means having answered it.
+     test-notify-ask.js is where the sheet itself is checked. */
+  await ctx.grantPermissions(['notifications'], { origin: 'http://localhost:8827' });
   const page = await ctx.newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto('http://localhost:8827/'); await page.waitForTimeout(1300);

@@ -6880,7 +6880,8 @@ begin
 end;
 $$;
 
-select public.lock_public_functions();
+-- The lock used to be called here. Nineteen functions were added below it
+-- afterwards, so it moved to the end of the file; see MIGRATION 35.
 
 -- ============================================================
 -- MIGRATION 29 — the queue pokes the sender itself
@@ -7605,3 +7606,125 @@ create index if not exists worker_push_endpoint_idx on public.worker_push (endpo
 -- 6. The admin's open-reports queue filters on unhandled and sorts by date.
 create index if not exists worker_reports_open_idx
   on public.worker_reports (created_at desc) where not handled;
+
+-- ============================================================
+-- MIGRATION 35 — the lock was not last, and a customer PIN had no lockout
+--
+-- Two findings from the pre-launch audit. Both were invisible from the
+-- application, and one of them hands out one-time codes.
+--
+-- 1. lock_public_functions() is documented as "MUST BE THE LAST STATEMENT",
+--    and it was not. Nineteen functions had been appended below it over
+--    several migrations, so each one kept the EXECUTE that Postgres grants
+--    to PUBLIC on every new function. Among them:
+--
+--      claim_otp        returns (id, phone, code) — the plaintext one-time
+--                       code. Anyone holding the public anon key, which is
+--                       in the page source because it has to be, could read
+--                       every pending code and take over any account that
+--                       had asked for one.
+--      mark_otp_sent    lets an attacker mark codes delivered, so the real
+--      mark_otp_failed  message never goes out
+--      purge_otp        destructive
+--      customer_auth    an authentication oracle with no rate limit
+--
+--    This never bit us in production only by luck: the file is re-applied on
+--    every push, and an earlier apply's lock revoked PUBLIC on functions that
+--    already existed, while `create or replace` preserves an existing ACL. A
+--    database built fresh — a new project, a restore, a second environment —
+--    had all nineteen exposed from the first apply. Verified by applying this
+--    file once to an empty database and reading pg_proc.proacl.
+--
+--    claim_push, defined *before* the lock, has been locked all along and its
+--    Edge Function has never had trouble: service_role keeps its own grant.
+--    That is the proof this is safe, not a guess.
+--
+-- 2. Workers have had a lockout since Migration 16 — six wrong PINs in
+--    fifteen minutes and the account stops answering. customer_auth was
+--    written later and never got one. Measured, not assumed: thirty wrong
+--    PINs in a row were all accepted, against a four-digit PIN, while the
+--    worker path stopped at seven. The customer screens are not built yet,
+--    so nobody could have been hurt — but the function is reachable now, and
+--    the screens are coming.
+-- ============================================================
+
+create or replace function public.customer_auth(
+  p_phone text default null, p_pin text default null, p_token uuid default null)
+returns uuid
+language plpgsql security definer set search_path = public, extensions as $$
+declare cid uuid;
+begin
+  if p_token is not null then
+    select s.customer_id into cid from customer_sessions s
+     where s.token = p_token and s.expires_at > now();
+    if cid is not null then
+      update customers set last_seen = now() where id = cid;
+      return cid;
+    end if;
+  end if;
+  if p_phone is null or p_pin is null then return null; end if;
+
+  -- same guard as the worker path, and a separate 'customer' kind so a
+  -- customer and a worker sharing a number cannot lock each other out
+  perform public.auth_guard('customer', p_phone);
+
+  select c.id into cid from customers c
+    join customer_secrets s on s.customer_id = c.id
+   where c.phone = p_phone and s.pin_hash = crypt(p_pin, s.pin_hash);
+
+  if cid is null then
+    perform public.auth_note('customer', p_phone, false);
+    return null;      -- MUST NOT raise: a raise rolls back the note it just
+  end if;             -- wrote, and the lockout never fires. See Migration 16.
+
+  perform public.auth_note('customer', p_phone, true);
+  update customers set last_seen = now() where id = cid;
+  return cid;
+end;
+$$;
+
+-- ---------- the lock, genuinely last this time ----------
+select public.lock_public_functions();
+
+-- ---------- and a check that says so out loud ----------
+-- The rule was written in a comment and broken anyway, because nothing
+-- enforced it. This asserts the property itself rather than the ordering:
+-- after the lock, no function in public may be executable by anon unless the
+-- allow-list names it. Adding a function below this block fails the apply
+-- instead of quietly publishing it.
+do $$
+declare leaked text;
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then return; end if;
+
+  select string_agg(p.proname, ', ' order by p.proname) into leaked
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and p.prokind = 'f'
+     and has_function_privilege('anon', p.oid, 'execute')
+     and p.proname not in (
+       'register_worker','login_worker','update_worker','delete_worker','phone_taken',
+       'worker_session_start','worker_session_end','worker_pending','worker_stats',
+       'search_workers','request_worker_contact','verify_worker_id','report_worker',
+       'record_booking','create_job','job_state','cancel_job','widen_job','advance_jobs',
+       'my_offers','accept_offer','decline_offer','set_online','save_push_subscription',
+       'save_customer_push','taken_slots','book_slot','my_appointments','rate_punctuality',
+       'start_thread','thread_view','thread_messages','post_message','customer_set_thread',
+       'worker_threads','worker_thread_messages','worker_post_message','worker_set_thread',
+       'review_thread','worker_reviews','admin_check','admin_session_start','admin_queue',
+       'admin_stats','admin_recent','admin_reports','admin_clear_report','admin_wa_codes',
+       'admin_set_status','admin_set_require_otp','admin_verify_registration',
+       'admin_exit_reasons','admin_exit_notes','admin_hide_review','admin_push_health',
+       'admin_set_vapid','test_push','register_customer','login_customer','customer_me',
+       'customer_update','customer_sign_out','delete_customer','send_otp','verify_otp',
+       'admin_set_otp','skill_price_stats','push_endpoint');
+
+  if leaked is not null then
+    raise exception
+      'these functions are reachable by anon but are not on the allow-list: %. '
+      'Either add them to client_rpcs in lock_public_functions(), or move their '
+      'definition above the lock call at the end of this file.', leaked;
+  end if;
+  raise notice 'PASS  nothing is reachable by anon except the allow-list';
+end $$;
