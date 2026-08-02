@@ -50,6 +50,26 @@ jobs:
             curl -sS -o /dev/null -m 15 -w "  $f -> HTTP %{http_code}\n" "https://mysheher.com/$f" >> $R 2>&1 || true
           done
 
+          # mysheher.com resolves to five addresses; four are GitHub and one is
+          # Hostinger's. A browser picks one and caches it, so "it works for me"
+          # proves nothing about the fifth. Ask that address directly, with the
+          # right Host header, and see what a visitor who lands on it gets.
+          echo "--- what the extra address actually serves ---" >> $R
+          for ip in 185.199.108.153 2.57.91.91; do
+            echo "  via $ip:" >> $R
+            curl -sS -o /dev/null -m 15 --resolve "mysheher.com:443:$ip" \
+              -w "    https -> HTTP %{http_code}  redirect=%{redirect_url}\n" \
+              https://mysheher.com/ >> $R 2>&1 \
+              || echo "    https -> FAILED (tls or connection refused)" >> $R
+            curl -sS -o /dev/null -m 15 --resolve "mysheher.com:80:$ip" \
+              -w "    http  -> HTTP %{http_code}  redirect=%{redirect_url}\n" \
+              http://mysheher.com/ >> $R 2>&1 \
+              || echo "    http  -> FAILED" >> $R
+            t=$(curl -sS -m 15 --resolve "mysheher.com:80:$ip" http://mysheher.com/ 2>/dev/null \
+                | grep -o "<title>[^<]*</title>" | head -1)
+            echo "    title -> ${t:-none}" >> $R
+          done
+
           echo "--- http, and www ---" >> $R
           curl -sS -o /dev/null -m 15 -w "http://mysheher.com  -> HTTP %{http_code} -> %{redirect_url}\n" http://mysheher.com/ >> $R 2>&1 || true
           curl -sS -o /dev/null -m 15 -w "https://www          -> HTTP %{http_code} -> %{redirect_url}\n" https://www.mysheher.com/ >> $R 2>&1 \
