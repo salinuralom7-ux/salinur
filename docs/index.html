@@ -9034,9 +9034,14 @@ async function enablePush(){
     renderPushState(); return;
   }
   try{
-    const perm = await Notification.requestPermission();
+    const perm = await askBrowserForNotifications();
     if(perm !== "granted"){
-      toast("Alerts blocked — you can allow them in your phone settings");
+      /* "denied" is a decision. "default" means the browser never showed the
+         prompt at all — a quiet chip, or suppression — and telling somebody
+         they were blocked when they were not is the wrong message. */
+      toast(perm === "denied"
+        ? "Alerts blocked — you can allow them in your phone's app settings"
+        : "Your browser did not show the prompt. Allow notifications for MySheher in your phone's app settings.");
       renderPushState(); return;
     }
     const reg = await navigator.serviceWorker.ready;
@@ -9360,6 +9365,19 @@ function renderAlertSetup(h){
    are trying to avoid. */
 const NOTIFY_ASKED = "repto_notify_asked_v1";
 
+/* When we last actually called requestPermission(), as opposed to when the
+   sheet was last dismissed. The two are different facts and only this one
+   tells us whether asking again is worth anything. */
+const NOTIFY_TRIED = "repto_notify_tried_v1";
+
+/* One place that asks the browser, so the attempt is always recorded. */
+async function askBrowserForNotifications(){
+  try{ localStorage.setItem(NOTIFY_TRIED, String(Date.now())); }catch(e){}
+  const perm = await Notification.requestPermission();
+  if(perm === "granted"){ try{ localStorage.removeItem(NOTIFY_TRIED); }catch(e){} }
+  return perm;
+}
+
 function notifyAskDue(){
   if(!("Notification" in window)){
     /* iPhone in Safari: notifications are not merely unpermitted, the API is
@@ -9367,7 +9385,23 @@ function notifyAskDue(){
        the answer is an install, not a permission. */
     return isIOS() && !isStandalone();
   }
-  return Notification.permission === "default";
+  if(Notification.permission !== "default") return false;   /* granted, or denied for good */
+
+  /* Here is the case that made this feel broken. Chrome shows a quiet chip
+     instead of a dialog to anyone who has dismissed notification prompts
+     before, and requestPermission() then returns "default" straight away
+     without anything appearing on screen. Permission never becomes granted,
+     so the sheet came back on every single launch — asking a browser that has
+     already decided not to ask. It looked like the app had forgotten a
+     permission that was never actually given.
+
+     If we have tried and been left on "default", wait a week before trying
+     again. Nothing is lost: the moment permission is granted anywhere — our
+     sheet, the address bar, Android settings — this returns false and
+     syncWorkerPush/syncCustomerPush pick the subscription up at start-up. */
+  const tried = Number(localStorage.getItem(NOTIFY_TRIED) || 0);
+  if(tried && Date.now() - tried < 7 * 24 * 3600 * 1000) return false;
+  return true;
 }
 
 function maybeAskNotify(){
@@ -9450,9 +9484,14 @@ async function enableCustomerAlerts(){
   if(isIOS() && !isStandalone()){ openModal("iosOverlay"); return; }
   if(!VAPID_PUBLIC){ toast("Alerts are not switched on yet"); return; }
   try{
-    const perm = await Notification.requestPermission();
+    const perm = await askBrowserForNotifications();
     if(perm !== "granted"){
-      toast("Alerts blocked — you can allow them in your phone settings");
+      /* "denied" is a decision. "default" means the browser never showed the
+         prompt at all — a quiet chip, or suppression — and telling somebody
+         they were blocked when they were not is the wrong message. */
+      toast(perm === "denied"
+        ? "Alerts blocked — you can allow them in your phone's app settings"
+        : "Your browser did not show the prompt. Allow notifications for MySheher in your phone's app settings.");
       renderCustomerPushState(); return;
     }
     await syncCustomerPush();

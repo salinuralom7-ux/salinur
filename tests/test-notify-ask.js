@@ -54,6 +54,54 @@ const ok=(l,c,x)=>console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x:
      }), await lead.evaluate(e => getComputedStyle(e).color));
   await p.locator('footer').screenshot({path:'tests/shots/footer.png'});
 
+  // ---- the browser that never shows the prompt ----
+  /* Chrome answers requestPermission() with "default" — no dialog, just a
+     quiet chip — for anyone who has dismissed prompts before. Permission never
+     becomes granted, so the sheet used to return on every single launch,
+     asking a browser that had already decided not to ask. It read as the app
+     forgetting a permission that was never actually given. */
+  const askedWith = async (setup) => {
+    const c = await b.newContext({ viewport: { width: 390, height: 844 } });
+    const pg = await c.newPage();
+    await pg.addInitScript(setup);
+    await pg.goto('http://localhost:8842/');
+    await pg.waitForTimeout(2600);          // the sheet is scheduled at 2200ms
+    const shown = await pg.locator('#notifyOverlay.open').count() === 1;
+    await pg.close(); await c.close();
+    return shown;
+  };
+  const DAY = 24 * 3600 * 1000;
+
+  ok('Never asked before: the sheet appears',
+     await askedWith(() => localStorage.removeItem('repto_notify_tried_v1')) === true);
+
+  ok('Asked, and the browser left us on "default": it backs off',
+     await askedWith(() =>
+       localStorage.setItem('repto_notify_tried_v1', String(Date.now()))) === false);
+
+  ok('…and comes back a week later, rather than never',
+     await askedWith(() =>
+       localStorage.setItem('repto_notify_tried_v1', String(Date.now() - 8 * 86400000))) === true);
+
+  ok('Six days later it is still quiet',
+     await askedWith(() =>
+       localStorage.setItem('repto_notify_tried_v1', String(Date.now() - 6 * 86400000))) === false);
+
+  // granting clears the back-off, so a later revoke asks again immediately
+  {
+    const c = await b.newContext({ viewport: { width: 390, height: 844 }, permissions: ['notifications'] });
+    const pg = await c.newPage();
+    await pg.addInitScript(() => localStorage.setItem('repto_notify_tried_v1', String(Date.now())));
+    await pg.goto('http://localhost:8842/'); await pg.waitForTimeout(900);
+    const r = await pg.evaluate(async () => {
+      const perm = await askBrowserForNotifications();
+      return { perm, leftover: localStorage.getItem('repto_notify_tried_v1') };
+    });
+    ok('Granting clears the back-off', r.perm === 'granted' && r.leftover === null,
+       `${r.perm}, leftover=${r.leftover}`);
+    await pg.close(); await c.close();
+  }
+
   ok('No JS errors', errs.length===0, errs.join(' | ')||'none');
   await b.close(); srv.close();
 })();
