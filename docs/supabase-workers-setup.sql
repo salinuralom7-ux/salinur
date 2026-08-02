@@ -6800,6 +6800,15 @@ begin
     for f in select p.oid::regprocedure as sig from pg_proc p
               join pg_namespace n on n.oid = p.pronamespace
              where n.nspname = 'public' and p.prokind = 'f'
+               -- Never the internals of an extension. pgcrypto and pg_trgm
+               -- install into public on Supabase, they are owned by
+               -- supabase_admin rather than by us, and a REVOKE on an object
+               -- you do not own is a silent no-op — so this loop was quietly
+               -- failing on them every run while appearing to succeed.
+               -- They are also not ours to lock: the trigram operators are
+               -- what make the search index work.
+               and not exists (select 1 from pg_depend d
+                                where d.objid = p.oid and d.deptype = 'e')
     loop
       execute format('revoke all on function %s from public', f.sig);
       execute format('revoke all on function %s from %I', f.sig, r);
@@ -7703,6 +7712,9 @@ begin
    where n.nspname = 'public'
      and p.prokind = 'f'
      and has_function_privilege('anon', p.oid, 'execute')
+     -- extension internals are not ours; see the note in the lock
+     and not exists (select 1 from pg_depend d
+                      where d.objid = p.oid and d.deptype = 'e')
      and p.proname not in (
        'register_worker','login_worker','update_worker','delete_worker','phone_taken',
        'worker_session_start','worker_session_end','worker_pending','worker_stats',
