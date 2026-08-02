@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
-const http = require('http'); const fs = require('fs');
+const http = require('http');
+require('fs').mkdirSync('tests/shots', { recursive: true }); const fs = require('fs');
 const html = fs.readFileSync('/home/user/salinur/docs/index.html','utf8');
 const srv = http.createServer((q,r)=>{r.writeHead(200,{'Content-Type':'text/html'});r.end(html);}).listen(8842);
 const ok=(l,c,x)=>console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x:''));
@@ -51,7 +52,7 @@ const ok=(l,c,x)=>console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x:
         const hex = n => '#' + n.match(/\d+/g).map(v => (+v).toString(16).padStart(2,'0')).join('');
         return hex(getComputedStyle(e).color).toLowerCase() === want.toLowerCase();
      }), await lead.evaluate(e => getComputedStyle(e).color));
-  await p.locator('footer').screenshot({path:'footer.png'});
+  await p.locator('footer').screenshot({path:'tests/shots/footer.png'});
 
   ok('No JS errors', errs.length===0, errs.join(' | ')||'none');
   await b.close(); srv.close();

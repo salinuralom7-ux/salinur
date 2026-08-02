@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
-const http = require('http'); const fs = require('fs'); const path = require('path');
+const http = require('http');
+require('fs').mkdirSync('tests/shots', { recursive: true }); const fs = require('fs'); const path = require('path');
 const ROOT='/home/user/salinur/docs';
 const T={'.html':'text/html','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.js':'application/javascript','.webmanifest':'application/manifest+json'};
 const srv=http.createServer((q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]);if(p.endsWith('/'))p+='index.html';
@@ -20,7 +21,7 @@ const ok=(l,c,x)=>console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x:
         .map(e=>Math.round(e.getBoundingClientRect().top))).size===2));
   ok('No horizontal overflow', await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
 
-  await p.screenshot({path:'full-landing.png', fullPage:true});
+  await p.screenshot({path:'tests/shots/full-landing.png', fullPage:true});
 
   // a tile must land on results for that trade
   await p.locator('.qtile', {hasText:'Plumber'}).click();

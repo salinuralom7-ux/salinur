@@ -23,8 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 
-# Playwright harnesses write their screenshots next to wherever they are run
+# Playwright harnesses write their screenshots next to wherever they are run.
+# They now all write into tests/shots/; these two names are kept because
+# footer.png was committed by accident once and full-landing.png dirtied the
+# tree on every run, which is noise that trains you to ignore git status.
 ks-*.png
 pg-*.png
+footer.png
+full-landing.png
 tests/node_modules/
 tests/shots/
