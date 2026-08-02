@@ -40,20 +40,23 @@ jobs:
       - name: Set the custom domain
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # `bash -e` plus a failing pipeline killed this step at the assignment,
+        # so the one thing worth reading — the API's reason for refusing — was
+        # thrown away. Run it plainly and print the body whatever happens.
+        shell: bash
         run: |
-          set -o pipefail
-          # A 204 means it took. Anything else and we want to see the body.
-          code=$(gh api -X PUT "repos/${{ github.repository }}/pages" \
-                   -f "cname=${{ inputs.domain }}" \
-                   --include 2>&1 | tee /tmp/put.txt | head -1)
-          echo "$code"
-          if grep -qE "HTTP/[0-9.]+ 20[04]" /tmp/put.txt; then
-            echo "custom domain set to ${{ inputs.domain }}"
-          else
-            echo "::error::could not set the domain — response above"
-            cat /tmp/put.txt
+          set +e
+          gh api -X PUT "repos/${{ github.repository }}/pages" \
+            -f "cname=${{ inputs.domain }}" --include > /tmp/put.txt 2>&1
+          rc=$?
+          echo "--- API response ---"
+          cat /tmp/put.txt
+          echo "--- exit $rc ---"
+          if [ $rc -ne 0 ]; then
+            echo "::error::the token was refused — see the response above"
             exit 1
           fi
+          echo "custom domain set to ${{ inputs.domain }}"
 
       - name: Wait for the certificate, then enforce HTTPS
         if: ${{ inputs.enforce_https }}
