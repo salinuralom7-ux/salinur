@@ -1,4 +1,4 @@
-checked: 2026-08-02T08:46:34Z
+checked: 2026-08-02T08:48:03Z
 --- certificate served on mysheher.com:443 ---
 subject=CN = mysheher.com
 issuer=C = US, O = Let's Encrypt, CN = YR2
@@ -8,3 +8,18 @@ notAfter=Oct 31 07:45:27 2026 GMT
 https://mysheher.com -> HTTP 200 (certificate TRUSTED)
 --- via github.io ---
 github.io redirect -> HTTP 301 -> http://mysheher.com/
+--- is it the current build? ---
+title: <title>MySheher — Trusted Local Workers in Guwahati, Booked Directly</title>
+canonical: mysheher.com
+old domain: gone from the page
+  icons/icon-192.png?v=5 -> HTTP 200
+  icons/logo.png?v=5 -> HTTP 200
+  icons/wordmark.png?v=5 -> HTTP 200
+  manifest.webmanifest -> HTTP 200
+  sw.js -> HTTP 200
+  privacy/ -> HTTP 200
+  terms/ -> HTTP 200
+  delete-account/ -> HTTP 200
+--- http, and www ---
+http://mysheher.com  -> HTTP 200 -> 
+https://www          -> HTTP 301 -> https://mysheher.com/
