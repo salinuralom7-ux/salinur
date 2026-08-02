@@ -1,10 +1,17 @@
-checked: 2026-07-10T04:12:56Z
---- certificate served on nearse.in:443 ---
-subject=CN = nearse.in
+checked: 2026-08-02T08:15:31Z
+--- certificate served on mysheher.com:443 ---
+subject=CN = *.github.io
 issuer=C = US, O = Let's Encrypt, CN = YR2
-notBefore=Jul  8 14:18:28 2026 GMT
-notAfter=Oct  6 14:18:27 2026 GMT
+notBefore=Jun  4 23:26:07 2026 GMT
+notAfter=Sep  2 23:26:06 2026 GMT
 --- strict https request ---
-https://nearse.in -> HTTP 200 (certificate TRUSTED)
+curl: (60) SSL: no alternative certificate subject name matches target host name 'mysheher.com'
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above.
+https://mysheher.com -> HTTP 000 (certificate TRUSTED)
+strict https failed -> certificate not trusted yet
 --- via github.io ---
 github.io redirect -> HTTP 301 -> http://nearse.in/
