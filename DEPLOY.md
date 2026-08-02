@@ -483,6 +483,58 @@ lie to you. A padlock and the site loading means it is done.
 Then check `nearse.in` sends you to `mysheher.com`, and that `mysheher.in`
 does too.
 
+## Two things that cost hours, written down so they cost nobody hours again
+
+### The CNAME file does not set the domain
+
+`docs/CNAME` is committed and correct, and it changes nothing. When Pages is
+published **by a GitHub Actions workflow**, GitHub takes the custom domain from
+the repository's Pages *configuration*, not from the file. The site kept
+answering for the old name for half an hour with everything else already
+right.
+
+Set it at **Settings → Pages → Custom domain**, on github.com, in a browser.
+There is no way round that:
+
+* the API endpoint (`PUT /repos/{owner}/{repo}/pages`) needs
+  **Administration: write**, which the token `GITHUB_TOKEN` hands to Actions
+  can never have — a workflow that tries it fails with 403, and one was written
+  and deleted proving exactly that;
+* the GitHub mobile app has no Pages settings screen at all.
+
+Tick **Enforce HTTPS** on the same page once the certificate exists, or
+`http://mysheher.com` serves over plain http and Chrome says Not secure.
+
+### Hostinger serves a parking record you cannot see
+
+A domain on Hostinger's nameservers can carry an extra `A` record for `@`
+pointing at **2.57.91.91**, their parked-domain server, which **does not appear
+in the hPanel DNS editor** — searching for the address there returns "Nothing
+found". It came back once after being deleted.
+
+Why it matters more than it looks. That address answers **HTTP 200** on both
+http and https with a page titled *"Parked Domain name on Hostinger DNS
+system"*. It does not fail, so the browser never retries another address — it
+simply shows the wrong page. And at TTL 14400 the visitor's device keeps that
+choice for **four hours**. So it is not one page view in five, it is one
+*person* in five, stuck, concluding the app does not exist.
+
+Check for it without trusting any panel:
+
+```bash
+curl -sS --resolve mysheher.com:80:2.57.91.91 http://mysheher.com/ | grep -i '<title>'
+```
+
+MySheher in the title is fine. "Parked Domain" is not.
+
+The fix is Hostinger's, not this repository's: hPanel → **Websites** and
+disconnect the domain if it is listed, otherwise their live chat. Tell them
+plainly not to reset the DNS records — that wipes the four GitHub `A` records
+and is the first thing they reach for.
+
+**Never use hPanel's "Reset DNS records" button.** It restores Hostinger's
+defaults, which means deleting the records that make the site work.
+
 ## Never let nearse.in expire
 
 Keep renewing it, and keep the redirect, for as long as the app exists.
