@@ -4,8 +4,7 @@
     "namespace": "android_app",
     "package_name": "com.mysheher.app",
     "sha256_cert_fingerprints": [
-      "REPLACE_WITH_PLAY_APP_SIGNING_SHA256",
-      "REPLACE_WITH_UPLOAD_KEY_SHA256"
+      "9C:DB:3F:6B:5F:EC:E2:D1:35:41:8F:14:1A:05:57:85:14:EC:01:A1:4A:D9:B2:83:76:3B:94:F6:7F:CB:48:64"
     ]
   }
 }]
