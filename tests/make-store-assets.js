@@ -65,19 +65,19 @@ const srv = http.createServer((q, r) => {
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{width:1024px;height:500px;overflow:hidden;font-family:'Plus Jakarta Sans',sans-serif;
-      background:radial-gradient(760px 420px at 78% -18%, rgba(234,187,81,.20), transparent 62%),
-                 radial-gradient(560px 320px at -4% 108%, rgba(234,187,81,.10), transparent 60%), #0C0A07;
-      color:#F6F2E8;display:flex;align-items:center;padding:0 64px;gap:38px}
+      background:radial-gradient(760px 420px at 78% -18%, rgba(255,195,0,.11), transparent 62%),
+                 radial-gradient(560px 320px at -4% 108%, rgba(61,220,200,.07), transparent 60%), #15151A;
+      color:#FFFFFF;display:flex;align-items:center;padding:0 64px;gap:38px}
     .lockup{display:flex;flex-direction:column;align-items:center;gap:18px;flex:0 0 auto}
     .mark{width:118px;height:auto;filter:drop-shadow(0 14px 34px rgba(0,0,0,.55))}
     .word{width:150px;height:auto}
     h1{font-size:50px;font-weight:800;letter-spacing:-.03em;line-height:1.1;white-space:nowrap}
-    em{font-style:normal;color:#EABB51}
-    p{margin-top:14px;font-size:21px;color:#D8D0BE;line-height:1.5;max-width:690px}
+    em{font-style:normal;color:#FFC300}
+    p{margin-top:14px;font-size:21px;color:#DADAE2;line-height:1.5;max-width:690px}
     .row{margin-top:24px;display:flex;gap:10px;flex-wrap:nowrap}
-    .chip{border:1px solid rgba(246,242,232,.20);border-radius:999px;padding:8px 16px;white-space:nowrap;
-      font-size:15px;font-weight:600;color:#C4B48C}
-    .chip.on{background:#EABB51;border-color:#EABB51;color:#14100A;font-weight:800}
+    .chip{border:1px solid rgba(61,220,200,.26);border-radius:999px;padding:8px 16px;white-space:nowrap;
+      font-size:15px;font-weight:600;color:#DADAE2}
+    .chip.on{background:#FFC300;border-color:#FFC300;color:#171200;font-weight:800}
   </style>
   <div class="lockup"><img class="mark" src="${logo}" alt=""><img class="word" src="${word}" alt=""></div>
   <div>

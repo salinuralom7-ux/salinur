@@ -98,6 +98,14 @@ const row = o => Object.assign({
       hidden: dot.hidden,
       count: dot.textContent,
       colour: cs.backgroundColor,
+      dangerRgb: (() => {
+        const probe = document.createElement('span');
+        probe.style.color = 'var(--danger)';
+        document.body.appendChild(probe);
+        const c = getComputedStyle(probe).color;
+        probe.remove();
+        return c;
+      })(),
       animation: cs.animationName,
       sub: document.getElementById('myBookingsSub').textContent,
       menuDot: document.getElementById('menuDot').classList.contains('urgent'),
@@ -109,7 +117,16 @@ const row = o => Object.assign({
   ok('The card is marked as waiting',        painted.waiting === true);
   ok('The badge is shown',                   painted.hidden === false);
   ok('The badge counts conversations',       painted.count === '2', painted.count);
-  ok('The badge is red, not gold',           painted.colour === 'rgb(232, 112, 127)', painted.colour);
+  /* Compare against the palette rather than a literal. Hard-coding the value
+     made a palette change look like a broken badge, which is the second time
+     a colour literal in a test has accused working code. What matters is that
+     the badge is painted --danger and that --danger is actually red. */
+  ok('The badge is painted --danger', painted.colour === painted.dangerRgb,
+     `${painted.colour} vs ${painted.dangerRgb}`);
+  ok('…and --danger is a red', (() => {
+    const [r, g, b] = painted.colour.match(/\d+/g).map(Number);
+    return r > 150 && r > g * 1.8 && r > b * 1.8;
+  })(), painted.colour);
   ok('The badge pulses',                     painted.animation === 'waiting-pulse', painted.animation);
   ok('The menu dot agrees',                  painted.menuDot === true);
   ok('The drawer row agrees',                painted.drawer === '2', painted.drawer);
@@ -169,11 +186,15 @@ const row = o => Object.assign({
   const calm = await still.evaluate(() => {
     document.getElementById('myBookingsLink').hidden = false;
     paintChatBadge([{ code: 'A', side: 'worker', status: 'requested', unread: 0 }]);
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--danger)';
+    document.body.appendChild(probe);
+    const danger = getComputedStyle(probe).color; probe.remove();
     const cs = getComputedStyle(document.getElementById('myBookingsDot'));
-    return { animation: cs.animationName, colour: cs.backgroundColor };
+    return { animation: cs.animationName, colour: cs.backgroundColor, dangerRgb: danger };
   });
   ok('Reduced motion: no pulse', calm.animation === 'none', calm.animation);
-  ok('Reduced motion: still red', calm.colour === 'rgb(232, 112, 127)', calm.colour);
+  ok('Reduced motion: still --danger', calm.colour === calm.dangerRgb, calm.colour);
 
   ok('No JS errors', errors.length === 0, errors.join(' | ') || 'none');
 

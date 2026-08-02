@@ -5,17 +5,17 @@
   "launcherName": "MySheher",
   "display": "standalone",
   "orientation": "portrait",
-  "themeColor": "#0C0A07",
-  "themeColorDark": "#0C0A07",
-  "navigationColor": "#0C0A07",
-  "navigationColorDark": "#0C0A07",
-  "navigationDividerColor": "#0C0A07",
-  "navigationDividerColorDark": "#0C0A07",
-  "backgroundColor": "#0C0A07",
+  "themeColor": "#15151A",
+  "themeColorDark": "#15151A",
+  "navigationColor": "#15151A",
+  "navigationColorDark": "#15151A",
+  "navigationDividerColor": "#15151A",
+  "navigationDividerColorDark": "#15151A",
+  "backgroundColor": "#15151A",
   "enableNotifications": true,
   "startUrl": "/?src=app",
-  "iconUrl": "https://mysheher.com/icons/icon-512.png?v=5",
-  "maskableIconUrl": "https://mysheher.com/icons/maskable-512.png?v=5",
+  "iconUrl": "https://mysheher.com/icons/icon-512.png?v=6",
+  "maskableIconUrl": "https://mysheher.com/icons/maskable-512.png?v=6",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",
@@ -28,13 +28,13 @@
       "name": "Find a worker",
       "shortName": "Find",
       "url": "/?src=app#find",
-      "chosenIconUrl": "https://mysheher.com/icons/icon-192.png?v=5"
+      "chosenIconUrl": "https://mysheher.com/icons/icon-192.png?v=6"
     },
     {
       "name": "Register as a worker",
       "shortName": "Register",
       "url": "/?src=app#work",
-      "chosenIconUrl": "https://mysheher.com/icons/icon-192.png?v=5"
+      "chosenIconUrl": "https://mysheher.com/icons/icon-192.png?v=6"
     }
   ],
   "generatorApp": "bubblewrap-cli",

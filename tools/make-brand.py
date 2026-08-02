@@ -23,7 +23,7 @@ from PIL import Image
 ICON_SRC = "brand/mysheher-icon.png"
 LOCK_SRC = "brand/mysheher-master.png"
 OUT      = "docs/icons"
-BRAND_BG = (12, 10, 7, 255)          # --bg, so an icon sits in the app's own dark
+BRAND_BG = (21, 21, 26, 255)         # --bg, so an icon sits in the app's own dark
 
 
 def ink_box(im, x0=0, x1=None, y0=0, y1=None):

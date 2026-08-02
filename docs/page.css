@@ -2,31 +2,40 @@
    These are plain HTML on purpose: they must render with no JavaScript, and
    the Play Store and search engines need to reach them at a stable URL. */
 :root{
-  --bg:#0C0A07;
-  --surface:#151109;
-  --surface-2:#1D1810;
-  --ink:#F6F2E8;
-  --ink-2:#D8D0BE;
-  --muted:#978D79;
-  --line:rgba(246,242,232,.10);
-  --line-strong:rgba(246,242,232,.19);
-  --brand:#F0B90B;
-  --brand-2:#FFD65C;
-  --brand-quiet:#C9AF6B;
-  --brand-ink:#14100A;
-  --brand-soft:rgba(240,185,11,.15);
+  /* Kept in step with the app's :root by hand — these pages are standalone
+     files that must render with no JavaScript and no shared build step. If
+     the app's palette moves, move this with it or the policy pages become a
+     different product. */
+  --bg:#15151A;
+  --surface:#1D1D24;
+  --surface-2:#26262E;
+  --ink:#FFFFFF;
+  --ink-2:#DADAE2;
+  --muted:#9A9AA6;
+  --ink-rgb:255,255,255;
+  --accent-rgb:61,220,200;
+  --line:rgba(var(--accent-rgb),.13);
+  --line-strong:rgba(var(--accent-rgb),.26);
+  --brand:#FFC300;
+  --brand-2:#FFDD57;
+  --brand-quiet:#C7B168;
+  --brand-ink:#171200;
+  --brand-rgb:255,195,0;
+  --brand-soft:rgba(var(--brand-rgb),.15);
   --warn:#E8924A;
+  --warn-rgb:232,146,74;
   --r-sm:10px;
   --r:14px;
   --sans:'Plus Jakarta Sans','Segoe UI',system-ui,-apple-system,sans-serif;
   --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
 }
+
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
   font-family:var(--sans);
   background:
-    radial-gradient(1100px 520px at 82% -12%, rgba(240,185,11,.13), transparent 62%),
+    radial-gradient(1100px 520px at 82% -12%, rgba(var(--brand-rgb),.13), transparent 62%),
     var(--bg);
   color:var(--ink);
   line-height:1.65;
@@ -45,7 +54,7 @@ a:hover{text-decoration:underline;text-underline-offset:3px}
 }
 
 header{
-  border-bottom:1px solid var(--line);background:rgba(12,10,7,.88);
+  border-bottom:1px solid var(--line);background:rgba(21,21,26,.88);
   backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;
 }
 /* The status bar is drawn over the page in the installed app, so the header
@@ -103,7 +112,7 @@ li{margin-bottom:7px}
 strong{color:var(--ink);font-weight:700}
 
 .callout{
-  border:1px solid rgba(232,146,74,.32);background:rgba(232,146,74,.08);
+  border:1px solid rgba(var(--warn-rgb),.32);background:rgba(var(--warn-rgb),.08);
   border-radius:var(--r);padding:17px 19px;margin:0 0 30px;
 }
 .callout b{display:block;color:var(--warn);margin-bottom:5px;font-size:.95rem}
@@ -154,7 +163,7 @@ footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
 .foot-glow{
   position:absolute;left:50%;top:-14px;width:min(540px,92%);height:170px;
   transform:translateX(-50%);pointer-events:none;
-  background:radial-gradient(closest-side, rgba(240,185,11,.17), transparent 74%);
+  background:radial-gradient(closest-side, rgba(var(--brand-rgb),.17), transparent 74%);
   animation:footBreathe 9s ease-in-out infinite;
 }
 @keyframes footBreathe{
@@ -203,7 +212,7 @@ footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
 .reach:hover .reach-ico{transform:scale(1.09)}
 /* each one lights up in its own colour, so the row is recognisable at a glance */
 .reach.wa:hover   .reach-ico{background:#25D366;color:#062B16;box-shadow:0 9px 24px rgba(37,211,102,.36)}
-.reach.mail:hover .reach-ico{background:var(--brand);color:#14100A;box-shadow:0 9px 24px rgba(240,185,11,.36)}
+.reach.mail:hover .reach-ico{background:var(--brand);color:#14100A;box-shadow:0 9px 24px rgba(var(--brand-rgb),.36)}
 .reach.ig:hover   .reach-ico{background:linear-gradient(45deg,#F9CE34 4%,#EE2A7B 54%,#6228D7);color:#fff;box-shadow:0 9px 24px rgba(238,42,123,.34)}
 .reach.fb:hover   .reach-ico{background:#1877F2;color:#fff;box-shadow:0 9px 24px rgba(24,119,242,.34)}
 .reach:active{transform:translateY(-1px)}
