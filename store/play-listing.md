@@ -60,7 +60,7 @@ MySheher is on an experimental launch in Guwahati, Assam. Tell us what is broken
 
 **App category:** Business
 **Tags:** Home services, Jobs, Local
-**Contact email:** hello.mysheher@gmail.com
+**Contact email:** info@mysheher.com
 **Contact phone:** +91 70865 99367
 **Website:** https://mysheher.com/
 **Privacy policy:** https://mysheher.com/privacy/

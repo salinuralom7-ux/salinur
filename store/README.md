@@ -107,7 +107,7 @@ already-installed phones keep showing the old icon.
 |---|---|
 | Privacy policy | `https://mysheher.com/privacy/` |
 | Account deletion | `https://mysheher.com/delete-account/` |
-| Support email | `hello.mysheher@gmail.com` |
+| Support email | `info@mysheher.com` |
 | Website | `https://mysheher.com/` |
 
 The account deletion URL is mandatory for any app that lets people create an

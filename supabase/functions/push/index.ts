@@ -6,7 +6,7 @@
  * on Google's or Apple's servers, and nothing is lost when they are slow.
  *
  * Deploy:   supabase functions deploy push --no-verify-jwt
- * Secrets:  supabase secrets set VAPID_PUBLIC=... VAPID_PRIVATE=... VAPID_SUBJECT=mailto:hello.mysheher@gmail.com
+ * Secrets:  supabase secrets set VAPID_PUBLIC=... VAPID_PRIVATE=... VAPID_SUBJECT=mailto:info@mysheher.com
  * Trigger:  Database Webhook on push_outbox INSERT, plus a one-minute cron
  *           sweep so a failed send is retried rather than forgotten.
  *
@@ -20,7 +20,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const VAPID_PUBLIC  = Deno.env.get("VAPID_PUBLIC") ?? "";
 const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE") ?? "";
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:hello.mysheher@gmail.com";
+const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:info@mysheher.com";
 
 type Row = {
   id: number; title: string; body: string;

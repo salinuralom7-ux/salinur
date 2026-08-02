@@ -117,7 +117,7 @@ why it lives in the database and not in a file: you never touch the code.
 |---|---|
 | `VAPID_PUBLIC` | the public key |
 | `VAPID_PRIVATE` | the private key |
-| `VAPID_SUBJECT` | `mailto:hello.mysheher@gmail.com` |
+| `VAPID_SUBJECT` | `mailto:info@mysheher.com` |
 
 If you do have a computer with Node, the same thing from the project folder:
 
@@ -127,7 +127,7 @@ supabase login
 supabase link --project-ref mpufunsitqtdkqlibxof
 supabase secrets set VAPID_PUBLIC='the public key' \
                      VAPID_PRIVATE='the private key' \
-                     VAPID_SUBJECT='mailto:hello.mysheher@gmail.com'
+                     VAPID_SUBJECT='mailto:info@mysheher.com'
 supabase functions deploy push --no-verify-jwt
 ```
 
