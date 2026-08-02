@@ -1,4 +1,4 @@
-checked: 2026-08-02T08:48:03Z
+checked: 2026-08-02T08:58:59Z
 --- certificate served on mysheher.com:443 ---
 subject=CN = mysheher.com
 issuer=C = US, O = Let's Encrypt, CN = YR2
@@ -20,6 +20,15 @@ old domain: gone from the page
   privacy/ -> HTTP 200
   terms/ -> HTTP 200
   delete-account/ -> HTTP 200
+--- what the extra address actually serves ---
+  via 185.199.108.153:
+    https -> HTTP 200  redirect=
+    http  -> HTTP 200  redirect=
+    title -> <title>MySheher — Trusted Local Workers in Guwahati, Booked Directly</title>
+  via 2.57.91.91:
+    https -> HTTP 200  redirect=
+    http  -> HTTP 200  redirect=
+    title -> <title>Parked Domain name on Hostinger DNS system</title>
 --- http, and www ---
 http://mysheher.com  -> HTTP 200 -> 
 https://www          -> HTTP 301 -> https://mysheher.com/
