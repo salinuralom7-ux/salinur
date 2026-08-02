@@ -29,6 +29,31 @@ jobs:
             || echo "strict https failed -> certificate not trusted yet" >> $R
           echo "--- via github.io ---" >> $R
           curl -sS -o /dev/null -m 15 -w "github.io redirect -> HTTP %{http_code} -> %{redirect_url}\n" https://salinuralom7-ux.github.io/salinur/ >> $R 2>&1 || true
+
+          # A 200 only says something answered. These say the thing answering
+          # is the current build: the right name in the title, the canonical
+          # pointing at this domain rather than the old one, and the icons
+          # actually fetchable at the ?v= the page asks for — a 404 there is
+          # how a rename ships a blank square to every home screen.
+          echo "--- is it the current build? ---" >> $R
+          page=$(curl -sS -m 20 https://mysheher.com/ 2>/dev/null || echo "")
+          title=$(printf '%s' "$page" | grep -o '<title>[^<]*</title>' | head -1)
+          echo "title: ${title:-COULD NOT READ}" >> $R
+          printf '%s' "$page" | grep -q 'rel="canonical" href="https://mysheher.com/"' \
+            && echo "canonical: mysheher.com" >> $R \
+            || echo "canonical: WRONG or missing" >> $R
+          printf '%s' "$page" | grep -q 'nearse\.in' \
+            && echo "old domain: STILL PRESENT in the page" >> $R \
+            || echo "old domain: gone from the page" >> $R
+          for f in icons/icon-192.png?v=5 icons/logo.png?v=5 icons/wordmark.png?v=5 \
+                   manifest.webmanifest sw.js privacy/ terms/ delete-account/; do
+            curl -sS -o /dev/null -m 15 -w "  $f -> HTTP %{http_code}\n" "https://mysheher.com/$f" >> $R 2>&1 || true
+          done
+
+          echo "--- http, and www ---" >> $R
+          curl -sS -o /dev/null -m 15 -w "http://mysheher.com  -> HTTP %{http_code} -> %{redirect_url}\n" http://mysheher.com/ >> $R 2>&1 || true
+          curl -sS -o /dev/null -m 15 -w "https://www          -> HTTP %{http_code} -> %{redirect_url}\n" https://www.mysheher.com/ >> $R 2>&1 \
+            || echo "https://www          -> failed (certificate may not cover www yet)" >> $R
           cat $R
       - name: Commit report
         if: always()
