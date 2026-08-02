@@ -45,7 +45,12 @@ jobs:
           printf '%s' "$page" | grep -q 'nearse\.in' \
             && echo "old domain: STILL PRESENT in the page" >> $R \
             || echo "old domain: gone from the page" >> $R
-          for f in icons/icon-192.png?v=5 icons/logo.png?v=5 icons/wordmark.png?v=5 \
+          # Read the icon URLs out of the page rather than naming them here.
+          # This list said ?v=5 while the page had moved to ?v=6, and it still
+          # reported 200 — GitHub Pages ignores a query string, so the check
+          # was passing on a URL nobody asks for. Asking for exactly what the
+          # page asks for is the only version of this check worth having.
+          for f in $(printf '%s' "$page" | grep -oE 'icons/[a-z0-9-]+\.png\?v=[0-9]+' | sort -u) \
                    manifest.webmanifest sw.js privacy/ terms/ delete-account/; do
             curl -sS -o /dev/null -m 15 -w "  $f -> HTTP %{http_code}\n" "https://mysheher.com/$f" >> $R 2>&1 || true
           done
