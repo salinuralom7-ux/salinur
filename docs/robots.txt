@@ -7,4 +7,4 @@ Allow: /
 Disallow: /functions/
 Disallow: /store/
 
-Sitemap: https://nearse.in/sitemap.xml
+Sitemap: https://mysheher.com/sitemap.xml

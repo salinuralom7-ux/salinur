@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://nearse.in/</loc>
+    <loc>https://mysheher.com/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://nearse.in/about/</loc>
+    <loc>https://mysheher.com/about/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://nearse.in/privacy/</loc>
+    <loc>https://mysheher.com/privacy/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://nearse.in/terms/</loc>
+    <loc>https://mysheher.com/terms/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://nearse.in/cancellation/</loc>
+    <loc>https://mysheher.com/cancellation/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://nearse.in/delete-account/</loc>
+    <loc>https://mysheher.com/delete-account/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

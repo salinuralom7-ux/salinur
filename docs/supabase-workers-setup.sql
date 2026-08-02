@@ -4842,8 +4842,13 @@ create table if not exists public.photo_hosts (pattern text primary key);
 insert into public.photo_hosts (pattern) values
   ('%.supabase.co'),      -- Supabase Storage, the current path
   ('%.r2.dev'),           -- Cloudflare R2 public bucket
+  -- Every host the photos have ever been served from, in rename order. These
+  -- are additive on purpose: a profile photo uploaded under an old host still
+  -- has that host baked into its stored URL, and dropping the row here would
+  -- blank the photo on every one of those profiles.
   ('img.repto.in'),
-  ('img.nearse.in')
+  ('img.nearse.in'),
+  ('img.mysheher.com')
 on conflict (pattern) do nothing;
 alter table public.photo_hosts enable row level security;
 -- no select policy: nothing in the app needs to read it

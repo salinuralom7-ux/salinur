@@ -25,7 +25,7 @@ visits. That covers iOS users on day one while you build a proper iOS app.
 
 ### What the app actually is
 
-A Trusted Web Activity: a thin Android shell that opens nearse.in full
+A Trusted Web Activity: a thin Android shell that opens mysheher.com full
 screen, with no browser chrome. Google supports this officially — it is how
 Twitter Lite, Trivago and many others ship. Updates to the site are updates
 to the app; you only re-upload the bundle when the shell itself changes.
@@ -48,9 +48,9 @@ On any machine with Node 18+ and a JDK:
 
 ```bash
 npm i -g @bubblewrap/cli
-mkdir nearse-android && cd nearse-android
+mkdir mysheher-android && cd mysheher-android
 cp ../store/twa-manifest.json ./twa-manifest.json
-bubblewrap init --manifest https://nearse.in/manifest.webmanifest
+bubblewrap init --manifest https://mysheher.com/manifest.webmanifest
 bubblewrap build
 ```
 
@@ -71,7 +71,7 @@ looks broken.
 2. Paste it into `docs/.well-known/assetlinks.json`, replacing
    `REPLACE_WITH_YOUR_PLAY_APP_SIGNING_SHA256_FINGERPRINT`.
 3. Commit and push. Confirm it is live:
-   `curl https://nearse.in/.well-known/assetlinks.json`
+   `curl https://mysheher.com/.well-known/assetlinks.json`
 4. Verify with
    <https://developers.google.com/digital-asset-links/tools/generator>.
 
@@ -95,14 +95,20 @@ Graphics are already generated and live in `docs/store/`:
 Regenerate them any time the app changes:
 `node tests/make-store-assets.js`.
 
+The icon itself is not hand-made. Every square icon, the header mark and the
+wordmark are cut from `brand/` by `python3 tools/make-brand.py`, so the icon on
+a phone can never drift from the logo in the app. Change the artwork, re-run
+that, then re-run the store assets — and bump the `?v=` on the icon URLs, or
+already-installed phones keep showing the old icon.
+
 ### Step 5 — URLs Play will ask for
 
 | Field | Value |
 |---|---|
-| Privacy policy | `https://nearse.in/privacy/` |
-| Account deletion | `https://nearse.in/delete-account/` |
+| Privacy policy | `https://mysheher.com/privacy/` |
+| Account deletion | `https://mysheher.com/delete-account/` |
 | Support email | `hello.mysheher@gmail.com` |
-| Website | `https://nearse.in/` |
+| Website | `https://mysheher.com/` |
 
 The account deletion URL is mandatory for any app that lets people create an
 account, and it must work without signing in. Ours does.
@@ -159,7 +165,7 @@ npx cap add ios
 npx cap open ios        # requires macOS + Xcode
 ```
 
-Point the app at the live site with `server.url = "https://nearse.in"` in
+Point the app at the live site with `server.url = "https://mysheher.com"` in
 `capacitor.config.json`, or bundle `docs/` and let it run locally — bundling
 is better for review, because Apple dislikes an app whose entire content is
 remote.
@@ -172,8 +178,8 @@ Apple Developer Program membership.
 
 | Field | Value |
 |---|---|
-| Privacy policy URL | `https://nearse.in/privacy/` |
-| Support URL | `https://nearse.in/about/#contact` |
+| Privacy policy URL | `https://mysheher.com/privacy/` |
+| Support URL | `https://mysheher.com/about/#contact` |
 | Account deletion | Must be reachable in-app — it is, under *My profile* |
 | Age rating | 17+ — see the rating notes in `play-listing.md` |
 | Encryption | Uses HTTPS only, so answer **exempt** to the export question |

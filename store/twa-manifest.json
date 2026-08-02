@@ -1,6 +1,6 @@
 {
   "packageId": "in.mysheher.app",
-  "host": "nearse.in",
+  "host": "mysheher.com",
   "name": "MySheher — Local Workers in Guwahati",
   "launcherName": "MySheher",
   "display": "standalone",
@@ -14,8 +14,8 @@
   "backgroundColor": "#0C0A07",
   "enableNotifications": true,
   "startUrl": "/?src=app",
-  "iconUrl": "https://nearse.in/icons/icon-512.png?v=4",
-  "maskableIconUrl": "https://nearse.in/icons/maskable-512.png?v=4",
+  "iconUrl": "https://mysheher.com/icons/icon-512.png?v=5",
+  "maskableIconUrl": "https://mysheher.com/icons/maskable-512.png?v=5",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",
@@ -28,17 +28,17 @@
       "name": "Find a worker",
       "shortName": "Find",
       "url": "/?src=app#find",
-      "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=4"
+      "chosenIconUrl": "https://mysheher.com/icons/icon-192.png?v=5"
     },
     {
       "name": "Register as a worker",
       "shortName": "Register",
       "url": "/?src=app#work",
-      "chosenIconUrl": "https://nearse.in/icons/icon-192.png?v=4"
+      "chosenIconUrl": "https://mysheher.com/icons/icon-192.png?v=5"
     }
   ],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://nearse.in/manifest.webmanifest",
+  "webManifestUrl": "https://mysheher.com/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {},
   "alphaDependencies": {
@@ -47,7 +47,7 @@
   "enableSiteSettingsShortcut": true,
   "isChromeOSOnly": false,
   "isMetaQuest": false,
-  "fullScopeUrl": "https://nearse.in/",
+  "fullScopeUrl": "https://mysheher.com/",
   "minSdkVersion": 23,
   "additionalTrustedOrigins": [],
   "retainedBundles": [],

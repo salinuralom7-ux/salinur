@@ -22,6 +22,7 @@ node tests/test-ks.js
 | `test-browse.js` | The browse screen: one category control, removable filters |
 | `sweep.js` | Screenshots every screen and reports words / controls / height per screen |
 | `test-menu.js` | The side menu, the combined chat list, and the one-button photo step |
+| `test-waiting.js` | What counts as waiting on you, and the red badge that says so |
 | `test-pages.js` | About, privacy, terms, cancellations, account deletion — links, styling, overflow |
 | `test-pwa.js` | Manifest, icons, offline shell, install prompt |
 | `test-landing.js` | Landing page across five viewports, reduced motion |
