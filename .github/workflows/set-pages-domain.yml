@@ -1,0 +1,86 @@
+name: Set the Pages custom domain
+
+# The custom domain for a Pages site published by Actions cannot be set by
+# committing a CNAME file — GitHub reads it from the repository's Pages
+# configuration, and only the API or the Settings page writes that. This
+# workflow writes it through the API using the token Actions already has,
+# so nobody has to sign in to github.com on a phone to change one field.
+#
+# Run it from the Actions tab, or with the GitHub CLI/API. It is safe to run
+# again: setting the same domain twice is a no-op.
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: "Custom domain, e.g. mysheher.com"
+        required: true
+        default: "mysheher.com"
+      enforce_https:
+        description: "Also turn on Enforce HTTPS (only works once the certificate exists)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  pages: write
+
+jobs:
+  set-domain:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show what Pages thinks the domain is now
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "--- before ---"
+          gh api "repos/${{ github.repository }}/pages" \
+            --jq '{cname, html_url, status, https_certificate: .https_certificate.state, https_enforced}' || true
+
+      - name: Set the custom domain
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -o pipefail
+          # A 204 means it took. Anything else and we want to see the body.
+          code=$(gh api -X PUT "repos/${{ github.repository }}/pages" \
+                   -f "cname=${{ inputs.domain }}" \
+                   --include 2>&1 | tee /tmp/put.txt | head -1)
+          echo "$code"
+          if grep -qE "HTTP/[0-9.]+ 20[04]" /tmp/put.txt; then
+            echo "custom domain set to ${{ inputs.domain }}"
+          else
+            echo "::error::could not set the domain — response above"
+            cat /tmp/put.txt
+            exit 1
+          fi
+
+      - name: Wait for the certificate, then enforce HTTPS
+        if: ${{ inputs.enforce_https }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # GitHub issues the certificate itself once DNS verifies. It is
+          # usually minutes, occasionally an hour, so this waits a while and
+          # then gives up quietly rather than failing the run — the domain is
+          # already set by this point, which is the part that matters.
+          for i in $(seq 1 30); do
+            state=$(gh api "repos/${{ github.repository }}/pages" \
+                      --jq '.https_certificate.state // "none"' 2>/dev/null || echo none)
+            echo "attempt $i: certificate state = $state"
+            if [ "$state" = "approved" ]; then
+              gh api -X PUT "repos/${{ github.repository }}/pages" -F "https_enforced=true" \
+                && echo "Enforce HTTPS is on" \
+                && break
+            fi
+            sleep 60
+          done
+
+      - name: Report where it ended up
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "--- after ---"
+          gh api "repos/${{ github.repository }}/pages" \
+            --jq '{cname, html_url, status, https_certificate: .https_certificate.state, https_enforced}'
