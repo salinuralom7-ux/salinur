@@ -49,7 +49,7 @@ Create a profile in about two minutes. Choose up to three services, set your own
 START YOUR 30 DAYS FREE
 Free for the first 30 days from the day your profile is approved. We ask for no card, no UPI mandate and no payment details of any kind — there is nothing that can auto-charge you and nothing to cancel.
 
-WHAT REPTO IS NOT
+WHAT MYSHEHER IS NOT
 We are a place to find each other, not an employer. Workers are independent — they are not our staff and we do not supervise their work. We are not a party to your agreement, and we do not handle payments. Our review confirms a profile looks genuine; it is not a police verification or a background check. Please use ordinary good sense, especially when inviting someone into your home.
 
 YOUR DATA
