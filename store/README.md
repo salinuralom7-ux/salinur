@@ -66,17 +66,36 @@ bubblewrap build
 Without this the app opens with a browser address bar across the top, which
 looks broken.
 
-1. In Play Console → **Test and release → Setup → App integrity**, copy the
-   **SHA-256 certificate fingerprint** under *App signing key certificate*.
-2. Paste it into `docs/.well-known/assetlinks.json`, replacing
-   `REPLACE_WITH_YOUR_PLAY_APP_SIGNING_SHA256_FINGERPRINT`.
+`assetlinks.json` holds **two** fingerprints, and both are needed:
+
+| Fingerprint | Where it comes from | Why |
+|---|---|---|
+| App signing key | Play Console → App integrity → *App signing key certificate* | Play re-signs the bundle with its own key. This is what installs from the store are signed with. |
+| Upload key | the same page, *Upload key certificate* — also printed in the PWABuilder zip | Signs what you upload, and what a tester installs from a direct APK. |
+
+Listing only the first breaks sideloaded test builds; listing only the second
+breaks every install from the store. Google's own tooling emits both.
+
+1. Copy both from Play Console → **Test and release → Setup → App integrity**.
+2. Put them in `docs/.well-known/assetlinks.json`, replacing
+   `REPLACE_WITH_PLAY_APP_SIGNING_SHA256` and `REPLACE_WITH_UPLOAD_KEY_SHA256`.
 3. Commit and push. Confirm it is live:
    `curl https://mysheher.com/.well-known/assetlinks.json`
 4. Verify with
    <https://developers.google.com/digital-asset-links/tools/generator>.
 
-The fingerprint from Play App Signing is the one that matters, not the one
-from your local keystore — Play re-signs the bundle.
+### The signing key, which is the one thing you cannot re-create
+
+PWABuilder's zip contains `signing.keystore` and a `signing-key-info.txt`
+holding its password. Treat both the way you treat a bank PIN:
+
+* back them up somewhere you will still have in five years, off the phone;
+* never commit them to this repository, which is public;
+* never paste them into a chat, an email, or a screenshot.
+
+If the upload key does leak, it is recoverable — Play lets you register a new
+upload key. The *app signing* key held by Google is the one that could never
+be replaced, which is exactly why letting Play hold it is the right choice.
 
 ### Step 4 — Fill in the listing
 
@@ -160,7 +179,7 @@ Build these before submitting, not after a rejection:
 
 ```bash
 npm i @capacitor/core @capacitor/cli
-npx cap init MySheher in.mysheher.app --web-dir=docs
+npx cap init MySheher com.mysheher.app --web-dir=docs
 npx cap add ios
 npx cap open ios        # requires macOS + Xcode
 ```
