@@ -427,14 +427,6 @@ body.menu-open{overflow:hidden}
   color:var(--ink-2);margin:13px auto 0;font-size:.95rem;line-height:1.55;
   max-width:34ch;text-wrap:balance;font-weight:500;
 }
-/* the live-in-Guwahati pill gets a real pulse, not a static dot */
-.pulse{position:relative;width:7px;height:7px;flex:0 0 auto}
-.pulse::before,.pulse::after{
-  content:"";position:absolute;inset:0;border-radius:50%;background:var(--brand-2);
-}
-.pulse::after{animation:ping 2.4s cubic-bezier(0,0,.2,1) infinite}
-@keyframes ping{0%{transform:scale(1);opacity:.75}70%,100%{transform:scale(3.2);opacity:0}}
-
 /* ---------- figures ----------
    These sit below the ticker rather than inside the hero, so they carry
    their own centring — .landing's text-align does not reach them here. */
@@ -831,12 +823,6 @@ body.menu-open{overflow:hidden}
   background:var(--surface-2);color:var(--muted);cursor:default;
   border-style:dashed;
 }
-.city-pill{
-  display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line-strong);
-  background:var(--surface);border-radius:999px;padding:6px 14px;
-  font-size:.78rem;font-weight:700;color:var(--ink-2);letter-spacing:-.01em;
-}
-.city-pill svg{color:var(--brand-2)}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
 .grid-2 .full{grid-column:1/-1}
 @media(max-width:540px){.grid-2{grid-template-columns:1fr}}
@@ -2404,10 +2390,6 @@ footer a{color:var(--ink-2)}
     <div class="aurora" aria-hidden="true"></div>
     <div class="motes" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
     <div class="wrap landing">
-      <span class="city-pill reveal" data-r="1">
-        <span class="pulse" aria-hidden="true"></span>
-        Now live in Guwahati
-      </span>
       <h1 class="reveal" data-r="2">Trusted people for every job,<br><em>right where you are.</em></h1>
       <p class="sub reveal" data-r="3">They set the price. We take no commission.</p>
 
