@@ -50,25 +50,24 @@ jobs:
             curl -sS -o /dev/null -m 15 -w "  $f -> HTTP %{http_code}\n" "https://mysheher.com/$f" >> $R 2>&1 || true
           done
 
-          # mysheher.com resolves to five addresses; four are GitHub and one is
-          # Hostinger's. A browser picks one and caches it, so "it works for me"
-          # proves nothing about the fifth. Ask that address directly, with the
-          # right Host header, and see what a visitor who lands on it gets.
-          echo "--- what the extra address actually serves ---" >> $R
-          for ip in 185.199.108.153 2.57.91.91; do
-            echo "  via $ip:" >> $R
-            curl -sS -o /dev/null -m 15 --resolve "mysheher.com:443:$ip" \
-              -w "    https -> HTTP %{http_code}  redirect=%{redirect_url}\n" \
-              https://mysheher.com/ >> $R 2>&1 \
-              || echo "    https -> FAILED (tls or connection refused)" >> $R
-            curl -sS -o /dev/null -m 15 --resolve "mysheher.com:80:$ip" \
-              -w "    http  -> HTTP %{http_code}  redirect=%{redirect_url}\n" \
-              http://mysheher.com/ >> $R 2>&1 \
-              || echo "    http  -> FAILED" >> $R
-            t=$(curl -sS -m 15 --resolve "mysheher.com:80:$ip" http://mysheher.com/ 2>/dev/null \
+          # The invariant that actually matters: EVERY address the domain
+          # resolves to must serve MySheher. A stray one does not fail — it
+          # answers 200 with somebody else's page, so no browser retries, and
+          # at a 4-hour TTL the visitor is stuck with it. Resolve the name and
+          # ask each address in turn, rather than hardcoding the one we already
+          # know about; that way the next stray is caught too.
+          echo "--- every address the domain resolves to ---" >> $R
+          bad=0
+          for ip in $(getent ahostsv4 mysheher.com | awk '{print $1}' | sort -u); do
+            t=$(curl -sS -m 15 --resolve "mysheher.com:443:$ip" https://mysheher.com/ 2>/dev/null \
                 | grep -o "<title>[^<]*</title>" | head -1)
-            echo "    title -> ${t:-none}" >> $R
+            case "$t" in
+              *MySheher*) echo "  $ip -> MySheher" >> $R ;;
+              *)          echo "  $ip -> NOT MySheher: ${t:-no response}" >> $R; bad=1 ;;
+            esac
           done
+          [ $bad -eq 0 ] && echo "  all addresses serve MySheher" >> $R \
+                         || echo "  WARNING: at least one address serves something else" >> $R
 
           echo "--- http, and www ---" >> $R
           curl -sS -o /dev/null -m 15 -w "http://mysheher.com  -> HTTP %{http_code} -> %{redirect_url}\n" http://mysheher.com/ >> $R 2>&1 || true
