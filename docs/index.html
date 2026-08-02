@@ -411,7 +411,7 @@ body.menu-open{overflow:hidden}
   font-style:normal;
   background:linear-gradient(100deg,
     var(--brand-2) 0%, var(--brand-2) 30%,
-    #FFF3C4 44%, #FFFDF6 50%, #FFF3C4 56%,
+    #FFF3C4 44%, #FFFFFF 50%, #FFF3C4 56%,
     var(--brand-2) 70%, var(--brand-2) 100%);
   background-size:300% 100%;
   -webkit-background-clip:text;background-clip:text;color:transparent;
@@ -715,7 +715,7 @@ body.menu-open{overflow:hidden}
 .cta-arrow{flex:0 0 auto}
 .cta.primary{
   position:relative;color:var(--brand-ink);
-  background:linear-gradient(168deg,#F2CE79 0%,var(--brand) 52%,#D2A337 100%);
+  background:linear-gradient(168deg,#FFDD57 0%,var(--brand) 52%,#C79600 100%);
   box-shadow:0 1px 0 rgba(255,255,255,.20) inset, 0 14px 34px -6px rgba(var(--brand-rgb),.30),
              0 2px 8px rgba(0,0,0,.35);
 }
@@ -785,7 +785,7 @@ body.menu-open{overflow:hidden}
 
 /* ---------- worker banner ---------- */
 .banner{
-  background:linear-gradient(160deg,#2A2010,#151007);color:var(--ink);padding:clamp(44px,8vw,72px) 0;text-align:center;
+  background:linear-gradient(160deg,#26262E,#15151A);color:var(--ink);padding:clamp(44px,8vw,72px) 0;text-align:center;
   border-bottom:1px solid var(--line);
 }
 .banner h1{
@@ -826,7 +826,7 @@ body.menu-open{overflow:hidden}
 .field input:focus,.field select:focus,.field textarea:focus{
   border-color:var(--brand);box-shadow:0 0 0 3px rgba(var(--brand-rgb),.26);
 }
-.field input::placeholder,.field textarea::placeholder{color:#7B7360}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted)}
 .field input.locked{
   background:var(--surface-2);color:var(--muted);cursor:default;
   border-style:dashed;
@@ -1205,20 +1205,20 @@ body.menu-open{overflow:hidden}
   aspect-ratio:85.6/54;                      /* CR80, the standard ID card */
   container-type:inline-size;
   border-radius:2.1cqw;overflow:hidden;color:#FFFFFF;
-  background:linear-gradient(150deg,#FFDD57 0%,#FFC300 44%,#C9993A 100%);
+  background:linear-gradient(150deg,#FFDD57 0%,#FFC300 44%,#C79600 100%);
   padding:0.8cqw;                            /* this padding IS the gold frame */
   box-shadow:0 22px 50px rgba(0,0,0,.55);
 }
 /* the black face, inset inside the gold frame */
 .bd-face{
   position:relative;width:100%;height:100%;border-radius:1.5cqw;overflow:hidden;
-  background:linear-gradient(158deg,#141210 0%,#0A0806 52%,#0F0C08 100%);
+  background:linear-gradient(158deg,#1D1D24 0%,#15151A 52%,#1A1A20 100%);
   display:flex;flex-direction:column;
 }
 /* the gold triangle bitten out of the top-right corner */
 .bd-chamfer{
   position:absolute;top:0;right:0;width:7cqw;height:7cqw;
-  background:linear-gradient(200deg,#FFDD57 0%,#FFC300 55%,#D2A340 100%);
+  background:linear-gradient(200deg,#FFDD57 0%,#FFC300 55%,#C79600 100%);
   clip-path:polygon(100% 0, 100% 100%, 0 0);
 }
 /* the mark, very faint, sitting behind the QR column */
@@ -1260,7 +1260,7 @@ body.menu-open{overflow:hidden}
 .bd-idstatus.approved{color:var(--brand-quiet)}
 .bd-idstatus.approved::before{content:"✓ ";color:var(--ok);font-weight:800}
 .bd-idstatus.pending{background:rgba(var(--warn-rgb),.18);color:#F0AE73;border:.12cqw solid rgba(var(--warn-rgb),.55);padding:.45cqw 1.1cqw}
-.bd-idstatus.rejected{background:rgba(var(--danger-rgb),.18);color:#F09AA6;border:.12cqw solid rgba(var(--danger-rgb),.55);padding:.45cqw 1.1cqw}
+.bd-idstatus.rejected{background:rgba(var(--danger-rgb),.18);color:#FFB0AB;border:.12cqw solid rgba(var(--danger-rgb),.55);padding:.45cqw 1.1cqw}
 
 /* ---- the three columns ---- */
 .bd-main{flex:1;display:flex;gap:3cqw;padding-top:1.8cqw;min-height:0}
@@ -1324,13 +1324,13 @@ body.menu-open{overflow:hidden}
 /* ---- the gold footer, broken by a black diagonal ---- */
 .bd-foot{
   position:absolute;left:0;right:0;bottom:0;z-index:3;height:5.4cqw;
-  background:linear-gradient(150deg,#FFDD57 0%,#FFC300 48%,#D2A340 100%);
+  background:linear-gradient(150deg,#FFDD57 0%,#FFC300 48%,#C79600 100%);
   display:flex;align-items:center;justify-content:space-between;
   padding:0 4cqw;overflow:hidden;
 }
 .bd-foot::before{                            /* the diagonal slab */
   content:"";position:absolute;top:0;bottom:0;right:19cqw;width:9cqw;
-  background:#0A0806;transform:skewX(-24deg);
+  background:#15151A;transform:skewX(-24deg);
 }
 .bd-tag,.bd-site{position:relative;z-index:2;color:#171200;white-space:nowrap}
 .bd-tag{font-size:1.65cqw;font-weight:600;letter-spacing:.24em}
@@ -1803,7 +1803,7 @@ body.in-chat > .demo-note{display:none}
 .searchbar:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(var(--brand-rgb),.24)}
 .searchbar svg{color:var(--muted);flex:0 0 auto}
 .searchbar input{border:none;outline:none;background:transparent;width:100%;font-size:1.02rem}
-.searchbar input::placeholder{color:#7B7360}
+.searchbar input::placeholder{color:var(--muted)}
 .searchbar .clear{
   border:none;background:none;color:var(--muted);font-size:1rem;padding:2px 4px;display:none;
 }
@@ -1968,7 +1968,7 @@ body.in-chat > .demo-note{display:none}
   text-decoration:underline;text-underline-offset:2px;padding:0;
 }
 .skeleton{
-  height:98px;border-radius:var(--r);background:linear-gradient(90deg,#1D1D24,#241E13,#1D1D24);
+  height:98px;border-radius:var(--r);background:linear-gradient(90deg,#1D1D24,#2C2C36,#1D1D24);
   background-size:200% 100%;animation:sk 1.3s ease-in-out infinite;
 }
 @keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
@@ -2061,7 +2061,7 @@ body.in-chat > .demo-note{display:none}
   display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
 }
 .rating-box .t{font-size:.85rem;color:var(--muted);font-weight:600}
-.pick-stars{display:flex;gap:4px;font-size:1.35rem;color:#3E3728;cursor:pointer;line-height:1}
+.pick-stars{display:flex;gap:4px;font-size:1.35rem;color:#3A3A45;cursor:pointer;line-height:1}
 .pick-stars span:hover,.pick-stars span.lit{color:var(--gold)}
 
 /* ---------- toast + footer ---------- */
@@ -2304,7 +2304,7 @@ footer a{color:var(--ink-2)}
   .motes{display:none}
   .landing h1 em{
     animation:none !important;
-    background:linear-gradient(100deg,var(--brand-2) 12%,#FBEBC0 88%);
+    background:linear-gradient(100deg,var(--brand-2) 12%,#FFF3C4 88%);
     -webkit-background-clip:text;background-clip:text;
   }
 }
@@ -3892,12 +3892,17 @@ function closeModal(id){
 function avatarOf(w, small){
   if(small && w.thumb) return w.thumb;
   if(w.selfie) return w.selfie;
-  /* Warm sand through to gold, so a placeholder reads as part of the brand.
-     These used to be indigo, left over from the palette before the gold mark. */
-  const hue = 34 + ([...(w.name||"N")].reduce((a,c)=>(a*31+c.charCodeAt(0))%18, 0));
+  /* Two families, the palette's own: yellow and teal. The hue used to be
+     locked to 34–51 at 46% saturation, which is the khaki band — every
+     placeholder came out the same olive, and on a neutral background it read
+     as dirt rather than as brand. Splitting the seed across the two accent
+     hues gives faces that are told apart at a glance and still belong to the
+     app. The tile stays dark so the letter carries the colour. */
+  const seed = [...(w.name||"N")].reduce((a,c)=>(a*31+c.charCodeAt(0))%36, 0);
+  const hue = seed < 18 ? 40 + seed : 164 + (seed - 18);
   const letter = (w.name||"N").trim().charAt(0).toUpperCase();
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="160" height="160" fill="hsl(${hue},46%,26%)"/><text x="80" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="72" fill="hsl(${hue},72%,72%)">${letter}</text></svg>`);
+    `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="160" height="160" fill="hsl(${hue},26%,19%)"/><text x="80" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="72" fill="hsl(${hue},78%,70%)">${letter}</text></svg>`);
 }
 function starsOf(w){
   const n = w.rating_count || 0;
@@ -7539,7 +7544,7 @@ async function cardImageBlob(scale){
      corners, and a transparent PNG shared on WhatsApp gets composited against
      whatever that client feels like — usually black, sometimes white. It also
      compresses considerably better without an alpha channel. */
-  ctx.fillStyle = "#0A0806";
+  ctx.fillStyle = "#15151A";
   ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.scale(S, S);
   ctx.drawImage(img, 0, 0);
