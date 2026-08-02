@@ -21,6 +21,13 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
+  /* The notification permission sheet opens over everything on a first visit
+     and keeps asking until it is answered — that is deliberate, and it means
+     it sits on top of the menu button this file is here to click. The gate is
+     the real permission, not a localStorage flag, so the way to be a returning
+     visitor is to have answered: grant it. test-notify-ask.js is where the
+     sheet itself is checked. */
+  await ctx.grantPermissions(['notifications'], { origin: 'http://localhost:8816' });
   await page.goto('http://localhost:8816/');
   await page.waitForTimeout(1200);
 

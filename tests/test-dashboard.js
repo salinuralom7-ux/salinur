@@ -33,7 +33,12 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   await page.goto('http://localhost:8817/#admin');
   await page.waitForTimeout(1600);
   ok('Admin opens', await page.locator('#scr-admin.on').count() === 1);
-  ok('Three tabs', await page.locator('.admin-tabs .tab').count() === 3,
+  /* Dashboard, Review, Activity, and Alerts — Alerts arrived with push and
+     this count was never moved with it. Naming them rather than counting
+     them, so the next tab fails the assertion with the reason on screen. */
+  ok('Four tabs, in order',
+     (await page.locator('.admin-tabs .tab').allTextContents()).join(' | ')
+       === 'Dashboard | Review | Activity | Alerts',
      (await page.locator('.admin-tabs .tab').allTextContents()).join(' | '));
   ok('Dashboard is the default tab', await page.locator('.admin-tabs .tab.on').innerText() === 'Dashboard');
 

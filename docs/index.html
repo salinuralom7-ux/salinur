@@ -517,13 +517,54 @@ body.menu-open{overflow:hidden}
 .ml-ico svg{width:19px;height:19px}
 .ml-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .ml-text b{font-size:.93rem;font-weight:700;letter-spacing:-.01em}
-.ml-text i{font-style:normal;font-size:.78rem;color:var(--muted);line-height:1.45}
+/* One line, always. The subtitle changes when something is waiting, and a
+   card that gets taller as it turns red moves everything under it. */
+.ml-text i{
+  font-style:normal;font-size:.78rem;color:var(--muted);line-height:1.45;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 .ml-n{
   flex:0 0 auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;
   background:var(--brand);color:var(--brand-ink);
   font-size:.72rem;font-weight:800;font-style:normal;display:grid;place-items:center;
 }
 .mine-link .cta-arrow{flex:0 0 auto;color:var(--muted)}
+
+/* ---------- something is waiting on you ----------
+   This card used to look identical whether nothing had happened or a request
+   was sitting unanswered — and the badge on it was gold, on a page that is
+   entirely gold, which is not a signal at all. Red is, and it is the only red
+   on this screen. The whole row lifts, not just the badge, because the badge
+   is 20px and the thing being missed is the reason the app exists. */
+.mine-link.waiting{
+  border-color:rgba(232,112,127,.5);
+  background:linear-gradient(180deg,rgba(232,112,127,.10),rgba(232,112,127,.04));
+}
+.mine-link.waiting:hover{border-color:var(--danger);background:rgba(232,112,127,.13)}
+.mine-link.waiting .ml-ico{background:rgba(232,112,127,.16);color:var(--danger)}
+.mine-link.waiting .ml-text i{color:var(--danger);font-weight:600}
+.mine-link.waiting .cta-arrow{color:var(--danger)}
+.ml-n.urgent{
+  background:var(--danger);color:#2A0C11;
+  animation:waiting-pulse 1.7s cubic-bezier(.4,0,.6,1) infinite;
+}
+/* A ring that swells and fades rather than the badge itself blinking: a
+   badge that disappears every second is unreadable, and a number you cannot
+   read is worse than no number. */
+@keyframes waiting-pulse{
+  0%   { box-shadow:0 0 0 0 rgba(232,112,127,.6) }
+  70%  { box-shadow:0 0 0 8px rgba(232,112,127,0) }
+  100% { box-shadow:0 0 0 0 rgba(232,112,127,0) }
+}
+/* The menu dot and the drawer row carry the same red, so the three places
+   that report this can never tell three different stories. */
+.menu-dot.urgent{background:var(--danger);animation:waiting-pulse 1.7s cubic-bezier(.4,0,.6,1) infinite}
+.row-n.urgent{background:var(--danger);color:#2A0C11}
+/* Somebody who has asked their phone to stop animating things still gets the
+   red — they just do not get the pulse. */
+@media(prefers-reduced-motion:reduce){
+  .ml-n.urgent,.menu-dot.urgent{animation:none}
+}
 
 .quick-lead{
   font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
@@ -7686,6 +7727,10 @@ async function refreshChatHead(){
 function paintChatHead(){
   const t = chatThread; if(!t) return;
   const st = THREAD_STATE[t.status] || THREAD_STATE.requested;
+  /* The status is on screen, in words, in front of them. That is seen. This
+     runs on every poll, so a change that lands while they are reading is
+     marked the moment it appears rather than the next time they open the app. */
+  markSeen(t.code, t.status);
   $("chatTitle").textContent = chatSide === "customer" ? (t.worker_name || "Worker") : (t.customer_name || "Customer");
   $("chatSub").textContent = [t.skill, t.detail].filter(Boolean).join(" · ");
   const badge = $("chatState");
@@ -7974,7 +8019,7 @@ async function renderChats(){
   const host = $("chatsCard");
   host.innerHTML = `<h2>Bookings &amp; chats</h2><div class="skeleton"></div>`;
   const rows = await myConversations();
-  paintChatBadge(rows.reduce((n, t) => n + (Number(t.unread) || 0), 0));
+  paintChatBadge(rows);
 
   if(!rows.length){
     host.innerHTML = `<h2>Bookings &amp; chats</h2>
@@ -8003,6 +8048,15 @@ async function renderChats(){
         </span>
       </button>`;
     }).join("");
+
+  /* Every row above shows its own status in words, so this list is where a
+     status change is seen. Recording that here — and not on the home card —
+     means the red clears when somebody has actually looked at it, rather than
+     because they walked past it. Anything still waiting on an answer stays
+     red: needsYourAnswer never consults this map. */
+  const map = seenMap();
+  rows.forEach(t => { if(t.code && t.status) map[t.code] = t.status; });
+  writeSeen(map);
 }
 
 /* Both sides, merged and sorted. Used by the chats screen and by the unread
@@ -8029,6 +8083,63 @@ async function myConversations(){
   ].sort((a, b) => b.when - a.when);
 }
 
+/* ---------- what is actually waiting on you ----------
+   Unread messages used to be the only thing that lit anything up, so the two
+   moments that matter most both arrived in silence: a request sitting
+   unanswered on a worker's phone, and the yes-or-no coming back to the
+   customer who sent it. A status change is news too, and news nobody has seen
+   yet is exactly what a notification badge is for.
+
+   Seen is tracked here rather than on the server. It is a per-device fact —
+   the same person on a laptop has not read anything just because they read it
+   on their phone — and it needs no schema change, no new RPC, and no entry in
+   the function allow-list. */
+const SEENSTORE = "repto_seen_v1";
+const seenMap = () => { try{ return JSON.parse(localStorage.getItem(SEENSTORE) || "{}"); }catch(e){ return {}; } };
+function writeSeen(map){
+  /* bounded: 80 conversations is far past anybody's real history, and an
+     unbounded object in localStorage eventually throws on quota */
+  const keys = Object.keys(map);
+  if(keys.length > 80) keys.slice(0, keys.length - 80).forEach(k => delete map[k]);
+  try{ localStorage.setItem(SEENSTORE, JSON.stringify(map)); }catch(e){}
+}
+function markSeen(code, status){
+  if(!code || !status) return;
+  const map = seenMap();
+  if(map[code] === status) return;
+  map[code] = status; writeSeen(map);
+}
+
+/* A status the other side changed, which you have not looked at since.
+   "requested" is not here: for the customer it is the state they just created
+   themselves, and for the worker it is caught by the action rule below. */
+const NEWS_STATES = ["accepted","declined","cancelled","expired","working","done","closed"];
+
+/* Three separate reasons, deliberately kept apart: something to read,
+   something only you can do, and something that changed while you were away. */
+function needsYou(t, seen){
+  if(Number(t.unread) > 0) return true;
+  if(needsYourAnswer(t)) return true;
+  return NEWS_STATES.includes(t.status) && seen[t.code] !== t.status;
+}
+function needsYourAnswer(t){
+  return (t.side === "worker"   && t.status === "requested")   /* accept or decline */
+      || (t.side === "customer" && t.status === "done");        /* confirm it is finished */
+}
+
+/* On the very first run there is no seen map, and every conversation that
+   ever happened would count as news — somebody with ten finished jobs would
+   open the app to a red badge about work they finished last month. So the
+   first sighting is recorded silently. Genuine unread messages and genuine
+   pending actions still show, because those are true regardless. */
+function seenForBadge(rows){
+  if(localStorage.getItem(SEENSTORE) !== null) return seenMap();
+  const fresh = {};
+  rows.forEach(t => { if(t.code && t.status) fresh[t.code] = t.status; });
+  writeSeen(fresh);
+  return fresh;
+}
+
 /* The dot on the three-dot button. Only asks the server when there is
    something to ask about — a visitor who has never booked anybody costs
    nothing. */
@@ -8037,13 +8148,43 @@ async function refreshChatBadge(){
   if(!asWorker && !myBookings().length) return;
   let rows = [];
   try{ rows = await myConversations(); }catch(e){ return; }
-  paintChatBadge(rows.reduce((n, t) => n + (Number(t.unread) || 0), 0));
+  paintChatBadge(rows);
 }
-function paintChatBadge(unread){
+
+/* One count, painted in all three places at once, so the menu button, the
+   drawer row and the landing card can never tell three different stories. */
+function paintChatBadge(rows){
+  rows = rows || [];
+  const seen    = seenForBadge(rows);
+  const waiting = rows.filter(t => needsYou(t, seen));
+  const n       = waiting.length;
+
   const dot = $("menuDot"), badge = $("chatsBadge"), home = $("myBookingsDot");
-  if(dot) dot.hidden = !unread;
-  if(badge){ badge.hidden = !unread; badge.textContent = unread; }
-  if(home){ home.hidden = !unread; home.textContent = unread; }
+  if(dot){ dot.hidden = !n; dot.classList.toggle("urgent", !!n); }
+  if(badge){ badge.hidden = !n; badge.textContent = n; badge.classList.toggle("urgent", !!n); }
+  if(home){ home.hidden = !n; home.textContent = n; home.classList.toggle("urgent", !!n); }
+
+  const link = $("myBookingsLink");
+  if(link) link.classList.toggle("waiting", !!n);
+  const sub = $("myBookingsSub");
+  if(sub && n) sub.textContent = waitingLine(waiting);
+  else if(sub) paintMineLink();
+}
+
+/* Say what is waiting, not just that something is. "2 need your answer" gets
+   somebody to open the app; "2 notifications" does not. */
+function waitingLine(waiting){
+  const acts = waiting.filter(needsYourAnswer).length;
+  const msgs = waiting.reduce((a, t) => a + (Number(t.unread) || 0), 0);
+  const bits = [];
+  /* "to answer" rather than "needs your answer": with a badge and an arrow now
+     taking the width, the longer phrasing wrapped to a second line and the
+     card grew taller the moment it went red — the page shifting under a thumb
+     that is already reaching for it. */
+  if(acts) bits.push(acts + " to answer");
+  if(msgs) bits.push(msgs + (msgs === 1 ? " new message" : " new messages"));
+  if(!bits.length) bits.push(waiting.length === 1 ? "1 update to see" : waiting.length + " updates to see");
+  return bits.join(" · ");
 }
 
 /* The landing shortcut. A worker always has it — receiving requests is the
@@ -8055,7 +8196,7 @@ function paintMineLink(){
   const asWorker = !!(session && session.registered);
   const mine = myBookings().length;
   link.hidden = !asWorker && !mine;
-  if(link.hidden) return;
+  if(link.hidden){ link.classList.remove("waiting"); return; }
   $("myBookingsTitle").textContent = asWorker ? "My jobs & chats" : "Bookings & chats";
   $("myBookingsSub").textContent = asWorker
     ? "Accept or decline your requests"
@@ -9358,7 +9499,11 @@ function watchPending(){
   clearInterval(pendingTimer);
   if(!(session && session.registered)) return;
   checkPending(false);
-  pendingTimer = setInterval(() => { if(!document.hidden) checkPending(true); }, 45000);
+  pendingTimer = setInterval(() => {
+    if(document.hidden) return;
+    checkPending(true);
+    refreshChatBadge();     /* so the card goes red without anyone navigating */
+  }, 45000);
 }
 
 /* ---------- keeping the profile honest about itself ----------
@@ -9418,6 +9563,11 @@ document.addEventListener("visibilitychange", () => {
   /* coming back to the app is exactly when a waiting offer matters most */
   if(session && session.registered && $("offerBox")) pollOffers();
   checkPending(true);
+  /* A request or a reply that landed while the app was in a pocket is the
+     whole reason somebody is opening it again. Without this the card only
+     woke up when they navigated, so the one screen they came back to was the
+     one screen that did not know anything had happened. */
+  refreshChatBadge();
 });
 window.addEventListener("focus", () => { if(!document.hidden) refreshMe(true); });
 
