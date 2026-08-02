@@ -1,8 +1,9 @@
 # MySheher — setup steps, in plain language
 
 **Do Job 0 first. It takes two minutes and it is the only genuinely urgent
-thing in this file.** Then Job A (about 20 minutes, before launch) and Job B
-(the domain, on a quiet day).
+thing in this file.** Then Job A½ — pointing `mysheher.com` at the site, which
+the code already expects. Then Job A (about 20 minutes, before launch), and
+Job B (moving to Cloudflare) only when you actually need it.
 
 ---
 
@@ -27,7 +28,7 @@ update nearse_admin
 ```
 
 4. Click **Run**. It should say `Success. No rows returned`.
-5. Test it: open <https://nearse.in/#admin> and enter the new admin PIN.
+5. Test it: open <https://mysheher.com/#admin> and enter the new admin PIN.
 
 Rules for choosing it: not `1234`, not your phone number, and **never typed
 into a chat, an email, or a file in this repository**. The database only ever stores a bcrypt hash of a PIN, never the
@@ -47,7 +48,7 @@ for permission, the database queues the alert — but nothing sends it until
 you do the four steps below. **Until then no notification will ever arrive**,
 in either direction, no matter what anybody taps.
 
-> **Do it from the app, not from here.** Open <https://nearse.in/#admin>,
+> **Do it from the app, not from here.** Open <https://mysheher.com/#admin>,
 > enter your admin PIN, and go to the **Alerts** tab. It shows which of the
 > four steps is missing, reads the live state out of the database, generates
 > the key pair for you in your own browser, and saves the public half without
@@ -280,7 +281,7 @@ Done. You are in the Cloudflare dashboard.
 5. In *Bucket name*, type exactly:
 
    ```
-   nearse-photos
+   mysheher-photos
    ```
 
 6. Under *Location*, choose **Asia-Pacific (APAC)** — it is nearest to Guwahati
@@ -292,7 +293,7 @@ Done. You are in the Cloudflare dashboard.
 
 Photos have to be public, or customers cannot see faces.
 
-1. You should now be inside the `nearse-photos` bucket. Click the **Settings**
+1. You should now be inside the `mysheher-photos` bucket. Click the **Settings**
    tab at the top
 2. Scroll to **Public access**
 3. Find **R2.dev subdomain** and click **Allow Access**
@@ -325,7 +326,7 @@ Now a settings page appears. Fill it in exactly like this:
 
 | Box | What to put |
 |---|---|
-| Project name | `nearse` |
+| Project name | `mysheher` |
 | Production branch | `main` |
 | Framework preset | **None** |
 | Build command | **leave completely empty** |
@@ -334,13 +335,13 @@ Now a settings page appears. Fill it in exactly like this:
 11. Click **Save and Deploy**
 
 Wait about a minute. It will give you a web address like
-`https://nearse.pages.dev`. Open it — your site should be there.
+`https://mysheher.pages.dev`. Open it — your site should be there.
 
 ## Step 5 — Connect the storage to the website  *(skip if you skipped Step 2)*
 
 The website needs permission to put photos into the bucket.
 
-1. In your `nearse` Pages project, click **Settings**
+1. In your `mysheher` Pages project, click **Settings**
 2. Click **Functions** in the side menu
 3. Scroll to **R2 bucket bindings**
 4. Click **Add binding**
@@ -349,7 +350,7 @@ The website needs permission to put photos into the bucket.
    | Box | What to put |
    |---|---|
    | Variable name | `PHOTOS` |
-   | R2 bucket | `nearse-photos` |
+   | R2 bucket | `mysheher-photos` |
 
 6. Click **Save**
 
@@ -385,7 +386,7 @@ Wait a minute for it to finish.
 
 ## Step 8 — Check it actually worked
 
-1. Open your `https://nearse.pages.dev` address
+1. Open your `https://mysheher.pages.dev` address
 2. Tap **Register as a worker** → **Create account**
 3. Register a test worker: any name, your own WhatsApp number, a 4-digit PIN
 4. Go through the steps and add a photo
@@ -393,7 +394,7 @@ Wait a minute for it to finish.
 
 Now check where the photo went:
 
-6. Go back to Cloudflare → **R2 Object Storage** → **nearse-photos**
+6. Go back to Cloudflare → **R2 Object Storage** → **mysheher-photos**
 7. You should see a folder called `p` with your photo inside it
 
 **If the photo is there — Job A is done.** 🎉
@@ -411,18 +412,118 @@ the app falls back on purpose rather than losing the photo.
 
 ---
 
-# JOB B — Move the domain (a quiet day, not launch day)
+# JOB A½ — Point mysheher.com at the site
 
-Right now `nearse.in` points at GitHub. This points it at Cloudflare instead.
-It takes a few hours to spread across the internet, which is why it should not
-be done on the morning of your launch.
+The code already says `mysheher.com` everywhere. Until you do the steps below,
+that name does not resolve and the site is still only on `nearse.in`.
 
-**Do this only after Job A is working.**
+> ## Do Step 1 before the code goes live
+>
+> `docs/CNAME` now contains `mysheher.com`, and that file **is** the switch:
+> the moment it deploys, GitHub Pages stops answering for `nearse.in` and
+> starts expecting `mysheher.com`. If DNS is not ready when that happens, the
+> old address stops working and the new one does not work yet — the site is
+> reachable only at `salinuralom7-ux.github.io` until DNS catches up.
+>
+> **So: do Step 1, wait for it, and only then merge the branch to `main`.**
+> Nothing is live until that merge, so there is no rush and no risk in
+> setting the DNS up first.
+
+You own three domains. They do three different jobs:
+
+| Domain | Job |
+|---|---|
+| `mysheher.com` | **the real address.** Everything points here. |
+| `mysheher.in` | redirects to `.com`. Stops somebody else owning it, catches people who assume `.in`. |
+| `nearse.in` | redirects to `.com`, **and must never be given up** — see the warning at the end. |
+
+## Step 1 — At Hostinger, point mysheher.com at GitHub
+
+Hostinger → **Domains** → `mysheher.com` → **DNS / Nameservers** → **DNS
+records**. Delete any existing `A` record for `@`, then add these five:
+
+| Type | Name | Points to |
+|---|---|---|
+| A | `@` | `185.199.108.153` |
+| A | `@` | `185.199.109.153` |
+| A | `@` | `185.199.110.153` |
+| A | `@` | `185.199.111.153` |
+| CNAME | `www` | `salinuralom7-ux.github.io` |
+
+All four A records. They are GitHub's four servers, and using one of them
+means the site goes down whenever that one server does.
+
+## Step 2 — Tell GitHub the new name
+
+GitHub → the repository → **Settings** → **Pages** → **Custom domain**. Type
+`mysheher.com` and save. It will say "DNS check in progress" for a few
+minutes.
+
+Once it goes green, tick **Enforce HTTPS**. The tick box is greyed out until
+GitHub has issued the certificate, which can take up to an hour. Wait for it —
+without it the site loads over plain `http` and Chrome marks it Not secure.
+
+## Step 3 — Redirect the other two
+
+Hostinger → **Domains** → pick the domain → **Domain forwarding**.
+
+* `mysheher.in` → `https://mysheher.com` (permanent / 301)
+* `nearse.in` → `https://mysheher.com` (permanent / 301)
+
+Choose **301 / permanent**, not 302. A 301 tells Google to move the search
+ranking you have already built to the new address; a 302 says "this is
+temporary" and it keeps the old one.
+
+## Step 4 — Check it on mobile data
+
+Give it an hour or two, then open `mysheher.com` on your phone **on mobile
+data, not wifi** — your home router caches the old answer for hours and will
+lie to you. A padlock and the site loading means it is done.
+
+Then check `nearse.in` sends you to `mysheher.com`, and that `mysheher.in`
+does too.
+
+## Never let nearse.in expire
+
+Keep renewing it, and keep the redirect, for as long as the app exists.
+
+The QR code on every printed worker ID card issued before today points at
+`nearse.in`. Those are physical cards in people's pockets — you cannot reach
+out and change them. If `nearse.in` stops redirecting, every one of those
+cards becomes unverifiable, which is exactly the moment a customer is standing
+at a door deciding whether to trust the person in front of them.
+
+The same goes for every WhatsApp booking link already sent.
+
+## One thing that does break, and cannot be avoided
+
+**Everyone who turned on notifications has to turn them on again.**
+
+Web Push is tied to the exact address that asked. A permission granted to
+`nearse.in` cannot be used by `mysheher.com` — the browser treats them as two
+unrelated sites, and there is no way to carry one across. Nobody's phone is
+broken; the app simply asks again on their next visit, and the old dead
+subscriptions are dropped automatically the first time a send to them fails.
+
+This is the strongest argument for doing the move **now** rather than in three
+months: today it affects a handful of people, and it is the one cost of this
+rename that grows every day you wait.
+
+---
+
+# JOB B — Move to Cloudflare (a quiet day, not launch day)
+
+This is optional, and only worth doing once traffic justifies it. It moves the
+site off GitHub Pages and onto Cloudflare, which is what makes the photo
+uploads in Job A possible. It takes a few hours to spread across the internet,
+which is why it should not be done on the morning of your launch.
+
+**Do this only after Job A½ and Job A are working.**
 
 ## Step 1 — Add your domain to Cloudflare
 
 1. Cloudflare dashboard → click **Add a site** (top of the page)
-2. Type `nearse.in`
+2. Type `mysheher.com`
 3. Choose the **Free** plan
 4. Cloudflare scans your existing settings — click **Continue**
 
@@ -437,22 +538,22 @@ rick.ns.cloudflare.com
 
 1. Copy both
 2. Open **Hostinger** in another tab and sign in
-3. Go to **Domains** → `nearse.in` → **DNS / Nameservers**
+3. Go to **Domains** → `mysheher.com` → **DNS / Nameservers**
 4. Choose **Change nameservers** → **Use custom nameservers**
 5. Delete what is there, paste Cloudflare's two addresses
 6. Save
 
 ## Step 3 — Point the domain at your site
 
-1. Back in Cloudflare, open your **nearse** Pages project
+1. Back in Cloudflare, open your **mysheher** Pages project
 2. Click **Custom domains**
 3. Click **Set up a custom domain**
-4. Type `nearse.in` → **Continue** → **Activate domain**
-5. Repeat for `www.nearse.in`
+4. Type `mysheher.com` → **Continue** → **Activate domain**
+5. Repeat for `www.mysheher.com`
 
 ## Step 4 — Wait, then check
 
-Give it a few hours. Then open `nearse.in` on your phone using mobile data
+Give it a few hours. Then open `mysheher.com` on your phone using mobile data
 (not wifi). If your site loads with a padlock in the address bar, it is done.
 
 **Leave GitHub Pages switched on until you have confirmed this.** Having both

@@ -7,18 +7,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>MySheher — Trusted Local Workers in Guwahati, Booked Directly</title>
 <meta name="description" content="MySheher connects you with verified local workers in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers, beauticians and more. Nearest first, rated by the community, priced by the workers themselves.">
-<meta name="keywords" content="MySheher, nearse.in, local workers near me, book maid cook electrician plumber, home services Guwahati, hire tutor driver Assam, find work near me">
+<meta name="keywords" content="MySheher, mysheher.com, local workers near me, book maid cook electrician plumber, home services Guwahati, hire tutor driver Assam, find work near me">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://nearse.in/">
+<link rel="canonical" href="https://mysheher.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="MySheher">
 <meta property="og:title" content="MySheher — Trusted local workers, booked directly">
 <meta property="og:description" content="Verified local workers near you. Nearest first, community rated, prices set by the workers.">
-<meta property="og:url" content="https://nearse.in/">
-<meta property="og:image" content="https://nearse.in/icons/icon-512.png?v=5">
+<meta property="og:url" content="https://mysheher.com/">
+<meta property="og:image" content="https://mysheher.com/icons/icon-512.png?v=5">
 <meta property="og:image:alt" content="MySheher logo — an interlocking M drawn as a gold heart">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://nearse.in/icons/icon-512.png?v=5">
+<meta name="twitter:image" content="https://mysheher.com/icons/icon-512.png?v=5">
 <meta name="theme-color" content="#0C0A07">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
@@ -53,11 +53,11 @@
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "MySheher",
-  "url": "https://nearse.in/",
+  "url": "https://mysheher.com/",
   "description": "Marketplace connecting customers with verified local skilled workers across India — home services, repairs, tutoring, care, events and professional work.",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": "https://nearse.in/#search={search_term_string}",
+    "target": "https://mysheher.com/#search={search_term_string}",
     "query-input": "required name=search_term_string"
   }
 }
@@ -3300,6 +3300,16 @@ footer a{color:var(--ink-2)}
    ========================================================================= */
 const SUPABASE_URL      = "https://mpufunsitqtdkqlibxof.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wdWZ1bnNpdHF0ZGtxbGlieG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNTAyNTksImV4cCI6MjA5ODkyNjI1OX0.iyYX1EFJwrdPWxXLTCHHm8cdmuO-roPIjjX4T-SU53E";
+
+/* Where this app lives. Written once because the last rename meant editing it
+   in forty places, and the one that was missed was the QR code on a printed
+   worker ID — a card somebody carries, that cannot be re-issued remotely.
+
+   Deliberately a literal and not location.origin: this string is baked into
+   printed cards and into WhatsApp messages that outlive the tab that sent
+   them, so it has to be the real address even when the page is being served
+   from a test harness or a file:// preview. */
+const SITE = "https://mysheher.com";
 
 const CITY = "Guwahati";
 /* Localities grouped by zone. Names follow the Guwahati Municipal Corporation
@@ -7230,7 +7240,7 @@ function renderCard(){
   const since = w.created_at ? new Date(w.created_at)
         .toLocaleDateString("en-IN", {month:"short", year:"numeric"}) : "—";
   const trades = (w.skills || []).map(s => s.skill);
-  const verifyUrl = "https://nearse.in/#id=" + idDigits(w.worker_code);
+  const verifyUrl = SITE + "/#id=" + idDigits(w.worker_code);
   let qr = "";
   try{ qr = qrSvg(verifyUrl, {size:96, fg:"#0C0A07", bg:"#FFFFFF", label:"Scan to verify this ID"}); }
   catch(e){ qr = ""; }
@@ -7299,7 +7309,7 @@ function renderCard(){
 
         <div class="bd-foot">
           <span class="bd-tag">YOUR SKILL. NEAR YOU.</span>
-          <span class="bd-site">nearse.in</span>
+          <span class="bd-site">mysheher.com</span>
         </div>
       </div>
     </div>
@@ -7324,14 +7334,14 @@ function renderCard(){
     <div class="card-note no-print">
       <b>What this is for</b>
       <p>Show it when you arrive at a job. Anyone can scan the code, or type the twelve digits into
-        <b>nearse.in</b> → <b>Check a MySheher Worker ID</b>, and see your name, your trade, your locality and
+        <b>mysheher.com</b> → <b>Check a MySheher Worker ID</b>, and see your name, your trade, your locality and
         how many jobs you have finished — nothing else. Your number never changes, even if you change
         your rates, your photo or your trade.</p>
       <p>Prints at standard card size — 85.6 × 54 mm, the same as a debit card, so it fits any
         card holder or lanyard sleeve. Thick paper if you have it, or take it to any print shop.
         In the print dialog choose <b>Save as PDF</b> to keep a copy on your phone.</p>
       <p><b>On an iPhone</b>, printing does not work from the installed app — Apple does not allow it.
-        Open <b>nearse.in</b> in Safari instead, sign in, and use <b>Share → Print</b>.</p>
+        Open <b>mysheher.com</b> in Safari instead, sign in, and use <b>Share → Print</b>.</p>
     </div>`;
 }
 const ICON_ID = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><circle cx="8.5" cy="11" r="2.1"/><path d="M5.2 16c.5-1.3 1.8-2 3.3-2s2.8.7 3.3 2"/><path d="M15 10h4M15 13.5h4"/></svg>';
@@ -7389,7 +7399,7 @@ async function printCard(){
 
   if(isIOS() && isStandalone()){
     restore();
-    toast("iPhone can't print from the installed app — open nearse.in in Safari, then Share → Print");
+    toast("iPhone can't print from the installed app — open mysheher.com in Safari, then Share → Print");
     return;
   }
 
@@ -7419,7 +7429,7 @@ async function printCard(){
   /* the dialog reads from the frame, so it has to outlive this function */
   setTimeout(() => frame.remove(), 60000);
   restore();
-  if(!opened) toast("This browser won't open a print dialog — try opening nearse.in in Chrome");
+  if(!opened) toast("This browser won't open a print dialog — try opening mysheher.com in Chrome");
 }
 
 /* ---------- the card as an image ----------
@@ -7921,7 +7931,7 @@ Hello ${(t.worker_name || "").split(" ")[0]}, I have sent you a request on MyShe
 ${(t.detail || b.detail) ? "*When:* " + (t.detail || b.detail) + "\n" : ""}*Request code:* ${t.code}
 
 Open it here to accept or decline:
-https://nearse.in/#job=${t.code}
+${SITE}/#job=${t.code}
 
 — sent from MySheher`;
 }

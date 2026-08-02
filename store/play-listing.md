@@ -62,8 +62,8 @@ MySheher is on an experimental launch in Guwahati, Assam. Tell us what is broken
 **Tags:** Home services, Jobs, Local
 **Contact email:** hello.mysheher@gmail.com
 **Contact phone:** +91 70865 99367
-**Website:** https://nearse.in/
-**Privacy policy:** https://nearse.in/privacy/
+**Website:** https://mysheher.com/
+**Privacy policy:** https://mysheher.com/privacy/
 
 ---
 
@@ -75,7 +75,7 @@ a third party). Answer exactly this — it matches what the code does.
 **Does your app collect or share any of the required user data types?** Yes
 **Is all data encrypted in transit?** Yes
 **Do you provide a way for users to request data deletion?**
-Yes — https://nearse.in/delete-account/
+Yes — https://mysheher.com/delete-account/
 
 ### Personal info
 

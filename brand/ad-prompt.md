@@ -1,4 +1,4 @@
-# Repto — the brief to paste into AI tools
+# MySheher — the brief to paste into AI tools
 
 Three versions. Use whichever fits the tool, then add one line saying what you
 want made.
@@ -20,30 +20,30 @@ change it here first, or the ads will start saying things that are not true.
 
 ---
 
-You are making advertising for **Repto** (nearse.in). Read this before you
+You are making advertising for **MySheher** (mysheher.com). Read this before you
 make anything.
 
-**WHAT REPTO IS**
-Repto is an online marketplace that connects people in Guwahati, Assam, India
+**WHAT MYSHEHER IS**
+MySheher is an online marketplace that connects people in Guwahati, Assam, India
 with skilled local workers who already live near them — maids, cooks,
 electricians, plumbers, carpenters, masons, AC and appliance technicians, home
 tutors, drivers, beauticians, tailors, photographers, packers and movers,
-gardeners, pet groomers. 155 services across 16 categories, covering 124
+gardeners, pet groomers. 184 services across 18 categories, covering 124
 localities of Guwahati.
 
 **HOW IT WORKS**
 A customer searches for what they need. Workers nearest to them appear first,
 each with their own rate already shown. The customer picks the service, the day
 and the time, and the request goes straight to that worker on WhatsApp. The two
-of them agree the final amount directly. Repto is never in the middle of the
+of them agree the final amount directly. MySheher is never in the middle of the
 money.
 
 A worker creates a profile in about two minutes: up to three services, their
 own price for each, a photo, and a WhatsApp number they confirm. A person at
-Repto reviews every profile before it goes live.
+MySheher reviews every profile before it goes live.
 
 **WHAT MAKES IT DIFFERENT — these are the selling points**
-1. **Zero commission.** Repto takes nothing from a worker's earnings and
+1. **Zero commission.** MySheher takes nothing from a worker's earnings and
    charges customers nothing to book. The rate shown is the rate the worker set.
 2. **The worker sets the price.** Not the platform. This is the heart of the
    brand.
@@ -70,7 +70,7 @@ found beyond word of mouth. They are not poor or helpless — they are
 professionals without a shopfront. Show them with dignity and competence.
 
 **BRAND**
-Name: **Repto**. Said "NEAR-se". It comes from *near*.
+Name: **MySheher**. Said "NEAR-se". It comes from *near*.
 Tagline: **Trusted people for every job, right where you are.**
 Alternate line: **Every skill deserves an earning.**
 
@@ -107,12 +107,12 @@ work — not costumes, not branded uniforms. A mix of men and women, ages 20 to
 55. Ordinary, capable, warm. Never glossy models pretending to plumb.
 
 **NEVER SHOW OR SAY**
-* Never imply the workers are Repto employees or wear a Repto uniform. They
-  are independent. Repto is a place to find each other, not an employer.
-* Never say "verified", "background checked" or "police verified". Repto
+* Never imply the workers are MySheher employees or wear a MySheher uniform. They
+  are independent. MySheher is a place to find each other, not an employer.
+* Never say "verified", "background checked" or "police verified". MySheher
   checks that a profile looks genuine. It is not a background check, and
   claiming otherwise is a legal problem.
-* Never show payment, cards, UPI, wallets or cash passing through Repto. It
+* Never show payment, cards, UPI, wallets or cash passing through MySheher. It
   takes no payments and asks for no payment details. This is a selling point,
   not an omission.
 * Never invent ratings, worker counts, download numbers or testimonials.
@@ -123,11 +123,11 @@ work — not costumes, not branded uniforms. A mix of men and women, ages 20 to
 * Do not use the phrase "gig" or "gig worker".
 
 **HONEST FRAMING**
-Repto is on an experimental launch and is new. Confident, not boastful.
+MySheher is on an experimental launch and is new. Confident, not boastful.
 "Now live in Guwahati", not "India's number one".
 
 **CONTACT**
-Website: nearse.in · WhatsApp: +91 70865 99367 · Guwahati, Assam
+Website: mysheher.com · WhatsApp: +91 70865 99367 · Guwahati, Assam
 
 ---
 
@@ -143,10 +143,10 @@ Facebook ad headline…]**
 
 ---
 
-Advertising image for **Repto** (nearse.in), a Guwahati, Assam marketplace
+Advertising image for **MySheher** (mysheher.com), a Guwahati, Assam marketplace
 where households book trusted local workers — maids, cooks, electricians,
 plumbers, carpenters, tutors, drivers, beauticians. Workers set their own
-prices and Repto takes zero commission; bookings arrive on WhatsApp.
+prices and MySheher takes zero commission; bookings arrive on WhatsApp.
 
 Style: warm premium, gold on near-black. Palette #0C0A07 charcoal, #EABB51
 gold, #F6F2E8 off-white. Gold-leaf and lamplight warmth, film grain, soft
@@ -167,7 +167,7 @@ Subject: **[write what you want in the picture]**
 
 ---
 
-Warm premium advertising image for Repto, a Guwahati marketplace for booking
+Warm premium advertising image for MySheher, a Guwahati marketplace for booking
 local workers — gold #EABB51 on near-black #0C0A07, lamplight warmth and film
 grain, real Assamese people aged 20–55 in everyday work clothes, dignified and
 documentary, no uniforms and no text — showing **[your subject]**
@@ -178,7 +178,7 @@ documentary, no uniforms and no text — showing **[your subject]**
 
 **Leave text out of AI images.** Every image generator mangles Assamese and
 Devanagari, and most mangle English past a few words. Generate the picture
-clean, then put the headline, the logo and nearse.in on top in Canva. The
+clean, then put the headline, the logo and mysheher.com on top in Canva. The
 typefaces are Source Serif 4 for headlines and Plus Jakarta Sans for the rest.
 
 **Ask for one idea per image.** "An electrician being welcomed at a door in
@@ -202,5 +202,5 @@ one line of voiceover per shot, Assamese with English subtitles."
 * The three-month free trial for workers, stressing no card is asked for.
 
 **Before publishing anything**, check it against the NEVER list above. The two
-that matter most: no Repto uniforms, and never the word "verified" about a
+that matter most: no MySheher uniforms, and never the word "verified" about a
 person.

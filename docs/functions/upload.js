@@ -7,7 +7,7 @@
  * Supabase plan. On R2 it is free.
  *
  * Bind an R2 bucket named PHOTOS to this Pages project, and set PHOTO_BASE to
- * the bucket's public URL (a custom domain such as https://img.nearse.in).
+ * the bucket's public URL (a custom domain such as https://img.mysheher.com).
  */
 
 const MAX_BYTES = 400 * 1024;

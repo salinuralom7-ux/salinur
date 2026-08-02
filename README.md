@@ -4,7 +4,7 @@ A marketplace for booking local skilled workers in Guwahati — maids, cooks,
 electricians, plumbers, tutors, drivers, doctors and 160 other trades. Workers
 set their own price and MySheher takes no commission.
 
-Live at **[nearse.in](https://nearse.in)**.
+Live at **[mysheher.com](https://mysheher.com)**.
 
 ## What is in here
 

@@ -20,8 +20,11 @@ const ok = (label, cond, extra) =>
   // ---------- the door before you are one ----------
   const door = () => p.locator('#ctaWorkTitle').innerText();
   ok('Door invites you to register', (await door()).trim() === 'Register as a worker', await door());
+  /* "Set your rates" was the old copy. The offer is the thing that gets
+     somebody through this door, so the subtitle leads with it. */
   ok('…with the matching subtitle',
-     (await p.locator('#ctaWorkSub').innerText()).includes('Set your rates'));
+     (await p.locator('#ctaWorkSub').innerText()).includes('Free for your first 30 days'),
+     await p.locator('#ctaWorkSub').innerText());
 
   // ---------- become one ----------
   await p.evaluate(() => {
@@ -234,10 +237,10 @@ const ok = (label, cond, extra) =>
         d[i] = d[i + 1] = d[i + 2] = 0;
       }
     return { data: Array.from(d), px };
-  }, 'https://nearse.in/#id=' + code);
+  }, 'https://mysheher.com/#id=' + code);
   const got = jsQR(new Uint8ClampedArray(decoded.data), decoded.px, decoded.px);
   ok('The badge QR decodes to the verification link',
-     got && got.data === 'https://nearse.in/#id=' + code, got ? got.data : 'nothing');
+     got && got.data === 'https://mysheher.com/#id=' + code, got ? got.data : 'nothing');
   void shot;
 
   ok('No JS errors anywhere', errors.length === 0, errors.join(' | ') || 'none');
