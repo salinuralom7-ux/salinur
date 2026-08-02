@@ -69,6 +69,21 @@ jobs:
           [ $bad -eq 0 ] && echo "  all addresses serve MySheher" >> $R \
                          || echo "  WARNING: at least one address serves something else" >> $R
 
+          # Is the palette actually live? "The deploy succeeded" and "the
+          # browser is showing it" are different claims, and only this one
+          # distinguishes a stale service worker on a phone from a stale site.
+          echo "--- palette served right now ---" >> $R
+          for token in "--bg:#15151A" "--brand:#FFC300" "--accent:#3DDCC8" "--danger:#FF5E57" "EVERY SKILL NEAR YOU"; do
+            if printf '%s' "$page" | grep -qF -- "$token"; then
+              echo "  present : $token" >> $R
+            else
+              echo "  MISSING : $token" >> $R
+            fi
+          done
+          printf '%s' "$page" | grep -oE 'theme-color" content="[^"]*"' | head -1 | sed 's/^/  /' >> $R
+          curl -sS -m 15 https://mysheher.com/sw.js 2>/dev/null | grep -oE 'CACHE = "[^"]*"' | sed 's/^/  service worker /' >> $R
+          curl -sS -o /dev/null -m 15 -w "  index.html Cache-Control: %header{cache-control}\n" https://mysheher.com/ >> $R 2>&1 || true
+
           echo "--- http, and www ---" >> $R
           curl -sS -o /dev/null -m 15 -w "http://mysheher.com  -> HTTP %{http_code} -> %{redirect_url}\n" http://mysheher.com/ >> $R 2>&1 || true
           curl -sS -o /dev/null -m 15 -w "https://www          -> HTTP %{http_code} -> %{redirect_url}\n" https://www.mysheher.com/ >> $R 2>&1 \
