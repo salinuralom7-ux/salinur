@@ -4220,8 +4220,9 @@ const api = {
       body:JSON.stringify(workerAuth({p_endpoint:sub.endpoint,
                            p_p256dh:sub.p256dh, p_auth:sub.auth}))});
   },
-  /* A customer has no account, so the subscription hangs off the booking:
-     the code and the token together prove it is theirs. */
+  /* The subscription hangs off the booking rather than the customer account:
+     the code and the token together prove it is theirs, and that keeps
+     working for a booking made before the account existed. */
   /* What workers in the same trade actually charge here. Only meaningful
      once a handful have joined, which is why the caller checks n. */
   async priceStats(skills){
@@ -9878,9 +9879,12 @@ async function acceptNotifyAsk(){
    without a notification they either sit on the app refreshing, or give up
    and phone somebody else.
 
-   There is no account to hang a subscription on, so it hangs on the booking
-   itself — one row per (booking, device). A phone that allowed alerts once
-   is re-registered against every later booking automatically, which is what
+   It hangs on the booking rather than on the customer's account — one row per
+   (booking, device). Deliberately kept that way after accounts arrived: the
+   thing being notified about is a booking, one account can be signed in on two
+   phones and only the one that asked should buzz, and bookings made before
+   accounts existed still work. A phone that allowed alerts once is
+   re-registered against every later booking automatically, which is what
    syncCustomerPush does on start-up and after each new request. */
 async function customerSubscription(){
   /* raced for the same reason as everywhere else: serviceWorker.ready never
