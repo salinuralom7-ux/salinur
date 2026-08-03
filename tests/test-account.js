@@ -190,10 +190,36 @@ const SHEET = {
   ok('A first-time visitor is offered an account', await f.locator('#accountOverlay.open').count() === 1);
   const offer = await f.locator('#accountOverlay').innerText();
   ok('…with "Skip for now" beside it', /skip for now/i.test(offer));
-  await f.locator('#accountOverlay .btn-quiet').click(); await f.waitForTimeout(400);
-  ok('Skipping closes it', await f.locator('#accountOverlay.open').count() === 0);
-  await f.reload(); await f.waitForTimeout(6000);
-  ok('…and it does not nag again', await f.locator('#accountOverlay.open').count() === 0);
+  /* Sign up has to actually go somewhere. It did not: closeModal queues a
+     history.back() that fired after go("account") and undid it, so the button
+     did nothing at all and left you on the home screen. Reported from a
+     phone, and it happened every time — which is why it is driven here as a
+     real tap rather than by calling the handler. */
+  await f.locator('#accountOverlay .btn-brand').click(); await f.waitForTimeout(700);
+  ok('Sign up on the offer opens the sign-up screen',
+     await f.evaluate(() => (document.querySelector('.screen.on') || {}).id) === 'scr-account',
+     await f.evaluate(() => (document.querySelector('.screen.on') || {}).id));
+  ok('…and it stays there a moment later, rather than snapping back home',
+     await f.evaluate(async () => { await new Promise(r => setTimeout(r, 900));
+       return (document.querySelector('.screen.on') || {}).id; }) === 'scr-account');
+  ok('…on the sign-up tab', await f.evaluate(() => acctMode) === 'signup');
+  ok('…and the offer sheet is gone', await f.locator('#accountOverlay.open').count() === 0);
+
+  /* back from there returns to where they were, not into the sheet again */
+  await f.goBack(); await f.waitForTimeout(700);
+  ok('Back from sign-up returns home, not into the offer',
+     await f.evaluate(() => (document.querySelector('.screen.on') || {}).id) === 'scr-home',
+     await f.evaluate(() => (document.querySelector('.screen.on') || {}).id));
+
+  // and skipping, from a fresh visit
+  const skipCtx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  await skipCtx.grantPermissions(['notifications'], { origin: 'http://localhost:8846' });
+  const sk = await skipCtx.newPage();
+  await sk.goto('http://localhost:8846/'); await sk.waitForTimeout(6000);
+  await sk.locator('#accountOverlay .btn-quiet').click(); await sk.waitForTimeout(400);
+  ok('Skipping closes it', await sk.locator('#accountOverlay.open').count() === 0);
+  await sk.reload(); await sk.waitForTimeout(6000);
+  ok('…and it does not nag again', await sk.locator('#accountOverlay.open').count() === 0);
 
   ok('No JS errors', errs.length === 0, errs.join(' | ') || 'none');
   await b.close(); srv.close();

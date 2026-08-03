@@ -7439,7 +7439,7 @@ async function confirmSlot(){
       note, price:s.price, unit:s.unit, mode:"slot" });
   }catch(e){ /* the appointment itself is booked; the chat is the bonus */ }
 
-  closeModal("slotOverlay");
+  hideModal("slotOverlay");        /* openChat navigates; see acceptAccountOffer */
   toast(`Booked — ${when} at ${slotPick.time}`);
   if(started && started.code){
     rememberBooking({ code:started.code, token:started.token, worker:w.name,
@@ -9282,7 +9282,7 @@ async function confirmDeleteCustomer(){
   try{ await api.deleteCustomer(customer.token); }
   catch(e){ toast(e.message || "Could not delete that just now"); return; }
   finally{ btn.disabled = false; btn.textContent = label; }
-  closeModal("custDelOverlay");
+  hideModal("custDelOverlay");     /* go("home") follows; see acceptAccountOffer */
   customer = null; saveCustomer(); paintAccountUi();
   toast("Your account has been deleted");
   go("home");
@@ -9329,7 +9329,13 @@ function skipAccountOffer(){
   closeModal("accountOverlay");
 }
 function acceptAccountOffer(){
-  closeModal("accountOverlay");
+  /* hideModal, not closeModal. closeModal calls history.back(), which fires
+     AFTER the current task — so go("account") ran first, the queued pop then
+     arrived and undid it, and Sign up left you sitting on the home screen.
+     Reported from a phone: "I clicked several times on sign up then nothing
+     happened." go() consumes this sheet's history entry itself; see the note
+     in go() about replacing rather than stacking. */
+  hideModal("accountOverlay");
   accountAfter = null;
   $("acctWhy").textContent = "So your bookings, replies and chats stay in one place.";
   showAccount("signup");

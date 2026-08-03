@@ -41,3 +41,26 @@ const idList = [...s.matchAll(/id="([A-Za-z0-9_-]+)"/g)].map(x => x[1]);
 const dupIds = idList.filter((v, i) => idList.indexOf(v) !== i);
 console.log('duplicate element ids:', dupIds.length ? [...new Set(dupIds)].join(', ') : 'none');
 if (dupIds.length) process.exitCode = 1;
+
+/* closeModal() calls history.back(), which fires after the current task. A
+   function that closes a sheet and then navigates therefore navigates first
+   and is undone a moment later by the queued pop — the screen simply does not
+   change, with nothing in the console. It cost the account offer's Sign up
+   button, and two more functions had it latent. hideModal is the one to use:
+   go() consumes the sheet's history entry itself. */
+{
+  const bad = [];
+  for (const m of js.matchAll(/\n(?:async )?function (\w+)\([^)]*\)\{/g)) {
+    let i = m.index + m[0].length, depth = 1;
+    while (i < js.length && depth) { const c = js[i++]; if (c === '{') depth++; else if (c === '}') depth--; }
+    const body = js.slice(m.index + m[0].length, i);
+    const close = [...body.matchAll(/closeModal\(/g)].map(x => x.index);
+    const nav   = [...body.matchAll(/\bgo\("|showAccount\(|openChat\(/g)].map(x => x.index);
+    /* Only when the close can actually reach the navigation. A guard clause
+       that closes the sheet and returns is fine — nothing follows it. */
+    const reaches = close.some(c => nav.some(n => n > c && !/\breturn\b/.test(body.slice(c, n))));
+    if (reaches) bad.push(m[1]);
+  }
+  console.log('closeModal before a navigation:', bad.length ? bad.join(', ') : 'none');
+  if (bad.length) process.exitCode = 1;
+}

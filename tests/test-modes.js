@@ -289,7 +289,11 @@ const SEED = `
   ok('Appointment is booked', await cust.evaluate(() =>
      JSON.parse(localStorage.getItem('nearse_appts_v1')).length === 1));
 
-  // that time must now be gone for the next patient
+  // that time must now be gone for the next patient.
+  // Booking now lands in the conversation like every other mode, so come back
+  // out to the browse screen before looking for the next patient's view.
+  await cust.evaluate(() => go('hire')); await cust.waitForTimeout(700);
+  await cust.fill('#hireSearch', 'Molar'); await cust.waitForTimeout(600);
   await cust.evaluate(() => { currentWorker = workers.find(w => w.name === 'Dr Molar') || currentWorker; });
   await cust.locator('.wcard').first().click();
   await cust.waitForTimeout(400);
