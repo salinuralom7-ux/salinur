@@ -2350,6 +2350,10 @@ footer a{color:var(--ink-2)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       <span>Bookings &amp; chats</span><i class="row-n" id="chatsBadge" hidden></i>
     </button>
+    <button class="drawer-row" id="drawerProfile" onclick="menuGoProfile()" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+      <span id="drawerProfileLabel">Sign up or sign in</span>
+    </button>
     <button class="drawer-row" id="drawerWork" onclick="menuGo('work')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-1.5A5.5 5.5 0 0 1 9.5 14h5a5.5 5.5 0 0 1 5.5 5.5V21"/><circle cx="12" cy="8" r="4"/></svg>
       <span id="drawerWorkLabel">Register as a worker</span>
@@ -2900,6 +2904,65 @@ footer a{color:var(--ink-2)}
 </section>
 
 <!-- ============================= CUSTOMER: MY BOOKINGS ============================= -->
+<!-- ============================= CUSTOMER ACCOUNT =============================
+     Sign up and sign in share one screen because they are the same three
+     fields plus a PIN, and a person who is not sure which they need should
+     not have to guess before they can start typing. -->
+<section class="screen" id="scr-account">
+  <div class="wrap-sm">
+    <button class="back" onclick="leaveAccount()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Back
+    </button>
+    <div class="panel">
+      <h2 id="acctTitle">Create your account</h2>
+      <p class="hint" id="acctWhy">So your bookings, replies and chats stay in one place.</p>
+
+      <div class="tabs three" style="margin:16px 0 4px">
+        <button class="tab on" id="acctTabSignup" onclick="showAccount('signup')">Sign up</button>
+        <button class="tab" id="acctTabSignin" onclick="showAccount('signin')">I have an account</button>
+      </div>
+
+      <div class="field" id="acctNameField">
+        <label for="acctName">Your name</label>
+        <input type="text" id="acctName" placeholder="e.g. Priya Das" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="acctPhone">WhatsApp number</label>
+        <input type="tel" id="acctPhone" placeholder="10-digit number" maxlength="10"
+               inputmode="numeric" autocomplete="tel-national">
+      </div>
+      <div class="field full" id="acctAreaField">
+        <label for="acctArea">Your area in Guwahati</label>
+        <select id="acctArea"></select>
+      </div>
+      <div class="field">
+        <label for="acctPin">Choose a 4-digit PIN</label>
+        <input type="password" id="acctPin" placeholder="4 digits" maxlength="4"
+               inputmode="numeric" autocomplete="off">
+        <p class="hint" id="acctPinHint">You will need it to sign in on another phone. Not your ATM PIN.</p>
+      </div>
+
+      <button class="btn btn-brand btn-block" id="acctGoBtn" onclick="submitAccount()" style="padding:14px">Create account</button>
+      <p class="hint" id="acctTerms" style="margin-top:12px">
+        By creating an account you agree to our <a href="terms/">terms</a> and
+        <a href="privacy/">privacy policy</a>. We ask for nothing beyond what a booking needs.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= MY PROFILE (customer) ============================= -->
+<section class="screen" id="scr-profile">
+  <div class="wrap-sm">
+    <button class="back" onclick="go('home')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Home
+    </button>
+    <div class="panel" id="profileCard"></div>
+  </div>
+</section>
+
 <section class="screen" id="scr-mine">
   <div class="wrap-sm">
     <button class="back" onclick="go('home')">
@@ -3272,6 +3335,37 @@ footer a{color:var(--ink-2)}
      our own sheet and not the browser's: tapping "Don't allow" here costs
      nothing, whereas a No to the real prompt is permanent — the browser never
      asks a second time. Allow is what hands over to the real one. -->
+<div class="overlay" id="accountOverlay" onclick="if(event.target===this)skipAccountOffer()">
+  <div class="modal notify-ask" role="dialog" aria-modal="true" aria-labelledby="acctOfferTitle">
+    <div class="notify-mark" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>
+    </div>
+    <h3 id="acctOfferTitle">Make an account?</h3>
+    <p class="sub">Your bookings, replies and chats stay in one place, and you never
+      type your name and number again. Takes about thirty seconds.</p>
+    <button class="btn btn-brand btn-block" style="padding:14px" onclick="acceptAccountOffer()">Sign up</button>
+    <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="skipAccountOffer()">Skip for now</button>
+  </div>
+</div>
+
+<!-- Deleting is permanent, so it is asked for twice. A worker gets two steps
+     before their profile goes; a customer had none at all, and Delete my
+     account sits one mis-tap below Sign out. -->
+<div class="overlay" id="custDelOverlay" onclick="if(event.target===this)closeModal('custDelOverlay')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="custDelTitle">
+    <h3 id="custDelTitle">Delete your account?</h3>
+    <p class="sub">This cannot be undone.</p>
+    <ul class="leave-list">
+      <li>Your name, number and locality</li>
+      <li>Your PIN, and your sign-in on every device</li>
+    </ul>
+    <p class="hint">Bookings you have already sent stay with the worker as their record
+      of the job, and are removed after 12 months like any other.</p>
+    <button class="btn btn-danger btn-block" id="custDelBtn" style="padding:14px;margin-top:16px" onclick="confirmDeleteCustomer()">Yes, delete my account</button>
+    <button class="btn btn-quiet btn-block btn-sm" style="margin-top:9px" onclick="closeModal('custDelOverlay')">Keep my account</button>
+  </div>
+</div>
+
 <div class="overlay" id="notifyOverlay" onclick="if(event.target===this)dismissNotifyAsk()">
   <div class="modal notify-ask" role="dialog" aria-modal="true" aria-labelledby="notifyAskTitle">
     <div class="notify-mark" aria-hidden="true">
@@ -4371,8 +4465,93 @@ const api = {
       list.unshift({...rec, id:Date.now(), created_at:new Date().toISOString()});
       localStorage.setItem("nearse_bookings_v1", JSON.stringify(list.slice(0, 500)));
     }catch(e){}
+  },
+
+  /* ---------- customer accounts ----------
+     A worker has to register: they are being listed publicly. A customer does
+     not, until the moment they book somebody — at that point a name, a
+     reachable number and an area stop being optional, because a stranger is
+     being asked to come to a house. So the account holds exactly those three
+     and nothing else. No email, no address, no date of birth: every field
+     here is one the booking itself already required, which is why this is an
+     account rather than a form filled in again every time. */
+  async registerCustomer(phone, pin, name, area){
+    if(LIVE) return await sb("rpc/register_customer", {method:"POST",
+      body:JSON.stringify({p_phone:phone, p_pin:pin, p_name:name, p_area:area || null,
+                           p_terms:TERMS_VERSION})});
+    return demoRegisterCustomer(phone, pin, name, area);
+  },
+  async loginCustomer(phone, pin){
+    if(LIVE) return await sb("rpc/login_customer", {method:"POST",
+      body:JSON.stringify({p_phone:phone, p_pin:pin})});
+    return demoLoginCustomer(phone, pin);
+  },
+  async customerMe(token){
+    if(LIVE){
+      const rows = await sb("rpc/customer_me", {method:"POST",
+        body:JSON.stringify({p_token:token})});
+      return (rows && rows[0]) || null;
+    }
+    return demoCustomerMe(token);
+  },
+  async customerUpdate(token, name, area){
+    if(LIVE) return await sb("rpc/customer_update", {method:"POST",
+      body:JSON.stringify({p_token:token, p_name:name, p_area:area})});
+    return demoCustomerUpdate(token, name, area);
+  },
+  async customerSignOut(token){
+    if(LIVE) return await sb("rpc/customer_sign_out", {method:"POST",
+      body:JSON.stringify({p_token:token})});
+    return demoCustomerSignOut(token);
+  },
+  async deleteCustomer(token){
+    if(LIVE) return await sb("rpc/delete_customer", {method:"POST",
+      body:JSON.stringify({p_token:token})});
+    return demoDeleteCustomer(token);
   }
 };
+
+/* ---------- customer accounts, preview mode ----------
+   Mirrors the six RPCs closely enough that every screen above can be driven
+   without a database, which is how the test suite runs. The PIN is stored in
+   the clear here on purpose: this store never leaves the device and is thrown
+   away the moment a real database answers. The live path hashes with bcrypt
+   and is rate-limited by auth_guard. */
+const CUSTDEMO = "repto_customers_demo_v1";
+const custAll  = () => { try{ return JSON.parse(localStorage.getItem(CUSTDEMO) || "[]"); }catch(e){ return []; } };
+const custSave = l => { try{ localStorage.setItem(CUSTDEMO, JSON.stringify(l)); }catch(e){} };
+
+function demoRegisterCustomer(phone, pin, name, area){
+  const all = custAll();
+  if(all.some(c => c.phone === phone)) throw new Error("This number already has an account — please sign in");
+  const rec = { id:"c" + Date.now(), token:"t" + Date.now() + Math.random().toString(16).slice(2),
+                phone, pin, name, area:area || null, phone_verified:false };
+  all.push(rec); custSave(all);
+  return rec.token;
+}
+function demoLoginCustomer(phone, pin){
+  const c = custAll().find(x => x.phone === phone && x.pin === pin);
+  return c ? c.token : null;
+}
+function demoCustomerMe(token){
+  const c = custAll().find(x => x.token === token);
+  return c ? { id:c.id, phone:c.phone, name:c.name, area:c.area, phone_verified:c.phone_verified } : null;
+}
+function demoCustomerUpdate(token, name, area){
+  const all = custAll(); const c = all.find(x => x.token === token);
+  if(!c) return;
+  if(name != null) c.name = name;
+  if(area != null) c.area = area;
+  custSave(all);
+}
+function demoCustomerSignOut(token){
+  const all = custAll(); const c = all.find(x => x.token === token);
+  if(c) c.token = "t" + Date.now() + Math.random().toString(16).slice(2);   /* old token dies */
+  custSave(all);
+}
+function demoDeleteCustomer(token){
+  custSave(custAll().filter(x => x.token !== token));
+}
 
 /* ---------- preview store ---------- */
 function demoSeed(){
@@ -4760,6 +4939,7 @@ function go(name, viaHistory){
   if(name === "me") renderMe();
   if(name === "inbox") renderInbox();
   if(name === "chats") renderChats();
+  if(name === "profile") renderProfile();
   if(name === "card") renderCard();
   if(name === "verify") $("verifyResult").innerHTML = "";
   if(name === "mine") renderMine();
@@ -4799,6 +4979,12 @@ function closeMenu(){
   if(history.state && history.state.modal === "drawer"){ try{ history.back(); }catch(e){} }
 }
 function menuGo(name){ setMenu(false); go(name); }
+/* One row, two destinations: the profile if there is one, the sign-up screen
+   if there is not. A row that leads to an empty profile teaches nothing. */
+function menuGoProfile(){
+  setMenu(false);
+  signedIn() ? go("profile") : showAccount("signup");
+}
 /* Keep the menu honest about who is reading it. */
 function paintMenu(){
   const inside = !!(session && session.registered);
@@ -6482,11 +6668,13 @@ function openBooking(){
 
   /* deliberately not pre-filled with the worker's locality — this asks where
      the CUSTOMER is, and a silent default is how the wrong address ends up in
-     the request */
+     the request. The account's own locality is a different matter: they chose
+     it themselves, and it is still editable here. */
   const areaSel = $("bookArea");
   areaSel.innerHTML = '<option value="">Select your locality</option>' + areaOptions(null);
-  areaSel.value = "";
   areaSel.onchange = renderQuote;
+
+  prefillFromAccount("bookName", "bookPhone", "bookArea");
 
   renderQuote();
   openModal("bookOverlay");
@@ -6590,6 +6778,29 @@ async function confirmBooking(){
    service, never by the customer — asking somebody to choose between
    "instant" and "scheduled" is asking them to understand our plumbing.
    ========================================================================= */
+/* Typing a name and a number into every booking is the thing an account is
+   supposed to remove, and there are three sheets, not one — an instant job, an
+   appointment and the scheduled sheet. Filling only the last would have meant
+   the account bought a customer nothing on two of the three flows, which is
+   the same class of miss as gating only one of them.
+
+   Filled in, not locked: somebody booking on behalf of a parent should be able
+   to change the name, and a person can be somewhere other than their own
+   locality. The area is only defaulted from the account because they chose it
+   themselves — it is never guessed from the worker's.
+
+   Written every time the sheet opens rather than only when the box is empty.
+   These sheets are never cleared, so "leave what is there" would mean a name
+   and a number typed by whoever used the phone last surviving a sign-out and
+   turning up in the next person's booking. */
+function prefillFromAccount(nameId, phoneId, areaId){
+  const on = signedIn();
+  const n = $(nameId), p = $(phoneId), a = areaId && $(areaId);
+  if(n) n.value = on ? (customer.name  || "") : "";
+  if(p) p.value = on ? (customer.phone || "") : "";
+  if(a) a.value = on ? (customer.area  || "") : "";
+}
+
 function bookingModeFor(w){
   /* a worker offering several trades is booked the way the chosen one works */
   const s = (w.skills||[])[bookPick.svc] || (w.skills||[])[0] || {};
@@ -6598,6 +6809,18 @@ function bookingModeFor(w){
 function openBookingFor(w, skillIndex){
   currentWorker = w;
   bookPick = { svc: skillIndex || 0, when:"today", slot:"any", date:"" };
+  /* The gate belongs here rather than in openBooking, because this is the one
+     door all three modes go through — instant, appointment and scheduled.
+     Gating only the last would have left the other two open, and an instant
+     booking sends a name, a number and a locality to a stranger's phone
+     within seconds. Asked before the form rather than at the send button, so
+     nobody loses what they have typed to it. */
+  if(!signedIn()){
+    hideModal("wOverlay");
+    requireAccount(() => openBookingFor(w, skillIndex),
+      "Create an account to send this request — it is how you see the reply, and how you can change or delete your details later.");
+    return;
+  }
   const mode = bookingModeFor(w);
   if(mode === "now")  return openNowBooking();
   if(mode === "slot") return openSlotBooking();
@@ -6626,6 +6849,7 @@ function openNowBooking(){
   const sel = $("nowArea");
   sel.innerHTML = '<option value="">Select your locality</option>' + areaOptions(null);
   sel.value = "";
+  prefillFromAccount("nowName", "nowPhone", "nowArea");
   openModal("nowOverlay");
 }
 
@@ -6821,6 +7045,7 @@ async function openSlotBooking(){
   $("slotWho").innerHTML = `${esc(w.name)} · ${esc(s.skill||"")} — <b>${esc(money(s.price||0))} ${esc(s.unit||"")}</b>` +
     (w.reg_number ? `<br><span class="reg-line">${w.reg_verified ? "✓ Registration checked" : "Registration"}: ${esc(w.reg_number)}</span>` : "");
   slotPick = { date:null, time:null, taken:[] };
+  prefillFromAccount("slotName", "slotPhone");
   renderSlotDayRow();
   openModal("slotOverlay");
   pickSlotDay(nextWorkingDay(w, 0));
@@ -7678,6 +7903,39 @@ function rememberBooking(rec){
 }
 const myBooking = code => myBookings().find(b => b.code === code);
 
+/* ---------- who the customer is ----------
+   Deliberately not the worker's `session`. A person can be both — book a
+   plumber on Monday, take carpentry work on Tuesday — and collapsing the two
+   would sign them out of one by using the other. Two independent tokens. */
+const CUSTSTORE = "repto_customer_v1";
+let customer = null;          /* { token, id, phone, name, area, phone_verified } */
+
+function loadCustomer(){
+  try{ customer = JSON.parse(localStorage.getItem(CUSTSTORE) || "null"); }
+  catch(e){ customer = null; }
+}
+function saveCustomer(){
+  try{
+    customer ? localStorage.setItem(CUSTSTORE, JSON.stringify(customer))
+             : localStorage.removeItem(CUSTSTORE);
+  }catch(e){}
+}
+const signedIn = () => !!(customer && customer.token);
+
+/* The one rule that matters: browsing is open to anyone, booking is not.
+   Somebody is about to send their name, their number and their address to a
+   stranger — an account is the point at which they can see what they sent,
+   change it, and delete it. Before that there is nothing to hold. */
+function requireAccount(then, why){
+  if(signedIn()){ then(); return; }
+  accountAfter = then;
+  $("acctWhy").textContent = why || "Create an account to send this request. It takes about thirty seconds.";
+  showAccount("signup");
+}
+
+const ACCOUNT_ASKED = "repto_account_asked_v1";
+let accountAfter = null;      /* what to do once they are signed in */
+
 const THREAD_STATE = {
   requested: { label:"Waiting for a reply", tone:"wait" },
   accepted:  { label:"Accepted",            tone:"ok" },
@@ -8248,6 +8506,189 @@ function paintMineLink(){
     ? "Accept or decline your requests"
     : (mine === 1 ? "See where your request has got to"
                   : "See where your " + mine + " requests have got to");
+}
+
+/* ---------- the account screen ---------- */
+let acctMode = "signup";
+
+function showAccount(mode){
+  acctMode = mode === "signin" ? "signin" : "signup";
+  const up = acctMode === "signup";
+  $("acctTabSignup").classList.toggle("on", up);
+  $("acctTabSignin").classList.toggle("on", !up);
+  $("acctTitle").textContent   = up ? "Create your account" : "Sign in";
+  $("acctGoBtn").textContent   = up ? "Create account" : "Sign in";
+  $("acctNameField").hidden    = !up;
+  $("acctAreaField").hidden    = !up;
+  $("acctTerms").hidden        = !up;
+  $("acctPinHint").textContent = up
+    ? "You will need it to sign in on another phone. Not your ATM PIN."
+    : "The 4-digit PIN you chose when you signed up.";
+  if(!$("acctArea").options.length)
+    $("acctArea").innerHTML = '<option value="">Choose your area</option>' + areaOptions(null);
+  go("account");
+}
+
+function leaveAccount(){
+  accountAfter = null;
+  go(signedIn() ? "profile" : "home");
+}
+
+async function submitAccount(){
+  const up    = acctMode === "signup";
+  const phone = $("acctPhone").value.trim();
+  const pin   = $("acctPin").value.trim();
+  const name  = $("acctName").value.trim();
+  const area  = $("acctArea").value;
+
+  if(!/^[6-9]\d{9}$/.test(phone)){ toast("Enter a valid 10-digit mobile number"); return; }
+  if(!/^\d{4}$/.test(pin)){ toast("Your PIN must be exactly 4 digits"); return; }
+  if(up && !name){ toast("Please enter your name"); return; }
+  if(up && !area){ toast("Please choose your area"); return; }
+
+  const btn = $("acctGoBtn"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = up ? "Creating…" : "Signing in…";
+  try{
+    const token = up ? await api.registerCustomer(phone, pin, name, area)
+                     : await api.loginCustomer(phone, pin);
+    if(!token){ toast("Wrong number or PIN"); return; }
+    customer = { token, phone, name: up ? name : "", area: up ? area : null };
+    /* read the profile back rather than trusting what was typed: signing in
+       has none of it, and the server is the one that knows */
+    try{
+      const me = await api.customerMe(token);
+      if(me) customer = { token, ...me };
+    }catch(e){}
+    saveCustomer();
+    try{ localStorage.setItem(ACCOUNT_ASKED, "1"); }catch(e){}
+    toast(up ? "Account created" : "Signed in");
+    $("acctPin").value = "";
+    paintAccountUi();
+    const next = accountAfter; accountAfter = null;
+    next ? next() : go("profile");
+  }catch(e){
+    toast(e.message || (up ? "Could not create that account" : "Could not sign in"));
+  }finally{
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+
+/* ---------- my profile ---------- */
+function renderProfile(){
+  const host = $("profileCard");
+  if(!signedIn()){
+    host.innerHTML = `<h2>My profile</h2>
+      <div class="empty" style="margin:14px 0 0"><b>You are not signed in</b>
+        An account keeps your bookings, replies and chats in one place.</div>
+      <button class="btn btn-brand btn-block" style="margin-top:16px" onclick="showAccount('signup')">Create an account</button>
+      <button class="btn btn-outline btn-block btn-sm" style="margin-top:10px" onclick="showAccount('signin')">I already have one</button>`;
+    return;
+  }
+  const c = customer;
+  host.innerHTML = `<h2>My profile</h2>
+    <p class="hint">Only what a booking needs. Nothing else is asked for, and nothing else is kept.</p>
+    <div class="field"><label for="pfName">Your name</label>
+      <input type="text" id="pfName" value="${esc(c.name || "")}" placeholder="e.g. Priya Das"></div>
+    <div class="field"><label for="pfArea">Your area in Guwahati</label>
+      <select id="pfArea"></select></div>
+    <div class="field"><label>WhatsApp number</label>
+      <input type="tel" value="${esc(c.phone || "")}" disabled>
+      <p class="hint">Your number identifies the account, so it cannot be changed here.
+        Write to <a href="mailto:info@mysheher.com">info@mysheher.com</a> if it has changed.</p></div>
+    <button class="btn btn-brand btn-block" id="pfSaveBtn" onclick="saveMyDetails()" style="padding:13px">Save changes</button>
+    <button class="btn btn-outline btn-block btn-sm" style="margin-top:10px" onclick="signOutCustomer()">Sign out</button>
+    <div class="danger-zone" style="margin-top:22px">
+      <button class="btn btn-danger btn-block btn-sm" onclick="deleteCustomerAccount()">Delete my account</button>
+      <p class="hint" style="margin-top:8px">This removes your account and your saved details.
+        Conversations you have already had stay with the worker, as their record of the job.</p>
+    </div>`;
+  $("pfArea").innerHTML = '<option value="">Choose your area</option>' + areaOptions(c.area);
+}
+
+/* Named for the customer's own details, not "saveProfile" — that name was
+   already taken by the worker's publish button 2,700 lines up, and a second
+   top-level function with the same name silently replaces the first. The
+   worker's Publish my profile stopped working and nothing said so. */
+async function saveMyDetails(){
+  const name = $("pfName").value.trim(), area = $("pfArea").value;
+  if(!name){ toast("Please enter your name"); return; }
+  const btn = $("pfSaveBtn"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Saving…";
+  try{
+    await api.customerUpdate(customer.token, name, area);
+    customer.name = name; customer.area = area; saveCustomer();
+    paintAccountUi();
+    toast("Saved");
+  }catch(e){ toast(e.message || "Could not save that"); }
+  finally{ btn.disabled = false; btn.textContent = label; }
+}
+
+async function signOutCustomer(){
+  try{ await api.customerSignOut(customer.token); }catch(e){}
+  customer = null; saveCustomer(); paintAccountUi();
+  toast("Signed out");
+  go("home");
+}
+
+function deleteCustomerAccount(){
+  if(!signedIn()) return;
+  openModal("custDelOverlay");
+}
+async function confirmDeleteCustomer(){
+  if(!signedIn()){ closeModal("custDelOverlay"); return; }
+  const btn = $("custDelBtn"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Deleting…";
+  try{ await api.deleteCustomer(customer.token); }
+  catch(e){ toast(e.message || "Could not delete that just now"); return; }
+  finally{ btn.disabled = false; btn.textContent = label; }
+  closeModal("custDelOverlay");
+  customer = null; saveCustomer(); paintAccountUi();
+  toast("Your account has been deleted");
+  go("home");
+}
+
+/* ---------- the menu row, and the first-visit offer ---------- */
+function paintAccountUi(){
+  const row = $("drawerProfile"), label = $("drawerProfileLabel");
+  if(row) row.hidden = false;
+  if(label) label.textContent = signedIn() ? "My profile" : "Sign up or sign in";
+}
+
+/* Offered once, and never again whichever way it is answered — this is not
+   the notification sheet, which had a reason to keep asking. Somebody who
+   skipped can sign up from the menu at any time, and booking asks anyway. */
+/* Offered once, and only into an empty moment: not over a sheet, not over the
+   menu, not while they are somewhere other than the home screen doing
+   something. An account is genuinely optional until a booking, so this has no
+   right to interrupt anything.
+
+   If the moment is not empty the offer is not thrown away, it is tried once
+   more a little later — otherwise somebody who happened to have the menu open
+   at the wrong second would never be asked at all. Once, then never again. */
+let accountOfferRetried = false;
+function maybeOfferAccount(){
+  if(signedIn()) return;
+  if(localStorage.getItem(ACCOUNT_ASKED)) return;
+  const busy = document.querySelector(".overlay.open")
+            || $("drawer").classList.contains("open")
+            || currentScreen !== "home";
+  if(busy){
+    if(accountOfferRetried) return;
+    accountOfferRetried = true;
+    setTimeout(maybeOfferAccount, 25000);
+    return;
+  }
+  openModal("accountOverlay");
+}
+function skipAccountOffer(){
+  try{ localStorage.setItem(ACCOUNT_ASKED, "1"); }catch(e){}
+  closeModal("accountOverlay");
+}
+function acceptAccountOffer(){
+  closeModal("accountOverlay");
+  accountAfter = null;
+  $("acctWhy").textContent = "So your bookings, replies and chats stay in one place.";
+  showAccount("signup");
 }
 
 /* ---------- the customer's bookings ---------- */
@@ -9673,6 +10114,7 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
 
 (async function init(){
   loadSession();
+  loadCustomer();
   try{ await sb("workers?select=id&limit=1"); LIVE = true; }
   catch(e){ LIVE = false; $("demoNote").classList.add("on"); }
   if(LIVE){
@@ -9683,6 +10125,17 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
       VAPID_PUBLIC = (rows && rows[0] && rows[0].vapid_public) || null;
       PUSH_URL     = (rows && rows[0] && rows[0].push_url) || null;
     }catch(e){ REQUIRE_OTP = false; }
+  }
+  /* A token can be revoked, expire, or belong to an account since deleted.
+     Checking once at start-up is the difference between a profile screen that
+     is empty for a reason and one that is empty because nobody looked. */
+  if(LIVE && signedIn()){
+    try{
+      const me = await api.customerMe(customer.token);
+      if(me) { customer = { token: customer.token, ...me }; saveCustomer(); }
+      else   { customer = null; saveCustomer(); }
+    }catch(e){ /* offline: keep what we have rather than signing them out */ }
+    paintAccountUi();
   }
   syncCustomerPush();   /* re-register this device against any newer booking */
   syncWorkerPush();     /* and against the worker, if permission is already given */
@@ -9695,7 +10148,13 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
   initHome();
   /* the entry in the history stack the app started on */
   try{ history.replaceState({screen:"home"}, ""); }catch(e){}
+  paintAccountUi();
+  /* Two sheets, never at once — maybeAskNotify already refuses to open over
+     an open overlay, and this one refuses too, so whichever is due first wins
+     and the other simply comes round next time. Notifications go first
+     because a missed booking costs more than a missed sign-up. */
   setTimeout(maybeAskNotify, 2200);   /* after the first paint, not over it */
+  setTimeout(maybeOfferAccount, 5200);
   const start = screenFromHash();          /* manifest shortcuts land here */
   if(start && start !== "home") go(start);
   checkAdminHash();

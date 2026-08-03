@@ -1,6 +1,7 @@
 /* The Repto Worker ID: the door that changes once you are registered, the
    card itself, and the check that makes the number on it worth printing. */
 const { chromium } = require('playwright');
+const { silenceAccountOffer } = require('./helpers');
 const http = require('http'); const fs = require('fs');
 
 const html = fs.readFileSync('/home/user/salinur/docs/index.html', 'utf8');
@@ -16,6 +17,7 @@ const ok = (label, cond, extra) =>
   p.on('pageerror', e => errors.push(e.message));
   await p.goto('http://localhost:8823/');
   await p.waitForTimeout(900);
+  await silenceAccountOffer(p);
 
   // ---------- the door before you are one ----------
   const door = () => p.locator('#ctaWorkTitle').innerText();

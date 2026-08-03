@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { signInDemoCustomer } = require('./helpers');
 const http = require('http');
 const fs = require('fs');
 
@@ -23,6 +24,7 @@ const srv = http.createServer((req, res) => {
 
   await page.goto('http://localhost:8777/');
   await page.waitForTimeout(700);
+  await signInDemoCustomer(page);
 
   // ---- landing: exactly two doors ----
   console.log('Landing buttons (expect 2):', await page.locator('.cta').count());

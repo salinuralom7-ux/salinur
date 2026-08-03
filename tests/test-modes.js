@@ -2,6 +2,7 @@
    auto-divert, appointment slots, punctuality, and the registration numbers
    that regulated trades cannot publish without. */
 const { chromium } = require('playwright');
+const { signInDemoCustomer } = require('./helpers');
 const http = require('http');
 const fs = require('fs');
 
@@ -50,6 +51,7 @@ const SEED = `
   cust.on('pageerror', e => errors.push('customer: ' + e.message));
   await cust.goto('http://localhost:8815/');
   await cust.waitForTimeout(900);
+  await signInDemoCustomer(cust);
 
   // ---------- modes are attached to services, not chosen by the customer ----------
   const modes = await cust.evaluate(() => ({

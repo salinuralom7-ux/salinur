@@ -15,10 +15,21 @@
 <meta property="og:image" content="https://mysheher.com/icons/icon-512.png?v=6">
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png?v=6">
 <link rel="icon" type="image/png" sizes="512x512" href="../icons/icon-512.png?v=6">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
 <style>
+/* Source Serif 4, self-hosted, for exactly the reason the app is: a
+   render-blocking <link> to fonts.googleapis.com means no pixel paints until a
+   DNS lookup, a TLS handshake and a round trip to Google have all finished —
+   and then the same again to fonts.gstatic.com for the file. Measured with the
+   host unreachable it was 12.8 seconds and no first paint at all. These pages
+   are what Google's crawler and a nervous customer read, so they get the same
+   treatment. Licensed under the SIL Open Font License 1.1 — see fonts/OFL.txt. */
+@font-face{
+  font-family:'Source Serif 4';
+  font-style:normal;
+  font-weight:400 700;              /* one variable file covers the range */
+  font-display:swap;
+  src:url("../fonts/source-serif-4-latin.woff2") format("woff2");
+}
 /* Plus Jakarta Sans, self-hosted. One variable file, 27 KB, every weight the
    app uses. It is served from our own origin for three reasons: the ID card can
    only be exported as a faithful image if the font can be read by script, and a
@@ -60,12 +71,14 @@
   <div class="wrap">
     <div class="eyebrow">Deleting your account</div>
     <h1>Leave whenever you like.</h1>
-    <p class="lede">Only workers have an account on MySheher. You can delete yours from inside the app in about a minute, without asking anyone's permission.</p>
+    <p class="lede">Workers and customers each have an account, and either one can be deleted from inside the app in about a minute, without asking anyone's permission.</p>
     <p class="updated">Last updated 27 July 2026 · Applies to mysheher.com and the MySheher app</p>
 
     <div class="callout">
       <b>Do it yourself, right now</b>
-      <p>Open MySheher → <b>Register as a worker</b> → sign in with your WhatsApp number and PIN → scroll to <b>Delete my profile</b> → confirm, and tell us why if you feel like it. That is the whole process. There is no waiting period and nobody reviews it.</p>
+      <p><b>Worker profile:</b> open MySheher → <b>Register as a worker</b> → sign in with your WhatsApp number and PIN → scroll to <b>Delete my profile</b> → confirm, and tell us why if you feel like it.</p>
+      <p><b>Customer account:</b> open MySheher → the menu (three dots, top right) → <b>My profile</b> → <b>Delete my account</b> → confirm.</p>
+      <p>That is the whole process either way. There is no waiting period and nobody reviews it.</p>
     </div>
 
     <h2>What gets deleted</h2>
@@ -98,8 +111,15 @@
       <div class="contact-line"><b>How long</b><span>Acknowledged within 24 hours, deleted within 7 days at the latest</span></div>
     </div>
 
-    <h2>Customers</h2>
-    <p>Booking a worker does not create an account, and we ask for nothing until you send a request. If you have sent one and want the record removed, email us with the number you used and we will erase it.</p>
+    <h2>If you are a customer</h2>
+    <p>Browsing MySheher creates nothing at all — no account, no record, nothing kept. An account is only needed at the moment you send a booking request, because that is the moment a stranger is given your name, your number and your locality, and you should be able to see and undo that.</p>
+    <p>The account holds those three things and a 4-digit PIN, and nothing else. <b>Delete my account</b> under <em>My profile</em> erases all of it immediately and permanently.</p>
+    <ul>
+      <li>Your <strong>name, WhatsApp number and locality</strong>.</li>
+      <li>Your <strong>PIN</strong> (only ever stored as a bcrypt hash).</li>
+      <li>Your <strong>sign-in on every device</strong> — the account is signed out everywhere at once.</li>
+    </ul>
+    <p>Bookings you already sent are a separate record and are kept up to <strong>12 months</strong>, for the same reason a worker's are: so a complaint about a job can be looked into by either side. If you want one of those removed sooner, email us with the number you used and we will erase it.</p>
 
     <h2>Your rights</h2>
     <p>Deleting your profile is how you withdraw consent under India's Digital Personal Data Protection Act, 2023. You may also ask what we hold about you, correct it, or complain — to our Grievance Officer first, and to the Data Protection Board of India if we do not resolve it. The full picture is in our <a href="../privacy/">privacy policy</a>.</p>

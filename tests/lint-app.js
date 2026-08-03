@@ -22,3 +22,22 @@ const css = s.match(/<style>\n([\s\S]*?)\n<\/style>/)[1];
 let depth = 0, bad = 0;
 for (const c of css) { if (c === '{') depth++; else if (c === '}') { depth--; if (depth < 0) bad++; } }
 console.log('CSS braces balanced:', depth === 0 && bad === 0 ? 'yes' : `NO (depth ${depth}, ${bad} stray)`);
+
+/* Two top-level functions with the same name is not an error anywhere — the
+   second silently replaces the first, and the button wired to the first stops
+   working with nothing in the console. It happened once: a customer
+   saveProfile() 2,700 lines below the worker's took over Publish my profile.
+   In one 10,000-line file this is the failure mode to watch for. */
+const seen = new Set(), dupes = new Set();
+for (const [, n] of js.matchAll(/(?:^|\n)(?:async )?function ([A-Za-z0-9_]+)/g))
+  (seen.has(n) ? dupes : seen).add(n);
+console.log('functions declared twice:', dupes.size ? [...dupes].join(', ') : 'none');
+if (dupes.size) process.exitCode = 1;
+
+/* Same shape of problem in the markup: $() and getElementById take the first
+   match, so a duplicated id means half the page is writing to an element
+   nobody can see. */
+const idList = [...s.matchAll(/id="([A-Za-z0-9_-]+)"/g)].map(x => x[1]);
+const dupIds = idList.filter((v, i) => idList.indexOf(v) !== i);
+console.log('duplicate element ids:', dupIds.length ? [...new Set(dupIds)].join(', ') : 'none');
+if (dupIds.length) process.exitCode = 1;

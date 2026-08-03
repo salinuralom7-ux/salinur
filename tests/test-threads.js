@@ -3,6 +3,7 @@
    This drives that whole arc in preview mode, from two browser contexts —
    one the customer, one the worker. */
 const { chromium } = require('playwright');
+const { signInDemoCustomer } = require('./helpers');
 const http = require('http'); const fs = require('fs');
 
 const html = fs.readFileSync('/home/user/salinur/docs/index.html', 'utf8');
@@ -23,6 +24,7 @@ const ok = (label, cond, extra) =>
   cust.on('pageerror', e => errors.push('customer: ' + e.message));
   await cust.goto('http://localhost:8817/');
   await cust.waitForTimeout(900);
+  await signInDemoCustomer(cust);
 
   await cust.evaluate(() => go('hire'));
   await cust.waitForTimeout(900);

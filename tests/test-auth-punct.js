@@ -19,6 +19,11 @@ const ok = (l, c, x) => console.log((c ? 'PASS  ' : 'FAIL  ') + l + (x !== undef
 (async () => {
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
+  /* The notification sheet opens a couple of seconds in and sits over the
+     punctuality sheet this file is about, so its buttons never get clicked.
+     Answering the real permission is what makes the app stop asking — a
+     localStorage flag is not the gate. test-notify-ask.js checks that sheet. */
+  await ctx.grantPermissions(['notifications'], { origin: 'http://localhost:8821' });
   const page = await ctx.newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   // if anything still reaches for a browser dialog here, fail loudly

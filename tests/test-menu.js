@@ -1,5 +1,6 @@
 /* The side menu, the combined chat list, and the one-button photo step. */
 const { chromium } = require('playwright');
+const { silenceAccountOffer } = require('./helpers');
 const http = require('http'); const fs = require('fs'); const path = require('path');
 const ROOT = '/home/user/salinur/docs';
 const T = {'.html':'text/html','.js':'application/javascript','.json':'application/json',
@@ -30,6 +31,9 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   await ctx.grantPermissions(['notifications'], { origin: 'http://localhost:8816' });
   await page.goto('http://localhost:8816/');
   await page.waitForTimeout(1200);
+  /* and the one-off "create an account?" offer lands on top of the menu
+     button too, for the same reason */
+  await silenceAccountOffer(page);
 
   // ---------- the three-dot button ----------
   ok('Three-dot button in the header', await page.locator('#menuBtn').isVisible());

@@ -3,6 +3,7 @@
    and broadcast the job, so the customer thought they had booked the face
    they were looking at and got whoever answered first. */
 const { chromium } = require('playwright');
+const { signInDemoCustomer } = require('./helpers');
 const http = require('http');
 const fs = require('fs');
 
@@ -21,6 +22,7 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   page.on('pageerror', e => errors.push(e.message));
   await page.goto('http://localhost:8823/');
   await page.waitForTimeout(900);
+  await signInDemoCustomer(page);
 
   // two plumbers, and the one we will tap is deliberately the further/worse one
   await page.evaluate(() => {

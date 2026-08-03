@@ -15,10 +15,21 @@
 <meta property="og:image" content="https://mysheher.com/icons/icon-512.png?v=6">
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png?v=6">
 <link rel="icon" type="image/png" sizes="512x512" href="../icons/icon-512.png?v=6">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
 <style>
+/* Source Serif 4, self-hosted, for exactly the reason the app is: a
+   render-blocking <link> to fonts.googleapis.com means no pixel paints until a
+   DNS lookup, a TLS handshake and a round trip to Google have all finished —
+   and then the same again to fonts.gstatic.com for the file. Measured with the
+   host unreachable it was 12.8 seconds and no first paint at all. These pages
+   are what Google's crawler and a nervous customer read, so they get the same
+   treatment. Licensed under the SIL Open Font License 1.1 — see fonts/OFL.txt. */
+@font-face{
+  font-family:'Source Serif 4';
+  font-style:normal;
+  font-weight:400 700;              /* one variable file covers the range */
+  font-display:swap;
+  src:url("../fonts/source-serif-4-latin.woff2") format("woff2");
+}
 /* Plus Jakarta Sans, self-hosted. One variable file, 27 KB, every weight the
    app uses. It is served from our own origin for three reasons: the ID card can
    only be exported as a faithful image if the font can be read by script, and a
@@ -110,6 +121,8 @@
 
     <h2>What we collect from customers</h2>
     <p>You can search and browse MySheher without giving us anything at all. We ask for details only when you send a booking request: your <strong>name, phone number, locality</strong>, the service and timing you chose, and any note you write. We record the request so we can help if something goes wrong, and we pass your name and number to that worker so they can reply to you.</p>
+    <p>Sending a request also needs a <strong>customer account</strong>, and it holds those same three things and nothing more — name, phone number, locality — plus a 4-digit PIN, stored only as a bcrypt hash and never in a form we can read. No email address, no home address, no date of birth. The account exists so that the details you are about to hand to a stranger are somewhere you can see them, correct them and delete them; it is not a way for us to learn anything further about you, and there is nothing in it that a booking did not already require.</p>
+    <p>You are never asked to make one to look around. If you would rather not have one, you can still browse every profile, every rate and every review — you simply cannot send a request.</p>
     <p>If you let your browser share your location, that stays <strong>on your device</strong>. It is used to sort workers by distance and is never sent to our servers.</p>
 
     <h2>Messages inside MySheher</h2>
@@ -162,6 +175,7 @@
     <p>These are not intentions. A job runs once a day and deletes anything past its period without being asked.</p>
     <ul>
       <li><strong>Your profile</strong> — until you delete it. Deletion is immediate and permanent, and takes the photo out of our image storage as well as out of the database.</li>
+      <li><strong>A customer account</strong> — until you delete it, from <em>My profile</em> in the menu. Same terms: immediate, permanent, nobody's permission needed.</li>
       <li><strong>Booking records</strong> — up to 12 months, so we can look into a complaint, then removed.</li>
       <li><strong>Rejected profiles</strong> — up to 90 days, so you can appeal or correct and resubmit, then removed.</li>
       <li><strong>Records of who asked for a worker's number</strong> — 90 days, then removed. They exist only to stop bulk collection.</li>
@@ -170,10 +184,11 @@
       <li><strong>Reports about a profile</strong> — until the matter is closed.</li>
     </ul>
 
-    <h2 id="delete">Deleting your profile</h2>
+    <h2 id="delete">Deleting your account</h2>
     <div class="panel">
       <h3>You can do this yourself, right now</h3>
-      <p>Open MySheher, sign in, go to your profile and choose <strong>Delete my profile</strong>. Your name, photo, rates, number and location are erased from our database for good. There is no waiting period and you do not need to ask our permission.</p>
+      <p><b>Worker profile.</b> Open MySheher, sign in, go to your profile and choose <strong>Delete my profile</strong>. Your name, photo, rates, number and location are erased from our database for good. There is no waiting period and you do not need to ask our permission.</p>
+      <p><b>Customer account.</b> Open the menu, choose <strong>My profile</strong>, then <strong>Delete my account</strong>. Your name, number and locality go with it, on the same terms.</p>
       <p>If you would rather we did it, or you cannot sign in, email or WhatsApp us and we will erase it for you. The full detail — exactly what goes and what briefly stays — is on the <a href="../delete-account/">account deletion page</a>.</p>
     </div>
 

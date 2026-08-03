@@ -84,11 +84,17 @@ Yes — https://mysheher.com/delete-account/
 | Name | Yes | Yes | Required | App functionality — shown on the profile, sent with a booking |
 | Email address | Yes | No | Optional | App functionality — worker's own contact record |
 | Phone number | Yes | Yes | Required | App functionality — bookings travel over WhatsApp |
+| User IDs | Yes | No | Required | Account management — a customer or worker account is keyed to the phone number |
 | Other info (services, rates, experience) | Yes | No | Required | App functionality |
 
 "Shared" is Yes for name and phone because a booking request is passed to the
 worker, and a worker's name and number are shown to the customer booking them.
 Say so; Play checks this against the app's behaviour.
+
+Both sides have an account. A worker must have one to be listed; a customer
+needs one only to send a booking request, and can browse the whole app without.
+Either can be deleted in the app without contacting us, which is what the
+deletion URL above has to demonstrate — Play does test it.
 
 ### Location
 
@@ -105,9 +111,20 @@ decimal places (about 100 m) before they are stored.
 |---|---|---|---|---|
 | Photos | Yes | No | Required for workers | App functionality — the verification photo on a public profile |
 
+### Messages
+
+| Data type | Collected | Shared | Optional? | Purpose |
+|---|---|---|---|---|
+| Other in-app messages | Yes | No | Required | App functionality — a booking opens a conversation both sides can read back |
+
+Answer Yes here. A booking opens a chat inside MySheher and those messages are
+stored for 12 months so either side has a record of what was agreed. Ticking
+"not collected" because the app is not a messenger is the kind of mismatch
+Play rejects an update over.
+
 ### Not collected — answer No to all of these
 
-Financial info · Health and fitness · Messages · Audio · Files and docs ·
+Financial info · Health and fitness · Audio · Files and docs ·
 Calendar · Contacts · App activity · Web browsing history · App info and
 performance · Device or other IDs
 
