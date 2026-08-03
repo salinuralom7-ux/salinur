@@ -1566,7 +1566,8 @@ body.in-chat > .demo-note{display:none}
 
 /* ---------- reviews ---------- */
 .reviews-box{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
-.rv-head{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.rv-head{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.rv-note{font-size:.78rem;color:var(--muted);margin:0 0 10px;line-height:1.45}
 .rv{padding:9px 0;border-bottom:1px solid var(--line)}
 .rv:last-child{border-bottom:0}
 .rv-top{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
@@ -3234,7 +3235,7 @@ footer a{color:var(--ink-2)}
 <div class="overlay" id="reviewOverlay" onclick="if(event.target===this)closeModal('reviewOverlay')">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="closeModal('reviewOverlay')" aria-label="Close">✕</button>
-    <h3>How did it go?</h3>
+    <h3 id="reviewTitle">How did it go?</h3>
     <p class="sub" id="reviewWho"></p>
     <div class="pick-stars big" id="reviewStars">
       <span data-s="1" onclick="setReviewStars(1)">★</span><span data-s="2" onclick="setReviewStars(2)">★</span><span data-s="3" onclick="setReviewStars(3)">★</span><span data-s="4" onclick="setReviewStars(4)">★</span><span data-s="5" onclick="setReviewStars(5)">★</span>
@@ -3245,6 +3246,7 @@ footer a{color:var(--ink-2)}
       <textarea id="reviewText" rows="3" maxlength="700" placeholder="Was he on time? Was the work neat? Did the price stay as agreed?"></textarea>
     </div>
     <button class="btn btn-brand btn-block" id="reviewSendBtn" onclick="sendReview()" style="padding:14px">Post review</button>
+    <button class="btn btn-quiet btn-block btn-sm" id="reviewLaterBtn" hidden style="margin-top:10px" onclick="reviewLater()">Not now</button>
     <p class="hint" style="margin-top:11px;text-align:center">Your first name is shown with the review. Only people whose job actually finished can leave one.</p>
   </div>
 </div>
@@ -6609,8 +6611,14 @@ async function loadWorkerReviews(id){
   let rows = [];
   try{ rows = await api.workerReviews(id, 8); }catch(e){ return; }
   if(!rows.length) return;
+  /* Said out loud on the profile, not only inside the sheet where a review is
+     written. A worker whose living depends on these needs to know a stranger
+     cannot touch them, and a customer reading them needs to know they were
+     not bought or brigaded. It is true — review_thread() will not accept one
+     without the token from that booking, after that job finished. */
   host.innerHTML = `<div class="reviews-box">
     <div class="rv-head">What people said</div>
+    <p class="rv-note">Only customers who booked ${esc((currentWorker && currentWorker.name || "this worker").split(" ")[0])} and had the work done can leave one.</p>
     ${rows.map(r => `<div class="rv">
       <div class="rv-top">
         <span class="rv-stars">${"★".repeat(r.stars)}<span class="dim">${"★".repeat(5-r.stars)}</span></span>
@@ -8171,15 +8179,38 @@ async function customerThread(status){
   }catch(e){ toast(e.message); }
 }
 
-/* ---------- the review, written once the job is actually finished ---------- */
+/* ---------- the review, written once the job is actually finished ----------
+
+   Who is allowed to write one is settled in the database, not here:
+   review_thread() takes the booking code together with the customer token
+   that was minted when the request was sent, and refuses unless the thread
+   is at "done" or "closed". So the only person who can rate a worker is the
+   person who booked that worker and saw the work — not a stranger, not a
+   rival, and not the worker themselves. Losing that argument in the client
+   would be free; losing it in the database is not, which is why it lives
+   there. One booking is one rating: a second submission edits the first and
+   the worker's rating_count does not move.
+
+   What was missing was the asking. The sheet only opened if the customer
+   happened to be inside the conversation at the moment they tapped "Yes,
+   it's finished" — so somebody who put the phone down when the worker left
+   was never asked at all, and the honest reviews are exactly the ones that
+   go uncollected that way. Now the app asks. */
 let reviewStars = 0;
+let reviewFor = null;      /* {code, token, name, skill, status} */
 const STAR_WORD = ["Tap to rate","Poor","Not good","Fine","Good","Excellent"];
-function openReview(){
-  const t = chatThread; if(!t) return;
+
+function openReview(t){
+  t = t || chatThread; if(!t) return;
+  reviewFor = { code: t.code, token: t.token || chatToken, status: t.status,
+                name: t.worker_name || "Worker", skill: t.skill || "" };
   reviewStars = 0;
-  $("reviewWho").textContent = `${t.worker_name || "Worker"} · ${t.skill || ""}`;
+  const first = reviewFor.name.split(" ")[0];
+  $("reviewTitle").textContent = `How was ${first}?`;
+  $("reviewWho").textContent = `${reviewFor.name}${reviewFor.skill ? " · " + reviewFor.skill : ""}`;
   $("reviewText").value = "";
   setReviewStars(0);
+  $("reviewLaterBtn").hidden = true;      /* shown only when we did the asking */
   openModal("reviewOverlay");
 }
 function setReviewStars(n){
@@ -8189,14 +8220,79 @@ function setReviewStars(n){
 }
 async function sendReview(){
   if(!reviewStars){ toast("Tap the stars to rate from 1 to 5"); return; }
+  const r = reviewFor || { code: chatCode, token: chatToken, status: chatThread && chatThread.status };
   const btn = $("reviewSendBtn"); btn.disabled = true; btn.textContent = "Posting…";
   try{
-    await api.reviewThread(chatCode, chatToken, reviewStars, $("reviewText").value.trim());
+    await api.reviewThread(r.code, r.token, reviewStars, $("reviewText").value.trim());
+    /* Rating a job is confirming it happened. Leaving it at "done" would mean
+       the worker still shows "waiting for the customer to confirm" under a
+       review the customer has already written. */
+    if(r.status === "done")
+      try{ await api.customerSetThread(r.code, r.token, "closed"); }catch(e){}
+    noteReviewDone(r.code);
     closeModal("reviewOverlay");
     toast("Review posted — thank you");
-    await refreshChatHead();
+    if(chatCode === r.code) await refreshChatHead();
+    refreshChatBadge();
   }catch(e){ toast(e.message); }
   btn.disabled = false; btn.textContent = "Post review";
+}
+
+/* ---------- asking, after the worker has been and gone ----------
+   Bounded on purpose. Three asks per booking and never more than one an app
+   open: a review is worth having, and it stops being worth having the moment
+   the app is nagging for it. After that the "Leave a review" button stays in
+   the conversation for as long as it is unreviewed, which is where somebody
+   who wants to write one will look. */
+const REVIEW_ASKED = "repto_review_asked_v1";
+const MAX_REVIEW_ASKS = 3;
+let reviewAskedThisSession = false;
+
+function reviewAsks(){
+  try{ return JSON.parse(localStorage.getItem(REVIEW_ASKED) || "{}"); }catch(e){ return {}; }
+}
+function noteReviewAsk(code){
+  const m = reviewAsks(); m[code] = (m[code] || 0) + 1;
+  /* same cap as the seen map: a phone that books for years should not carry
+     every booking it ever made in local storage */
+  const keys = Object.keys(m);
+  if(keys.length > 80) keys.slice(0, keys.length - 80).forEach(k => delete m[k]);
+  try{ localStorage.setItem(REVIEW_ASKED, JSON.stringify(m)); }catch(e){}
+}
+function noteReviewDone(code){
+  const m = reviewAsks(); m[code] = 99;                 /* asked and answered */
+  try{ localStorage.setItem(REVIEW_ASKED, JSON.stringify(m)); }catch(e){}
+}
+function reviewLater(){
+  /* The ask was counted when the sheet opened. Counting it again here would
+     mean "Not now" costs two of the three, and closing it with the ✕ costs
+     one — the same answer priced differently depending on which button. */
+  closeModal("reviewOverlay");
+}
+
+/* The job the customer most recently had done and has not rated. Oldest
+   first would nag about a booking from three weeks ago while the one from
+   this morning is fresh in their mind; the newest is the one they can
+   actually remember. */
+function jobAwaitingReview(rows){
+  const asks = reviewAsks();
+  return (rows || []).filter(t =>
+      t.side === "customer" && !t.reviewed &&
+      (t.status === "done" || t.status === "closed") &&
+      (asks[t.code] || 0) < MAX_REVIEW_ASKS)
+    .sort((a, b) => b.when - a.when)[0] || null;
+}
+
+function maybeAskForReview(rows){
+  if(reviewAskedThisSession) return;
+  if(document.querySelector(".overlay.open")) return;
+  if($("drawer").classList.contains("open")) return;
+  const t = jobAwaitingReview(rows);
+  if(!t) return;
+  reviewAskedThisSession = true;
+  noteReviewAsk(t.code);
+  openReview(t);
+  $("reviewLaterBtn").hidden = false;
 }
 
 /* ---------- telling the worker it is there ----------
@@ -8443,6 +8539,7 @@ async function refreshChatBadge(){
   let rows = [];
   try{ rows = await myConversations(); }catch(e){ return; }
   paintChatBadge(rows);
+  maybeAskForReview(rows);
 }
 
 /* One count, painted in all three places at once, so the menu button, the
