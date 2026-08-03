@@ -1022,6 +1022,8 @@ body.menu-open{overflow:hidden}
 .otp-foot{display:flex;justify-content:space-between;gap:12px;margin-top:15px}
 .otp-foot .linkish{font-size:.85rem}
 .otp-foot .linkish:disabled{color:var(--muted);text-decoration:none;cursor:default}
+/* the way back in, under a sign-in button that has just refused somebody */
+.block-link{display:block;width:100%;text-align:center;margin-top:14px;font-size:.88rem}
 .otp-preview{
   border:1px dashed rgba(var(--warn-rgb),.4);background:rgba(var(--warn-rgb),.08);color:var(--warn);
   border-radius:var(--r-sm);padding:12px 14px;margin-bottom:15px;font-size:.83rem;line-height:1.55;
@@ -2559,6 +2561,7 @@ footer a{color:var(--ink-2)}
           <input type="password" id="inPin" placeholder="4-digit PIN" maxlength="4" inputmode="numeric">
         </div>
         <button class="btn btn-brand btn-block" id="signInBtn" onclick="signIn()">Sign in</button>
+        <button class="linkish block-link" onclick="showRecover('worker')">Forgotten your PIN?</button>
       </div>
 
       <div id="authUp" style="display:none">
@@ -2909,6 +2912,56 @@ footer a{color:var(--ink-2)}
      Sign up and sign in share one screen because they are the same three
      fields plus a PIN, and a person who is not sure which they need should
      not have to guess before they can start typing. -->
+<!-- Getting back in. One screen, three steps, because a person who has just
+     discovered they cannot sign in does not want to be navigated. -->
+<section class="screen" id="scr-recover">
+  <div class="wrap-sm">
+    <button class="back" onclick="leaveRecover()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Back
+    </button>
+    <div class="panel">
+      <h2>Forgotten your PIN</h2>
+      <p class="hint" id="recWhy">We will send a 6-digit code to your WhatsApp number. Confirm it and you can choose a new PIN.</p>
+
+      <div id="recStep1">
+        <div class="field">
+          <label for="recPhone">WhatsApp number</label>
+          <div class="phone-input">
+            <span class="cc">+91</span>
+            <input type="tel" id="recPhone" placeholder="10-digit number" maxlength="10"
+                   inputmode="numeric" autocomplete="tel-national">
+          </div>
+          <p class="hint">It has to be the number on the account. We cannot send the code anywhere else — that is the whole point of it.</p>
+        </div>
+        <button class="btn btn-brand btn-block" id="recSendBtn" onclick="recoverSend()" style="padding:14px">Send me a code</button>
+      </div>
+
+      <div id="recStep2" hidden>
+        <p class="hint" id="recSentTo"></p>
+        <div class="otp-preview" id="recPreview" hidden></div>
+        <div class="field">
+          <label for="recCode">The 6-digit code</label>
+          <input type="text" id="recCode" class="otp-box" placeholder="······" maxlength="6"
+                 inputmode="numeric" autocomplete="one-time-code" oninput="onRecCodeInput()">
+        </div>
+        <div class="field">
+          <label for="recPin">Choose a new 4-digit PIN</label>
+          <input type="password" id="recPin" placeholder="4 digits" maxlength="4"
+                 inputmode="numeric" autocomplete="new-password">
+          <p class="hint">Anything but 1234 or your year of birth. You will need it to sign in on another phone.</p>
+        </div>
+        <button class="btn btn-brand btn-block" id="recGoBtn" onclick="recoverFinish()" style="padding:14px">Set my new PIN</button>
+        <div class="otp-foot">
+          <button class="linkish" id="recResend" onclick="recoverSend(true)">Send it again</button>
+          <button class="linkish" onclick="recoverStep(1)">Wrong number?</button>
+        </div>
+        <p class="hint" style="margin-top:14px">Setting a new PIN signs you out on every other phone. If somebody else has your account, this is what removes them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="screen" id="scr-account">
   <div class="wrap-sm">
     <button class="back" onclick="leaveAccount()">
@@ -2945,6 +2998,7 @@ footer a{color:var(--ink-2)}
       </div>
 
       <button class="btn btn-brand btn-block" id="acctGoBtn" onclick="submitAccount()" style="padding:14px">Create account</button>
+      <button class="linkish block-link" id="acctForgot" hidden onclick="showRecover('customer')">Forgotten your PIN?</button>
       <p class="hint" id="acctTerms" style="margin-top:12px">
         By creating an account you agree to our <a href="terms/">terms</a> and
         <a href="privacy/">privacy policy</a>. We ask for nothing beyond what a booking needs.
@@ -4511,8 +4565,78 @@ const api = {
     if(LIVE) return await sb("rpc/delete_customer", {method:"POST",
       body:JSON.stringify({p_token:token})});
     return demoDeleteCustomer(token);
+  },
+
+  /* ---------- getting back in ----------
+     A code to the number on the account is the only proof of ownership we
+     can ask for that a stranger cannot produce. send_otp is rate limited in
+     the database on both axes that matter — how often one number may be sent
+     a code, and how many times a code may be guessed — so there is nothing
+     to add here beyond passing it on. */
+  async sendCode(phone){
+    if(LIVE) return await sb("rpc/send_otp", {method:"POST",
+      body:JSON.stringify({p_phone:phone})});
+    return demoSendCode(phone);
+  },
+  /* Both resets answer with one row of {token, error} rather than throwing.
+     That is not a client convenience: in plpgsql a raise rolls back the same
+     statement's `attempts = attempts + 1`, so a reset that raised on a wrong
+     code would never count the guess and the code could be ground down. */
+  async resetWorkerPin(phone, code, pin){
+    if(LIVE){
+      const rows = await sb("rpc/reset_worker_pin", {method:"POST",
+        body:JSON.stringify({p_phone:phone, p_code:code, p_pin:pin})});
+      return (rows && rows[0]) || {token:null, error:"Could not reset that just now"};
+    }
+    return demoResetPin("worker", phone, code, pin);
+  },
+  async resetCustomerPin(phone, code, pin){
+    if(LIVE){
+      const rows = await sb("rpc/reset_customer_pin", {method:"POST",
+        body:JSON.stringify({p_phone:phone, p_code:code, p_pin:pin})});
+      return (rows && rows[0]) || {token:null, error:"Could not reset that just now"};
+    }
+    return demoResetPin("customer", phone, code, pin);
   }
 };
+
+/* ---------- recovery, preview mode ----------
+   Mirrors the database closely enough to drive the screens: one live code per
+   number, six guesses, single use. The code is readable here because there is
+   no provider to send it — the screen shows it, and says so. */
+const RECDEMO = "repto_recovery_demo_v1";
+const recGet = () => { try{ return JSON.parse(localStorage.getItem(RECDEMO) || "{}"); }catch(e){ return {}; } };
+const recPut = m => { try{ localStorage.setItem(RECDEMO, JSON.stringify(m)); }catch(e){} };
+
+function demoSendCode(phone){
+  const m = recGet();
+  m[phone] = { code:String(Math.floor(100000 + Math.random()*900000)), tries:0, at:Date.now() };
+  recPut(m);
+  return "preview:" + m[phone].code;
+}
+function demoResetPin(kind, phone, code, pin){
+  if(!/^\d{4}$/.test(pin || "")) throw new Error("Your new PIN must be exactly 4 digits");
+  const m = recGet(), row = m[phone];
+  if(!code || !/^\d{6}$/.test(code)) return {token:null, error:"Enter the 6-digit code we sent you"};
+  if(!row) return {token:null, error:"Ask for a code first"};
+  if(row.tries >= 6) return {token:null, error:"Too many wrong tries. Ask for a new code."};
+  row.tries++; recPut(m);
+  if(row.code !== code) return {token:null, error:"That code does not match — please check and try again"};
+
+  if(kind === "worker"){
+    const all = demoAll(); const w = all.find(x => x.phone === phone);
+    if(!w) return {token:null, error:"There is no worker profile on this number"};
+    w.pin = pin; demoSave(all);
+    delete m[phone]; recPut(m);
+    return {token:"w-" + w.id, error:null, worker:w};
+  }
+  const all = custAll(); const c = all.find(x => x.phone === phone);
+  if(!c) return {token:null, error:"There is no account on this number"};
+  c.pin = pin; c.token = "t" + Date.now() + Math.random().toString(16).slice(2);
+  custSave(all);
+  delete m[phone]; recPut(m);
+  return {token:c.token, error:null};
+}
 
 /* ---------- customer accounts, preview mode ----------
    Mirrors the six RPCs closely enough that every screen above can be driven
@@ -8622,6 +8746,9 @@ function showAccount(mode){
   $("acctPinHint").textContent = up
     ? "You will need it to sign in on another phone. Not your ATM PIN."
     : "The 4-digit PIN you chose when you signed up.";
+  /* Only on the sign-in tab. Offering a way to recover a PIN to somebody who
+     is in the middle of choosing one reads as an error message. */
+  $("acctForgot").hidden = up;
   if(!$("acctArea").options.length)
     $("acctArea").innerHTML = '<option value="">Choose your area</option>' + areaOptions(null);
   go("account");
@@ -8666,6 +8793,128 @@ async function submitAccount(){
     next ? next() : go("profile");
   }catch(e){
     toast(e.message || (up ? "Could not create that account" : "Could not sign in"));
+  }finally{
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+
+/* ---------- getting back in ----------
+   The one screen somebody reaches at their least patient moment, so it holds
+   the whole thing: number, code, new PIN, done — and it signs them straight
+   in rather than returning them to the sign-in form they had just failed.
+
+   Deliberately no "is this number registered?" step. Answering that before a
+   code has been passed would make this a way to find out who is on MySheher
+   without owning any of the phones. */
+let recWho   = "worker";      /* which kind of account is being recovered */
+let recPhone = "";
+
+function showRecover(kind){
+  recWho = kind === "customer" ? "customer" : "worker";
+  $("recWhy").textContent = recWho === "worker"
+    ? "We will send a 6-digit code to the WhatsApp number on your worker profile. Confirm it and you can choose a new PIN."
+    : "We will send a 6-digit code to your WhatsApp number. Confirm it and you can choose a new PIN.";
+  const guess = recWho === "worker" ? ($("inPhone") || {}).value : ($("acctPhone") || {}).value;
+  $("recPhone").value = (guess || "").trim();
+  $("recCode").value = ""; $("recPin").value = "";
+  recoverStep(1);
+  go("recover");
+}
+function leaveRecover(){ go(recWho === "worker" ? "work" : "account"); }
+
+function recoverStep(n){
+  $("recStep1").hidden = n !== 1;
+  $("recStep2").hidden = n !== 2;
+}
+
+async function recoverSend(again){
+  const phone = $("recPhone").value.trim();
+  if(!/^[6-9]\d{9}$/.test(phone)){ toast("Enter a valid 10-digit mobile number"); return; }
+  const btn = again ? $("recResend") : $("recSendBtn");
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Sending…";
+  try{
+    const res = await api.sendCode(phone);
+    recPhone = phone;
+    $("recSentTo").innerHTML = `We sent a 6-digit code on <b>WhatsApp</b> to <b>+91 ${esc(phone)}</b>. It lasts ten minutes.`;
+    const box = $("recPreview");
+    /* Two ways there is no message on the way, and they need different words.
+       "no-provider" is the database saying nothing is connected yet; the
+       preview string is this browser having no database at all. Pretending a
+       code was sent in either case leaves somebody staring at a phone that is
+       never going to buzz. */
+    if(typeof res === "string" && res.indexOf("preview:") === 0){
+      box.innerHTML = `Preview mode — there is no database here, so your code is shown instead of being sent.<b>${esc(res.slice(8))}</b>`;
+      box.hidden = false;
+    }else if(res === "no-provider"){
+      box.innerHTML = `No message provider is connected yet, so the code could not be sent.
+        Ask us on WhatsApp at <b>+91 70865 99367</b> and we will get you back in.`;
+      box.hidden = false;
+      $("recSentTo").textContent = "";
+    }else{
+      box.hidden = true;
+    }
+    recoverStep(2);
+    $("recCode").focus();
+    if(again) toast("Code sent again");
+  }catch(e){
+    toast(e.message || "Could not send a code just now");
+  }
+  btn.disabled = false; btn.textContent = label;
+}
+
+function onRecCodeInput(){
+  const el = $("recCode");
+  el.value = el.value.replace(/\D/g, "").slice(0, 6);
+}
+
+async function recoverFinish(){
+  const code = $("recCode").value.trim(), pin = $("recPin").value.trim();
+  if(!/^\d{6}$/.test(code)){ toast("Enter the 6-digit code"); return; }
+  if(!/^\d{4}$/.test(pin)){ toast("Your new PIN must be exactly 4 digits"); return; }
+  const btn = $("recGoBtn"), label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Setting it…";
+  try{
+    const res = recWho === "worker"
+      ? await api.resetWorkerPin(recPhone, code, pin)
+      : await api.resetCustomerPin(recPhone, code, pin);
+
+    if(!res || !res.token){
+      toast((res && res.error) || "That did not work — please try again");
+      $("recCode").value = "";
+      return;
+    }
+    if(recWho === "worker"){
+      /* Straight into the dashboard on the new PIN. The reset ended every
+         other session, so this token is the only one alive. */
+      /* The same landing as a normal sign-in, because that is what this is —
+         read the profile back on the new PIN rather than trusting whatever
+         the reset happened to return. */
+      let w = res.worker || null;
+      try{ w = (await api.login(recPhone, pin)) || w; }catch(e){}
+      session = { phone: recPhone, pin, token: res.token, registered: true,
+                  worker: w, name: (w && w.name) || "" };
+      saveSession();
+      toast("PIN changed — you are signed in");
+      syncWorkerPush();
+      paintMineLink();
+      go("me");
+      watchStatus();
+      watchPending();
+    }else{
+      customer = { token: res.token, phone: recPhone };
+      try{
+        const me = await api.customerMe(res.token);
+        if(me) customer = { token: res.token, ...me };
+      }catch(e){}
+      saveCustomer();
+      paintAccountUi();
+      toast("PIN changed — you are signed in");
+      const next = accountAfter; accountAfter = null;
+      next ? next() : go("profile");
+    }
+  }catch(e){
+    toast(e.message || "That did not work — please try again");
   }finally{
     btn.disabled = false; btn.textContent = label;
   }

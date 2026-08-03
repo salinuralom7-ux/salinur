@@ -7740,3 +7740,283 @@ begin
   end if;
   raise notice 'PASS  nothing is reachable by anon except the allow-list';
 end $$;
+
+-- ============================================================
+-- MIGRATION 36 — a way back in when the PIN is forgotten
+--
+-- There was none. A worker who forgot four digits lost their profile, their
+-- reviews and their MySheher number for good, and the only route back was to
+-- email the owner and be believed. Same for a customer.
+--
+-- Proof of ownership is a code sent to the number itself — the one thing we
+-- know about somebody that a stranger cannot produce. The code machinery has
+-- existed since Migration 30 for registration (bcrypt-hashed, ten minute
+-- life, six guesses, five sends an hour, drained to WhatsApp through an
+-- outbox), so this reuses it rather than growing a second one.
+--
+-- Two bugs were found while building on it, both by attacking it rather than
+-- reading it. They are fixed here because a recovery flow standing on top of
+-- them would be worse than no recovery flow at all.
+--
+-- (a) A NULL code verified anything. crypt(null, hash) is null, null <> null
+--     is null, and `if null then` does not fire — so verify_otp(phone, null)
+--     fell straight past the comparison and returned true. Measured on a
+--     fresh database: null_code_accepted = t, otp_is_verified = t. That is
+--     every number on MySheher markable as verified by anyone holding the
+--     anon key, which is published in the page because it has to be.
+--     `null !~ regex` is null too, so a regex guard alone would not have
+--     caught it either; the null is named explicitly.
+--
+-- (b) The six-guess limit did not count. A RAISE rolls back the whole
+--     statement, and the statement contained `attempts = attempts + 1` — so
+--     six wrong guesses left attempts at zero and a code could be ground
+--     down for as long as its ten minutes lasted. verify_otp had quietly
+--     avoided this by returning false instead of raising; nothing said why,
+--     so the new code walked straight into it. Proved by guessing six times
+--     and watching the seventh still work. Everything below returns its
+--     complaint rather than raising it.
+-- ============================================================
+
+create or replace function public.verify_otp(p_phone text, p_code text)
+returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare row otp_codes%rowtype;
+begin
+  if p_code is null or p_code !~ '^\d{6}$' then
+    raise exception 'Enter the 6-digit code we sent you';
+  end if;
+  select * into row from otp_codes where phone = p_phone;
+  if not found then raise exception 'Ask for a code first'; end if;
+  if row.expires_at < now() then raise exception 'That code has expired — ask for a new one'; end if;
+  if row.attempts >= 6 then raise exception 'Too many wrong tries. Ask for a new code.'; end if;
+
+  update otp_codes set attempts = attempts + 1 where phone = p_phone;
+  -- IS DISTINCT FROM, not <>, so a null can never read as a match
+  if row.code_hash is distinct from crypt(p_code, row.code_hash) then
+    return false;
+  end if;
+  update otp_codes set verified_at = now() where phone = p_phone;
+  update customers set phone_verified = true where phone = p_phone;
+  return true;
+end;
+$$;
+
+-- These three changed shape while they were being written — burn_otp from
+-- void to text, both resets from uuid to a (token, error) row. CREATE OR
+-- REPLACE cannot change a return type, and this file is re-applied on every
+-- push, so without the drops the first re-apply would fail the deploy.
+drop function if exists public.burn_otp(text, text);
+drop function if exists public.reset_worker_pin(text, text, text);
+drop function if exists public.reset_customer_pin(text, text, text);
+
+-- Checks a code and destroys it. Never granted to anon: it is the thing that
+-- turns a code into a change, and only the two resets below may call it.
+create or replace function public.burn_otp(p_phone text, p_code text)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare row otp_codes%rowtype;
+begin
+  if p_code is null or p_code !~ '^\d{6}$' then
+    return 'Enter the 6-digit code we sent you';
+  end if;
+
+  select * into row from otp_codes where phone = p_phone;
+  if not found            then return 'Ask for a code first'; end if;
+  if row.expires_at < now() then return 'That code has expired — ask for a new one'; end if;
+  if row.attempts >= 6    then return 'Too many wrong tries. Ask for a new code.'; end if;
+
+  update otp_codes set attempts = attempts + 1 where phone = p_phone;
+  if row.code_hash is distinct from crypt(p_code, row.code_hash) then
+    return 'That code does not match — please check and try again';
+  end if;
+
+  -- One code, one reset. Left alive it could be replayed, and it would also
+  -- still satisfy otp_is_verified() and let somebody register a second
+  -- account on the number.
+  delete from otp_codes where phone = p_phone;
+  return null;                                    -- null means good
+end;
+$$;
+
+-- What a reset does beyond changing four digits, and why:
+--   * clears the lockout — somebody resetting has usually just got their PIN
+--     wrong six times, and making them wait fifteen minutes after they have
+--     proved they own the number punishes the wrong thing;
+--   * ends every existing session — this is the flow used after a phone is
+--     stolen, and a reset that leaves the thief signed in is a formality;
+--   * hands back a token, so they land signed in rather than being asked for
+--     the PIN they invented four seconds ago.
+create or replace function public.reset_worker_pin(p_phone text, p_code text, p_pin text)
+returns table (token uuid, error text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; tok uuid; bad text;
+begin
+  -- nothing to count on these two, so they may raise
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit Indian mobile number';
+  end if;
+  if p_pin is null or p_pin !~ '^\d{4}$' then
+    raise exception 'Your new PIN must be exactly 4 digits';
+  end if;
+
+  select w.id into wid from workers w where w.phone = p_phone;
+
+  -- The code is checked whether or not there is an account here, and the
+  -- answer is only given afterwards. Saying "no such profile" first would
+  -- make this a way to ask "is this number registered?" and get a straight
+  -- answer without owning the phone.
+  bad := public.burn_otp(p_phone, p_code);
+  if bad is not null then return query select null::uuid, bad; return; end if;
+  if wid is null then
+    return query select null::uuid, 'There is no worker profile on this number'::text; return;
+  end if;
+
+  insert into worker_secrets (worker_id, pin_hash)
+  values (wid, crypt(p_pin, gen_salt('bf', 10)))
+  on conflict (worker_id) do update set pin_hash = excluded.pin_hash;
+
+  update workers set phone_verified = true where id = wid;
+  delete from auth_attempts   where kind = 'login' and subject = p_phone;
+  delete from worker_sessions where worker_id = wid;
+
+  insert into worker_sessions (worker_id) values (wid) returning worker_sessions.token into tok;
+  return query select tok, null::text;
+end;
+$$;
+
+create or replace function public.reset_customer_pin(p_phone text, p_code text, p_pin text)
+returns table (token uuid, error text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare cid uuid; tok uuid; bad text;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit Indian mobile number';
+  end if;
+  if p_pin is null or p_pin !~ '^\d{4}$' then
+    raise exception 'Your new PIN must be exactly 4 digits';
+  end if;
+
+  select c.id into cid from customers c where c.phone = p_phone;
+
+  bad := public.burn_otp(p_phone, p_code);
+  if bad is not null then return query select null::uuid, bad; return; end if;
+  if cid is null then
+    return query select null::uuid, 'There is no account on this number'::text; return;
+  end if;
+
+  insert into customer_secrets (customer_id, pin_hash)
+  values (cid, crypt(p_pin, gen_salt('bf', 10)))
+  on conflict (customer_id) do update set pin_hash = excluded.pin_hash;
+
+  update customers set phone_verified = true where id = cid;
+  delete from auth_attempts     where kind = 'customer' and subject = p_phone;
+  delete from customer_sessions where customer_id = cid;
+
+  insert into customer_sessions (customer_id) values (cid) returning customer_sessions.token into tok;
+  return query select tok, null::text;
+end;
+$$;
+
+-- ---------- the allow-list, with the two resets on it ----------
+-- burn_otp is deliberately absent. Anything appended below the lock call at
+-- the bottom of this file is anon-executable by default; the check after it
+-- is what stops that being discovered in production.
+create or replace function public.lock_public_functions()
+returns void
+language plpgsql
+set search_path = public as $lock$
+declare
+  r text;
+  f record;
+  client_rpcs text[] := array[
+    'register_worker','login_worker','update_worker','delete_worker','phone_taken',
+    'worker_session_start','worker_session_end','worker_pending','worker_stats',
+    'search_workers','request_worker_contact','verify_worker_id','report_worker',
+    'record_booking',
+    'create_job','job_state','cancel_job','widen_job','advance_jobs',
+    'my_offers','accept_offer','decline_offer','set_online','save_push_subscription',
+    'save_customer_push',
+    'taken_slots','book_slot','my_appointments','rate_punctuality',
+    'start_thread','thread_view','thread_messages','post_message','customer_set_thread',
+    'worker_threads','worker_thread_messages','worker_post_message','worker_set_thread',
+    'review_thread','worker_reviews',
+    'admin_check','admin_session_start','admin_queue','admin_stats','admin_recent',
+    'admin_reports','admin_clear_report','admin_wa_codes','admin_set_status',
+    'admin_set_require_otp','admin_verify_registration','admin_exit_reasons',
+    'admin_exit_notes','admin_hide_review','admin_push_health','admin_set_vapid',
+    'test_push',
+    'register_customer','login_customer','customer_me','customer_update',
+    'customer_sign_out','delete_customer','send_otp','verify_otp','admin_set_otp',
+    'reset_worker_pin','reset_customer_pin',
+    'skill_price_stats','push_endpoint'
+  ];
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if not exists (select 1 from pg_roles where rolname = r) then continue; end if;
+
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.prokind = 'f'
+               -- never the internals of an extension: on Supabase they belong
+               -- to supabase_admin, and a REVOKE on an object you do not own
+               -- is a silent no-op rather than an error
+               and not exists (select 1 from pg_depend d
+                                where d.objid = p.oid and d.deptype = 'e')
+    loop
+      execute format('revoke all on function %s from public', f.sig);
+      execute format('revoke all on function %s from %I', f.sig, r);
+    end loop;
+
+    for f in select p.oid::regprocedure as sig from pg_proc p
+              join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname = 'public' and p.prokind = 'f'
+               and p.proname = any(client_rpcs)
+    loop
+      execute format('grant execute on function %s to %I', f.sig, r);
+    end loop;
+  end loop;
+end;
+$lock$;
+
+-- ---------- the lock, genuinely last ----------
+select public.lock_public_functions();
+
+do $$
+declare leaked text;
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then return; end if;
+
+  select string_agg(p.proname, ', ' order by p.proname) into leaked
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and p.prokind = 'f'
+     and has_function_privilege('anon', p.oid, 'execute')
+     and not exists (select 1 from pg_depend d
+                      where d.objid = p.oid and d.deptype = 'e')
+     and p.proname not in (
+       'register_worker','login_worker','update_worker','delete_worker','phone_taken',
+       'worker_session_start','worker_session_end','worker_pending','worker_stats',
+       'search_workers','request_worker_contact','verify_worker_id','report_worker',
+       'record_booking','create_job','job_state','cancel_job','widen_job','advance_jobs',
+       'my_offers','accept_offer','decline_offer','set_online','save_push_subscription',
+       'save_customer_push','taken_slots','book_slot','my_appointments','rate_punctuality',
+       'start_thread','thread_view','thread_messages','post_message','customer_set_thread',
+       'worker_threads','worker_thread_messages','worker_post_message','worker_set_thread',
+       'review_thread','worker_reviews','admin_check','admin_session_start','admin_queue',
+       'admin_stats','admin_recent','admin_reports','admin_clear_report','admin_wa_codes',
+       'admin_set_status','admin_set_require_otp','admin_verify_registration',
+       'admin_exit_reasons','admin_exit_notes','admin_hide_review','admin_push_health',
+       'admin_set_vapid','test_push','register_customer','login_customer','customer_me',
+       'customer_update','customer_sign_out','delete_customer','send_otp','verify_otp',
+       'admin_set_otp','reset_worker_pin','reset_customer_pin',
+       'skill_price_stats','push_endpoint');
+
+  if leaked is not null then
+    raise exception
+      'these functions are reachable by anon but are not on the allow-list: %. '
+      'Either add them to client_rpcs in lock_public_functions(), or move their '
+      'definition above the lock call at the end of this file.', leaked;
+  end if;
+  raise notice 'PASS  nothing is reachable by anon except the allow-list';
+end $$;

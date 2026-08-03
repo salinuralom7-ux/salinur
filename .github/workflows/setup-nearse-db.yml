@@ -286,6 +286,37 @@ jobs:
             code=$(curl -sS -o /tmp/ping.json -w "%{http_code}" -X POST "https://$ref.supabase.co/functions/v1/push" -H "Content-Type: application/json" -d '{}')
             note "sender: test call — HTTP $code — $(head -c 300 /tmp/ping.json)"
           fi
+
+          # ---- and the one-time-code sender, the same way ----
+          # A forgotten PIN is recovered with a code sent to the number on the
+          # account. If this function is not deployed the codes sit in
+          # otp_outbox and nobody can get back into anything, so it ships with
+          # the schema rather than being a step somebody has to remember.
+          OFN=supabase/functions/otp/index.ts
+          if [ ! -f "$OFN" ]; then
+            note "otp sender: $OFN is missing from the repository"
+          else
+            jq -n --arg slug otp --arg name otp --arg body "$(cat $OFN)" \
+              '{slug:$slug, name:$name, body:$body, verify_jwt:false}' > /tmp/ofn.json
+            ocode=$(curl -sS -o /tmp/ofnres.json -w "%{http_code}" "${hdr[@]}" \
+                      -X POST "$api/projects/$ref/functions" -d @/tmp/ofn.json)
+            if [ "$ocode" = "409" ] || [ "$ocode" = "400" ]; then
+              ocode=$(curl -sS -o /tmp/ofnres.json -w "%{http_code}" "${hdr[@]}" \
+                        -X PATCH "$api/projects/$ref/functions/otp" -d @/tmp/ofn.json)
+              note "otp sender: updated existing function — HTTP $ocode"
+            else
+              note "otp sender: created — HTTP $ocode"
+            fi
+            case "$ocode" in
+              2*) note "otp sender: deployed as https://$ref.supabase.co/functions/v1/otp" ;;
+              *)  note "otp sender: DEPLOY FAILED — $(head -c 400 /tmp/ofnres.json)" ;;
+            esac
+            # A 500 here is the expected answer until a provider's secrets are
+            # set, and it says which ones are missing — so it is reported, not
+            # treated as a failure of the deploy.
+            ocode=$(curl -sS -o /tmp/optest.json -w "%{http_code}" -X POST "https://$ref.supabase.co/functions/v1/otp" -H "Content-Type: application/json" -d '{}')
+            note "otp sender: test call — HTTP $ocode — $(head -c 300 /tmp/optest.json)"
+          fi
           [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
           # these two are warnings, not failures: only the owner can fix them
           if grep -q '"admin_pin_still_published_change_it":true' /tmp/harden.json; then

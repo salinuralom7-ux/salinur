@@ -116,6 +116,10 @@
     <h3>Why your number is not simply published</h3>
     <p>Your WhatsApp number is shown to a customer who is booking you — that is the point of it. It is <strong>not</strong> readable in bulk: it is handed out one booking at a time, and each request is recorded, so nobody can take a copy of every number on MySheher in one go. Until 27 July 2026 they could, and that has been closed.</p>
 
+    <h3>If you forget your PIN</h3>
+    <p>We cannot tell you what it is — we do not have it, only a hash of it. What we can do is send a <strong>6-digit code to the number on the account</strong> and let you choose a new one. The code is stored hashed like the PIN, lasts ten minutes, allows six guesses, and is destroyed the moment it is used. Setting a new PIN ends every signed-in session on that account, including any we do not know about.</p>
+    <p>Asking for a code sends one WhatsApp message to that number and nothing else. We do not use it to contact you afterwards.</p>
+
     <h3>About your PIN</h3>
     <p>Your PIN is never stored as you typed it. We keep only a bcrypt hash, which cannot be reversed back into your PIN. Nobody at MySheher can read it, and neither can anyone who obtains a copy of our database. To stay signed in on your own phone, the app keeps your PIN in that phone's local storage — it never leaves your device except to sign you in.</p>
 
