@@ -4932,8 +4932,11 @@ begin
       if not exists (select 1 from pricing_units u where u.unit = s->>'unit') then
         raise exception 'Choose how % is priced', s->>'skill';
       end if;
+      -- Zero is a rate. See MIGRATION 37: MySheher sets no floor, so the only
+      -- things refused here are a missing rate, a non-integer one, and one
+      -- with more digits than money has.
       if nullif(s->>'price','') is null
-         or (s->>'price') !~ '^\d{1,7}$' or (s->>'price')::int < 1 then
+         or (s->>'price') !~ '^\d{1,7}$' then
         raise exception 'Set a whole-rupee rate for %', s->>'skill';
       end if;
       -- rebuilt from known keys, so anything else a client sends is dropped
@@ -7979,6 +7982,103 @@ end;
 $lock$;
 
 -- ---------- the lock, genuinely last ----------
+select public.lock_public_functions();
+
+do $$
+declare leaked text;
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then return; end if;
+
+  select string_agg(p.proname, ', ' order by p.proname) into leaked
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+   where n.nspname = 'public'
+     and p.prokind = 'f'
+     and has_function_privilege('anon', p.oid, 'execute')
+     and not exists (select 1 from pg_depend d
+                      where d.objid = p.oid and d.deptype = 'e')
+     and p.proname not in (
+       'register_worker','login_worker','update_worker','delete_worker','phone_taken',
+       'worker_session_start','worker_session_end','worker_pending','worker_stats',
+       'search_workers','request_worker_contact','verify_worker_id','report_worker',
+       'record_booking','create_job','job_state','cancel_job','widen_job','advance_jobs',
+       'my_offers','accept_offer','decline_offer','set_online','save_push_subscription',
+       'save_customer_push','taken_slots','book_slot','my_appointments','rate_punctuality',
+       'start_thread','thread_view','thread_messages','post_message','customer_set_thread',
+       'worker_threads','worker_thread_messages','worker_post_message','worker_set_thread',
+       'review_thread','worker_reviews','admin_check','admin_session_start','admin_queue',
+       'admin_stats','admin_recent','admin_reports','admin_clear_report','admin_wa_codes',
+       'admin_set_status','admin_set_require_otp','admin_verify_registration',
+       'admin_exit_reasons','admin_exit_notes','admin_hide_review','admin_push_health',
+       'admin_set_vapid','test_push','register_customer','login_customer','customer_me',
+       'customer_update','customer_sign_out','delete_customer','send_otp','verify_otp',
+       'admin_set_otp','reset_worker_pin','reset_customer_pin',
+       'skill_price_stats','push_endpoint');
+
+  if leaked is not null then
+    raise exception
+      'these functions are reachable by anon but are not on the allow-list: %. '
+      'Either add them to client_rpcs in lock_public_functions(), or move their '
+      'definition above the lock call at the end of this file.', leaked;
+  end if;
+  raise notice 'PASS  nothing is reachable by anon except the allow-list';
+end $$;
+
+-- ============================================================
+-- MIGRATION 37 — MySheher sets no minimum rate
+--
+-- Every service had a floor as well as a ceiling, and a worker pricing below
+-- it was refused outright: "Carpenter is too low. The lowest allowed is Rs
+-- 500 per day." The ceiling earns its place — it is what stops a ₹40,000
+-- plumbing visit appearing on a marketplace that promises honest local rates
+-- — and it is untouched.
+--
+-- The floor does not earn its place. It was meant to prevent a race to the
+-- bottom. What it actually did was tell somebody willing to work cheaply
+-- that they were not allowed to. A worker who has just joined, with no
+-- reviews, competing against established names with forty ratings each, has
+-- exactly one lever — and we had taken it off them. What a person charges
+-- for their own labour is their decision, not ours.
+--
+-- min_price stays in service_rates and stays on the screen, as "most in
+-- Guwahati charge X – Y", which is the thing a new worker actually wants to
+-- know. It is guidance now, not a rule.
+--
+-- Zero is allowed, deliberately: a trainee doing a first job to earn a
+-- review, or somebody helping a neighbour, is not a case worth blocking.
+-- ============================================================
+
+create or replace function public.check_rate_bands(p_skills jsonb)
+returns void
+language plpgsql stable set search_path = public as $fn$
+declare
+  s     jsonb;
+  band  public.service_rates%rowtype;
+  price numeric;
+begin
+  for s in select * from jsonb_array_elements(coalesce(p_skills,'[]'::jsonb)) loop
+    select * into band from service_rates where skill = s->>'skill';
+    if not found then continue;            -- a service with no band is unrestricted
+    end if;
+    price := nullif(s->>'price','')::numeric;
+    if price is null then
+      raise exception 'Set a rate for %', s->>'skill';
+    end if;
+    if price < 0 then
+      raise exception 'A rate cannot be negative';
+    end if;
+    -- No lower bound. min_price is still read, and still shown to the worker
+    -- as what this trade usually charges here, but it no longer decides
+    -- whether they may publish.
+    if price > band.max_price then
+      raise exception '% is too high. The highest allowed is Rs % %',
+        s->>'skill', band.max_price, coalesce(s->>'unit','');
+    end if;
+  end loop;
+end;
+$fn$;
+
+-- ---------- the lock, still the last statement in this file ----------
 select public.lock_public_functions();
 
 do $$

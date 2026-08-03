@@ -144,9 +144,14 @@ const srv = http.createServer((req, res) => {
   await page.locator('#stepNext').click();
   await page.waitForTimeout(400);
   console.log('Blocks saving an over-ceiling rate:', await page.evaluate(() => regStep) === 1);
+  // No floor any more: a worker willing to work for less is allowed to say so,
+  // so a rate under the usual range must NOT be warned about.
   await carp.locator('.sd-price').fill('50');
   await page.waitForTimeout(250);
-  console.log('Under-floor flagged live:', (await carp.locator('.band').innerText()).includes('Too low'));
+  console.log('A low rate is not flagged:', !(await carp.locator('.band').innerText()).includes('Too'));
+  await carp.locator('.sd-price').fill('0');
+  await page.waitForTimeout(250);
+  console.log('Nor is zero:', !(await carp.locator('.band').innerText()).includes('Too'));
   await carp.locator('.sd-price').fill('900');
   await page.waitForTimeout(250);
   console.log('Back in range clears the warning:', !(await carp.locator('.band').innerText()).includes('Too'));

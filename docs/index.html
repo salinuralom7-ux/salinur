@@ -5777,12 +5777,12 @@ function renderPicked(){
         <button onclick="toggleSkill('${jsq(name)}')">Remove</button>
       </div>
       <div class="rate-row">
-        <label class="rupee"><span>₹</span><input class="sd-price" type="number" min="1" inputmode="numeric"
+        <label class="rupee"><span>₹</span><input class="sd-price" type="number" min="0" inputmode="numeric"
           placeholder="Your rate" value="${known.price ? known.price : ""}" oninput="checkRate(this)"></label>
         <select class="sd-unit">${units.map(u=>`<option${u===unit?" selected":""}>${esc(u)}</option>`).join("")}</select>
         <input class="sd-exp exp" type="text" maxlength="40" placeholder="Experience — e.g. 5 years" value="${esc(known.exp||"")}">
       </div>
-      ${RATE_BAND[name] ? `<p class="band">Usual range in Guwahati: <b>${money0(RATE_BAND[name][0])} – ${money0(RATE_BAND[name][1])}</b> ${esc(unit)}</p>` : ""}
+      ${RATE_BAND[name] ? `<p class="band">Most in Guwahati charge <b>${money0(RATE_BAND[name][0])} – ${money0(RATE_BAND[name][1])}</b> ${esc(unit)}. You can ask for less if you want the work.</p>` : ""}
       <p class="price-tip" hidden></p>
     </div>`;
   }).join("");
@@ -5823,13 +5823,17 @@ function checkRate(input){
   const note = card.querySelector(".band");
   if(!band || !note) return;
   const v = +input.value;
-  const bad = input.value !== "" && (v < band[0] || v > band[1]);
+  /* Only the ceiling is a rule. There is no minimum on MySheher: somebody
+     willing to work for less is allowed to say so, and a worker who has just
+     joined with no reviews has exactly one lever against the established
+     names above them. The lower figure is still shown — as what this trade
+     usually charges here, which is what a new worker wants to know. */
+  const bad = input.value !== "" && v > band[1];
   note.classList.toggle("over", bad);
   input.classList.toggle("bad", bad);
   note.textContent = bad
-    ? (v < band[0] ? `Too low — the lowest allowed is ${money0(band[0])}`
-                   : `Too high — the highest allowed is ${money0(band[1])}`)
-    : `Usual range in Guwahati: ${money0(band[0])} – ${money0(band[1])}`;
+    ? `Too high — the highest allowed is ${money0(band[1])}`
+    : `Most in Guwahati charge ${money0(band[0])} – ${money0(band[1])}. You can ask for less if you want the work.`;
 
   /* the softer half: where this sits against everybody else */
   const tip = card.querySelector(".price-tip");
@@ -5851,7 +5855,7 @@ function rateOutOfBand(skills){
   for(const s of skills){
     const b = RATE_BAND[s.skill];
     if(!b) continue;
-    if(s.price < b[0]) return `${s.skill}: the lowest allowed rate is ${money0(b[0])} ${s.unit}`;
+    /* no lower bound — see checkRate */
     if(s.price > b[1]) return `${s.skill}: the highest allowed rate is ${money0(b[1])} ${s.unit}`;
   }
   return null;
@@ -9602,12 +9606,12 @@ function adminCard(w){
         ${w.about ? "<br>" + esc(w.about) : ""}
         ${w.review_note ? `<br><em>Reason given: ${esc(w.review_note)}</em>` : ""}
       </p>
-      ${(w.skills||[]).filter(x => RATE_BAND[x.skill] &&
-            (x.price < RATE_BAND[x.skill][0] || x.price > RATE_BAND[x.skill][1]))
+      ${(w.skills||[]).filter(x => RATE_BAND[x.skill] && x.price > RATE_BAND[x.skill][1])
           .map(x => `<div class="wa-expect" style="border-color:rgba(var(--danger-rgb),.4)">
-            Rate outside the usual range — <b>${esc(x.skill)}</b> at ${money(x.price)} ${esc(x.unit||"")},
-            allowed ${money(RATE_BAND[x.skill][0])}–${money(RATE_BAND[x.skill][1])}.
+            Above the ceiling — <b>${esc(x.skill)}</b> at ${money(x.price)} ${esc(x.unit||"")};
+            the most allowed is ${money(RATE_BAND[x.skill][1])}.
             Profiles saved before the limits existed keep their old rate until the worker edits.
+            A rate <i>below</i> the usual range is not flagged — there is no minimum on MySheher.
           </div>`).join("")}
       ${w.reg_number ? `<div class="wa-expect" style="border-color:${w.reg_verified ? "rgba(var(--ok-rgb),.45)" : "rgba(var(--warn-rgb),.5)"}">
         ${w.reg_verified ? "✓ Registration checked" : "<b style='letter-spacing:0;font-size:.8rem'>Check this on the council register before approving</b>"}
