@@ -2572,7 +2572,7 @@ footer a{color:var(--ink-2)}
       <div class="row-label">How it works</div>
       <ol class="stepbar">
         <li><span class="sn">1</span><b>Search</b><span>Nearest first, rates on the card</span></li>
-        <li><span class="sn">2</span><b>Request</b><span>Lands on their WhatsApp</span></li>
+        <li><span class="sn">2</span><b>Request</b><span>Opens a chat with them</span></li>
         <li><span class="sn">3</span><b>Agree</b><span>You settle it, we take nothing</span></li>
       </ol>
     </div>
@@ -2638,7 +2638,7 @@ footer a{color:var(--ink-2)}
             <span class="cc">+91</span>
             <input type="tel" id="upPhone" placeholder="10-digit number" maxlength="10" inputmode="numeric" autocomplete="tel">
           </div>
-          <p class="hint" style="margin-top:6px">Bookings arrive on WhatsApp, so this must be a number with WhatsApp on it.</p>
+          <p class="hint" style="margin-top:6px">Bookings arrive in MySheher, and customers can nudge you on WhatsApp — so this must be a number with WhatsApp on it.</p>
         </div>
         <div class="field">
           <label for="upEmail">Email <span class="sublabel">— optional</span></label>
@@ -3301,7 +3301,14 @@ footer a{color:var(--ink-2)}
     </div>
 
     <div class="quote" id="bookQuote"></div>
-    <button class="btn btn-brand btn-block" id="confirmBookBtn" onclick="confirmBooking()" style="padding:14px">Send request on WhatsApp</button>
+    <button class="btn btn-brand btn-block" id="confirmBookBtn" onclick="confirmBooking()" style="padding:14px">Send request</button>
+    <!-- This used to say "Send request on WhatsApp" and then open a
+         conversation inside MySheher, which is not what it promised. The chat
+         is the better place — it is how the app knows whether the job was
+         accepted, whether it happened and whether it was any good — so the
+         label changed to match the behaviour rather than the other way round.
+         WhatsApp is still one tap away afterwards, from inside the chat. -->
+    <p class="hint" style="margin-top:10px;text-align:center">Opens a conversation inside MySheher. You can nudge them on WhatsApp from there.</p>
     <p class="hint" style="margin-top:11px;text-align:center">Goes straight to the worker. MySheher takes no commission.<br>
       Your name and number are shared with the worker so they can reply, and we keep a record of the request —
       see our <a href="privacy/" target="_blank" rel="noopener">privacy policy</a>.
@@ -7057,11 +7064,11 @@ async function confirmBooking(){
    and a number typed by whoever used the phone last surviving a sign-out and
    turning up in the next person's booking. */
 function prefillFromAccount(nameId, phoneId, areaId){
-  const on = signedIn();
+  const me = canBook() ? bookingIdentity() : { name:"", phone:"", area:"" };
   const n = $(nameId), p = $(phoneId), a = areaId && $(areaId);
-  if(n) n.value = on ? (customer.name  || "") : "";
-  if(p) p.value = on ? (customer.phone || "") : "";
-  if(a) a.value = on ? (customer.area  || "") : "";
+  if(n) n.value = me.name;
+  if(p) p.value = me.phone;
+  if(a) a.value = me.area;
 }
 
 function bookingModeFor(w){
@@ -7078,7 +7085,12 @@ function openBookingFor(w, skillIndex){
      booking sends a name, a number and a locality to a stranger's phone
      within seconds. Asked before the form rather than at the send button, so
      nobody loses what they have typed to it. */
-  if(!signedIn()){
+  /* A worker booking themselves is not a booking. */
+  if(workerSignedIn() && session.worker.id === w.id){
+    toast("That is your own profile");
+    return;
+  }
+  if(!canBook()){
     hideModal("wOverlay");
     requireAccount(() => openBookingFor(w, skillIndex),
       "Create an account to send this request — it is how you see the reply, and how you can change or delete your details later.");
@@ -7395,13 +7407,10 @@ async function confirmSlot(){
   if(!name){ toast("Please enter your name"); return; }
   if(!/^[6-9]\d{9}$/.test(phone)){ toast("Enter a valid 10-digit mobile number"); return; }
 
-  const tab = window.open("", "_blank");
   const btn = $("slotBookBtn"); btn.disabled = true; btn.textContent = "Booking…";
-  let num;
   try{
-    num = await api.bookSlot(w.id, s.skill, slotPick.date, slotPick.time, name, phone, note);
+    await api.bookSlot(w.id, s.skill, slotPick.date, slotPick.time, name, phone, note);
   }catch(e){
-    if(tab) tab.close();
     btn.disabled = false; btn.textContent = "Confirm appointment";
     toast(e.message || "Could not book that time");
     pickSlotDay(0);
@@ -7410,20 +7419,34 @@ async function confirmSlot(){
   btn.disabled = false; btn.textContent = "Confirm appointment";
   const when = new Date(slotPick.date + "T00:00:00")
     .toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long" });
-  const msg =
-`*MySheher appointment*
 
-Hello ${w.name.split(" ")[0]}, I have booked an appointment.
+  /* An appointment used to end by throwing the customer straight into
+     WhatsApp with a pre-written message, and it opened no conversation at
+     all — so of the four booking modes this was the only one with no chat,
+     no status anybody could follow, and no way to leave a review, because a
+     review comes off a finished conversation.
 
-*For:* ${s.skill}
-*When:* ${when} at ${slotPick.time}${note ? "\n*Reason:* " + note : ""}
+     It now does what every other booking does: opens the conversation. The
+     WhatsApp nudge is still there, inside the chat, where it is a choice
+     rather than a hand-off. */
+  const me = bookingIdentity();
+  let started = null;
+  try{
+    started = await api.startThread({
+      workerId:w.id, skill:s.skill, name, phone,
+      area: me.area || null,
+      detail: `${when} at ${slotPick.time}`,
+      note, price:s.price, unit:s.unit, mode:"slot" });
+  }catch(e){ /* the appointment itself is booked; the chat is the bonus */ }
 
-*Name:* ${name}
-*Mobile:* ${phone}`;
-  const url = "https://wa.me/91" + num + "?text=" + encodeURIComponent(msg);
-  if(tab) tab.location.href = url; else window.location.href = url;
   closeModal("slotOverlay");
   toast(`Booked — ${when} at ${slotPick.time}`);
+  if(started && started.code){
+    rememberBooking({ code:started.code, token:started.token, worker:w.name,
+                      skill:s.skill, at:new Date().toISOString(),
+                      detail:`${when} at ${slotPick.time}` });
+    openChat(started.code, "customer", "hire");
+  }
 }
 
 /* ---------- punctuality ----------
@@ -8202,12 +8225,32 @@ function saveCustomer(){
 }
 const signedIn = () => !!(customer && customer.token);
 
+/* A worker is already an account. An electrician needs a doctor, a tutor
+   needs a plumber, and being listed on MySheher should not mean signing up a
+   second time to use it — the profile already holds a verified name, a
+   verified number and a locality, which is everything a booking asks for and
+   more than a customer account holds. Anyone signed in as either can book. */
+const workerSignedIn = () => !!(session && session.registered && session.worker);
+const canBook = () => signedIn() || workerSignedIn();
+
+/* Who the booking is from, wherever they signed in. */
+function bookingIdentity(){
+  if(signedIn()) return { name: customer.name || "", phone: customer.phone || "",
+                          area: customer.area || "" };
+  if(workerSignedIn()){
+    const w = session.worker || {};
+    return { name: w.name || session.name || "", phone: w.phone || session.phone || "",
+             area: w.area || "" };
+  }
+  return { name:"", phone:"", area:"" };
+}
+
 /* The one rule that matters: browsing is open to anyone, booking is not.
    Somebody is about to send their name, their number and their address to a
    stranger — an account is the point at which they can see what they sent,
    change it, and delete it. Before that there is nothing to hold. */
 function requireAccount(then, why){
-  if(signedIn()){ then(); return; }
+  if(canBook()){ then(); return; }
   accountAfter = then;
   $("acctWhy").textContent = why || "Create an account to send this request. It takes about thirty seconds.";
   showAccount("signup");
@@ -8682,11 +8725,20 @@ ${SITE}/#job=${t.code}
 — sent from MySheher`;
 }
 
-function nudgeWhatsApp(){
+async function nudgeWhatsApp(){
   const t = chatThread; if(!t) return;
   const b = myBooking(t.code) || {};
-  const num = t.worker_phone || b.workerPhone;
-  if(!num){ toast("Their number is not available yet"); return; }
+  let num = t.worker_phone || b.workerPhone;
+  /* thread_view withholds the worker's number until the job is accepted, and
+     this button is offered while it is still only requested — so it failed
+     every single time it was most useful, with "their number is not available
+     yet". The number is not secret from somebody who has sent this worker a
+     booking; it is only protected from being harvested in bulk. So ask for it
+     down the metered path, which records who asked and rate-limits them. */
+  if(!num && t.worker_id){
+    try{ num = await api.contact(t.worker_id); }catch(e){}
+  }
+  if(!num){ toast("Could not reach their number just now — your request is still with them"); return; }
   const url = waLink("91" + idDigits(num), nudgeText(t), null);
   window.open(url, "_blank", "noopener");
   try{ localStorage.setItem("repto_nudged_" + t.code, "1"); }catch(e){}
@@ -9256,7 +9308,10 @@ function paintAccountUi(){
    at the wrong second would never be asked at all. Once, then never again. */
 let accountOfferRetried = false;
 function maybeOfferAccount(){
-  if(signedIn()) return;
+  /* Nobody who can already book is offered an account, which now includes a
+     signed-in worker — asking somebody with a verified profile to sign up
+     reads as the app not knowing who they are. */
+  if(canBook()) return;
   if(localStorage.getItem(ACCOUNT_ASKED)) return;
   const busy = document.querySelector(".overlay.open")
             || $("drawer").classList.contains("open")
