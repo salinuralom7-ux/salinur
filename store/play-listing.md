@@ -44,7 +44,7 @@ Every service has a floor and a ceiling drawn from what that trade actually char
 From Jalukbari to Narengi, Amingaon to Azara, Six Mile to Maligaon. Filter by locality, or let the app sort by how far away someone actually is.
 
 ARE YOU THE ONE LOOKING FOR WORK?
-Create a profile in about two minutes. Choose up to three services, set your own rate for each, add a photo and confirm your WhatsApp number. Once approved you appear in searches near you, and bookings arrive on your WhatsApp.
+Create a profile in about two minutes. Choose the service you do, set your own rate for it, add a photo and confirm your WhatsApp number. Once approved you appear in searches near you, and bookings arrive on your WhatsApp.
 
 START YOUR 30 DAYS FREE
 Free for the first 30 days from the day your profile is approved. We ask for no card, no UPI mandate and no payment details of any kind — there is nothing that can auto-charge you and nothing to cancel.

@@ -118,17 +118,24 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(250);
   await page.locator('.svc-row', { hasText: 'Plumber' }).first().click();
   await page.waitForTimeout(250);
-  console.log('Picked 3 services:', await page.locator('.picked-card').count());
+  // A profile is one trade now. Choosing Plumber above replaced Carpenter
+  // rather than adding to it, so there is exactly one card here.
+  console.log('One service at a time:', await page.locator('.picked-card').count() === 1);
   console.log('Counter reads:', (await page.locator('#skillCount').textContent()).trim());
-  console.log('4th service disabled:', await page.locator('.svc-row[disabled]').count() > 0);
+  console.log('Nothing is greyed out:', await page.locator('.svc-row[disabled]').count() === 0);
 
-  console.log('Rate band shown for Electrician:', (await page.locator('.picked-card .band').first().innerText()).trim());
+  // put Carpenter back — the rate assertions below are about a carpenter
+  await page.locator('.step-back').click();
+  await page.waitForTimeout(250);
+  await page.locator('.cat-tile', { hasText: 'Construction & Interiors' }).click();
+  await page.waitForTimeout(250);
+  await page.locator('.svc-row', { hasText: 'Carpenter' }).first().click();
+  await page.waitForTimeout(300);
+
+  console.log('Rate band shown:', (await page.locator('.picked-card .band').first().innerText()).trim());
   const cards = page.locator('.picked-card');
-  const rates = ['450', '900', '400'];
-  for (let i = 0; i < 3; i++) {
-    await cards.nth(i).locator('.sd-price').fill(rates[i]);
-    await cards.nth(i).locator('.sd-exp').fill((i + 3) + ' years');
-  }
+  await cards.nth(0).locator('.sd-price').fill('900');
+  await cards.nth(0).locator('.sd-exp').fill('6 years');
   // price validation
   await cards.nth(0).locator('.sd-price').fill('');
   await page.locator('#stepNext').click();
@@ -140,7 +147,9 @@ const srv = http.createServer((req, res) => {
   await carp.locator('.sd-price').fill('9000');
   await page.waitForTimeout(250);
   console.log('Over-ceiling flagged live:', (await carp.locator('.band').innerText()).includes('Too high'));
-  await cards.nth(0).locator('.sd-price').fill('450');
+  // and it must not merely warn — the step has to refuse to advance while the
+  // rate is above the ceiling. (This used to be checked with a second card
+  // still holding a bad rate; there is only one card now.)
   await page.locator('#stepNext').click();
   await page.waitForTimeout(400);
   console.log('Blocks saving an over-ceiling rate:', await page.evaluate(() => regStep) === 1);

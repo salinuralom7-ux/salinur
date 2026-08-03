@@ -262,8 +262,8 @@ const SEED = `
      the test being wrong. */
   await cust.locator('#slotDayRow .dchip').nth(1).click();
   await cust.waitForTimeout(600);
-  const slots = await cust.locator('.tslot').count();
-  ok('10:00–13:00 in 30s gives six slots tomorrow', slots === 6, slots + ' shown');
+  const slots = await cust.locator('button.tslot').count();
+  ok('10:00–13:00 in 30s gives six bookable slots tomorrow', slots === 6, slots + ' shown');
 
   /* And assert the hiding itself, which nothing covered. */
   const todayCount = await cust.evaluate(() => {
@@ -280,7 +280,7 @@ const SEED = `
 
   await cust.locator('.dchip').nth(1).click();       // tomorrow, so nothing is in the past
   await cust.waitForTimeout(600);
-  await cust.locator('.tslot').first().click();
+  await cust.locator('button.tslot').first().click();
   await cust.fill('#slotName', 'Bikash');
   await cust.fill('#slotPhone', '9876500002');
   await cust.evaluate(() => { window.open = () => null; });
@@ -297,8 +297,23 @@ const SEED = `
   await cust.waitForTimeout(600);
   await cust.locator('.dchip').nth(1).click();
   await cust.waitForTimeout(700);
-  const left = await cust.locator('.tslot').count();
-  ok('A taken slot disappears', left === 5, left + ' left');
+  /* The taken hour is still on the grid — that is the point of it — but it is
+     no longer bookable, and it says why. A customer who sees a gap where 1pm
+     should be concludes the worker does not work at 1pm. */
+  const left = await cust.locator('button.tslot').count();
+  ok('A taken slot is no longer bookable', left === 5, left + ' bookable');
+  const shown = await cust.locator('.tslot').count();
+  ok('…but it is still shown, so the day reads honestly', shown === 6, shown + ' cells');
+  ok('…marked Booked', (await cust.locator('.tslot.taken .tslot-tag').innerText()).trim().toLowerCase() === 'booked',
+     JSON.stringify(await cust.locator('.tslot.taken').innerText()));
+  ok('…in the notification red', await cust.evaluate(() => {
+    const el = document.querySelector('.tslot.taken');
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--danger)';
+    document.body.appendChild(probe);
+    const danger = getComputedStyle(probe).color; probe.remove();
+    return getComputedStyle(el).color === danger;
+  }));
 
   // the dentist sees it in their book
   await worker.evaluate(() => {

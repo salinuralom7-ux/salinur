@@ -949,8 +949,54 @@ body.menu-open{overflow:hidden}
 .link-alt[hidden]{display:none}
 
 /* ---------- camera capture ---------- */
+/* Who else does this, offered inside the conversation the moment a request is
+   turned down. A customer who has already chosen a trade, a locality and a
+   time should not be sent back to an empty search box to do it again. */
+.alt-head{font-size:.74rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin:14px 0 8px}
+.alt-list{display:flex;flex-direction:column;gap:8px}
+.alt-row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:9px 11px;color:var(--ink);font:inherit;cursor:pointer}
+.alt-row:active{background:var(--raise)}
+.alt-face{width:38px;height:38px;border-radius:50%;overflow:hidden;flex:0 0 auto;background:var(--raise)}
+.alt-face img{width:100%;height:100%;object-fit:cover;display:block}
+.alt-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.alt-body b{font-size:.92rem;font-weight:700}
+.alt-body span{font-size:.78rem;color:var(--muted)}
+.alt-go{font-size:.82rem;font-weight:800;color:var(--brand)}
+
+/* The undo bar. Above the sheets and the chat bar, because five seconds is
+   not long enough to go looking for it. */
+.undo-bar{
+  position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
+  z-index:120;display:flex;align-items:center;gap:12px;
+  background:var(--raise);border:1px solid var(--line-strong);
+  border-radius:var(--r);padding:12px 14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
+  animation:undo-in .18s ease-out;
+}
+@keyframes undo-in{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.undo-bar{animation:none}}
+.undo-bar span#undoText{flex:1;font-size:.9rem;font-weight:600;color:var(--ink)}
+.undo-bar button{
+  display:flex;align-items:center;gap:8px;
+  background:transparent;border:0;color:var(--brand);
+  font:inherit;font-weight:800;font-size:.9rem;letter-spacing:.02em;
+  padding:6px 2px;cursor:pointer;
+}
+.undo-ring{
+  width:18px;height:18px;border-radius:50%;
+  border:2px solid rgba(var(--brand-rgb),.30);border-top-color:var(--brand);
+  animation:undo-spin 1s linear infinite;
+}
+@media (prefers-reduced-motion:reduce){.undo-ring{animation:none}}
+@keyframes undo-spin{to{transform:rotate(360deg)}}
 .cam-stage{position:relative;background:#000;border-radius:var(--r);overflow:hidden;aspect-ratio:1;margin-bottom:16px}
-.cam-stage video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+/* Mirrored for a selfie, because that is what a front camera should look
+   like. The back camera is not a mirror — see openLens(). */
+.cam-stage video{width:100%;height:100%;object-fit:cover}
+.cam-stage video.mirrored{transform:scaleX(-1)}
 .cam-oval{
   position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(ellipse 38% 46% at 50% 46%, transparent 98%, rgba(var(--bg-rgb),.78) 100%);
@@ -1723,6 +1769,23 @@ body.in-chat > .demo-note{display:none}
   border-radius:var(--r-sm);padding:10px 4px;font-size:.86rem;font-weight:600;
 }
 .tslot.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:800}
+/* A taken time used to vanish from the grid, which reads as "this worker does
+   not work at 1pm" rather than "1pm has gone". Showing it, struck through and
+   in the notification red, tells the truth: the day is real, that one hour is
+   spoken for. Deliberately not disabled-grey — grey says "not available to
+   you", red says "somebody has this". */
+.tslot.taken{
+  background:rgba(var(--danger-rgb),.10);
+  border-color:rgba(var(--danger-rgb),.38);
+  color:var(--danger);
+  font-weight:700;cursor:default;
+}
+.tslot.taken .tslot-when{text-decoration:line-through;opacity:.75}
+.tslot.taken .tslot-tag{display:block;font-size:.66rem;letter-spacing:.06em;
+  text-transform:uppercase;font-weight:800;margin-top:2px}
+.tslot.gone{opacity:.42;cursor:default}
+.tslot.gone .tslot-tag{display:block;font-size:.66rem;letter-spacing:.06em;
+  text-transform:uppercase;font-weight:700;margin-top:2px;color:var(--muted)}
 
 /* ---------- booking modes: the extra questions a trade brings with it ---------- */
 .mode-note{
@@ -2707,8 +2770,8 @@ footer a{color:var(--ink-2)}
     <div class="regstep" data-step="1">
     <div class="field">
       <label>
-        Services you offer <span class="sublabel">— choose up to 3</span>
-        <span class="chip-count" id="skillCount" style="float:right">0 of 3</span>
+        The service you offer <span class="sublabel">— choose one</span>
+        <span class="chip-count" id="skillCount" style="float:right">None yet</span>
       </label>
       <div class="skill-search">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -3376,6 +3439,13 @@ footer a{color:var(--ink-2)}
   </div>
 </div>
 
+<!-- Five seconds to take back an accept. Sits above everything, because it is
+     useless if the worker has to find it. -->
+<div class="undo-bar" id="undoBar" hidden role="status" aria-live="polite">
+  <span id="undoText">Accepted</span>
+  <button type="button" id="undoBtn" onclick="runUndo()">Undo<span class="undo-ring" id="undoRing"></span></button>
+</div>
+
 <div class="overlay" id="camOverlay" onclick="if(event.target===this)stopCamera()">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="stopCamera()" aria-label="Close">✕</button>
@@ -3384,6 +3454,11 @@ footer a{color:var(--ink-2)}
     <div class="cam-stage"><video id="camVideo" autoplay playsinline muted></video><div class="cam-oval"></div></div>
     <p class="cam-tip" id="camTip">Only a live photo is accepted — this is how we keep MySheher trustworthy.</p>
     <button class="btn btn-brand btn-block" id="camShot" onclick="captureFrame()" style="padding:14px">Capture photo</button>
+    <!-- Plenty of people hand the phone to somebody else to take the picture,
+         and plenty of cheap handsets have a front camera that is far worse
+         than the back one. Either way the front camera should not be the only
+         one on offer. Hidden where there is nothing to switch to. -->
+    <button class="btn btn-quiet btn-block btn-sm" id="camFlip" hidden style="margin-top:10px" onclick="flipCamera()">Use the back camera</button>
   </div>
 </div>
 
@@ -3731,8 +3806,7 @@ const CATALOGUE = [
   ]],
   ["care","Care & Nursing",[
     ["Babysitter","per month"],["Nanny (Full-time)","per month"],["Newborn & Mother Care","per month"],
-    ["Elderly Caretaker","per month"],["Patient Attendant","per day"],["Home Nurse","per day"],
-    ["Physiotherapist (Home Visit)","per session"]
+    ["Elderly Caretaker","per month"],["Patient Attendant","per day"],["Home Nurse","per day"]
   ]],
   ["repair","Repairs & Appliances",[
     ["Electrician","per visit"],["Plumber","per visit"],["AC Service & Repair","per unit"],
@@ -3760,7 +3834,7 @@ const CATALOGUE = [
     ["Beautician (At Home)","per visit"],["Bridal Makeup Artist","per job"],["Party Makeup Artist","per job"],
     ["Hair Stylist (At Home)","per visit"],["Barber (At Home)","per visit"],["Mehendi Artist","per job"],
     ["Nail Artist","per visit"],["Massage Therapist","per session"],["Yoga Trainer","per month"],
-    ["Fitness Trainer (At Home)","per month"],["Dietician & Nutritionist","per session"]
+    ["Fitness Trainer (At Home)","per month"]
   ]],
   ["tutor","Tutors & Coaching",[
     ["Home Tutor (Class 1–5)","per month"],["Home Tutor (Class 6–10)","per month"],["Tutor — Science (11–12)","per month"],
@@ -3769,7 +3843,7 @@ const CATALOGUE = [
     ["Guitar Teacher","per month"],["Keyboard & Piano Teacher","per month"],["Vocal & Singing Teacher","per month"],
     ["Tabla & Drums Teacher","per month"],["Classical Dance Teacher","per month"],["Western Dance Teacher","per month"],
     ["Art & Drawing Teacher","per month"],["Religious Studies Teacher","per month"],["Cricket / Football Coach","per month"],
-    ["Swimming Coach","per month"]
+    ["Swimming Coach","per month"],["Online Tutor (Any Subject)","per month"]
   ]],
   ["event","Events & Photography",[
     ["Event Photographer","per day"],["Wedding Photographer","per day"],["Videographer","per day"],
@@ -3799,7 +3873,7 @@ const CATALOGUE = [
     ["Presentation Designer","per job"],["Social Media Manager","per month"],
     ["Digital Marketing Specialist","per month"],["SEO Specialist","per month"],
     ["Content Writer","per job"],["Translator (Assamese / Hindi / English)","per job"],
-    ["Online Tutor (Any Subject)","per month"],["Data Entry Operator","per month"]
+    ["Data Entry Operator","per month"]
   ]],
   ["garden","Gardening & Outdoor",[
     ["Gardener (Regular)","per month"],["Garden Setup & Landscaping","per project"],["Lawn Mowing","per visit"],
@@ -3827,7 +3901,8 @@ const CATALOGUE = [
     ["Orthopaedic Doctor","per session"],["Skin & Hair Specialist","per session"],
     ["Eye Specialist","per session"],["ENT Specialist","per session"],
     ["Ayurvedic Doctor","per session"],["Homeopathic Doctor","per session"],
-    ["Psychologist / Counsellor","per session"],["Lab Sample Collection (At Home)","per visit"]
+    ["Psychologist / Counsellor","per session"],["Dietician & Nutritionist","per session"],
+    ["Physiotherapist (Home Visit)","per session"],["Lab Sample Collection (At Home)","per visit"]
   ]]
 ];
 
@@ -5683,7 +5758,7 @@ function regNext(){
 function renderSkillPicker(){
   const q = $("skillSearch").value.trim().toLowerCase();
   const host = $("skillPicker");
-  $("skillCount").textContent = picked.length + " of 3";
+  $("skillCount").textContent = picked.length ? "1 chosen" : "None yet";
 
   if(q){
     const hits = SKILLS.filter(x => x.n.toLowerCase().includes(q)).slice(0, 40);
@@ -5719,8 +5794,10 @@ function renderSkillPicker(){
 }
 function svcRow(x){
   const on = picked.includes(x.n);
-  const dis = !on && picked.length >= 3;
-  return `<button class="svc-row${on?" on":""}" ${dis?"disabled":""} onclick="toggleSkill('${jsq(x.n)}')">
+  /* One trade per profile. Nothing is greyed out: tapping a different service
+     moves the choice rather than refusing it, because a disabled row with no
+     explanation reads as a bug. */
+  return `<button class="svc-row${on?" on":""}" onclick="toggleSkill('${jsq(x.n)}')">
     <span><b>${esc(x.n)}</b><span class="unit">Usually priced ${esc(x.u)}</span></span>
     <span class="tick">✓</span>
   </button>`;
@@ -5728,9 +5805,11 @@ function svcRow(x){
 function openCat(k){ pickCat = k; renderSkillPicker(); }
 function toggleSkill(name){
   const current = collectSkills();
-  if(picked.includes(name)) picked = picked.filter(x => x !== name);
-  else if(picked.length < 3) picked.push(name);
-  else { toast("You can offer up to 3 services"); return; }
+  /* A profile is one trade. Somebody who is a carpenter and also drives is
+     two different people to a customer searching, two different rates and two
+     different sets of reviews — and a profile listing both was being found
+     for neither. Choosing a second service replaces the first. */
+  picked = picked.includes(name) ? [] : [name];
   window._existing = current.length ? current : window._existing;
   renderSkillPicker();
   renderPicked();
@@ -5881,25 +5960,60 @@ function renderSelfie(){
    Offering it up front invites a gallery photo of somebody else. */
 function offerUpload(){ const a = $("uploadAlt"); if(a) a.hidden = false; }
 let camStream = null;
+let camFacing = "user";        /* "user" = front, "environment" = back */
+
 async function startCamera(){
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     offerUpload();
     toast("Camera not available — you can upload a photo instead");
     return;
   }
+  camFacing = "user";          /* a selfie is still the default */
   openModal("camOverlay");
-  $("camShot").disabled = true;
+  await openLens();
+}
+
+/* Split out so flipping does not re-open the sheet or re-run the permission
+   dance — it is the same camera, pointed the other way. */
+async function openLens(){
+  const shot = $("camShot"), flip = $("camFlip"), v = $("camVideo");
+  shot.disabled = true;
+  if(camStream){ camStream.getTracks().forEach(t => t.stop()); camStream = null; }
   try{
-    camStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user", width:{ideal:720}, height:{ideal:720}}, audio:false});
-    const v = $("camVideo");
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode: camFacing, width:{ideal:720}, height:{ideal:720} }, audio:false });
     v.srcObject = camStream;
+    /* The front camera is shown mirrored because that is what people expect
+       of a selfie. The back camera is not a mirror and must not be flipped,
+       or every sign behind them reads backwards. */
+    v.classList.toggle("mirrored", camFacing === "user");
     await v.play();
-    $("camShot").disabled = false;
+    shot.disabled = false;
+    if(flip){
+      /* Only offered once we know there is a second camera. On a laptop with
+         one webcam the button would just fail. */
+      let many = true;
+      try{
+        const cams = (await navigator.mediaDevices.enumerateDevices())
+                       .filter(d => d.kind === "videoinput");
+        many = cams.length > 1;
+      }catch(e){}
+      flip.hidden = !many;
+      flip.textContent = camFacing === "user" ? "Use the back camera" : "Use the front camera";
+    }
   }catch(e){
     stopCamera();
     offerUpload();
     toast("Camera permission denied — allow the camera, or upload a photo instead");
   }
+}
+
+async function flipCamera(){
+  camFacing = camFacing === "user" ? "environment" : "user";
+  $("camTip").textContent = camFacing === "environment"
+    ? "Ask somebody to take it for you — face inside the circle, in good light."
+    : "Only a live photo is accepted — this is how we keep MySheher trustworthy.";
+  await openLens();
 }
 function stopCamera(){
   if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream = null; }
@@ -5912,7 +6026,9 @@ async function captureFrame(){
   const S = PHOTO_SIZE, side = Math.min(v.videoWidth, v.videoHeight);
   const cv = document.createElement("canvas"); cv.width = S; cv.height = S;
   const ctx = cv.getContext("2d");
-  ctx.translate(S, 0); ctx.scale(-1, 1);   /* un-mirror */
+  /* Un-mirror only what was mirrored. The back camera is not a mirror, and
+     flipping it would reverse everything in the frame. */
+  if(camFacing === "user"){ ctx.translate(S, 0); ctx.scale(-1, 1); }
   ctx.drawImage(v, (v.videoWidth-side)/2, (v.videoHeight-side)/2, side, side, 0, 0, S, S);
 
   /* on-device face check where the browser supports it */
@@ -6446,6 +6562,16 @@ async function confirmEta(mins){
     if(j && j.thread_code){
       toast("Accepted — say hello");
       openChat(j.thread_code, "worker", "me");
+      /* An instant job is the one most likely to be accepted by accident:
+         the offer arrives unannounced and the button is under the thumb. */
+      const tc = j.thread_code;
+      offerUndo("Accepted — you have a few seconds to change your mind", async () => {
+        await api.workerSetThread(session.phone, session.pin, tc, "declined", UNAVAILABLE);
+        pokePush();
+        if(chatCode === tc){ await refreshChat(false); await refreshChatHead(); }
+        toast("Undone — the customer has been told you are unavailable");
+        pollOffers();
+      });
     }else{
       toast("Accepted");
     }
@@ -7229,19 +7355,36 @@ function renderSlotTimes(){
   /* a time that has already passed today is not a slot */
   const today = new Date().toISOString().slice(0,10);
   const nowMin = new Date().getHours()*60 + new Date().getMinutes();
-  const free = all.filter(t => {
-    if(taken.has(t)) return false;
-    if(slotPick.date !== today) return true;
+  /* Every slot the worker actually offers is shown, whatever its state. A
+     booked hour used to be dropped from the list entirely, so a customer
+     looking at a gap where 1pm should be concluded this worker does not work
+     at 1pm — and either gave up or asked for a time that was never on offer.
+     Say which it is. */
+  const past = t => {
+    if(slotPick.date !== today) return false;
     const [h,m] = t.split(":").map(Number);
-    return h*60 + m > nowMin + 15;
+    return h*60 + m <= nowMin + 15;
+  };
+  const cells = all.map(t => {
+    if(taken.has(t))
+      return `<span class="tslot taken" aria-disabled="true" aria-label="${t} is already booked">
+        <span class="tslot-when">${t}</span><span class="tslot-tag">Booked</span></span>`;
+    if(past(t))
+      return `<span class="tslot gone" aria-disabled="true" aria-label="${t} has passed">
+        <span class="tslot-when">${t}</span><span class="tslot-tag">Passed</span></span>`;
+    return `<button type="button" class="tslot${slotPick.time===t?" on":""}"
+      onclick="pickSlotTime('${t}')"><span class="tslot-when">${t}</span></button>`;
   });
-  $("slotTimeGrid").innerHTML = free.length
-    ? free.map(t => `<button type="button" class="tslot${slotPick.time===t?" on":""}" onclick="pickSlotTime('${t}')">${t}</button>`).join("")
-    : `<p class="hint">Nothing left on this day — try another.</p>`;
+  const anyFree = all.some(t => !taken.has(t) && !past(t));
+  $("slotTimeGrid").innerHTML = cells.join("") +
+    (anyFree ? "" : `<p class="hint" style="grid-column:1/-1;margin:6px 0 0">Every time on this day has gone — try another.</p>`);
 }
 function pickSlotTime(t){
   slotPick.time = t;
-  document.querySelectorAll("#slotTimeGrid .tslot").forEach(b => b.classList.toggle("on", b.textContent === t));
+  /* matched on the time itself rather than the whole cell's text, which now
+     carries a "Booked" or "Passed" label as well */
+  document.querySelectorAll("#slotTimeGrid button.tslot").forEach(b =>
+    b.classList.toggle("on", b.querySelector(".tslot-when").textContent === t));
 }
 async function confirmSlot(){
   const w = currentWorker;
@@ -8205,10 +8348,60 @@ function chatActions(t){
   if(t.status === "closed" && !t.reviewed) return `
     <button class="btn btn-brand btn-sm" onclick="openReview()">Leave a review</button>`;
   if(t.status === "closed") return `<span class="chat-note">Completed. Thank you for the review.</span>`;
-  if(t.status === "declined") return `<span class="chat-note">${esc(t.decline_reason || "They could not take this one.")}</span>
-    <button class="btn btn-outline btn-sm" onclick="go('hire')">Find someone else</button>`;
+  if(t.status === "declined"){
+    /* "Find someone else" sent them back to a blank search to start over,
+       having already chosen a trade, a locality and a time. The people who
+       could actually do this job are known — show them, in this thread,
+       ready to book. */
+    setTimeout(() => suggestOthers(t), 0);
+    return `<span class="chat-note">${esc(t.decline_reason || "They could not take this one.")}</span>
+      <div id="altWrap"><p class="hint">Looking for others who do this…</p></div>`;
+  }
   return "";
 }
+/* ---------- who else does this ----------
+   Shown the moment a request is declined or withdrawn, in the conversation
+   the customer is already looking at. Same trade, nearest first, the worker
+   who just said no left out. Tapping one opens their booking directly, so
+   the second attempt costs a tap rather than a fresh search. */
+async function suggestOthers(t){
+  const host = $("altWrap");
+  if(!host || !t || !t.skill) return;
+  let rows = [];
+  try{
+    /* the same call the browse screen makes, narrowed to this one trade and
+       ranked by distance when the customer has shared theirs */
+    const page = await api.search({ catSkills:[t.skill],
+                                    lat: myLoc && myLoc.lat, lng: myLoc && myLoc.lng,
+                                    limit: 8, offset: 0 });
+    rows = (page && page.list) || [];
+  }catch(e){ rows = []; }
+  const others = rows.filter(w => w.id !== t.worker_id).slice(0, 4);
+  if(!others.length){
+    host.innerHTML = `<p class="hint">Nobody else is listed for ${esc(t.skill)} just yet.</p>
+      <button class="btn btn-outline btn-sm" onclick="go('hire')">Browse everyone</button>`;
+    return;
+  }
+  host.innerHTML = `<p class="alt-head">Others who do ${esc(t.skill)}</p>
+    <div class="alt-list">${others.map(w => `
+      <button type="button" class="alt-row" onclick="bookInstead('${jsq(w.id)}','${jsq(t.skill)}')">
+        <span class="alt-face"><img src="${avatarOf(w, true)}" alt="" loading="lazy" decoding="async"></span>
+        <span class="alt-body">
+          <b>${esc(w.name)}</b>
+          <span>${esc(w.area || "Guwahati")}${w.rating_count ? " · " + (w.rating_sum/w.rating_count).toFixed(1) + "★" : " · new"}</span>
+        </span>
+        <span class="alt-go">Book</span>
+      </button>`).join("")}</div>`;
+}
+
+function bookInstead(id, skill){
+  const w = (workers || []).find(x => x.id === id);
+  if(!w){ go("hire"); return; }
+  const i = Math.max(0, (w.skills || []).findIndex(s => s.skill === skill));
+  go("hire");
+  openBookingFor(w, i);
+}
+
 /* A phone call stays available once a job is on — the app is the place the
    work happens, not a reason to be unreachable when somebody is at the gate. */
 const callBtn = num => `<a class="btn btn-outline btn-sm" href="tel:+91${esc(num)}">Call</a>`;
@@ -8281,6 +8474,40 @@ async function sendChat(e){
   }catch(err){ box.value = body; toast(err.message || "Message not sent"); }
 }
 
+/* ---------- five seconds to take it back ----------
+   Accept and Decline sit next to each other on a phone, and the two are not
+   equally forgiving: a wrong decline can be re-requested, a wrong accept
+   means somebody is expecting you. The acceptance is still sent to the
+   server straight away — nothing is held hostage to the worker's screen
+   staying on — but the customer's alert is queued six seconds in the future
+   (see MIGRATION 38), so an undo removes it before it ever reaches a phone.
+
+   Deliberately not a confirm() before accepting. A dialog on every accept
+   punishes the ninety-nine who meant it to protect the one who did not. */
+const UNDO_MS = 5000;
+const UNAVAILABLE = "Sorry, the worker is unavailable at the moment.";
+let undoAction = null, undoTimer = null;
+
+function offerUndo(text, action){
+  clearTimeout(undoTimer);
+  undoAction = action;
+  $("undoText").textContent = text;
+  $("undoBar").hidden = false;
+  undoTimer = setTimeout(closeUndo, UNDO_MS);
+}
+function closeUndo(){
+  clearTimeout(undoTimer);
+  undoAction = null;
+  const bar = $("undoBar"); if(bar) bar.hidden = true;
+}
+async function runUndo(){
+  const act = undoAction;
+  closeUndo();
+  if(!act) return;
+  try{ await act(); }
+  catch(e){ toast(e.message || "Could not undo that"); }
+}
+
 async function workerThread(status, reason){
   try{
     await api.workerSetThread(session.phone, session.pin, chatCode, status, reason);
@@ -8289,6 +8516,17 @@ async function workerThread(status, reason){
     await refreshChatHead();
     toast({accepted:"Job accepted", working:"Marked as started", done:"Marked finished",
            declined:"Request declined"}[status] || "Updated");
+    if(status === "accepted"){
+      const code = chatCode;
+      offerUndo("Accepted — you have a few seconds to change your mind", async () => {
+        await api.workerSetThread(session.phone, session.pin, code, "declined", UNAVAILABLE);
+        pokePush();
+        if(chatCode === code){ await refreshChat(false); await refreshChatHead(); }
+        toast("Undone — the customer has been told you are unavailable");
+      });
+    }else{
+      closeUndo();
+    }
   }catch(e){ toast(e.message); }
 }
 function workerDecline(){

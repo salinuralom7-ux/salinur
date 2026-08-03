@@ -8081,6 +8081,264 @@ $fn$;
 -- ---------- the lock, still the last statement in this file ----------
 select public.lock_public_functions();
 
+
+-- ============================================================
+-- MIGRATION 38 — the alerts nobody was getting, and a 5-second undo
+--
+-- Reported from a phone, not found by reading: "in some services the worker
+-- gets no notification outside the app, they only find out when they open
+-- it." True, and worse than it sounds. push_on_new_thread fires on INSERT
+-- into threads — so the scheduled and enquiry flows alerted the worker, and
+-- the other two did not, because they do not create a thread at all:
+--
+--   instant jobs   create_job writes to jobs + job_offers. A worker has
+--                  SIXTY SECONDS to take one of these and was told about it
+--                  only if the app happened to be open.
+--   appointments   book_slot writes to appointments. Nothing woke anybody.
+--
+-- Those are the two where silence costs most. An instant offer expires while
+-- the phone sits in a pocket; an appointment is a stranger arriving at a time
+-- the worker never read.
+--
+-- Also here: a worker who accepts by mistake gets five seconds to take it
+-- back. That needs the customer NOT to be buzzed the instant accept lands,
+-- or they get "accepted!" followed four seconds later by "actually, no" —
+-- so push_outbox learns to hold a row back, and an undo deletes it before it
+-- is ever sent rather than apologising for it afterwards.
+--
+-- And a profile is one trade now, not three. See MIGRATION 39 below.
+-- ============================================================
+
+-- ---------- a queued alert can be held, and withdrawn ----------
+alter table public.push_outbox
+  add column if not exists send_after timestamptz not null default now();
+
+-- Pending rows are scanned by (send_after, sent_at) now, not id alone.
+create index if not exists push_outbox_due_idx
+  on public.push_outbox (send_after) where sent_at is null;
+
+create or replace function public.claim_push(p_limit int default 20)
+returns table (id bigint, title text, body text, url text, tag text,
+               endpoint text, p256dh text, auth text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  return query
+  with due as (
+    select o.id from push_outbox o
+     where o.sent_at is null
+       and o.attempts < 5
+       and o.send_after <= now()                    -- held rows wait their turn
+       and o.created_at > now() - interval '1 day'  -- a day-old buzz helps nobody
+     order by o.id
+     limit greatest(1, least(p_limit, 100))
+     for update skip locked
+  ), bumped as (
+    update push_outbox o set attempts = o.attempts + 1
+      from due where o.id = due.id
+      returning o.*
+  )
+  select b.id, b.title, b.body, b.url, b.tag, s.endpoint, s.p256dh, s.auth
+    from bumped b
+    join lateral (
+      select p.endpoint, p.p256dh, p.auth
+        from worker_push p where p.worker_id = b.worker_id
+      union all
+      select c.endpoint, c.p256dh, c.auth
+        from customer_push c where c.customer_token = b.customer_token
+    ) s on true;
+end;
+$$;
+
+-- Adding a defaulted parameter makes a NEW function, not a replacement — and
+-- two functions of one name is something PostgREST cannot resolve, which the
+-- guard earlier in this file catches and refuses. The old shapes go first.
+drop function if exists public.enqueue_push(uuid, text, text, text, text);
+drop function if exists public.enqueue_customer_push(uuid, text, text, text, text);
+
+create or replace function public.enqueue_push(
+  p_worker uuid, p_title text, p_body text, p_url text default null,
+  p_tag text default null, p_delay interval default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if p_worker is null then return; end if;
+  if not exists (select 1 from worker_push where worker_id = p_worker) then
+    return;                       -- never subscribed, or withdrew permission
+  end if;
+  insert into push_outbox (worker_id, title, body, url, tag, send_after)
+  values (p_worker, p_title, left(coalesce(p_body,''), 180), p_url, p_tag,
+          now() + coalesce(p_delay, interval '0'));
+end;
+$$;
+
+create or replace function public.enqueue_customer_push(
+  p_token uuid, p_title text, p_body text, p_url text default null,
+  p_tag text default null, p_delay interval default null)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if p_token is null then return; end if;
+  if not exists (select 1 from customer_push where customer_token = p_token) then
+    return;                       -- never subscribed, or withdrew permission
+  end if;
+  insert into push_outbox (customer_token, title, body, url, tag, send_after)
+  values (p_token, p_title, left(coalesce(p_body,''), 180), p_url, p_tag,
+          now() + coalesce(p_delay, interval '0'));
+end;
+$$;
+
+-- Deletes a held alert that has not gone out. This is what makes an undo an
+-- undo rather than a correction: the customer never learns the worker
+-- pressed the wrong button.
+create or replace function public.withdraw_push(p_tag text, p_title_like text default null)
+returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare n int;
+begin
+  delete from push_outbox
+   where tag = p_tag
+     and sent_at is null
+     and (p_title_like is null or title ilike p_title_like);
+  get diagnostics n = row_count;
+  return n;
+end;
+$$;
+
+-- ---------- an accepted booking waits six seconds before it buzzes ----------
+create or replace function public.push_on_thread_status()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  wname text;
+  first text;
+  eta   text;
+begin
+  if new.status is not distinct from old.status then return new; end if;
+
+  select w.name into wname from workers w where w.id = new.worker_id;
+  first := coalesce(nullif(split_part(coalesce(wname,''), ' ', 1), ''), 'The worker');
+
+  eta := '';
+  if new.job_id is not null then
+    select case when j.eta_minutes is not null
+                then ' Arriving in about ' || j.eta_minutes || ' minutes.' else '' end
+      into eta
+      from jobs j where j.id = new.job_id;
+    eta := coalesce(eta, '');
+  end if;
+
+  if new.status = 'accepted' then
+    -- Held for six seconds. The worker's undo window is five, so a mistake
+    -- is withdrawn before this is ever handed to a push service. One second
+    -- of slack for the clock, and the customer is none the wiser.
+    perform public.enqueue_customer_push(new.customer_token,
+      first || ' accepted your booking',
+      coalesce(new.skill, 'Your booking') || ' is confirmed.' || eta,
+      './?src=push#mine', 'thread-' || new.id::text, interval '6 seconds');
+
+  elsif new.status = 'declined' then
+    -- An undo lands here, so anything still held from the acceptance goes
+    -- first. Otherwise the held "accepted" would surface a moment later and
+    -- contradict the message that replaced it.
+    perform public.withdraw_push('thread-' || new.id::text, '%accepted your booking');
+    perform public.enqueue_customer_push(new.customer_token,
+      first || ' could not take this one',
+      coalesce(nullif(new.decline_reason, ''), 'Open MySheher to find somebody else nearby.'),
+      './?src=push#mine', 'thread-' || new.id::text);
+
+  elsif new.status = 'working' then
+    perform public.enqueue_customer_push(new.customer_token,
+      first || ' has started',
+      coalesce(new.skill, 'The work') || ' is under way.',
+      './?src=push#mine', 'thread-' || new.id::text);
+
+  elsif new.status in ('done', 'closed') then
+    perform public.enqueue_customer_push(new.customer_token,
+      'Work finished',
+      'How did ' || first || ' do? A rating helps the next person choose.',
+      './?src=push#mine', 'thread-' || new.id::text);
+
+  elsif new.status = 'cancelled' then
+    perform public.withdraw_push('thread-' || new.id::text, '%accepted your booking');
+    perform public.enqueue_customer_push(new.customer_token,
+      'Booking cancelled',
+      coalesce(new.skill, 'Your booking') || ' is no longer going ahead.',
+      './?src=push#mine', 'thread-' || new.id::text);
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists threads_customer_push_trg on public.threads;
+create trigger threads_customer_push_trg after update of status on public.threads
+  for each row execute function public.push_on_thread_status();
+
+-- ---------- an instant offer, which expires in sixty seconds ----------
+-- The loudest of the lot and the one that had nothing. A worker cannot take a
+-- job in a minute if the only way to hear about it is to already be looking.
+create or replace function public.push_on_job_offer()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare j record;
+begin
+  select skill, area, note into j from jobs where id = new.job_id;
+  perform public.enqueue_push(
+    new.worker_id,
+    'Job now — ' || coalesce(j.skill, 'work') || ' nearby',
+    'Somebody needs this' || coalesce(' in ' || j.area, '') ||
+      '. You have 60 seconds to accept.',
+    './?src=push#me', 'offer-' || new.id::text);
+  return new;
+end;
+$$;
+drop trigger if exists job_offers_push_trg on public.job_offers;
+create trigger job_offers_push_trg after insert on public.job_offers
+  for each row execute function public.push_on_job_offer();
+
+-- ---------- an appointment, which is a stranger at the door on a date ----------
+create or replace function public.push_on_appointment()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform public.enqueue_push(
+    new.worker_id,
+    'New appointment booked',
+    coalesce(new.customer_name, 'A customer') || ' booked ' ||
+      coalesce(new.skill, 'you') || ' for ' ||
+      to_char(new.slot_date, 'FMDay DD Mon') || ' at ' || new.slot_time || '.',
+    './?src=push#me', 'appt-' || new.id::text);
+  return new;
+end;
+$$;
+drop trigger if exists appointments_push_trg on public.appointments;
+create trigger appointments_push_trg after insert on public.appointments
+  for each row execute function public.push_on_appointment();
+
+-- ============================================================
+-- MIGRATION 39 — a profile is one trade
+--
+-- Three services on one profile made a worker harder to find, not easier: a
+-- carpenter who also drives appears in two searches with one rating average,
+-- one price line and one set of reviews covering both, and a customer reading
+-- it cannot tell which of the two the reviews are about. One trade, one
+-- profile, one reputation.
+--
+-- Existing profiles carrying more are left alone on read — nothing breaks for
+-- them — but the next time one is saved it has to be a single trade.
+-- ============================================================
+
+do $$
+begin
+  -- Only the count changes; everything else this function does is untouched,
+  -- so it is patched by text rather than restated and left to drift.
+  execute replace(
+    pg_get_functiondef('public.clean_worker_data(jsonb, boolean)'::regprocedure),
+    'if n > 3 then raise exception ''You can offer up to 3 services''; end if;',
+    'if n > 1 then raise exception ''A profile is for one service. Choose the one you do.''; end if;');
+end $$;
+
+-- ---------- the lock, still last ----------
+select public.lock_public_functions();
+
 do $$
 declare leaked text;
 begin
