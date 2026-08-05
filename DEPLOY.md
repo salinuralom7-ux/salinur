@@ -58,28 +58,46 @@ in either direction, no matter what anybody taps.
 About 15 minutes, once, and **no laptop is needed** — every step can be done
 in a browser.
 
-## Step 1 — make the key pair
+## Turning notifications on — the whole thing
 
-**Easiest:** the **Alerts** tab of the admin screen has a *Generate a key
-pair* button. The keys are made by your own browser and neither half is sent
-anywhere — that is the whole point of a signing key.
+**Run the "Set up the MySheher database" workflow in GitHub Actions. That is
+the entire job.**
 
-If you would rather use a computer with Node:
+GitHub → **Actions** → *Set up the MySheher database* → **Run workflow**.
 
-```bash
-npx web-push generate-vapid-keys
+It generates the key pair on the runner, stores the private half straight
+into Supabase as a project secret, publishes the public half to the app, and
+deploys the sender. The private key is masked out of the logs before anything
+else runs, and is never printed, committed, or sent to anybody — not to you,
+not to me. Nobody has to hold it, which is the only safe way to hold a
+signing key.
+
+It generates **once**. Re-running the workflow leaves an existing key alone,
+on purpose: rotating a VAPID key invalidates every push subscription already
+issued against it, so every worker who had tapped *Turn on alerts* would
+silently stop receiving them.
+
+Check it worked: the run's summary says
+
+```
+push keys: stored in Supabase — HTTP 201
+push keys: public key published to the app — HTTP 201
+sender: deployed as https://<ref>.supabase.co/functions/v1/push
 ```
 
-Either way you end up with a **Public Key** (about 87 characters) and a
-**Private Key** (about 43). Keep them in front of you.
+and the **Alerts** tab of the admin screen turns from *NOT SET* to showing a
+key. Tap **Send me a test alert** there to see one arrive.
 
-> The private key is a password. Do not screenshot it, do not send it to me,
-> do not put it in the repository. It goes into Supabase in Step 3 and
-> nowhere else.
+### If you would rather do it by hand
 
-> The private key is a password. Do not put it in the repository, do not
-> send it to me, do not paste it into a chat. It only ever goes into
-> Supabase in Step 3.
+Nothing below is needed if the workflow ran. It is here so the automation is
+readable rather than magic.
+
+```bash
+npx web-push generate-vapid-keys        # a public key (~87 chars) and a private one (~43)
+```
+
+Then in Supabase → Project Settings → Edge Functions → Secrets:
 
 ## Step 2 — tell the app the public half
 

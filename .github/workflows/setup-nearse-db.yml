@@ -245,6 +245,55 @@ jobs:
           code=$(curl -sS -o /tmp/push.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/p.json)
           note "verify push: HTTP $code — $(head -c 1200 /tmp/push.json)"
 
+          # ---- the push keys, generated here and never seen by anyone ----
+          # These were the last manual step in the whole setup, and the one
+          # that had blocked every notification the app queues: "run npx
+          # web-push on a laptop, paste the public key into SQL, set three
+          # secrets with the Supabase CLI." That is four tools and a computer,
+          # and it never happened.
+          #
+          # The token that already applies the schema and deploys the sender
+          # can also write project secrets, so it does. The private key is
+          # generated on the runner, masked out of the logs before anything
+          # else touches it, posted straight to Supabase, and never printed,
+          # never committed, never sent to anybody. Nobody has to hold it.
+          #
+          # Generated ONCE. Rotating a VAPID key invalidates every push
+          # subscription already issued against it — every worker who has
+          # tapped "turn on alerts" would silently stop receiving them — so if
+          # a key is already there this step keeps its hands off.
+          have=$(curl -sS "${hdr[@]}" "$api/projects/$ref/secrets" \
+                   | jq -r '[.[] | select(.name=="VAPID_PRIVATE")] | length')
+          if [ "$have" != "0" ]; then
+            note "push keys: already set — left alone (rotating one would cut off every phone already subscribed)"
+          else
+            npm i --silent --no-save web-push@3.6.7 >/dev/null 2>&1
+            node -e "const w=require('web-push');const k=w.generateVAPIDKeys();console.log(JSON.stringify(k))" > /tmp/vapid.json
+            VAPID_PUB=$(jq -r .publicKey  /tmp/vapid.json)
+            VAPID_PRIV=$(jq -r .privateKey /tmp/vapid.json)
+            # masked before it can appear in any later command's echo
+            echo "::add-mask::$VAPID_PRIV"
+            rm -f /tmp/vapid.json
+
+            jq -n --arg pub "$VAPID_PUB" --arg priv "$VAPID_PRIV" \
+              '[{name:"VAPID_PUBLIC",value:$pub},
+                {name:"VAPID_PRIVATE",value:$priv},
+                {name:"VAPID_SUBJECT",value:"mailto:info@mysheher.com"}]' > /tmp/sec.json
+            code=$(curl -sS -o /tmp/secres.json -w "%{http_code}" "${hdr[@]}" \
+                     -X POST "$api/projects/$ref/secrets" -d @/tmp/sec.json)
+            note "push keys: stored in Supabase — HTTP $code"
+
+            # the browser needs the PUBLIC key to subscribe at all, and it
+            # reads it from the database, not from the function
+            printf "update public.nearse_config set vapid_public = %s where id = 1;" \
+              "'"'"'$VAPID_PUB'"'"'" > /tmp/vp.sql
+            jq -Rs '{query: .}' /tmp/vp.sql > /tmp/vp.json
+            code=$(curl -sS -o /tmp/vpres.json -w "%{http_code}" "${hdr[@]}" \
+                     -X POST "$api/projects/$ref/database/query" -d @/tmp/vp.json)
+            note "push keys: public key published to the app — HTTP $code"
+            note "push keys: the private key was never printed, committed or sent anywhere"
+          fi
+
           # ---- deploy the sender ----
           # This used to be "paste 100 lines into the dashboard editor", which
           # is a wall for anyone without a laptop — and impossible for someone
