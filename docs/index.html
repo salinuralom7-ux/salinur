@@ -966,6 +966,22 @@ body.menu-open{overflow:hidden}
 .alt-body span{font-size:.78rem;color:var(--muted)}
 .alt-go{font-size:.82rem;font-weight:800;color:var(--brand)}
 
+/* The locality finder. Tall on purpose: the list is the point of the sheet,
+   so it gets the height rather than the padding. */
+.sheet-tall{max-height:86vh;display:flex;flex-direction:column}
+.area-list{overflow-y:auto;-webkit-overflow-scrolling:touch;margin:6px -4px 0;padding:0 4px 4px;flex:1;min-height:200px}
+.area-zone{font-size:.68rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);margin:14px 0 6px;position:sticky;top:0;background:var(--surface);padding:5px 0}
+.area-pick{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:11px 13px;margin-bottom:6px;color:var(--ink);font:inherit;font-size:.9rem;cursor:pointer}
+.area-pick:active{background:var(--raise)}
+.area-pick.on{border-color:var(--brand);color:var(--brand)}
+.area-pick mark{background:rgba(var(--brand-rgb),.22);color:var(--brand-2);border-radius:3px;padding:0 1px}
+.area-none{color:var(--muted);font-size:.86rem;padding:18px 2px;line-height:1.6}
+.loc-find{display:inline-flex;align-items:center;gap:5px;background:none;border:0;padding:6px 2px;
+  color:var(--brand);font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+
 /* The undo bar. Above the sheets and the chat bar, because five seconds is
    not long enough to go looking for it. */
 .undo-bar{
@@ -3467,6 +3483,23 @@ footer a{color:var(--ink-2)}
   </div>
 </div>
 
+<!-- 125 localities in a native <select> is a scroll wheel, and finding
+     Bhetapara in it on a cheap phone is a minute of thumbing. The select
+     stays for anyone who likes it; this is the way in for anyone who would
+     rather type three letters. -->
+<div class="overlay" id="areaSearchOverlay" onclick="if(event.target===this)closeModal('areaSearchOverlay')">
+  <div class="modal sheet-tall" role="dialog" aria-modal="true" aria-labelledby="areaSearchTitle">
+    <button class="close" onclick="closeModal('areaSearchOverlay')" aria-label="Close">✕</button>
+    <h3 id="areaSearchTitle">Find your locality</h3>
+    <div class="searchbar" style="margin:14px 0 4px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="text" id="areaSearchBox" placeholder="Type a locality — belt, six, zoo…"
+             autocomplete="off" oninput="renderAreaSearch()">
+    </div>
+    <div class="area-list" id="areaSearchList"></div>
+  </div>
+</div>
+
 <div class="overlay" id="goneOverlay" onclick="if(event.target===this)closeModal('goneOverlay')">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="goneTitle">
     <button class="close" onclick="closeModal('goneOverlay')" aria-label="Close">✕</button>
@@ -3620,6 +3653,115 @@ function areaOptions(selected){
     list.map(a=>`<option${a === selected ? " selected" : ""}>${esc(a)}</option>`).join("") +
     `</optgroup>`).join("");
 }
+/* ---------- finding a locality by typing ----------
+   Every locality control on MySheher is a <select> holding 125 options in
+   eight groups. On a phone that is a scroll wheel, and somebody in Bhetapara
+   has to thumb past eighty names to reach it. The select stays — it works,
+   and some people prefer it — but there is a way in for anyone who would
+   rather type three letters.
+
+   One sheet, six triggers. It writes back into whichever select opened it
+   and fires the change event, so nothing downstream needs to know this
+   exists: renderResults, renderQuote and the rest carry on reading .value. */
+const AREA_RECENT = "repto_areas_recent_v1";
+let areaTargetId = null;
+
+const recentAreas = () => { try{ return JSON.parse(localStorage.getItem(AREA_RECENT) || "[]"); }catch(e){ return []; } };
+function noteArea(name){
+  if(!name) return;
+  const list = [name, ...recentAreas().filter(x => x !== name)].slice(0, 5);
+  try{ localStorage.setItem(AREA_RECENT, JSON.stringify(list)); }catch(e){}
+}
+
+function openAreaSearch(targetId){
+  areaTargetId = targetId;
+  const box = $("areaSearchBox");
+  box.value = "";
+  renderAreaSearch();
+  openModal("areaSearchOverlay");
+  /* Focused, but only where a keyboard is not going to cover the list it is
+     meant to help you read. On a phone the list matters more. */
+  if(window.matchMedia("(min-width: 700px)").matches) setTimeout(() => box.focus(), 60);
+}
+
+function renderAreaSearch(){
+  const host = $("areaSearchList");
+  const sel  = areaTargetId && $(areaTargetId);
+  const cur  = sel ? sel.value : "";
+  const q    = $("areaSearchBox").value.trim().toLowerCase();
+
+  const hit = name => name.toLowerCase().includes(q);
+  const mark = name => q
+    ? esc(name).replace(new RegExp("(" + q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig"), "<mark>$1</mark>")
+    : esc(name);
+  const row = name => `<button type="button" class="area-pick${name === cur ? " on" : ""}"
+      onclick="pickArea('${jsq(name)}')"><span>${mark(name)}</span>${name === cur ? "<span>✓</span>" : ""}</button>`;
+
+  let html = "";
+
+  /* "Anywhere" only where it means something. On a booking form the question
+     is where the customer is, and "anywhere" is not an answer.
+
+     And only while the box is empty, or when it is itself what was typed.
+     Left in during a search it sat at the top of the results, which made the
+     first row of "belt" mean "clear the filter" — the opposite of what
+     somebody typing a locality is reaching for. */
+  if(areaTargetId === "areaFilter" && (!q || "all localities".includes(q)))
+    html += `<button type="button" class="area-pick${cur === "" ? " on" : ""}"
+      onclick="pickArea('')"><span>All localities</span>${cur === "" ? "<span>✓</span>" : ""}</button>`;
+
+  if(!q){
+    const recent = recentAreas().filter(a => AREAS.includes(a));
+    if(recent.length)
+      html += `<div class="area-zone">Recent</div>` + recent.map(row).join("");
+    html += AREA_GROUPS.map(([zone, list]) =>
+      `<div class="area-zone">${esc(zone)}</div>` + list.map(row).join("")).join("");
+  }else{
+    /* A zone name is worth matching too: somebody who knows they are in
+       "South Guwahati" but not which locality still gets a shortlist. */
+    const groups = AREA_GROUPS
+      .map(([zone, list]) => [zone, zone.toLowerCase().includes(q) ? list : list.filter(hit)])
+      .filter(([, list]) => list.length);
+    html += groups.length
+      ? groups.map(([zone, list]) =>
+          `<div class="area-zone">${esc(zone)}</div>` + list.map(row).join("")).join("")
+      : `<p class="area-none">No locality matches “${esc($("areaSearchBox").value.trim())}”.
+         Try fewer letters — or pick the nearest one, since a worker a street away
+         still shows up for you.</p>`;
+  }
+  host.innerHTML = html;
+}
+
+function pickArea(name){
+  const sel = areaTargetId && $(areaTargetId);
+  if(sel){
+    sel.value = name;
+    noteArea(name);
+    /* The selects carry their behaviour on onchange in the markup, and
+       setting .value in script does not fire it. */
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  closeModal("areaSearchOverlay");
+}
+
+/* Put a "search" affordance on every locality select there is, once, at boot.
+   Doing it here rather than in six pieces of markup means a locality control
+   added later gets it by having the right class, and cannot be forgotten. */
+function wireAreaSearch(){
+  ["areaFilter","regArea","bookArea","nowArea","acctArea","pfArea"].forEach(id => {
+    const sel = $(id);
+    if(!sel || sel.dataset.findWired) return;
+    sel.dataset.findWired = "1";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "loc-find";
+    btn.setAttribute("aria-label", "Search localities");
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search`;
+    btn.onclick = () => openAreaSearch(id);
+    sel.insertAdjacentElement("afterend", btn);
+  });
+}
+
 const WSTORE = "nearse_workers_v1";
 const SSTORE = "nearse_session_v1";
 /* Which edition of the terms and privacy policy a worker agreed to. Bump it
@@ -9365,6 +9507,10 @@ function renderProfile(){
         Conversations you have already had stay with the worker, as their record of the job.</p>
     </div>`;
   $("pfArea").innerHTML = '<option value="">Choose your area</option>' + areaOptions(c.area);
+  /* This select is built here rather than sitting in the markup, so the boot
+     pass could not have reached it. Wiring is keyed on a data attribute, so
+     calling it again costs nothing. */
+  wireAreaSearch();
 }
 
 /* Named for the customer's own details, not "saveProfile" — that name was
@@ -10889,6 +11035,7 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
 (async function init(){
   loadSession();
   loadCustomer();
+  wireAreaSearch();      /* every locality select gets a way to type instead */
   try{ await sb("workers?select=id&limit=1"); LIVE = true; }
   catch(e){ LIVE = false; $("demoNote").classList.add("on"); }
   if(LIVE){
