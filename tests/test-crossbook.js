@@ -119,8 +119,11 @@ const beWorker = (p, i = 0) => p.evaluate(i => {
   // ---------- an appointment behaves like every other booking ----------
   ok('Confirming an appointment no longer hijacks the tab to WhatsApp',
      !/const tab = window\.open\("", "_blank"\)/.test(html));
+  /* Checked as behaviour, not as an exact source line — the startThread call
+     it used to match has since grown the structured booking time. */
   ok('…it opens the conversation instead',
-     /mode:"slot" \}\);/.test(html) && /openChat\(started\.code, "customer", "hire"\)/.test(html));
+     /api\.startThread\(\{[\s\S]{0,320}mode:"slot"/.test(html) &&
+     /openChat\(started\.code, "customer", "hire"\)/.test(html));
 
   await p.evaluate(() => { localStorage.setItem('repto_account_asked_v1', '1'); });
   const appt = await beWorker(p, 0).then(() => p.evaluate(async () => {

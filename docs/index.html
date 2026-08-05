@@ -3453,6 +3453,20 @@ footer a{color:var(--ink-2)}
   <button type="button" id="undoBtn" onclick="runUndo()">Undo<span class="undo-ring" id="undoRing"></span></button>
 </div>
 
+<!-- A review is the thing that decides whether a worker gets more work, and
+     until now it happened entirely behind their back. The push arrives while
+     the app is shut; this is what they see when they open it. -->
+<div class="overlay" id="newReviewOverlay" onclick="if(event.target===this)closeModal('newReviewOverlay')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="nrTitle">
+    <button class="close" onclick="closeModal('newReviewOverlay')" aria-label="Close">✕</button>
+    <h3 id="nrTitle">Somebody left you a review</h3>
+    <p class="sub" id="nrSub"></p>
+    <div class="reviews-box" id="nrBody" style="margin-top:14px"></div>
+    <button class="btn btn-brand btn-block" style="padding:14px;margin-top:16px" onclick="closeModal('newReviewOverlay')">Thanks</button>
+    <p class="hint" style="margin-top:11px;text-align:center">Reviews only come from customers whose job with you actually finished.</p>
+  </div>
+</div>
+
 <div class="overlay" id="goneOverlay" onclick="if(event.target===this)closeModal('goneOverlay')">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="goneTitle">
     <button class="close" onclick="closeModal('goneOverlay')" aria-label="Close">✕</button>
@@ -6388,12 +6402,60 @@ function renderMe(){
   loadMeSummary();
   watchStatus();
 }
+/* ---------- somebody reviewed you ----------
+   The push says it while the app is shut. This is the same news for somebody
+   who opened the app before the notification arrived, or who never allowed
+   notifications at all — and it shows the review itself rather than sending
+   them looking for it.
+
+   Detected by comparing against what this device last saw, so it needs no
+   schema and no new call: worker_stats already returns the count and the
+   average. A rewrite changes the average without changing the count, and
+   that counts as news too. The first sighting is recorded silently — an
+   established worker signing in on a new phone should not be told about
+   forty old reviews at once. */
+const REVIEW_SEEN = "repto_reviews_seen_v1";
+
+async function maybeShowNewReview(s){
+  if(!s) return;
+  const now = { n: Number(s.reviews) || 0, avg: String(s.avg_stars || "") };
+  let was = null;
+  try{ was = JSON.parse(localStorage.getItem(REVIEW_SEEN) || "null"); }catch(e){}
+  try{ localStorage.setItem(REVIEW_SEEN, JSON.stringify(now)); }catch(e){}
+
+  if(!was) return;                                   /* first run: record, say nothing */
+  if(now.n === was.n && now.avg === was.avg) return; /* nothing changed */
+  if(now.n < was.n) return;                          /* one was hidden or removed */
+  if(document.querySelector(".overlay.open")) return;
+
+  const fresh = now.n - was.n;
+  $("nrSub").textContent = fresh > 1
+    ? fresh + " new reviews. Here is the latest."
+    : (now.n === was.n ? "Somebody has changed what they wrote."
+                       : "Here is what they said.");
+
+  let rows = [];
+  try{ rows = await api.workerReviews(session.worker && session.worker.id, 1); }catch(e){}
+  const r = (rows || [])[0];
+  $("nrBody").innerHTML = r
+    ? `<div class="rv">
+         <div class="rv-top">
+           <span class="rv-stars">${"★".repeat(r.stars)}<span class="dim">${"★".repeat(5 - r.stars)}</span></span>
+           <span class="rv-who">${esc(r.author || "Customer")}${r.skill ? " · " + esc(r.skill) : ""}</span>
+         </div>
+         ${r.comment ? `<p>${esc(r.comment)}</p>` : `<p class="hint">They rated you without writing anything.</p>`}
+       </div>`
+    : `<p class="hint">Open your profile to read it.</p>`;
+  openModal("newReviewOverlay");
+}
+
 /* The profile answers "how am I doing" without making anyone open a tab. */
 async function loadMeSummary(){
   if(!(session && session.registered)) return;
   let s;
   try{ s = await api.workerStats(session.phone, session.pin); }catch(e){ return; }
   if(!s) return;
+  maybeShowNewReview(s);
   const line = $("weLine"), badge = $("weUnread");
   if(!line) return;
   const bits = [];
