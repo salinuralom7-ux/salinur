@@ -8752,6 +8752,52 @@ create trigger worker_ratings_push_trg
   after insert or update of stars, comment on public.worker_ratings
   for each row execute function public.push_on_review();
 
+-- ============================================================
+-- MIGRATION 43 — a booking records roughly where, not exactly where
+--
+-- Workers' coordinates have been blunted to three decimal places since
+-- migration 5, but the coordinates that arrive with an instant request went
+-- into jobs at whatever precision the phone reported — which is a few metres,
+-- and points at a doorway. The app now rounds before sending; this rounds
+-- again on arrival, so a stale copy of the app, a replayed request or a call
+-- made straight against the API cannot put a street address in the table.
+--
+-- Three decimal places is about 110 metres at this latitude: enough to rank
+-- workers by distance, not enough to say which house.
+-- ============================================================
+
+update public.jobs
+   set lat = round(lat::numeric, 3)::double precision,
+       lng = round(lng::numeric, 3)::double precision
+ where lat is not null or lng is not null;
+
+create or replace function public.jobs_coarse_location()
+returns trigger
+language plpgsql set search_path = public as $$
+begin
+  if new.lat is not null then new.lat := round(new.lat::numeric, 3)::double precision; end if;
+  if new.lng is not null then new.lng := round(new.lng::numeric, 3)::double precision; end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists jobs_coarse_location_trg on public.jobs;
+create trigger jobs_coarse_location_trg
+  before insert or update of lat, lng on public.jobs
+  for each row execute function public.jobs_coarse_location();
+
+do $$
+declare sharp int;
+begin
+  select count(*) into sharp from public.jobs
+   where (lat is not null and lat <> round(lat::numeric, 3)::double precision)
+      or (lng is not null and lng <> round(lng::numeric, 3)::double precision);
+  if sharp > 0 then
+    raise exception 'MIGRATION 43: % job rows still hold sharper coordinates than 3dp', sharp;
+  end if;
+  raise notice 'PASS  no job holds a coordinate sharper than about 110 metres';
+end $$;
+
 -- ---------- the lock, still last ----------
 select public.lock_public_functions();
 

@@ -6334,11 +6334,19 @@ function renderLocBtn(){
   if(regLoc){ b.classList.add("ok"); t.textContent = "Location saved — nearby customers will see you first"; }
   else{ b.classList.remove("ok"); t.textContent = "Use my current location"; }
 }
+/* Coordinates are blunted to three decimal places — about 110 metres — the
+   moment the browser hands them over, before anything is stored, ranked or
+   sent. That is close enough to sort a list by distance and far too coarse to
+   point at the house somebody is standing in. The database rounds again on the
+   way in, but a number that never leaves the phone at full precision cannot be
+   spilled by a mistake on our side. */
+function coarse(v){ return typeof v === "number" ? Math.round(v * 1000) / 1000 : v; }
+
 function captureLocation(){
   if(!navigator.geolocation){ toast("Location is not available on this device"); return; }
   $("regLocText").textContent = "Getting your location…";
   navigator.geolocation.getCurrentPosition(
-    pos => { regLoc = {lat:pos.coords.latitude, lng:pos.coords.longitude}; renderLocBtn(); toast("Location saved"); },
+    pos => { regLoc = {lat:coarse(pos.coords.latitude), lng:coarse(pos.coords.longitude)}; renderLocBtn(); toast("Location saved"); },
     ()  => { renderLocBtn(); toast("Couldn't get location — you can still publish"); },
     {enableHighAccuracy:true, timeout:10000}
   );
@@ -6949,7 +6957,7 @@ function onSearchInput(){
 function requestLocation(loud){
   if(!navigator.geolocation){ if(loud) toast("Location is not available on this device"); return; }
   navigator.geolocation.getCurrentPosition(
-    pos => { myLoc = {lat:pos.coords.latitude, lng:pos.coords.longitude}; renderResults(); },
+    pos => { myLoc = {lat:coarse(pos.coords.latitude), lng:coarse(pos.coords.longitude)}; renderResults(); },
     ()  => { if(loud) toast("Location permission denied — showing best rated first"); },
     {enableHighAccuracy:true, timeout:10000}
   );
