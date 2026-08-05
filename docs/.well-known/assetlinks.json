@@ -7,7 +7,8 @@
       "namespace": "android_app",
       "package_name": "com.mysheher.app",
       "sha256_cert_fingerprints": [
-        "DE:DE:EC:4E:A0:3A:C3:DB:E1:AD:3C:2F:FF:F9:71:AB:E6:28:BD:85:EF:E9:B5:B9:0B:8F:48:18:DC:E1:39:C8"
+        "DE:DE:EC:4E:A0:3A:C3:DB:E1:AD:3C:2F:FF:F9:71:AB:E6:28:BD:85:EF:E9:B5:B9:0B:8F:48:18:DC:E1:39:C8",
+        "38:E2:30:18:E8:27:8C:60:5E:4A:8B:FA:DD:64:4E:7D:8D:FE:DF:0F:74:43:1C:7C:0D:4C:65:F7:D3:36:70:FC"
       ]
     }
   }
