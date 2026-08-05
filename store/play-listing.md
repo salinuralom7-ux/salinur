@@ -29,7 +29,7 @@ FIND SOMEONE FOR THE JOB
 Search 184 services across 18 categories: maids, cooks, electricians, plumbers, carpenters, AC and appliance repair, home tutors, drivers, beauticians, tailors, photographers, packers and movers, and more. Workers closest to you appear first, with their rates already on the card.
 
 SEND THE REQUEST IN SECONDS
-Pick the service, the day and the time. Your request arrives on the worker's WhatsApp with everything they need to know — the job, when, and where. You agree the final amount with them directly.
+Pick the service, the day and the time. Your request opens a conversation with that worker inside MySheher, carrying the job, the day and your locality — and you can nudge them on WhatsApp from there if you want their phone to buzz. You agree the final amount with them directly.
 
 NO COMMISSION, EVER
 MySheher takes nothing from a worker's earnings and charges customers nothing to book. The rate you see is the rate the worker set.
