@@ -3453,6 +3453,16 @@ footer a{color:var(--ink-2)}
   <button type="button" id="undoBtn" onclick="runUndo()">Undo<span class="undo-ring" id="undoRing"></span></button>
 </div>
 
+<div class="overlay" id="goneOverlay" onclick="if(event.target===this)closeModal('goneOverlay')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="goneTitle">
+    <button class="close" onclick="closeModal('goneOverlay')" aria-label="Close">✕</button>
+    <h3 id="goneTitle">That time has gone</h3>
+    <p class="sub" id="goneSub"></p>
+    <button class="btn btn-brand btn-block" id="goneAgainBtn" style="padding:14px;margin-top:16px">Pick another time</button>
+    <button class="btn btn-outline btn-block btn-sm" id="goneElseBtn" style="margin-top:10px">See who else does this</button>
+  </div>
+</div>
+
 <div class="overlay" id="camOverlay" onclick="if(event.target===this)stopCamera()">
   <div class="modal" role="dialog" aria-modal="true">
     <button class="close" onclick="stopCamera()" aria-label="Close">✕</button>
@@ -4476,7 +4486,8 @@ const api = {
         p_worker:o.workerId, p_skill:o.skill, p_name:o.name, p_phone:o.phone,
         p_area:o.area || null, p_detail:o.detail || null, p_note:o.note || null,
         p_price:o.price || null, p_unit:o.unit || null, p_mode:o.mode || null,
-        p_job:o.jobId || null })});
+        p_job:o.jobId || null,
+        p_slot_date:o.slotDate || null, p_slot_part:o.slotPart || null })});
       return Array.isArray(rows) ? rows[0] : rows;
     }
     return demoStartThread(o);
@@ -6971,6 +6982,19 @@ function todayISO(){
   const t = new Date(); t.setMinutes(t.getMinutes() - t.getTimezoneOffset());
   return t.toISOString().slice(0,10);
 }
+/* The date the customer actually chose, as a date rather than the words on
+   the button. Two bookings clash only if they are for the same day and the
+   same part of it, and "Tomorrow" cannot be compared with anything. */
+function bookWhenISO(){
+  if(bookPick.when === "today") return todayISO();
+  if(bookPick.when === "tomorrow"){
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,10);
+  }
+  return bookPick.date || null;
+}
+
 function bookWhenText(){
   if(bookPick.when === "today") return "Today";
   if(bookPick.when === "tomorrow") return "Tomorrow";
@@ -7019,10 +7043,19 @@ async function confirmBooking(){
     started = await api.startThread({
       workerId:w.id, skill:s.skill, name, phone,
       area, detail:[when, area + ", Guwahati"].filter(Boolean).join(" · "),
-      note, price:s.price, unit:s.unit, mode:modeOf(s.skill)
+      note, price:s.price, unit:s.unit, mode:modeOf(s.skill),
+      slotDate: bookWhenISO(), slotPart: bookPick.slot || "any"
     });
   }catch(e){
     btn.disabled = false; btn.textContent = label;
+    /* The database can only say BOOKED_ELSEWHERE — a raise down there cannot
+       know what the customer is looking at. Said properly here, with the way
+       out attached rather than an apology on its own. */
+    if(/BOOKED_ELSEWHERE/.test(e.message || "")){
+      hideModal("bookOverlay");
+      slotGoneFor(w, s.skill);
+      return;
+    }
     toast(e.message || "Could not send that just now");
     return;
   }
@@ -7436,7 +7469,8 @@ async function confirmSlot(){
       workerId:w.id, skill:s.skill, name, phone,
       area: me.area || null,
       detail: `${when} at ${slotPick.time}`,
-      note, price:s.price, unit:s.unit, mode:"slot" });
+      note, price:s.price, unit:s.unit, mode:"slot",
+      slotDate: slotPick.date, slotPart: slotPick.time });
   }catch(e){ /* the appointment itself is booked; the chat is the bonus */ }
 
   hideModal("slotOverlay");        /* openChat navigates; see acceptAccountOffer */
@@ -8402,6 +8436,31 @@ function chatActions(t){
   }
   return "";
 }
+/* ---------- that time has gone ----------
+   Two ways out, because there are exactly two: the same person at a
+   different time, or a different person. Offering only "browse everyone"
+   throws away the fact that they had already chosen somebody. */
+function slotGoneFor(w, skill){
+  const first = ((w && w.name) || "They").split(" ")[0];
+  $("goneTitle").textContent = first + " is booked at that time";
+  $("goneSub").textContent =
+    "Somebody else has already taken that slot. Pick another time with " +
+    first + ", or see who else does this.";
+  $("goneAgainBtn").onclick = () => {
+    hideModal("goneOverlay");
+    openBookingFor(w, Math.max(0, (w.skills || []).findIndex(x => x.skill === skill)));
+  };
+  $("goneElseBtn").onclick = () => {
+    hideModal("goneOverlay");
+    go("hire");
+    setTimeout(() => {
+      const box = $("hireSearch");
+      if(box){ box.value = skill; onSearchInput(); }
+    }, 80);
+  };
+  openModal("goneOverlay");
+}
+
 /* ---------- who else does this ----------
    Shown the moment a request is declined or withdrawn, in the conversation
    the customer is already looking at. Same trade, nearest first, the worker

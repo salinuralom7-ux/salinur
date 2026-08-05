@@ -8568,6 +8568,193 @@ end $$;
 -- ---------- the lock, still last ----------
 select public.lock_public_functions();
 
+
+-- ============================================================
+-- MIGRATION 41 — reminders for a job somebody said yes to and forgot
+--
+-- "I am mechanic and someone booked me, I am still not attending that, I
+-- mean I have accepted but forgot to go, I should be receiving constant
+-- notifications as reminders."
+--
+-- Accepting is a promise, and the app took the promise and then went quiet.
+-- Everything it sent was about something changing — a request arriving, a
+-- status moving. A job that has been accepted and not started changes
+-- nothing at all, which is exactly why it needs saying: silence and "all is
+-- well" looked identical.
+--
+-- "Constant" is the request; constant is not what to build. A notification
+-- that arrives every few minutes is one somebody turns off, and then they
+-- get none at all — so this backs off instead: 30 minutes after accepting,
+-- then 2 hours, then 6, then daily, and never more than six in all. The
+-- wording sharpens as it goes, because "did you get there?" and "this was
+-- three days ago" are different questions.
+--
+-- It stops the moment the job moves — started, finished, cancelled — so a
+-- worker who is actually on the job is never nagged. Marking it started is
+-- the one thing that makes it stop, which is also the thing that tells the
+-- customer somebody is on the way.
+-- ============================================================
+
+create table if not exists public.job_reminders (
+  thread_id  uuid primary key references public.threads(id) on delete cascade,
+  sent       int not null default 0,
+  last_at    timestamptz
+);
+alter table public.job_reminders enable row level security;   -- no policies
+
+do $$
+declare r text;
+begin
+  foreach r in array array['anon','authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = r) then
+      execute format('revoke all on public.job_reminders from %I', r);
+    end if;
+  end loop;
+end $$;
+
+-- How long after the previous nudge the next one is due. Widening on purpose.
+create or replace function public.reminder_gap(p_sent int)
+returns interval
+language sql immutable as $$
+  select case p_sent
+    when 0 then interval '30 minutes'
+    when 1 then interval '2 hours'
+    when 2 then interval '6 hours'
+    else        interval '24 hours'
+  end;
+$$;
+
+create or replace function public.sweep_job_reminders()
+returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare r record; n int := 0; waited text; body text;
+begin
+  for r in
+    select t.id, t.code, t.skill, t.customer_name, t.customer_area, t.worker_id,
+           t.accepted_at, coalesce(jr.sent, 0) as sent,
+           coalesce(jr.last_at, t.accepted_at) as since
+      from threads t
+      left join job_reminders jr on jr.thread_id = t.id
+     where t.status = 'accepted'                 -- accepted and not yet started
+       and t.accepted_at is not null
+       and coalesce(jr.sent, 0) < 6              -- six is enough; after that we are nagging
+       and now() - coalesce(jr.last_at, t.accepted_at) >= public.reminder_gap(coalesce(jr.sent, 0))
+     for update of t skip locked
+  loop
+    waited := case
+      when now() - r.accepted_at < interval '90 minutes' then 'a little while ago'
+      when now() - r.accepted_at < interval '24 hours'
+        then floor(extract(epoch from (now() - r.accepted_at)) / 3600)::text || ' hours ago'
+      else floor(extract(epoch from (now() - r.accepted_at)) / 86400)::text || ' days ago'
+    end;
+
+    body := coalesce(r.customer_name, 'A customer') ||
+            coalesce(' in ' || r.customer_area, '') ||
+            ' is waiting for ' || coalesce(r.skill, 'you') ||
+            '. You accepted this ' || waited ||
+            '. Tap "I''ve started" when you are on the way, or cancel so they can find somebody else.';
+
+    perform public.enqueue_push(
+      r.worker_id,
+      case when r.sent = 0 then 'Are you on the way?'
+           else 'Still waiting on you' end,
+      body,
+      './?src=push#inbox',
+      'remind-' || r.id::text);
+
+    insert into job_reminders (thread_id, sent, last_at)
+    values (r.id, 1, now())
+    on conflict (thread_id) do update
+      set sent = job_reminders.sent + 1, last_at = now();
+    n := n + 1;
+  end loop;
+  return n;
+end;
+$$;
+
+-- The moment a job moves off "accepted" the reminders stop, and the row that
+-- was counting them goes with it.
+create or replace function public.stop_reminders_on_move()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if new.status is distinct from old.status and new.status <> 'accepted' then
+    delete from job_reminders where thread_id = new.id;
+    delete from push_outbox
+     where tag = 'remind-' || new.id::text and sent_at is null;
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists threads_stop_reminders_trg on public.threads;
+create trigger threads_stop_reminders_trg after update of status on public.threads
+  for each row execute function public.stop_reminders_on_move();
+
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    begin
+      perform cron.unschedule('mysheher-job-reminders')
+        where exists (select 1 from cron.job where jobname = 'mysheher-job-reminders');
+      -- every ten minutes: fine enough for a 30-minute first nudge, and far
+      -- from often enough to matter
+      perform cron.schedule('mysheher-job-reminders', '*/10 * * * *',
+                            'select public.sweep_job_reminders()');
+      raise notice 'job reminders scheduled';
+    exception when others then
+      raise notice 'could not schedule job reminders (%)', sqlerrm;
+    end;
+  end if;
+end $$;
+
+-- ============================================================
+-- MIGRATION 42 — tell the worker when somebody reviews them
+--
+-- "When someone gives a feedback on a worker, there should be a pop up at
+-- worker's phone: someone gave their feedback, click to see."
+--
+-- A review is the single most consequential thing that happens to a worker
+-- on MySheher — it is what the next customer reads before choosing — and it
+-- happened entirely behind their back. Every other event on the platform
+-- sent them something. This one, the one that decides whether they get more
+-- work, sent nothing.
+-- ============================================================
+
+create or replace function public.push_on_review()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare who text; skill text;
+begin
+  select coalesce(nullif(new.author, ''), 'A customer'),
+         (select t.skill from threads t where t.id = new.thread_id)
+    into who, skill;
+
+  perform public.enqueue_push(
+    new.worker_id,
+    who || ' left you a review',
+    case when coalesce(btrim(new.comment), '') <> ''
+         then new.stars || '★ — "' || left(btrim(new.comment), 90) ||
+              case when length(btrim(new.comment)) > 90 then '…"' else '"' end
+         else new.stars || '★ for ' || coalesce(skill, 'your work') || '. Tap to see it.'
+    end,
+    -- worker_ratings is keyed on (worker_id, rater); there is no id column.
+    -- The thread is the right thing to tag by anyway — one job, one review,
+    -- so rewriting it replaces the alert rather than stacking a second one.
+    './?src=push#me', 'review-' || coalesce(new.thread_id::text, new.rater));
+  return new;
+end;
+$$;
+
+-- On insert and on update: a customer may change their mind and rewrite a
+-- review, and review_thread edits the row in place rather than adding one.
+drop trigger if exists worker_ratings_push_trg on public.worker_ratings;
+create trigger worker_ratings_push_trg
+  after insert or update of stars, comment on public.worker_ratings
+  for each row execute function public.push_on_review();
+
+-- ---------- the lock, still last ----------
+select public.lock_public_functions();
+
 do $$
 declare leaked text;
 begin
