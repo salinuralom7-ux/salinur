@@ -13,6 +13,8 @@ description oversells, and a rejection costs days.
 ```
 MySheher: Local Workers Nearby
 ```
+Exactly 30 characters. "MySheher" alone is 8 and finds nobody who does not
+already know the name.
 
 **Short description** (80 max)
 
@@ -37,11 +39,11 @@ MySheher takes nothing from a worker's earnings and charges customers nothing to
 EVERY PROFILE VERIFIED
 Not an algorithm. Someone reviews the photo, the details and the WhatsApp number before a profile goes live. Change your photo or your name later and it goes back for review.
 
-HONEST PRICES
-Every service has a floor and a ceiling drawn from what that trade actually charges in Guwahati. It keeps out listings that are not serious. Within the range, the worker decides.
+THE WORKER SETS THE PRICE
+There is no minimum on MySheher. If someone wants to charge less than everybody else, that is their right and their decision. Each service does have a ceiling, drawn from what that trade actually charges in Guwahati, so nobody lists a ₹40,000 plumbing visit on a marketplace that promises honest local rates. Below that, the price is entirely theirs.
 
 124 LOCALITIES ACROSS GUWAHATI
-From Jalukbari to Narengi, Amingaon to Azara, Six Mile to Maligaon. Filter by locality, or let the app sort by how far away someone actually is.
+From Jalukbari to Narengi, Amingaon to Azara, Six Mile to Maligaon. Filter by locality, search for yours by name, or let the app sort by how far away someone actually is.
 
 ARE YOU THE ONE LOOKING FOR WORK?
 Create a profile in about two minutes. Choose the service you do, set your own rate for it, add a photo and confirm your WhatsApp number. Once approved you appear in searches near you, and bookings arrive in the app — with a WhatsApp nudge if the customer wants your phone to buzz.
@@ -53,14 +55,17 @@ WHAT MYSHEHER IS NOT
 We are a place to find each other, not an employer. Workers are independent — they are not our staff and we do not supervise their work. We are not a party to your agreement, and we do not handle payments. Our review confirms a profile looks genuine; it is not a police verification or a background check. Please use ordinary good sense, especially when inviting someone into your home.
 
 YOUR DATA
-No ads, no analytics, no tracking cookies, nothing sold to anybody. Your location is rounded to about 100 metres before it is stored. You can delete your profile yourself, from inside the app, at any time — photo included.
+No ads, no analytics, no tracking cookies, nothing sold to anybody. Your location is rounded to about 110 metres before it is stored, on your phone, before it is sent. You can delete your profile yourself, from inside the app, at any time — photo included.
 
 MySheher is on an experimental launch in Guwahati, Assam. Tell us what is broken and we will fix it.
 ```
 
-**App category:** Business
-**Tags:** Home services, Jobs, Local
-**Contact email:** info@mysheher.com
+**App category:** Lifestyle — House & Home fits the trades but not the doctors,
+tutors and mechanics; Business is for tools a business runs on, which this is not.
+**Tags:** Home Services, Local Services, Booking, Directory, Jobs — whichever of
+these Play offers once the category is chosen.
+**Contact email:** hello.mysheher@gmail.com — the address the site publishes.
+An address a reviewer cannot match to the privacy policy is a rejection.
 **Contact phone:** +91 70865 99367
 **Website:** https://mysheher.com/
 **Privacy policy:** https://mysheher.com/privacy/
@@ -69,105 +74,128 @@ MySheher is on an experimental launch in Guwahati, Assam. Tell us what is broken
 
 ## Data safety form
 
-Play asks about *collection* (it leaves your device) and *sharing* (it goes to
-a third party). Answer exactly this — it matches what the code does.
+Play asks about *collection* (it leaves the device) and *sharing* (it goes to a
+**third party**). These are the answers actually submitted on 5 August 2026, and
+they match what the code does — a reviewer who installs the app can check.
 
 **Does your app collect or share any of the required user data types?** Yes
+**Account creation methods:** Username and password (phone number + 4-digit PIN)
 **Is all data encrypted in transit?** Yes
-**Do you provide a way for users to request data deletion?**
-Yes — https://mysheher.com/delete-account/
+**Way to request account and data deletion?** Yes — https://mysheher.com/delete-account/
+**Way to request deletion of some data without deleting the account?** Yes — same URL
+**Independent security review / UPI verified badges:** neither, they are not earned
 
-### Personal info
+### The ten types collected
 
-| Data type | Collected | Shared | Optional? | Purpose |
-|---|---|---|---|---|
-| Name | Yes | Yes | Required | App functionality — shown on the profile, sent with a booking |
-| Email address | Yes | No | Optional | App functionality — worker's own contact record |
-| Phone number | Yes | Yes | Required | App functionality — bookings travel over WhatsApp |
-| User IDs | Yes | No | Required | Account management — a customer or worker account is keyed to the phone number |
-| Other info (services, rates, experience) | Yes | No | Required | App functionality |
+| Data type | Collected | Shared | Ephemeral | Required? | Purpose |
+|---|---|---|---|---|---|
+| Approximate location | Yes | No | No | Required | App functionality |
+| Precise location | Yes | No | No | Users can choose | App functionality |
+| Name | Yes | No | No | Required | App functionality, Account management |
+| Email address | Yes | No | No | Users can choose | App functionality, Account management |
+| Phone number | Yes | No | No | Required | App functionality, Account management, Fraud prevention and security |
+| User IDs | Yes | No | No | Required | App functionality, Account management |
+| Other in-app messages | Yes | No | No | Required | App functionality |
+| Photos | Yes | No | No | Required | App functionality |
+| Other user-generated content | Yes | No | No | Users can choose | App functionality |
+| Device or other IDs | Yes | No | No | Users can choose | App functionality |
 
-"Shared" is Yes for name and phone because a booking request is passed to the
-worker, and a worker's name and number are shown to the customer booking them.
-Say so; Play checks this against the app's behaviour.
+**Nothing is ticked as Shared.** Play defines shared as transfer to a *third
+party*. A worker publishing a public profile, and a customer handing their
+number to the worker they have just booked, are both **user-initiated transfers
+the user expects**, which Play exempts by name. There are no ad networks, no
+analytics SDKs and no data sales, so nothing else could qualify.
 
-Both sides have an account. A worker must have one to be listed; a customer
-needs one only to send a booking request, and can browse the whole app without.
-Either can be deleted in the app without contacting us, which is what the
-deletion URL above has to demonstrate — Play does test it.
+**Nothing is ticked as processed ephemerally.** All ten are written to the
+database. Ephemeral means memory-only, discarded when the request finishes.
 
-### Location
+**Analytics, Advertising or marketing, and Personalisation are never ticked.**
+None of them run, and claiming one would contradict the privacy policy — which
+is the mismatch Play looks for.
 
-| Data type | Collected | Shared | Optional? | Purpose |
-|---|---|---|---|---|
-| Approximate location | Yes | No | Optional | App functionality — sorting results by distance |
+### Why "Precise location" and not only "Approximate"
 
-Precise location is **not** collected. Coordinates are rounded to three
-decimal places (about 100 m) before they are stored.
+Play's line is **3 km²**: anything narrower than that is precise. Coordinates
+are blunted to three decimal places — about 110 m — which is a hundredth of
+that area, so it is precise by Play's definition however coarse it feels.
+Approximate applies as well, because the city and locality names are stored.
+Declaring only Approximate would be a misdeclaration.
 
-### Photos and videos
+### Not collected — every remaining box stays empty
 
-| Data type | Collected | Shared | Optional? | Purpose |
-|---|---|---|---|---|
-| Photos | Yes | No | Required for workers | App functionality — the verification photo on a public profile |
+Financial info (no payment passes through the app) · Health and fitness ·
+Audio files · Files and docs · Calendar · Contacts · App activity
+(no analytics, no interaction logging) · Web browsing history ·
+App info and performance (no crash reporting)
 
-### Messages
+### The four marked "Users can choose"
 
-| Data type | Collected | Shared | Optional? | Purpose |
-|---|---|---|---|---|
-| Other in-app messages | Yes | No | Required | App functionality — a booking opens a conversation both sides can read back |
-
-Answer Yes here. A booking opens a chat inside MySheher and those messages are
-stored for 12 months so either side has a record of what was agreed. Ticking
-"not collected" because the app is not a messenger is the kind of mismatch
-Play rejects an update over.
-
-### Not collected — answer No to all of these
-
-Financial info · Health and fitness · Audio · Files and docs ·
-Calendar · Contacts · App activity · Web browsing history · App info and
-performance · Device or other IDs
-
-### Security practices
-
-* Data is encrypted in transit — **Yes**
-* Users can request that data be deleted — **Yes**
-* Committed to the Play Families Policy — **No** (18+ app)
-* Independent security review — **No**
+* **Precise location** — refusing it is a supported path; results are then
+  ordered by rating, and a worker can still publish.
+* **Email address** — optional on a worker profile, never asked of a customer.
+* **Other user-generated content** — reviews and the "about" text are optional
+  to write.
+* **Device or other IDs** — the web-push subscription; none exists until
+  notifications are allowed.
 
 ---
 
 ## Content rating questionnaire
 
-Category: **Utility, Productivity, Communication or Other**
+Category: **Utility, Productivity, Communication or Other**. Submitted
+5 August 2026; the result was **PEGI 3** with an interactive-elements notice.
 
 | Question | Answer |
 |---|---|
-| Violence, sexual content, profanity, drugs, gambling | No to all |
-| Does the app let users interact or exchange content? | **Yes** |
-| Does it share the user's current location with other users? | **No** — only the locality name and a rounded distance |
-| Does it allow users to purchase digital goods? | No |
-| Does the app contain user-generated content? | **Yes** — profiles, ratings |
-| Is there a way to report content, and a moderation policy? | **Yes** — Report this profile on every worker, reviewed by our team |
+| Violence, sexuality, controlled substances, age-restricted content | No to all |
+| Does the app share user-generated content? | **Yes** |
+| Is user-generated content the app's primary purpose? | No |
+| Nudity or graphic violence in user content | No |
+| Can users block other users? | **No** |
+| Can users report other users or content? | **Yes** — Report this profile |
+| Is chat moderated? | **No** |
+| Is sharing limited to invited friends? | No |
+| Does the app display content from the internet? | **Yes** |
+| Does it share the user's **precise** location with other users? | **No** — the other side sees a locality name and a rounded distance |
+| Digital goods, cash rewards, crypto, NFTs | No to all |
+| Is it a browser, search engine, news or educational product? | No |
 
-Expect **PEGI 3 / ESRB Everyone** with an interactive-elements notice. Set
-the target audience to **18 and over** — the terms require it and the app
-asks people to confirm it.
+**"Is chat moderated?" is answered No on purpose.** Reviewing a conversation
+after somebody reports it is not moderation, and overclaiming a safety feature
+is what Play penalises. The stricter rating costs nothing on an 18+ app.
+
+### Target audience and content
+
+* Age groups: **18 and over only.** Ticking any bracket below 18 pulls the app
+  into the Families policy — a separate review the app would not survive, and
+  the terms require 18+ anyway.
+* Is your store listing appealing to children? **No**
 
 ---
 
 ## Government and legal declarations
 
-* **Financial features:** None. The app takes no payments, has no wallet and
-  does not connect to a bank.
-* **Health apps declaration:** Not applicable.
-* **Data deletion:** In-app and at a public URL.
-* **News app:** No.
-* **COVID-19 / contact tracing:** No.
+* **Government app:** No. A sole proprietorship, commissioned by nobody.
+* **Financial features:** none. The app takes no payments, has no wallet and
+  connects to no bank. A worker lists a rate; the customer pays them in cash.
+* **Health features:** **Healthcare services and management.** This is *not*
+  "no health features" — the app has a Health & Consultation category with
+  General Physician, Dentist, Ayurvedic and Homeopathic Doctors, Psychologist,
+  Dietician, Physiotherapist and at-home lab sample collection, plus Home Nurse
+  and Patient Attendant under Care. A reviewer finds those in ten seconds, and
+  declaring none would be a misdeclaration. MySheher facilitates access to
+  healthcare; it does not provide it. Every statutorily registered trade in
+  that list already has to give a council registration number at sign-up —
+  see REG_REQUIRED and COUNCILS in the app.
+* **Ads:** none. Answering No here also skips the ads policy section.
+* **Advertising ID:** not used.
+* **Data deletion:** in-app, and at a public URL.
+* **News app / COVID-19 contact tracing:** No.
 * **Target API level:** Bubblewrap builds against the current requirement;
   rebuild with the latest Bubblewrap when Play raises it.
-* **Advertising ID:** Not used. Answer **No** to the ads declaration — this
-  also lets you skip the ads policy section entirely.
+* **App access:** **Yes, part of the app is restricted.** Test credentials are
+  supplied — a worker account and a customer account — because a reviewer
+  cannot see the worker side or send a booking without signing in.
 
 ---
 

@@ -5892,7 +5892,7 @@ function regWhyNot(step){
   if(step === 1){
     const skills = collectSkills();
     if(!skills.length) return "Choose at least one type of work";
-    const noPrice = skills.find(x => !x.price || x.price < 1);
+    const noPrice = skills.find(x => !x.priced);
     if(noPrice) return "Add your rate for " + noPrice.skill;
     const bad = rateOutOfBand(skills);
     if(bad) return bad;
@@ -6113,10 +6113,14 @@ function rateOutOfBand(skills){
   }
   return null;
 }
+/* `priced` is not the same question as `price > 0`. Zero is a rate somebody
+   may deliberately choose — MySheher sets no floor — so an empty box and a box
+   holding 0 have to be told apart, which a bare `+value || 0` cannot do. */
 function collectSkills(){
   return [...document.querySelectorAll(".picked-card")].map(d=>({
     skill: d.dataset.skill,
     price: +d.querySelector(".sd-price").value || 0,
+    priced: /^\d{1,7}$/.test(d.querySelector(".sd-price").value.trim()),
     unit:  d.querySelector(".sd-unit").value,
     exp:   d.querySelector(".sd-exp").value.trim()
   }));
@@ -6355,7 +6359,7 @@ async function saveProfile(){
   if(!session){ go("work"); return; }
   const skills = collectSkills();
   if(!skills.length){ toast("Choose at least one service"); return; }
-  const missing = skills.find(s => !s.price || s.price < 1);
+  const missing = skills.find(s => !s.priced);
   if(missing){ toast("Set your rate for " + missing.skill); return; }
   const badRate = rateOutOfBand(skills);
   if(badRate){ toast(badRate); return; }
