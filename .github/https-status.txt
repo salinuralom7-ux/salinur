@@ -1,4 +1,4 @@
-checked: 2026-08-02T15:28:32Z
+checked: 2026-08-05T06:57:47Z
 --- certificate served on mysheher.com:443 ---
 subject=CN = mysheher.com
 issuer=C = US, O = Let's Encrypt, CN = YR2
@@ -35,7 +35,7 @@ old domain: gone from the page
   present : --danger:#FF5E57
   present : EVERY SKILL NEAR YOU
   theme-color" content="#15151A"
-  service worker CACHE = "mysheher-shell-v10"
+  service worker CACHE = "mysheher-shell-v22"
   index.html Cache-Control: max-age=600
 --- http, and www ---
 http://mysheher.com  -> HTTP 301 -> https://mysheher.com/
