@@ -1,14 +1,14 @@
-name: Set up the Repto database
+name: Set up the MySheher database
 # One-time: creates the Repto tables/functions in the existing Supabase
 # project. Reads the Supabase access token from the repo secret
 # SUPABASE_TOKEN. Writes a sanitized status report to
-# .github/kaamsetu-setup-status.txt (never the token). Removed after use.
+# .github/mysheher-setup-status.txt (never the token). Removed after use.
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [".github/workflows/setup-nearse-db.yml", "docs/supabase-workers-setup.sql"]
+    paths: [".github/workflows/setup-mysheher-db.yml", "docs/supabase-workers-setup.sql"]
 
 permissions:
   contents: write
@@ -18,12 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Repto SQL on Supabase
+      - name: Run the MySheher schema on Supabase
         env:
           SB_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
         run: |
           set -uo pipefail
-          R=.github/kaamsetu-setup-status.txt
+          R=.github/mysheher-setup-status.txt
           note(){ echo "$1" | tee -a "$R"; }
           : > "$R"
           note "run: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -43,6 +43,12 @@ jobs:
             note "ERROR: token rejected or API unreachable. Body: $(head -c 300 /tmp/projects.json)"
             exit 1
           fi
+          # "budget-cars" is the name of the Supabase PROJECT, not a leftover
+          # brand — it is what the project is actually called in the account,
+          # from before any of the naming settled. It is matched exactly, so it
+          # cannot be tidied here alone: rename the project in Supabase first,
+          # then change this string in the same breath, or every run stops
+          # finding the database.
           ref=$(jq -r '[.[] | select(.name=="budget-cars")][0].id // empty' /tmp/projects.json)
           if [ -z "$ref" ]; then
             note "ERROR: project 'budget-cars' not found. Projects: $(jq -r '[.[].name] | join(", ")' /tmp/projects.json)"
@@ -447,6 +453,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/kaamsetu-setup-status.txt
-          git commit -m "Repto DB setup status" || echo "nothing to commit"
+          git add .github/mysheher-setup-status.txt
+          git commit -m "MySheher DB setup status" || echo "nothing to commit"
           git push || true
