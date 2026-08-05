@@ -1,10 +1,14 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.mysheher.app",
-    "sha256_cert_fingerprints": [
-      "9C:DB:3F:6B:5F:EC:E2:D1:35:41:8F:14:1A:05:57:85:14:EC:01:A1:4A:D9:B2:83:76:3B:94:F6:7F:CB:48:64"
-    ]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.mysheher.app",
+      "sha256_cert_fingerprints": [
+        "DE:DE:EC:4E:A0:3A:C3:DB:E1:AD:3C:2F:FF:F9:71:AB:E6:28:BD:85:EF:E9:B5:B9:0B:8F:48:18:DC:E1:39:C8"
+      ]
+    }
   }
-}]
+]
