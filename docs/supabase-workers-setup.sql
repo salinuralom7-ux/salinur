@@ -2989,9 +2989,13 @@ returns boolean language sql immutable set search_path = public as $$
 $$;
 
 -- ---------- 14.2 starting one ----------
--- Dropped first every time: Migration 18 widens the return type to carry
--- the worker's number for the booking notification.
+-- Dropped first every time: Migration 18 widens the return type to carry the
+-- worker's number for the booking notification, and Migration 40 adds the two
+-- structured when-columns. Both shapes go, so that at the overload guard
+-- further down exactly one start_thread exists — that guard runs before
+-- Migration 40 does, and it is right to be strict.
 drop function if exists public.start_thread(uuid, text, text, text, text, text, text, int, text, text, uuid);
+drop function if exists public.start_thread(uuid, text, text, text, text, text, text, int, text, text, uuid, date, text);
 
 create function public.start_thread(
   p_worker uuid, p_skill text, p_name text, p_phone text,
@@ -4521,9 +4525,13 @@ $$;
 -- the booking notification needs the number, so start_thread hands it back
 -- and records the hand-over exactly like any other contact request
 drop function if exists public.start_thread(uuid, text, text, text, text, text, text, int, text, text, uuid);
--- Dropped first every time: Migration 18 widens the return type to carry
--- the worker's number for the booking notification.
+-- Dropped first every time: Migration 18 widens the return type to carry the
+-- worker's number for the booking notification, and Migration 40 adds the two
+-- structured when-columns. Both shapes go, so that at the overload guard
+-- further down exactly one start_thread exists — that guard runs before
+-- Migration 40 does, and it is right to be strict.
 drop function if exists public.start_thread(uuid, text, text, text, text, text, text, int, text, text, uuid);
+drop function if exists public.start_thread(uuid, text, text, text, text, text, text, int, text, text, uuid, date, text);
 
 create function public.start_thread(
   p_worker uuid, p_skill text, p_name text, p_phone text,
@@ -8334,6 +8342,227 @@ begin
     pg_get_functiondef('public.clean_worker_data(jsonb, boolean)'::regprocedure),
     'if n > 3 then raise exception ''You can offer up to 3 services''; end if;',
     'if n > 1 then raise exception ''A profile is for one service. Choose the one you do.''; end if;');
+end $$;
+
+-- ---------- the lock, still last ----------
+select public.lock_public_functions();
+
+
+-- ============================================================
+-- MIGRATION 40 — one person can only be in one place at a time
+--
+-- Reported from a phone: "supposed I am a mechanic and 3 people are booking
+-- me right now, I can accept all three requests, since I am a single person
+-- I have the capacity to work at one place only."
+--
+-- Exactly right, and nothing stopped it. worker_set_thread checked that a
+-- request was still `requested` and accepted it, with no idea whether the
+-- worker had already promised that time to somebody else. Three people could
+-- each be told "accepted", two would wait for a person who was never coming,
+-- and the first they would hear of it is when nobody turned up. That is the
+-- worst failure this app can have: not a wrong screen — a wasted afternoon
+-- and a broken promise made in our name.
+--
+-- What counts as a clash depends on how the trade is booked, and getting it
+-- wrong the other way is its own harm: a maid with four monthly households
+-- is not double-booked, she is employed.
+--
+--   now    an instant job. One at a time, full stop. Somebody under a car
+--          cannot take another car.
+--   sched  a dated visit. Clashes with another visit on the same date in the
+--          same part of the day. Morning and afternoon on one day do not
+--          clash — that is a working day, not a double booking.
+--   slot   an appointment. Same date and same time. The appointments table
+--          has always enforced this; the conversation now agrees with it.
+--   hire   a monthly engagement. Never clashes.
+--
+-- Two halves. Accepting a clashing job is refused. And the moment one is
+-- accepted, the other requests for that same time are declined automatically
+-- with "Booked by someone else" — because leaving them at "waiting for a
+-- reply" against a slot that has gone is a slower way of telling the same lie.
+-- ============================================================
+
+-- The when, as data rather than as the sentence a human reads. detail has
+-- always been free text ("Tomorrow · Morning · Beltola, Guwahati"), which is
+-- right for a screen and useless for deciding whether two bookings collide.
+alter table public.threads add column if not exists slot_date date;
+alter table public.threads add column if not exists slot_part text;
+
+create index if not exists threads_worker_slot_idx
+  on public.threads (worker_id, slot_date, slot_part) where slot_date is not null;
+
+-- Null means "cannot clash with anything" — a monthly hire, or a booking made
+-- before these columns existed, where guessing would be worse than allowing.
+create or replace function public.thread_slot_key(
+  p_mode text, p_date date, p_part text)
+returns text
+language sql immutable set search_path = public as $$
+  select case
+    when coalesce(p_mode,'') = 'now'  then 'now'
+    when coalesce(p_mode,'') = 'hire' then null
+    when p_date is null               then null
+    else p_date::text || '#' || coalesce(nullif(btrim(p_part),''), 'any')
+  end;
+$$;
+
+create or replace function public.start_thread(
+  p_worker uuid, p_skill text, p_name text, p_phone text,
+  p_area text default null, p_detail text default null, p_note text default null,
+  p_price int default null, p_unit text default null, p_mode text default null,
+  p_job uuid default null, p_slot_date date default null, p_slot_part text default null)
+returns table (code text, token uuid, worker_name text, worker_phone text)
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; c text; tok uuid; wname text; wphone text; recent int;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then raise exception 'Enter a valid 10-digit mobile number'; end if;
+  if btrim(coalesce(p_name,'')) = '' then raise exception 'Please enter your name'; end if;
+
+  select w.name, w.phone into wname, wphone from workers w
+   where w.id = p_worker and w.status = 'approved' and w.available;
+  if wname is null then raise exception 'That worker is not available at the moment'; end if;
+
+  select count(*) into recent from threads
+   where customer_phone = p_phone and created_at > now() - interval '1 hour';
+  if recent >= 15 then
+    raise exception 'That is a lot of requests in one hour. Please try again later.';
+  end if;
+
+  -- Said before the request is sent rather than after it is answered. A slot
+  -- somebody has already promised away is not worth waiting on.
+  if public.thread_slot_key(p_mode, p_slot_date, p_slot_part) is not null
+     and exists (
+       select 1 from threads t
+        where t.worker_id = p_worker
+          and t.status in ('accepted','working')
+          and public.thread_slot_key(t.mode, t.slot_date, t.slot_part)
+              = public.thread_slot_key(p_mode, p_slot_date, p_slot_part))
+  then
+    raise exception 'BOOKED_ELSEWHERE';
+  end if;
+
+  loop
+    c := upper(substr(encode(gen_random_bytes(8), 'hex'), 1, 10));
+    exit when not exists (select 1 from threads where threads.code = c);
+  end loop;
+
+  insert into threads (code, worker_id, skill, mode, detail, note, price, unit,
+                       customer_name, customer_phone, customer_area, job_id, worker_unread,
+                       slot_date, slot_part)
+  values (c, p_worker, p_skill, nullif(btrim(coalesce(p_mode,'')),''),
+          nullif(btrim(coalesce(p_detail,'')),''), nullif(btrim(coalesce(p_note,'')),''),
+          p_price, p_unit, btrim(p_name), p_phone,
+          nullif(btrim(coalesce(p_area,'')),''), p_job, 1,
+          p_slot_date, nullif(btrim(coalesce(p_slot_part,'')),''))
+  returning id, customer_token into tid, tok;
+
+  insert into messages (thread_id, sender, body)
+  values (tid, 'system', btrim(p_name) || ' sent a request'
+          || coalesce(' for ' || nullif(btrim(coalesce(p_detail,'')),''), '') || '.');
+
+  return query select c, tok, wname, null::text;
+end;
+$$;
+
+create or replace function public.worker_set_thread(
+  p_phone text default null, p_pin text default null, p_code text default null,
+  p_status text default null, p_reason text default null, p_token uuid default null)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare tid uuid; wid uuid; st text; wname text; mykey text; clashes int;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return null; end if;
+  select w.name into wname from workers w where w.id = wid;
+  select t.id, t.status into tid, st from threads t
+   where t.code = upper(btrim(p_code)) and t.worker_id = wid;
+  if tid is null then raise exception 'Conversation not found'; end if;
+  if st in ('cancelled','closed') then raise exception 'This one is already finished'; end if;
+
+  if p_status = 'accepted' then
+    if st <> 'requested' then raise exception 'Only a new request can be accepted'; end if;
+
+    select public.thread_slot_key(t.mode, t.slot_date, t.slot_part) into mykey
+      from threads t where t.id = tid;
+
+    if mykey is not null then
+      -- Locked, not merely read: two requests answered in the same second
+      -- would otherwise both look free and both be accepted.
+      perform 1 from threads t
+       where t.worker_id = wid and t.id <> tid
+         and t.status in ('accepted','working')
+         and public.thread_slot_key(t.mode, t.slot_date, t.slot_part) = mykey
+       for update;
+      get diagnostics clashes = row_count;
+      if clashes > 0 then
+        raise exception 'You already have a job at that time. Finish or cancel that one first.';
+      end if;
+    end if;
+
+    update threads set status = 'accepted', accepted_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body) values (tid, 'system', wname || ' accepted this job.');
+
+    -- and everybody else who asked for the same time is told now
+    if mykey is not null then
+      update threads t
+         set status = 'declined', closed_at = now(), last_message_at = now(),
+             customer_unread = t.customer_unread + 1,
+             decline_reason = 'Booked by someone else — please choose another time, or another worker.'
+       where t.worker_id = wid and t.id <> tid and t.status = 'requested'
+         and public.thread_slot_key(t.mode, t.slot_date, t.slot_part) = mykey;
+
+      insert into messages (thread_id, sender, body)
+      select t.id, 'system',
+             wname || ' has taken another job at that time. Pick a different time, or somebody else who does this.'
+        from threads t
+       where t.worker_id = wid and t.id <> tid and t.status = 'declined'
+         and t.closed_at > now() - interval '2 seconds'
+         and public.thread_slot_key(t.mode, t.slot_date, t.slot_part) = mykey;
+    end if;
+
+  elsif p_status = 'declined' then
+    if st <> 'requested' then raise exception 'Only a new request can be declined'; end if;
+    update threads set status = 'declined', closed_at = now(), last_message_at = now(),
+                       decline_reason = nullif(btrim(coalesce(p_reason,'')),'')
+     where id = tid;
+    insert into messages (thread_id, sender, body)
+      values (tid, 'system', wname || ' could not take this job'
+              || coalesce(' — ' || nullif(btrim(coalesce(p_reason,'')),''), '.'));
+  elsif p_status = 'working' then
+    if st <> 'accepted' then raise exception 'Accept the job first'; end if;
+    update threads set status = 'working', started_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body) values (tid, 'system', wname || ' has started work.');
+  elsif p_status = 'done' then
+    if st not in ('accepted','working') then raise exception 'This job has not started'; end if;
+    update threads set status = 'done', done_at = now(), last_message_at = now() where id = tid;
+    insert into messages (thread_id, sender, body)
+      values (tid, 'system', wname || ' marked the work finished. Please confirm.');
+  else
+    raise exception 'A worker cannot set that';
+  end if;
+  update threads set customer_unread = customer_unread + 1 where id = tid;
+  return p_status;
+end;
+$$;
+
+-- accept_offer writes its thread straight into the table rather than going
+-- through worker_set_thread, so the guard above did not cover the instant
+-- path — and the instant path is the one the report was about. A mechanic
+-- already under one car could still take a second.
+--
+-- Patched by text rather than restated: this function is ninety lines of
+-- dispatch that has nothing to do with this change, and a copy of it here is
+-- a copy that drifts.
+do $$
+begin
+  execute replace(
+    pg_get_functiondef('public.accept_offer(text, text, text, int, uuid)'::regprocedure),
+    'update job_offers set status = ''accepted'' where job_id = jid and worker_id = wid;',
+    'if exists (select 1 from threads t
+                 where t.worker_id = wid and t.mode = ''now''
+                   and t.status in (''accepted'',''working'')) then
+       raise exception ''You are already on a job. Finish that one first.'';
+     end if;
+     update job_offers set status = ''accepted'' where job_id = jid and worker_id = wid;');
 end $$;
 
 -- ---------- the lock, still last ----------
