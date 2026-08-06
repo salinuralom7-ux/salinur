@@ -64,8 +64,10 @@ MySheher is on an experimental launch in Guwahati, Assam. Tell us what is broken
 tutors and mechanics; Business is for tools a business runs on, which this is not.
 **Tags:** Home Services, Local Services, Booking, Directory, Jobs — whichever of
 these Play offers once the category is chosen.
-**Contact email:** hello.mysheher@gmail.com — the address the site publishes.
-An address a reviewer cannot match to the privacy policy is a rejection.
+**Contact email:** info@mysheher.com — the address every page of the site
+publishes, and the one in the privacy policy's grievance-officer panel. A
+contact a reviewer cannot match to the privacy policy is a rejection, so this
+must not be changed to anything else.
 **Contact phone:** +91 70865 99367
 **Website:** https://mysheher.com/
 **Privacy policy:** https://mysheher.com/privacy/
