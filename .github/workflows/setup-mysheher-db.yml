@@ -118,9 +118,13 @@ jobs:
             (select min_price || '-' || max_price from public.service_rates where skill='Carpenter') as carpenter_band,
             (select count(*)::int from information_schema.routines
               where routine_schema='public' and routine_name='check_rate_bands') as band_fn,
+            -- Only the ceiling is a fault. Migration 37 removed the floor:
+            -- somebody charging less than the going rate is making a choice
+            -- MySheher deliberately allows, and counting it here reported a
+            -- problem on every run for a profile that is doing nothing wrong.
             (select count(*)::int from public.workers w, jsonb_array_elements(w.skills) s
                join public.service_rates r on r.skill = s->>'skill'
-              where (s->>'price')::numeric < r.min_price or (s->>'price')::numeric > r.max_price) as live_rates_out_of_band
+              where (s->>'price')::numeric > r.max_price) as live_rates_over_ceiling
           VSQL
           jq -Rs '{query: .}' /tmp/verify.sql > /tmp/v.json
           code=$(curl -sS -o /tmp/verify.json -w "%{http_code}" "${hdr[@]}" -X POST $api/projects/$ref/database/query -d @/tmp/v.json)
