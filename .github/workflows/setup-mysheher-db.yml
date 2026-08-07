@@ -43,15 +43,17 @@ jobs:
             note "ERROR: token rejected or API unreachable. Body: $(head -c 300 /tmp/projects.json)"
             exit 1
           fi
-          # "budget-cars" is the name of the Supabase PROJECT, not a leftover
-          # brand — it is what the project is actually called in the account,
-          # from before any of the naming settled. It is matched exactly, so it
-          # cannot be tidied here alone: rename the project in Supabase first,
-          # then change this string in the same breath, or every run stops
-          # finding the database.
-          ref=$(jq -r '[.[] | select(.name=="budget-cars")][0].id // empty' /tmp/projects.json)
+          # The Supabase project is still called "budget-cars" in the account —
+          # a name from before any of this settled, not a leftover brand in the
+          # code. Renaming it in Supabase used to break every run here, because
+          # one exact string was matched and nothing else. So both names are
+          # accepted: "mysheher" wins if it exists, "budget-cars" answers until
+          # somebody renames it, and the rename can happen on any afternoon
+          # without touching this file or coordinating with a deploy.
+          ref=$(jq -r '[.[] | select(.name=="mysheher" or .name=="MySheher")][0].id // empty' /tmp/projects.json)
+          [ -z "$ref" ] && ref=$(jq -r '[.[] | select(.name=="budget-cars")][0].id // empty' /tmp/projects.json)
           if [ -z "$ref" ]; then
-            note "ERROR: project 'budget-cars' not found. Projects: $(jq -r '[.[].name] | join(", ")' /tmp/projects.json)"
+            note "ERROR: no project named 'mysheher' or 'budget-cars'. Projects: $(jq -r '[.[].name] | join(\", \")' /tmp/projects.json)"
             exit 1
           fi
           note "project: $ref"
