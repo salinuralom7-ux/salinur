@@ -28,9 +28,9 @@ livelihood.
 ## The reset
 
 1. Open **supabase.com** and sign in.
-2. Choose the **budget-cars** project. (That is the project's internal name.
-   It is the MySheher database — the name is load-bearing in the setup
-   workflow, so it has deliberately not been renamed.)
+2. Choose the **mysheher** project. (It was called "budget-cars" until
+   7 August 2026, from before the naming settled. If you are reading an older
+   note that says budget-cars, it is the same database.)
 3. In the left menu click **SQL Editor**.
 4. Click **New query**.
 5. Paste the block below.

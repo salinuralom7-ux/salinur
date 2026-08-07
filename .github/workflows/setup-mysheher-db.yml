@@ -43,13 +43,12 @@ jobs:
             note "ERROR: token rejected or API unreachable. Body: $(head -c 300 /tmp/projects.json)"
             exit 1
           fi
-          # The Supabase project is still called "budget-cars" in the account —
-          # a name from before any of this settled, not a leftover brand in the
-          # code. Renaming it in Supabase used to break every run here, because
-          # one exact string was matched and nothing else. So both names are
-          # accepted: "mysheher" wins if it exists, "budget-cars" answers until
-          # somebody renames it, and the rename can happen on any afternoon
-          # without touching this file or coordinating with a deploy.
+          # The project was renamed from "budget-cars" to "mysheher" on
+          # 7 August 2026. The old name is still accepted, and stays accepted:
+          # it costs one line, and it is what makes a rename a two-minute job
+          # rather than something that has to land with a deploy. If the
+          # account is ever restored from an older snapshot, this still finds
+          # the database.
           ref=$(jq -r '[.[] | select(.name=="mysheher" or .name=="MySheher")][0].id // empty' /tmp/projects.json)
           [ -z "$ref" ] && ref=$(jq -r '[.[] | select(.name=="budget-cars")][0].id // empty' /tmp/projects.json)
           if [ -z "$ref" ]; then
