@@ -1,0 +1,76 @@
+name: Check Digital Asset Links
+# Why the app opens with an address bar: Android only drops the browser UI
+# when it can fetch and verify /.well-known/assetlinks.json over HTTPS. This
+# asks the same questions Android asks, from a machine that can actually reach
+# the domain, and prints the answers to the job log.
+#
+# Runs on any push that touches this file, on any branch, so it can be used
+# from a working branch without going through main.
+
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/check-assetlinks.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: What the domain serves
+        run: |
+          echo "=========== 1. headers ==========="
+          curl -sSI -m 20 https://mysheher.com/.well-known/assetlinks.json || echo "REQUEST FAILED"
+
+          echo
+          echo "=========== 2. body ==========="
+          curl -sS -m 20 https://mysheher.com/.well-known/assetlinks.json || echo "REQUEST FAILED"
+
+          echo
+          echo "=========== 3. following every redirect ==========="
+          curl -sS -L -m 20 -o /dev/null \
+            -w 'final url: %{url_effective}\nstatus: %{http_code}\ncontent-type: %{content_type}\nredirects: %{num_redirects}\n' \
+            https://mysheher.com/.well-known/assetlinks.json || echo "REQUEST FAILED"
+
+          echo
+          echo "=========== 4. the www variant, which Android also tries ==========="
+          curl -sS -L -m 20 -o /dev/null \
+            -w 'final url: %{url_effective}\nstatus: %{http_code}\n' \
+            https://www.mysheher.com/.well-known/assetlinks.json || echo "no www host"
+
+      - name: What Google's own verifier sees
+        run: |
+          echo "=========== 5. digitalassetlinks API ==========="
+          # This is the service Android consults. If it cannot confirm the
+          # statement, the app gets a browser bar no matter what the file says.
+          curl -sS -m 30 -G https://digitalassetlinks.googleapis.com/v1/statements:list \
+            --data-urlencode 'source.web.site=https://mysheher.com' \
+            --data-urlencode 'relation=delegate_permission/common.handle_all_urls' \
+            || echo "REQUEST FAILED"
+
+          echo
+          echo "=========== 6. the check Android actually runs ==========="
+          # assetlinks in one direction is not enough: Android asks whether
+          # THIS app on THIS site is permitted, both ends named explicitly.
+          curl -sS -m 30 -G https://digitalassetlinks.googleapis.com/v1/assetlinks:check \
+            --data-urlencode 'source.web.site=https://mysheher.com' \
+            --data-urlencode 'relation=delegate_permission/common.handle_all_urls' \
+            --data-urlencode 'target.androidApp.packageName=com.mysheher.app' \
+            --data-urlencode 'target.androidApp.certificate.sha256Fingerprint=38:E2:30:18:E8:27:8C:60:5E:4A:8B:FA:DD:64:4E:7D:8D:FE:DF:0F:74:43:1C:7C:0D:4C:65:F7:D3:36:70:FC' \
+            || echo "REQUEST FAILED"
+
+          echo
+          echo "=========== 7. same, against the upload key ==========="
+          curl -sS -m 30 -G https://digitalassetlinks.googleapis.com/v1/assetlinks:check \
+            --data-urlencode 'source.web.site=https://mysheher.com' \
+            --data-urlencode 'relation=delegate_permission/common.handle_all_urls' \
+            --data-urlencode 'target.androidApp.packageName=com.mysheher.app' \
+            --data-urlencode 'target.androidApp.certificate.sha256Fingerprint=DE:DE:EC:4E:A0:3A:C3:DB:E1:AD:3C:2F:FF:F9:71:AB:E6:28:BD:85:EF:E9:B5:B9:0B:8F:48:18:DC:E1:39:C8' \
+            || echo "REQUEST FAILED"
+
+      - name: The manifest the app launches into
+        run: |
+          echo "=========== 8. manifest ==========="
+          curl -sS -m 20 https://mysheher.com/manifest.webmanifest || echo "REQUEST FAILED"
