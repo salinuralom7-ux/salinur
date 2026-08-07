@@ -1,0 +1,90 @@
+name: Rename the Supabase project to mysheher
+# One-shot chore. The project is still called "budget-cars" in the Supabase
+# account, from before the naming settled, and it shows up in the dashboard
+# and in every set of instructions written for a human. This renames it
+# through the Management API using the token already in Actions secrets, so
+# nobody has to sign in to do it.
+#
+# Safe: a Supabase project's identity is its ref, a random string. The name is
+# a dashboard label. Renaming touches no data, no keys, no URLs. The setup
+# workflow already accepts either name, so nothing breaks whichever way this
+# lands.
+#
+# Runs on any push that touches this file, and by hand.
+
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/rename-supabase-project.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  rename:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rename
+        env:
+          SB_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
+        run: |
+          set -uo pipefail
+          api=https://api.supabase.com/v1
+          if [ -z "${SB_TOKEN:-}" ]; then
+            echo "ERROR: SUPABASE_TOKEN secret is empty or missing."
+            exit 1
+          fi
+          hdr=(-H "Authorization: Bearer $SB_TOKEN" -H "Content-Type: application/json")
+
+          code=$(curl -sS -o /tmp/projects.json -w "%{http_code}" "${hdr[@]}" $api/projects)
+          if [ "$code" != "200" ]; then
+            echo "ERROR: could not list projects (HTTP $code)."
+            head -c 300 /tmp/projects.json
+            exit 1
+          fi
+          echo "projects in the account: $(jq -r '[.[].name] | join(", ")' /tmp/projects.json)"
+
+          # Already done? Then say so and stop — this must be safe to re-run.
+          if jq -e '[.[] | select(.name=="mysheher")] | length > 0' /tmp/projects.json >/dev/null; then
+            echo "Already named 'mysheher'. Nothing to do."
+            exit 0
+          fi
+
+          ref=$(jq -r '[.[] | select(.name=="budget-cars")][0].id // empty' /tmp/projects.json)
+          if [ -z "$ref" ]; then
+            echo "ERROR: no project named 'budget-cars' to rename."
+            exit 1
+          fi
+          echo "renaming project $ref"
+
+          echo '{"name":"mysheher"}' > /tmp/rename.json
+          code=$(curl -sS -o /tmp/out.json -w "%{http_code}" "${hdr[@]}" \
+                   -X PATCH "$api/projects/$ref" -d @/tmp/rename.json)
+          echo "PATCH /v1/projects/$ref -> HTTP $code"
+          head -c 600 /tmp/out.json; echo
+
+          case "$code" in
+            2*) : ;;
+            404|405|501)
+              # The Management API does not expose a rename on every plan or
+              # every API version. Say which it was rather than "it failed",
+              # so the fallback is a known two-minute job in the dashboard.
+              echo
+              echo "The Management API refused to rename this project (HTTP $code)."
+              echo "Supabase does not expose renaming here for every account."
+              echo "Fall back to the dashboard: Settings -> General -> Project name."
+              exit 1 ;;
+            *)
+              echo "Unexpected response. Not retrying."
+              exit 1 ;;
+          esac
+
+          # Trust the list, not the PATCH response.
+          code=$(curl -sS -o /tmp/after.json -w "%{http_code}" "${hdr[@]}" $api/projects)
+          echo "after: $(jq -r '[.[].name] | join(", ")' /tmp/after.json)"
+          if jq -e '[.[] | select(.name=="mysheher")] | length > 0' /tmp/after.json >/dev/null; then
+            echo "PASS  the project is now called mysheher"
+          else
+            echo "The call succeeded but the name did not change. Rename it in the dashboard."
+            exit 1
+          fi
