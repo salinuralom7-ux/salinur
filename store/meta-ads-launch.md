@@ -2,24 +2,24 @@
 
 Written for the situation as it actually is on 7 August 2026: the app is in
 closed testing and cannot be installed by the public, the website works and
-takes registrations, and there are almost no workers listed yet.
+takes registrations, and there are almost no professionals listed yet.
 
-Everything here follows from one decision: **advertise to workers, not to
-customers, until there are enough workers to be worth finding.**
+Everything here follows from one decision: **advertise to professionals, not to
+customers, until there are enough professionals to be worth finding.**
 
 ---
 
-## Why workers first
+## Why professionals first
 
 A marketplace fails from the supply side, and it fails quietly.
 
 A customer who opens MySheher, searches "electrician", and finds nobody does
 not come back. They do not complain, they do not tell you, and they are gone
 for good — the first impression of an empty app is the only impression. A
-worker who registers and waits a week for a booking is mildly disappointed and
+professional who registers and waits a week for a booking is mildly disappointed and
 still there.
 
-So the money goes on workers until there are roughly **50 live profiles across
+So the money goes on professionals until there are roughly **50 live profiles across
 the common trades**. Then, and only then, turn it round.
 
 Spending on customer ads before that is not just wasted — it actively burns
@@ -60,7 +60,7 @@ the start; a small budget split many ways learns nothing.
 | Budget | Campaign budget optimisation ON |
 
 **On "special ad category":** Meta restricts targeting for **employment** ads.
-MySheher is not hiring anybody — it is a directory where independent workers
+MySheher is not hiring anybody — it is a directory where independent professionals
 list themselves, and no job is being offered by you. Declaring "employment"
 would strip your location and age targeting for no reason. If Meta's review
 disagrees and flags it, accept the flag rather than arguing; the campaign
@@ -160,7 +160,7 @@ Guwahati only. Takes two minutes.
 ```
 The customer three streets away cannot find you.
 
-MySheher shows workers nearest to the person searching. A plumber in
+MySheher shows professionals nearest to the person searching. A plumber in
 Six Mile appears to Six Mile first — not the best-advertised plumber in
 the whole city.
 
@@ -197,19 +197,19 @@ Register free at MySheher — Guwahati.
 
 ## Creative
 
-**Use photographs of real Guwahati workers.** Not stock, not illustrations, not
+**Use photographs of real Guwahati professionals.** Not stock, not illustrations, not
 the app's screenshots. A face someone recognises as their own kind of person
 outperforms polished design by a distance, and it is the one thing a
 competitor cannot copy.
 
-* Ask three or four workers you know for permission to photograph them at work.
+* Ask three or four professionals you know for permission to photograph them at work.
   Get the permission in writing over WhatsApp.
 * Shoot on a phone, in daylight, at the job — an electrician on a ladder, a
   cook in a kitchen, a tailor at a machine.
 * **1:1 square** (1080×1080) for feed. Also export **4:5** (1080×1350); it takes
   more screen and usually wins.
 * Put no more than eight words on the image. Text belongs in the caption.
-* Never show a worker's phone number.
+* Never show a professional's phone number.
 
 If you have no photographs yet, run text-on-brand-colour cards using the app's
 own palette (#15151A background, the yellow) — but replace them with real faces
@@ -243,7 +243,7 @@ Ignore likes, reach and impressions. They tell you nothing.
 |---|---|
 | Cost per WhatsApp conversation started | under ₹40 |
 | Conversations → registrations | over 30% |
-| **Cost per live worker profile** | **under ₹150** |
+| **Cost per live professional profile** | **under ₹150** |
 
 The last one is the only number that matters. Everything else is a step
 towards it. Count it by hand each week: money spent ÷ profiles approved.
@@ -256,7 +256,7 @@ before spending more. If it is under ₹100, raise the budget.
 ## Phase two and three, for later
 
 **Phase two — customers.** Once ~50 profiles are live: same geography, ages
-25–55, objective Traffic or Messages, creative showing real workers with real
+25–55, objective Traffic or Messages, creative showing real professionals with real
 rates. Lead with the specific ("Electrician at home, ₹300 a visit, in Six
 Mile"), never the generic.
 
@@ -275,6 +275,6 @@ where small advertisers' money goes to die.
 
 **Do not claim what MySheher does not do.** No "background-verified", no
 "police-verified", no "guaranteed". Your review confirms a profile looks
-genuine; the app says so plainly and the ads must match. A worker who joins on
+genuine; the app says so plainly and the ads must match. A professional who joins on
 a promise you did not make is a complaint waiting to happen, and Meta pulls ads
 that overstate.

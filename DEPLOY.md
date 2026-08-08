@@ -11,7 +11,7 @@ Job B (moving to Cloudflare) only when you actually need it.
 
 The admin PIN was stored in this repository, which is public. Anyone who
 reads the source can work it out. Until you change it, somebody else could
-approve worker profiles, take every live worker down, or read the WhatsApp
+approve professional profiles, take every live professional down, or read the WhatsApp
 verification codes.
 
 It is now **refused by the database**, so nobody can use it — including you.
@@ -42,7 +42,7 @@ good. Changing it is the only fix.
 
 # Job 0.5 — switch on notifications outside the app
 
-Right now a worker only finds out about a booking by opening MySheher and
+Right now a professional only finds out about a booking by opening MySheher and
 looking. Everything needed to fix that is built and deployed — the app asks
 for permission, the database queues the alert — but nothing sends it until
 you do the four steps below. **Until then no notification will ever arrive**,
@@ -74,7 +74,7 @@ signing key.
 
 It generates **once**. Re-running the workflow leaves an existing key alone,
 on purpose: rotating a VAPID key invalidates every push subscription already
-issued against it, so every worker who had tapped *Turn on alerts* would
+issued against it, so every professional who had tapped *Turn on alerts* would
 silently stop receiving them.
 
 Check it worked: the run's summary says
@@ -111,7 +111,7 @@ update nearse_config set vapid_public = 'PASTE_THE_PUBLIC_KEY_HERE' where id = 1
 ```
 
 **Nothing works before this step.** With no key the app cannot even ask a
-worker for permission, so nobody is ever subscribed and the queue stays
+professional for permission, so nobody is ever subscribed and the queue stays
 empty. If you have tested and had no notification, this is almost certainly
 why.
 
@@ -167,21 +167,21 @@ calling the same `push` function.
 
 ## Checking it works
 
-1. On your phone, open MySheher, sign in as a worker, go to your profile.
+1. On your phone, open MySheher, sign in as a professional, go to your profile.
 2. Under **Booking alerts**, tap **Turn on alerts** and allow the prompt.
 3. **Close MySheher completely** — swipe it away, do not just go to the home
    screen.
-4. From another phone, book that worker.
+4. From another phone, book that professional.
 5. The notification should arrive within a few seconds.
 
 The **Alerts** tab tells you where it stopped without you reading any tables:
-whether a key is set, how many workers and customers are subscribed, how many
+whether a key is set, how many professionals and customers are subscribed, how many
 alerts are waiting, how many gave up, and the last error the push service
 returned.
 
 If you would rather look yourself, Supabase → **Table Editor** → `push_outbox`:
 
-- **No row at all** — the worker never subscribed. Go back to step 2 above.
+- **No row at all** — the professional never subscribed. Go back to step 2 above.
 - **A row with `sent_at` empty and `last_error` filled** — the sender ran and
   the push service refused it. The error text says why; a wrong VAPID key is
   the usual answer.
@@ -190,7 +190,7 @@ If you would rather look yourself, Supabase → **Table Editor** → `push_outbo
 - **`sent_at` filled but no notification on the phone** — the phone is
   blocking it. Android: Settings → Apps → MySheher → Notifications.
 
-## What workers will see
+## What professionals will see
 
 | | |
 |---|---|
@@ -199,7 +199,7 @@ If you would rather look yourself, Supabase → **Table Editor** → `push_outbo
 | You approve their profile | "Your profile is live" |
 | You reject it | "Your profile needs a change" plus your reason |
 
-A worker is never notified about their own messages, and a second message in
+A professional is never notified about their own messages, and a second message in
 the same conversation replaces the first notification rather than stacking up.
 
 ## What customers will see
@@ -209,11 +209,11 @@ start working the moment Step 4 is done.
 
 | | |
 |---|---|
-| The worker accepts | "Bhaskar accepted your booking — Carpenter is confirmed. Arriving in about 30 minutes." |
-| The worker declines | "Bhaskar could not take this one" plus their reason |
-| The worker starts | "Bhaskar has started — Carpenter is under way." |
+| The professional accepts | "Bhaskar accepted your booking — Carpenter is confirmed. Arriving in about 30 minutes." |
+| The professional declines | "Bhaskar could not take this one" plus their reason |
+| The professional starts | "Bhaskar has started — Carpenter is under way." |
 | The job is finished | "Work finished — How did Bhaskar do?" |
-| The worker replies | "Bhaskar replied — On my way at 10." |
+| The professional replies | "Bhaskar replied — On my way at 10." |
 
 A customer has no account, so the subscription is tied to the booking itself.
 They are asked once, on the **My bookings** screen; after they allow it, every
@@ -328,10 +328,10 @@ Photos have to be public, or customers cannot see faces.
 
 1. Open the left-hand menu again
 2. Under the **Build** heading, tap **Compute**
-3. Tap **Workers & Pages**
+3. Tap **Professionals & Pages**
 4. Click **Create**
 
-> Same as before: **Workers & Pages** is inside **Compute**, not on the top
+> Same as before: **Professionals & Pages** is inside **Compute**, not on the top
 > level.
 5. Choose the **Pages** tab
 6. Click **Connect to Git**
@@ -405,8 +405,8 @@ Wait a minute for it to finish.
 ## Step 8 — Check it actually worked
 
 1. Open your `https://mysheher.pages.dev` address
-2. Tap **Register as a worker** → **Create account**
-3. Register a test worker: any name, your own WhatsApp number, a 4-digit PIN
+2. Tap **Register as a professional** → **Create account**
+3. Register a test professional: any name, your own WhatsApp number, a 4-digit PIN
 4. Go through the steps and add a photo
 5. Publish the profile
 
@@ -418,7 +418,7 @@ Now check where the photo went:
 **If the photo is there — Job A is done.** 🎉
 
 **If you skipped R2:** there is no bucket to check. Instead, just confirm the
-test worker's photo shows up on their profile. It will have gone to Supabase,
+test professional's photo shows up on their profile. It will have gone to Supabase,
 which is correct and expected.
 
 **If the bucket is empty**, the photo went to Supabase instead. That means
@@ -426,7 +426,7 @@ Step 5, 6 or 7 didn't take. Go back and check the variable is spelled
 `PHOTOS` exactly, then retry the deployment. Nothing is broken either way —
 the app falls back on purpose rather than losing the photo.
 
-8. Delete the test worker: open the profile, scroll down, **Delete my profile**
+8. Delete the test professional: open the profile, scroll down, **Delete my profile**
 
 ---
 
@@ -557,7 +557,7 @@ defaults, which means deleting the records that make the site work.
 
 Keep renewing it, and keep the redirect, for as long as the app exists.
 
-The QR code on every printed worker ID card issued before today points at
+The QR code on every printed professional ID card issued before today points at
 `nearse.in`. Those are physical cards in people's pockets — you cannot reach
 out and change them. If `nearse.in` stops redirecting, every one of those
 cards becomes unverifiable, which is exactly the moment a customer is standing

@@ -5,15 +5,15 @@
 <!-- An installed app does not zoom. maximum-scale also kills the double-tap
      zoom that makes every tap feel 300ms late. -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>MySheher — Trusted Local Workers in Guwahati, Booked Directly</title>
-<meta name="description" content="MySheher connects you with verified local workers in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers, beauticians and more. Nearest first, rated by the community, priced by the workers themselves.">
-<meta name="keywords" content="MySheher, mysheher.com, local workers near me, book maid cook electrician plumber, home services Guwahati, hire tutor driver Assam, find work near me">
+<title>MySheher — Trusted Local Professionals in Guwahati, Booked Directly</title>
+<meta name="description" content="MySheher connects you with verified local professionals in Guwahati — maids, cooks, electricians, plumbers, tutors, drivers, beauticians and more. Nearest first, rated by the community, priced by the people doing the work.">
+<meta name="keywords" content="MySheher, mysheher.com, local professionals near me, book maid cook electrician plumber, home services Guwahati, hire tutor driver Assam, find work near me">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://mysheher.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="MySheher">
-<meta property="og:title" content="MySheher — Trusted local workers, booked directly">
-<meta property="og:description" content="Verified local workers near you. Nearest first, community rated, prices set by the workers.">
+<meta property="og:title" content="MySheher — Trusted local professionals, booked directly">
+<meta property="og:description" content="Verified local professionals near you. Nearest first, community rated, prices set by them.">
 <meta property="og:url" content="https://mysheher.com/">
 <meta property="og:image" content="https://mysheher.com/icons/icon-512.png?v=6">
 <meta property="og:image:alt" content="MySheher logo — an interlocking M drawn as a gold heart">
@@ -68,7 +68,7 @@
   "@type": "WebSite",
   "name": "MySheher",
   "url": "https://mysheher.com/",
-  "description": "Marketplace connecting customers with verified local skilled workers across India — home services, repairs, tutoring, care, events and professional work.",
+  "description": "Marketplace connecting customers with verified local skilled professionals across India — home services, repairs, tutoring, care, events and professional work.",
   "potentialAction": {
     "@type": "SearchAction",
     "target": "https://mysheher.com/#search={search_term_string}",
@@ -1939,6 +1939,13 @@ body.in-chat > .demo-note{display:none}
   display:flex;align-items:center;gap:9px;flex-wrap:nowrap;
   padding:2px 0 0;
 }
+/* A <select> carries an intrinsic minimum width and will not shrink below it,
+   so the Search button wired in beside it was pushed 32px past the right edge
+   of a 390px phone and the whole page scrolled sideways. min-width:0 is what
+   lets a flex child ignore that intrinsic floor; the button keeps its own
+   width because it is flex:0 0 auto. */
+.loc-bar > select{min-width:0;flex:1 1 auto}
+.loc-bar > .loc-find{flex:0 0 auto}
 .loc-city{
   display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;color:var(--ink);
 }
@@ -2400,7 +2407,7 @@ footer a{color:var(--ink-2)}
       <img class="mark" src="icons/logo.png?v=6" alt="" width="384" height="373"><img class="wordmark" src="icons/wordmark.png?v=6" alt="MySheher" width="512" height="114">
     </a>
     <div style="display:flex;align-items:center;gap:12px">
-      <a class="header-link" id="browseLink" href="#" onclick="go('hire');return false">Browse workers</a>
+      <a class="header-link" id="browseLink" href="#" onclick="go('hire');return false">Browse professionals</a>
       <button class="menu-btn" id="menuBtn" onclick="openMenu()" aria-label="Menu" aria-expanded="false">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>
@@ -2438,11 +2445,11 @@ footer a{color:var(--ink-2)}
     </button>
     <button class="drawer-row" id="drawerWork" onclick="menuGo('work')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-1.5A5.5 5.5 0 0 1 9.5 14h5a5.5 5.5 0 0 1 5.5 5.5V21"/><circle cx="12" cy="8" r="4"/></svg>
-      <span id="drawerWorkLabel">Register as a worker</span>
+      <span id="drawerWorkLabel">Register as a professional</span>
     </button>
     <button class="drawer-row" onclick="menuGo('hire')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <span>Find a worker</span>
+      <span>Find a professional</span>
     </button>
 
     <div class="dg-label">MySheher</div>
@@ -2511,7 +2518,7 @@ footer a{color:var(--ink-2)}
               <path d="M17.6 35 22 39.4 26.4 35"/>
             </svg>
           </span>
-          <span class="cta-text"><b>Find a worker</b><i>Verified, and near you</i></span>
+          <span class="cta-text"><b>Find a professional</b><i>Verified, and near you</i></span>
           <span class="cta-go" aria-hidden="true">
             <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
           </span>
@@ -2537,7 +2544,7 @@ footer a{color:var(--ink-2)}
               </g>
             </svg>
           </span>
-          <span class="cta-text"><b id="ctaWorkTitle">Register as a worker</b><i id="ctaWorkSub">Free for your first 30 days</i></span>
+          <span class="cta-text"><b id="ctaWorkTitle">Register as a professional</b><i id="ctaWorkSub">Free for your first 30 days</i></span>
           <span class="cta-go" aria-hidden="true">
             <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
           </span>
@@ -2596,7 +2603,7 @@ footer a{color:var(--ink-2)}
     <div class="assure">
       <span><i class="dot"></i>Verified profiles</span>
       <span><i class="dot"></i>Nearest first</span>
-      <span><i class="dot"></i>Worker sets the rate</span>
+      <span><i class="dot"></i>They set the rate</span>
       <span><i class="dot"></i>No commission</span>
     </div>
   </div>
@@ -2606,7 +2613,7 @@ footer a{color:var(--ink-2)}
 <section class="screen" id="scr-work">
   <div class="banner">
     <div class="wrap">
-      <div class="eyebrow">For workers</div>
+      <div class="eyebrow">For professionals</div>
       <h1>Every Skill Deserves an Earning</h1>
       <p>Create your profile in two minutes and start receiving work near you.</p>
       <span class="trial-badge">
@@ -2777,7 +2784,7 @@ footer a{color:var(--ink-2)}
     </button>
   </div>
   <div class="panel wide">
-    <h2 id="regTitle">Your worker profile</h2>
+    <h2 id="regTitle">Create your profile</h2>
     <!-- One thing at a time. The whole form used to be one 2,400px page with
          45 controls on it, which is a lot to face if reading is work. -->
     <div class="stepper" id="regStepper" aria-hidden="true"></div>
@@ -2818,7 +2825,7 @@ footer a{color:var(--ink-2)}
         <label>Instant jobs</label>
         <div class="mode-note">
           <b>You will be offered jobs that are needed straight away.</b>
-          <span>When a customer near you needs this work now, we alert you and you have <b>60 seconds</b> to accept. Miss it and it goes to the next worker — so turn yourself <b>Available now</b> only when you can actually leave.</span>
+          <span>When a customer near you needs this work now, we alert you and you have <b>60 seconds</b> to accept. Miss it and it goes to the next person — so turn yourself <b>Available now</b> only when you can actually leave.</span>
           <button type="button" class="btn btn-outline btn-sm push-optin" onclick="enablePush()">Turn on alerts</button>
           <span class="hint push-state" style="margin-top:8px"></span>
         </div>
@@ -3186,7 +3193,7 @@ footer a{color:var(--ink-2)}
 
     <div class="assure hire-assure">
       <span><i class="dot"></i>Verified by MySheher</span>
-      <span><i class="dot"></i>Rates set by the worker</span>
+      <span><i class="dot"></i>They set the rate</span>
       <span><i class="dot"></i>No commission</span>
       <span><i class="dot"></i>Chat inside the app</span>
     </div>
@@ -3726,7 +3733,7 @@ function renderAreaSearch(){
       ? groups.map(([zone, list]) =>
           `<div class="area-zone">${esc(zone)}</div>` + list.map(row).join("")).join("")
       : `<p class="area-none">No locality matches “${esc($("areaSearchBox").value.trim())}”.
-         Try fewer letters — or pick the nearest one, since a worker a street away
+         Try fewer letters — or pick the nearest one, since somebody a street away
          still shows up for you.</p>`;
   }
   host.innerHTML = html;
@@ -4135,7 +4142,7 @@ const MODE_OVERRIDE = {
 const MODE_LABEL = {
   now:   { verb:"Book now",    note:"Someone comes today" },
   slot:  { verb:"Book a slot", note:"Pick an appointment time" },
-  sched: { verb:"Request a date", note:"The worker confirms it with you" },
+  sched: { verb:"Request a date", note:"They confirm it with you" },
   hire:  { verb:"Send an enquiry", note:"Ongoing work — agreed between you" }
 };
 
@@ -4515,7 +4522,7 @@ const api = {
     if(LIVE) return await sb("rpc/request_worker_contact", {method:"POST",
       body:JSON.stringify({p_id:id, p_requester:CLIENT_ID})});
     const w = demoAll().find(x => x.id === id);
-    if(!w) throw new Error("That worker is no longer available");
+    if(!w) throw new Error("They are no longer available");
     return w.phone;
   },
   /* the worker's push endpoint, so the dispatcher can reach them in seconds */
@@ -4874,7 +4881,7 @@ function demoResetPin(kind, phone, code, pin){
 
   if(kind === "worker"){
     const all = demoAll(); const w = all.find(x => x.phone === phone);
-    if(!w) return {token:null, error:"There is no worker profile on this number"};
+    if(!w) return {token:null, error:"There is no profile on this number"};
     w.pin = pin; demoSave(all);
     delete m[phone]; recPut(m);
     return {token:"w-" + w.id, error:null, worker:w};
@@ -5033,7 +5040,7 @@ function demoSetThread(code, status, side, reason){
   if(!t) throw new Error("Conversation not found");
   const say = body => t.messages.push({id:(t.messages[t.messages.length-1]||{id:0}).id + 1,
     sender:"system", body, created_at:new Date().toISOString()});
-  const who = (t.worker_name || "The worker");
+  const who = (t.worker_name || "They");
   if(side === "worker"){
     if(status === "accepted"){ t.accepted_at = new Date().toISOString(); say(who + " accepted this job."); }
     if(status === "declined"){ t.decline_reason = reason || null;
@@ -5044,7 +5051,7 @@ function demoSetThread(code, status, side, reason){
     t.customer_unread++;
   }else{
     if(status === "cancelled") say("The customer cancelled this request.");
-    if(status === "closed"){ if(t.status !== "done") throw new Error("The worker has not marked this finished yet");
+    if(status === "closed"){ if(t.status !== "done") throw new Error("They have not marked this finished yet");
       say("The customer confirmed the work is finished."); }
     t.worker_unread++;
   }
@@ -5365,7 +5372,7 @@ function menuGoProfile(){
 function paintMenu(){
   const inside = !!(session && session.registered);
   const label = $("drawerWorkLabel");
-  if(label) label.textContent = inside ? "My profile" : "Register as a worker";
+  if(label) label.textContent = inside ? "My profile" : "Register as a professional";
   const y = $("yearMenu"); if(y) y.textContent = new Date().getFullYear();
 }
 
@@ -5392,7 +5399,7 @@ function paintWorkDoor(){
   const t = $("ctaWorkTitle"), sub = $("ctaWorkSub");
   if(!t || !sub) return;
   const inside = !!(session && session.registered);
-  t.textContent   = inside ? "Visit your profile" : "Register as a worker";
+  t.textContent   = inside ? "Visit your profile" : "Register as a professional";
   sub.textContent = inside ? "Your ID card, work and reviews" : "Free for your first 30 days";
 }
 /* the eight trades people actually open the app for */
@@ -5757,7 +5764,7 @@ function signOut(){
 function initRegister(){
   const editing = session && session.registered;
   const w = editing ? session.worker : null;
-  $("regTitle").textContent = editing ? "Edit your profile" : "Your worker profile";
+  $("regTitle").textContent = editing ? "Edit your profile" : "Create your profile";
   $("regSaveBtn").textContent = editing ? "Save changes" : "Publish my profile";
   window._pricesConfirmed = false;   /* a later edit gets asked again */
   /* consent is recorded once, when the profile is first published */
@@ -6530,7 +6537,7 @@ function renderMe(){
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v13H3z"/><circle cx="8.5" cy="11.5" r="2.2"/><path d="M5 16.3c.5-1.4 1.9-2.1 3.5-2.1s3 .7 3.5 2.1"/><path d="M14.5 10.5H19M14.5 13.5H19"/></svg>
       </span>
       <span class="we-text"><b>My MySheher ID card</b>
-        <span>${w.worker_code ? esc(idPretty(w.worker_code)) : "Your worker ID"} — show it, or print it</span></span>
+        <span>${w.worker_code ? esc(idPretty(w.worker_code)) : "your MySheher ID"} — show it, or print it</span></span>
       <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </button>
     <button class="work-entry" onclick="go('inbox')">
@@ -6997,7 +7004,7 @@ async function loadPage(reset){
     console.error(e);
     loadingPage = false;
     if(seq === searchSeq) $("results").innerHTML =
-      `<div class="empty" style="grid-column:1/-1"><b>Couldn't load workers</b>Check your connection and try again.</div>`;
+      `<div class="empty" style="grid-column:1/-1"><b>Couldn't load professionals</b>Check your connection and try again.</div>`;
     return;
   }
   loadingPage = false;
@@ -7014,17 +7021,17 @@ function paintResults(q, areaPick){
   const list = workers;
 
   $("resultMeta").innerHTML = list.length
-    ? `<span>${resultTotal.toLocaleString("en-IN")} ${resultTotal===1?"worker":"workers"} available${hireCat?" in "+esc(CAT_LABEL[hireCat]):""}` +
+    ? `<span>${resultTotal.toLocaleString("en-IN")} ${resultTotal===1?"professional":"professionals"} available${hireCat?" in "+esc(CAT_LABEL[hireCat]):""}` +
       `${areaPick?" · "+esc(areaPick):""}</span>` +
       (myLoc ? `<span>Sorted by distance</span>` : `<button onclick="requestLocation(true)">Show nearest to me</button>`)
     : "";
 
   if(!list.length){
     $("results").innerHTML = `<div class="empty" style="grid-column:1/-1">
-      <b>No workers found${q?" for “"+esc(q)+"”":""}${areaPick?" in "+esc(areaPick):""}</b>
+      <b>Nobody found${q?" for “"+esc(q)+"”":""}${areaPick?" in "+esc(areaPick):""}</b>
       ${areaPick
         ? `Try <button class="linkish" onclick="document.getElementById('areaFilter').value='';renderResults()">all localities</button>, or a different service.`
-        : "Try a different service, or browse a category above. New workers join every week."}</div>`;
+        : "Try a different service, or browse a category above. New professionals join every week."}</div>`;
     return;
   }
   $("results").innerHTML = list.map(w=>{
@@ -7047,7 +7054,7 @@ function paintResults(q, areaPick){
     </button>`;
   }).join("") + (list.length < resultTotal
     ? `<button class="btn btn-outline btn-block more-btn" id="moreBtn" onclick="loadPage(false)">
-         Show more workers <small>${(resultTotal - list.length).toLocaleString("en-IN")} more</small>
+         Show more <small>${(resultTotal - list.length).toLocaleString("en-IN")} more</small>
        </button>`
     : "");
 }
@@ -7106,7 +7113,7 @@ async function loadWorkerReviews(id){
      without the token from that booking, after that job finished. */
   host.innerHTML = `<div class="reviews-box">
     <div class="rv-head">What people said</div>
-    <p class="rv-note">Only customers who booked ${esc((currentWorker && currentWorker.name || "this worker").split(" ")[0])} and had the work done can leave one.</p>
+    <p class="rv-note">Only customers who booked ${esc((currentWorker && currentWorker.name || "this professional").split(" ")[0])} and had the work done can leave one.</p>
     ${rows.map(r => `<div class="rv">
       <div class="rv-top">
         <span class="rv-stars">${"★".repeat(r.stars)}<span class="dim">${"★".repeat(5-r.stars)}</span></span>
@@ -7363,7 +7370,7 @@ function openNowBooking(){
      "Get a plumber now" and then broadcast to whoever answered — so the
      customer thought they had booked the face they were looking at. */
   const first = (w.name || "").split(" ")[0] || "them";
-  $("nowTitle").textContent = "Ask " + esc(w.name || "this worker") + " to come now";
+  $("nowTitle").textContent = "Ask " + esc(w.name || "this professional") + " to come now";
   $("nowSub").innerHTML = `<b>${esc(s.skill||"")}</b> · around <b>${esc(money(s.price||0))} ${esc(s.unit||"")}</b> — the final amount is agreed after ${esc(first)} sees the job.`;
   const ex = $("nowExplain");
   if(ex) ex.innerHTML =
@@ -7429,10 +7436,10 @@ function renderSearch(st){
     host.innerHTML = `
       <div class="finding">
         <div class="radar" aria-hidden="true"><span></span><span></span><span></span></div>
-        <h3>${who ? "Waiting for " + esc(who) : "Finding a " + esc((st.skill||"worker").toLowerCase()) + " near you"}</h3>
+        <h3>${who ? "Waiting for " + esc(who) : "Finding a " + esc((st.skill||"professional").toLowerCase()) + " near you"}</h3>
         <p class="sub">${who
           ? "Your request has gone to " + esc(who) + " and nobody else. They have 60 seconds to accept."
-          : `Asked <b>${st.asked}</b> ${st.asked === 1 ? "worker" : "workers"} so far.
+          : `Asked <b>${st.asked}</b> ${st.asked === 1 ? "person" : "people"} so far.
              Each one gets 60 seconds before we move to the next.`}</p>
         <div class="tick-left">${Math.max(0, st.seconds_left|0)}s</div>
         <button class="btn btn-quiet btn-block btn-sm" onclick="cancelNowJob()">Stop looking</button>
@@ -7443,7 +7450,7 @@ function renderSearch(st){
         <div class="done-mark" aria-hidden="true">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5.2 5.2L20 7"/></svg>
         </div>
-        <h3>${esc(st.worker_name || "A worker")} is coming</h3>
+        <h3>${esc(st.worker_name || "Somebody")} is coming</h3>
         <p class="sub">They said <b>about ${st.eta_minutes} minutes</b>${st.worker_area ? ", from " + esc(st.worker_area) : ""}.
           This is their own commitment, not an estimate we made up.</p>
         <button class="btn btn-brand btn-block" id="jobChatBtn" onclick="openJobChat()" style="padding:14px">
@@ -7457,7 +7464,7 @@ function renderSearch(st){
         <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="closeSearch()">Done</button>
       </div>`;
   }else if(st.status === "no_answer"){
-    const who = st.requested_name || (nowJob && nowJob.askedFor) || "That worker";
+    const who = st.requested_name || (nowJob && nowJob.askedFor) || "They";
     host.innerHTML = `
       <div class="finding">
         <h3>${esc(who)} did not answer</h3>
@@ -7472,7 +7479,7 @@ function renderSearch(st){
     host.innerHTML = `
       <div class="finding">
         <h3>Nobody free right now</h3>
-        <p class="sub">We asked every ${esc((st.skill||"worker").toLowerCase())} we could reach and none of them can come at the moment.
+        <p class="sub">We asked every ${esc((st.skill||"professional").toLowerCase())} we could reach and none of them can come at the moment.
           This is honest rather than useful, and we would rather tell you than leave you waiting.</p>
         <button class="btn btn-brand btn-block" onclick="closeSearch();go('hire')">Browse and book for later</button>
         <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="closeSearch()">Close</button>
@@ -7540,7 +7547,7 @@ async function widenSearch(){
     nowJob.askedFor = null;
     $("searchBody").innerHTML = `<div class="finding">
       <div class="radar" aria-hidden="true"><span></span><span></span><span></span></div>
-      <h3>Looking for someone else</h3><p class="sub">Asking the nearest available worker now.</p></div>`;
+      <h3>Looking for someone else</h3><p class="sub">Asking the nearest available professional now.</p></div>`;
     pollJob();
   }catch(e){ toast(e.message || "Could not reopen the search"); }
 }
@@ -7595,7 +7602,7 @@ function renderSlotDayRow(){
       <b>${i === 0 ? "Today" : i === 1 ? "Tomorrow" : DAY_NAMES[d.getDay()]}</b>
       <span>${d.getDate()} ${d.toLocaleDateString("en-IN",{month:"short"})}</span></button>`;
   }
-  $("slotDayRow").innerHTML = html || `<p class="hint">This worker has not set any working days yet.</p>`;
+  $("slotDayRow").innerHTML = html || `<p class="hint">They have not set any working days yet.</p>`;
 }
 async function pickSlotDay(offset){
   const w = currentWorker;
@@ -8137,7 +8144,7 @@ function renderCard(){
     <div class="card-note no-print">
       <b>What this is for</b>
       <p>Show it when you arrive at a job. Anyone can scan the code, or type the twelve digits into
-        <b>mysheher.com</b> → <b>Check a MySheher Worker ID</b>, and see your name, your trade, your locality and
+        <b>mysheher.com</b> → <b>Check a MySheher ID</b>, and see your name, your trade, your locality and
         how many jobs you have finished — nothing else. Your number never changes, even if you change
         your rates, your photo or your trade.</p>
       <p>Prints at standard card size — 85.6 × 54 mm, the same as a debit card, so it fits any
@@ -8173,9 +8180,9 @@ function cardPrintDoc(){
   const css = [...document.querySelectorAll("style")].map(s => s.textContent).join("\n");
   const fonts = [...document.querySelectorAll('link[rel="stylesheet"]')]
     .map(l => `<link rel="stylesheet" href="${esc(l.href)}">`).join("");
-  const who = (session && session.worker && session.worker.name) || "Worker";
+  const who = (session && session.worker && session.worker.name) || "Professional";
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
-<title>MySheher Worker ID — ${esc(who)}</title>
+<title>MySheher ID — ${esc(who)}</title>
 <base href="${esc(location.origin + location.pathname)}">
 ${fonts}
 <style>${css}</style>
@@ -8208,7 +8215,7 @@ async function printCard(){
 
   const frame = document.createElement("iframe");
   frame.setAttribute("aria-hidden", "true");
-  frame.title = "MySheher Worker ID, ready to print";
+  frame.title = "MySheher ID, ready to print";
   frame.style.cssText = "position:fixed;left:-10000px;top:0;width:120mm;height:90mm;border:0;opacity:0";
   document.body.appendChild(frame);
 
@@ -8391,7 +8398,7 @@ async function runVerify(code){
 
   if(!row){
     host.innerHTML = `<div class="verify-card bad">
-      <b>No live worker has this ID</b>
+      <b>No live profile has this ID</b>
       <span>The number is well formed but does not belong to an approved profile. It may have been withdrawn, or the card may not be genuine.</span>
     </div>`;
     return;
@@ -8401,7 +8408,7 @@ async function runVerify(code){
   const avg = row.rating_count ? (row.rating_sum / row.rating_count).toFixed(1) : null;
   host.innerHTML = `<div class="verify-card good">
     <span class="vc-tick">✓</span>
-    <b>This is a genuine MySheher worker</b>
+    <b>This is a genuine MySheher professional</b>
     <div class="vc-who">
       <span class="avatar"><img src="${row.thumb ? esc(row.thumb) : avatarOf({name:row.name})}" alt=""></span>
       <div>
@@ -8597,7 +8604,7 @@ function paintChatHead(){
      runs on every poll, so a change that lands while they are reading is
      marked the moment it appears rather than the next time they open the app. */
   markSeen(t.code, t.status);
-  $("chatTitle").textContent = chatSide === "customer" ? (t.worker_name || "Worker") : (t.customer_name || "Customer");
+  $("chatTitle").textContent = chatSide === "customer" ? (t.worker_name || "Professional") : (t.customer_name || "Customer");
   $("chatSub").textContent = [t.skill, t.detail].filter(Boolean).join(" · ");
   const badge = $("chatState");
   badge.textContent = st.label;
@@ -8803,7 +8810,7 @@ async function sendChat(e){
    Deliberately not a confirm() before accepting. A dialog on every accept
    punishes the ninety-nine who meant it to protect the one who did not. */
 const UNDO_MS = 5000;
-const UNAVAILABLE = "Sorry, the worker is unavailable at the moment.";
+const UNAVAILABLE = "Sorry, they are unavailable at the moment.";
 let undoAction = null, undoTimer = null;
 
 function offerUndo(text, action){
@@ -8887,7 +8894,7 @@ const STAR_WORD = ["Tap to rate","Poor","Not good","Fine","Good","Excellent"];
 function openReview(t){
   t = t || chatThread; if(!t) return;
   reviewFor = { code: t.code, token: t.token || chatToken, status: t.status,
-                name: t.worker_name || "Worker", skill: t.skill || "" };
+                name: t.worker_name || "Professional", skill: t.skill || "" };
   reviewStars = 0;
   const first = reviewFor.name.split(" ")[0];
   $("reviewTitle").textContent = `How was ${first}?`;
@@ -9108,9 +9115,9 @@ async function renderChats(){
     host.innerHTML = `<h2>Bookings &amp; chats</h2>
       <div class="empty" style="margin:14px 0 0"><b>No bookings yet</b>
         Book someone, or register your own skills, and every request lands here — with where it has got to.</div>
-      <button class="btn btn-brand btn-block" style="margin-top:16px" onclick="go('hire')">Find a worker</button>
+      <button class="btn btn-brand btn-block" style="margin-top:16px" onclick="go('hire')">Find a professional</button>
       ${session && session.registered ? "" :
-        `<button class="btn btn-outline btn-block btn-sm" style="margin-top:10px" onclick="go('work')">Register as a worker</button>`}`;
+        `<button class="btn btn-outline btn-block btn-sm" style="margin-top:10px" onclick="go('work')">Register as a professional</button>`}`;
     return;
   }
 
@@ -9160,7 +9167,7 @@ async function myConversations(){
       sub: [t.skill, t.customer_area].filter(Boolean).join(" · "),
       when: when(t)})),
     ...theirs.filter(Boolean).map(t => ({...t, side:"customer",
-      who: t.worker_name || "Worker",
+      who: t.worker_name || "Professional",
       sub: [t.skill, t.detail].filter(Boolean).join(" · "),
       when: when(t)}))
   ].sort((a, b) => b.when - a.when);
@@ -9381,7 +9388,7 @@ let recPhone = "";
 function showRecover(kind){
   recWho = kind === "customer" ? "customer" : "worker";
   $("recWhy").textContent = recWho === "worker"
-    ? "We will send a 6-digit code to the WhatsApp number on your worker profile. Confirm it and you can choose a new PIN."
+    ? "We will send a 6-digit code to the WhatsApp number on your profile. Confirm it and you can choose a new PIN."
     : "We will send a 6-digit code to your WhatsApp number. Confirm it and you can choose a new PIN.";
   const guess = recWho === "worker" ? ($("inPhone") || {}).value : ($("acctPhone") || {}).value;
   $("recPhone").value = (guess || "").trim();
@@ -9516,7 +9523,7 @@ function renderProfile(){
     <div class="danger-zone" style="margin-top:22px">
       <button class="btn btn-danger btn-block btn-sm" onclick="deleteCustomerAccount()">Delete my account</button>
       <p class="hint" style="margin-top:8px">This removes your account and your saved details.
-        Conversations you have already had stay with the worker, as their record of the job.</p>
+        Conversations you have already had stay with them, as their record of the job.</p>
     </div>`;
   $("pfArea").innerHTML = '<option value="">Choose your area</option>' + areaOptions(c.area);
   /* This select is built here rather than sitting in the markup, so the boot
@@ -9628,7 +9635,7 @@ async function renderMine(){
     host.innerHTML = `<h2>My bookings</h2>
       <div class="empty" style="margin:14px 0 0"><b>No bookings yet</b>
         Once you request someone, the conversation lives here.</div>
-      <button class="btn btn-brand btn-block" style="margin-top:16px" onclick="go('hire')">Find a worker</button>`;
+      <button class="btn btn-brand btn-block" style="margin-top:16px" onclick="go('hire')">Find a professional</button>`;
     return;
   }
   host.innerHTML = `<h2>My bookings</h2><div class="skeleton"></div>`;
@@ -9654,7 +9661,7 @@ async function renderMine(){
     const st = THREAD_STATE[t.status] || THREAD_STATE.requested;
     return `<button class="thread-row${t.unread ? " unread" : ""}" onclick="openChat('${jsq(t.code)}','customer','mine')">
       <span class="tr-main">
-        <b>${esc(t.worker_name || "Worker")}${t.unread ? `<i class="dot-n">${t.unread}</i>` : ""}</b>
+        <b>${esc(t.worker_name || "Professional")}${t.unread ? `<i class="dot-n">${t.unread}</i>` : ""}</b>
         <span class="tr-skill">${esc(t.skill)}${t.detail ? " · " + esc(t.detail) : ""}</span>
         ${t.status === "closed" && !t.reviewed ? `<span class="tr-prev">Leave a review</span>` : ""}
       </span>
@@ -10882,7 +10889,7 @@ function renderCustomerPushState(){
     btns.forEach(b => { b.hidden = !label; if(label) b.textContent = label; });
   };
   if(pushSupported() && Notification.permission === "granted"){
-    say("Alerts are on. You will hear when the worker accepts, declines or replies — even with MySheher closed.", null);
+    say("Alerts are on. You will hear when they accept, decline or reply — even with MySheher closed.", null);
   }else if(isIOS() && !isStandalone()){
     say("On iPhone, add MySheher to your home screen first — alerts cannot reach you from Safari.", "Add to home screen");
   }else if(pushSupported() && Notification.permission === "denied"){

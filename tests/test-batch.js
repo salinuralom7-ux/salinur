@@ -183,7 +183,7 @@ const ok = (label, cond, extra) => {
   }));
 
   ok('The reason the customer is given names the problem, not the mistake',
-     await p.evaluate(() => UNAVAILABLE) === 'Sorry, the worker is unavailable at the moment.');
+     await p.evaluate(() => UNAVAILABLE) === 'Sorry, they are unavailable at the moment.');
 
   // and the alternatives that follow it
   const alts = await p.evaluate(async () => {

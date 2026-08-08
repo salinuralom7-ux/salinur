@@ -11,10 +11,11 @@ description oversells, and a rejection costs days.
 **App name** (30 max)
 
 ```
-MySheher: Local Workers Nearby
+MySheher: Local Professionals
 ```
-Exactly 30 characters. "MySheher" alone is 8 and finds nobody who does not
-already know the name.
+29 of the 30 characters allowed. "MySheher" alone is 8 and finds nobody who
+does not already know the name; the extra words are what a stranger searches
+for. "Nearby" would push it to 36 and Play would refuse it.
 
 **Short description** (80 max)
 
@@ -25,21 +26,21 @@ Book trusted maids, cooks, electricians and tutors near you in Guwahati.
 **Full description** (4000 max)
 
 ```
-MySheher connects you with skilled local workers who already live around you in Guwahati — and lets them set their own price and keep every rupee of it.
+MySheher connects you with skilled local professionals who already live around you in Guwahati — and lets them set their own price and keep every rupee of it.
 
 FIND SOMEONE FOR THE JOB
-Search 184 services across 18 categories: maids, cooks, electricians, plumbers, carpenters, AC and appliance repair, home tutors, drivers, beauticians, tailors, photographers, packers and movers, and more. Workers closest to you appear first, with their rates already on the card.
+Search 184 services across 18 categories: maids, cooks, electricians, plumbers, carpenters, AC and appliance repair, home tutors, drivers, beauticians, tailors, photographers, packers and movers, and more. Professionals closest to you appear first, with their rates already on the card.
 
 SEND THE REQUEST IN SECONDS
-Pick the service, the day and the time. Your request opens a conversation with that worker inside MySheher, carrying the job, the day and your locality — and you can nudge them on WhatsApp from there if you want their phone to buzz. You agree the final amount with them directly.
+Pick the service, the day and the time. Your request opens a conversation with that professional inside MySheher, carrying the job, the day and your locality — and you can nudge them on WhatsApp from there if you want their phone to buzz. You agree the final amount with them directly.
 
 NO COMMISSION, EVER
-MySheher takes nothing from a worker's earnings and charges customers nothing to book. The rate you see is the rate the worker set.
+MySheher takes nothing from a professional's earnings and charges customers nothing to book. The rate you see is the rate the professional set.
 
 EVERY PROFILE VERIFIED
 Not an algorithm. Someone reviews the photo, the details and the WhatsApp number before a profile goes live. Change your photo or your name later and it goes back for review.
 
-THE WORKER SETS THE PRICE
+THEY SET THE PRICE
 There is no minimum on MySheher. If someone wants to charge less than everybody else, that is their right and their decision. Each service does have a ceiling, drawn from what that trade actually charges in Guwahati, so nobody lists a ₹40,000 plumbing visit on a marketplace that promises honest local rates. Below that, the price is entirely theirs.
 
 124 LOCALITIES ACROSS GUWAHATI
@@ -52,7 +53,7 @@ START YOUR 30 DAYS FREE
 Free for the first 30 days from the day your profile is approved. We ask for no card, no UPI mandate and no payment details of any kind — there is nothing that can auto-charge you and nothing to cancel.
 
 WHAT MYSHEHER IS NOT
-We are a place to find each other, not an employer. Workers are independent — they are not our staff and we do not supervise their work. We are not a party to your agreement, and we do not handle payments. Our review confirms a profile looks genuine; it is not a police verification or a background check. Please use ordinary good sense, especially when inviting someone into your home.
+We are a place to find each other, not an employer. Professionals are independent — they are not our staff and we do not supervise their work. We are not a party to your agreement, and we do not handle payments. Our review confirms a profile looks genuine; it is not a police verification or a background check. Please use ordinary good sense, especially when inviting someone into your home.
 
 YOUR DATA
 No ads, no analytics, no tracking cookies, nothing sold to anybody. Your location is rounded to about 110 metres before it is stored, on your phone, before it is sent. You can delete your profile yourself, from inside the app, at any time — photo included.
@@ -103,8 +104,8 @@ they match what the code does — a reviewer who installs the app can check.
 | Device or other IDs | Yes | No | No | Users can choose | App functionality |
 
 **Nothing is ticked as Shared.** Play defines shared as transfer to a *third
-party*. A worker publishing a public profile, and a customer handing their
-number to the worker they have just booked, are both **user-initiated transfers
+party*. A professional publishing a public profile, and a customer handing their
+number to the professional they have just booked, are both **user-initiated transfers
 the user expects**, which Play exempts by name. There are no ad networks, no
 analytics SDKs and no data sales, so nothing else could qualify.
 
@@ -133,8 +134,8 @@ App info and performance (no crash reporting)
 ### The four marked "Users can choose"
 
 * **Precise location** — refusing it is a supported path; results are then
-  ordered by rating, and a worker can still publish.
-* **Email address** — optional on a worker profile, never asked of a customer.
+  ordered by rating, and a professional can still publish.
+* **Email address** — optional on a professional profile, never asked of a customer.
 * **Other user-generated content** — reviews and the "about" text are optional
   to write.
 * **Device or other IDs** — the web-push subscription; none exists until
@@ -179,7 +180,7 @@ is what Play penalises. The stricter rating costs nothing on an 18+ app.
 
 * **Government app:** No. A sole proprietorship, commissioned by nobody.
 * **Financial features:** none. The app takes no payments, has no wallet and
-  connects to no bank. A worker lists a rate; the customer pays them in cash.
+  connects to no bank. A professional lists a rate; the customer pays them in cash.
 * **Health features:** **Healthcare services and management.** This is *not*
   "no health features" — the app has a Health & Consultation category with
   General Physician, Dentist, Ayurvedic and Homeopathic Doctors, Psychologist,
@@ -196,8 +197,8 @@ is what Play penalises. The stricter rating costs nothing on an 18+ app.
 * **Target API level:** Bubblewrap builds against the current requirement;
   rebuild with the latest Bubblewrap when Play raises it.
 * **App access:** **Yes, part of the app is restricted.** Test credentials are
-  supplied — a worker account and a customer account — because a reviewer
-  cannot see the worker side or send a booking without signing in.
+  supplied — a professional account and a customer account — because a reviewer
+  cannot see the professional side or send a booking without signing in.
 
 ---
 
@@ -206,9 +207,9 @@ is what Play penalises. The stricter rating costs nothing on an 18+ app.
 If review asks what the app does that a website does not, or why it needs
 these permissions:
 
-* **Camera** — a live verification photo for a worker's profile. It is the
+* **Camera** — a live verification photo for a professional's profile. It is the
   main thing that keeps fake profiles off the platform.
-* **Location** — optional, used once, to sort workers by distance. The app
+* **Location** — optional, used once, to sort professionals by distance. The app
   works fully without it, and coordinates are rounded before storage.
 * **Why an app** — home screen presence, offline browsing of the service
   list, and installable shortcuts. It is a Trusted Web Activity, which is a

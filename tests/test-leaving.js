@@ -90,7 +90,7 @@ const ok = (label, cond, extra) =>
   ok('It lands back on the landing screen',
      await p.evaluate(() => (document.querySelector('.screen.on') || {}).id) === 'scr-home');
   ok('The door invites registration again',
-     (await p.locator('#ctaWorkTitle').innerText()).trim() === 'Register as a worker');
+     (await p.locator('#ctaWorkTitle').innerText()).trim() === 'Register as a professional');
 
   // ---------- the photo goes through the storage API, not SQL ----------
   // Supabase forbids a direct delete on storage.objects; doing it in SQL took

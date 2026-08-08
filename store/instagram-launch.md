@@ -1,7 +1,7 @@
 # MySheher — Instagram launch pack
 
 Everything needed to open the account and run the first three weeks.
-Worker-first, because a marketplace with no workers is an empty shop.
+Professionals first, because a marketplace with nobody listed is an empty shop.
 
 ---
 
@@ -10,7 +10,7 @@ Worker-first, because a marketplace with no workers is an empty shop.
 | Field | Value |
 |---|---|
 | **Handle** | `mysheher` — fallbacks: `mysheher.app`, `mysheher.in`, `mysheher.official` |
-| **Name** (searchable, 30 max) | `MySheher · Guwahati Workers` |
+| **Name** (searchable, 30 max) | `MySheher · Guwahati Professionals` |
 | **Email on the account** | info@mysheher.com — never a personal Gmail |
 | **Profile picture** | `docs/icons/icon-512.png` |
 | **Link** | https://mysheher.com — swap for the Play link once review clears |
@@ -21,12 +21,12 @@ Worker-first, because a marketplace with no workers is an empty shop.
 **Bio** (130 / 150):
 
 ```
-Book trusted local workers in Guwahati.
+Book trusted local professionals in Guwahati.
 Maids · cooks · electricians · tutors · drivers
-No commission. Workers set their own rate.
+No commission. Professionals set their own rate.
 ```
 
-Turn on **Settings → Messages → allow requests from everyone.** Workers will DM
+Turn on **Settings → Messages → allow requests from everyone.** Professionals will DM
 before they will email.
 
 ---
@@ -34,12 +34,12 @@ before they will email.
 ## The first nine posts
 
 Nine because that is one full screen of grid. Post in this order, one a day.
-Numbers 1–6 are aimed at workers; 7–9 turn to customers.
+Numbers 1–6 are aimed at professionals; 7–9 turn to customers.
 
 ### 1 — We exist
 
 **Image:** the app icon on the brand background, wordmark under it, and one line:
-*Guwahati's own worker marketplace.*
+*Guwahati's own professional marketplace.*
 
 **Caption**
 
@@ -73,7 +73,7 @@ No commission. No middleman. The rate you agree is the rate that is paid.
 
 ### 2 — List your skill, free
 
-**Image:** split screen — a photo of a worker on one side, the app's profile
+**Image:** split screen — a photo of a professional on one side, the app's profile
 card on the other. Text: *Your skill. Your price. Your profile.*
 
 **Caption**
@@ -109,7 +109,7 @@ earnings.*
 ```
 0%.
 
-That is what we take from a worker's earnings. Not 10, not 20. Zero.
+That is what we take from a professional's earnings. Not 10, not 20. Zero.
 
 If a customer pays you ₹500, you keep ₹500. We are not in the middle of
 your money and we do not want to be. You are paid directly, in cash, by
@@ -133,7 +133,7 @@ the person you worked for.
 ```
 How to get listed on MySheher:
 
-1 — Open mysheher.com and tap "Register as a worker"
+1 — Open mysheher.com and tap "Register as a professional"
 2 — Pick your work, set your rate, take a photo, enter your WhatsApp number
 3 — We check it by hand, usually the same day. Then you are live.
 
@@ -260,7 +260,7 @@ Five, in this order. Covers: plain brand-colour squares with a white icon.
 
 | Cover | Name | What goes in it |
 |---|---|---|
-| 🛠 | **For workers** | How to register, the 30 free days, no commission |
+| 🛠 | **For professionals** | How to register, the 30 free days, no commission |
 | 📱 | **How to book** | A screen recording of one real booking |
 | ✅ | **Verified** | What checking a profile actually involves |
 | 💬 | **Reviews** | Screenshots of real feedback, once you have some |
@@ -270,17 +270,17 @@ Five, in this order. Covers: plain brand-colour squares with a white icon.
 
 ## Posting rhythm
 
-**Week 1** — posts 1 to 6, one a day. All worker-facing. This is recruitment.
-**Week 2** — posts 7 to 9, then start showing real workers who have joined.
-**Week 3 onward** — two a week is enough. One worker story, one useful post.
+**Week 1** — posts 1 to 6, one a day. All aimed at professionals. This is recruitment.
+**Week 2** — posts 7 to 9, then start showing real professionals who have joined.
+**Week 3 onward** — two a week is enough. One professional story, one useful post.
 
-The single most valuable thing you can post, once you have workers: **a real
-worker, photographed, named, with their trade and their rate.** It recruits
-other workers better than anything written, and it is the only content a
+The single most valuable thing you can post, once you have professionals: **a real
+professional, photographed, named, with their trade and their rate.** It recruits
+other professionals better than anything written, and it is the only content a
 competitor cannot copy.
 
 Ask permission every time, and get it in writing over WhatsApp. Never post a
-worker's phone number.
+professional's phone number.
 
 ---
 
