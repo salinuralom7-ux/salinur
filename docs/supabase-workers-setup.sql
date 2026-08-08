@@ -903,6 +903,12 @@ $$;
 -- one rupee. Each service gets a floor and a ceiling drawn from what that
 -- trade actually charges in Guwahati, and the rate is checked on the
 -- server so the limit cannot be bypassed by calling the API directly.
+--
+-- The floor did not survive. MIGRATION 37 removed it: charging less than
+-- everybody else is a decision MySheher exists to allow. The min_price
+-- column stays because the table is keyed on it and the numbers are still
+-- useful as guidance, but nothing refuses a rate for being too low. Only
+-- the ceiling is enforced.
 -- ============================================================
 
 create table if not exists public.service_rates (

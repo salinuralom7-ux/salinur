@@ -1,7 +1,7 @@
 # Uploading MySheher to Google Play — the actual steps
 
 Written for the day you do it. Follow it top to bottom; do not skip step 6,
-which is the one that decides whether the app looks professional or broken.
+which is the one that decides whether the app looks service expert or broken.
 
 Everything the listing asks for is in `play-listing.md` next to this file.
 Every graphic is in `docs/store/`. Nothing needs to be made up on the spot.
@@ -30,7 +30,7 @@ Play Console → **Create app**.
 
 | Field | Answer |
 |---|---|
-| App name | `MySheher: Local Professionals Nearby` |
+| App name | `MySheher: Local Service experts Nearby` |
 | Default language | English (India) |
 | App or game | App |
 | Free or paid | **Free** |
@@ -55,7 +55,7 @@ single most useful thing you can do.
 2. Let Play manage the signing key when it offers — say yes. That is what
    makes a lost upload key survivable.
 3. Release name: `1.0.0 (1)`.
-4. Release notes: *First release. Find and book local professionals in Guwahati.*
+4. Release notes: *First release. Find and book local service experts in Guwahati.*
 
 Save. Do not roll it out yet.
 
@@ -65,7 +65,7 @@ Save. Do not roll it out yet.
 
 Same screen → **Testers** → create an email list, add at least 12 addresses.
 
-Friends, family, the first professionals who register. They must each **accept the
+Friends, family, the first service experts who register. They must each **accept the
 opt-in link and install the app** for the day to count. A tester who never
 opens it does not count, so send the link personally and check they did it.
 
@@ -98,7 +98,7 @@ Minimum is 2 screenshots; there are 5, use all of them.
 
 * **Privacy policy** — `https://mysheher.com/privacy/`
 * **App access** — everything is reachable without signing in except a
-  professional's own dashboard. Say so, and give a test professional's number and PIN so
+  service expert's own dashboard. Say so, and give a test service expert's number and PIN so
   the reviewer can get in.
 * **Ads** — No.
 * **Content rating** — fill in the questionnaire; answers are in
@@ -180,7 +180,7 @@ It happens, and it is not a disaster. The three usual reasons, all avoidable:
 
 1. **Data safety does not match behaviour.** Answer it exactly as
    `play-listing.md` says.
-2. **The reviewer could not get in.** Give them a working professional number and
+2. **The reviewer could not get in.** Give them a working service expert number and
    PIN under App access.
 3. **The listing promises something the app does not do.** The description in
    `play-listing.md` was checked against the app on 5 August 2026.

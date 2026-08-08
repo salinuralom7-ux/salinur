@@ -39,7 +39,7 @@ livelihood.
    * `1234` → the temporary PIN you are giving them
 7. Click **Run**.
 
-### For a professional
+### For a service expert
 
 ```sql
 insert into worker_secrets (worker_id, pin_hash)
@@ -71,7 +71,7 @@ without this they still cannot get in.
 
 The result panel should say **Success. No rows returned**, or show a row count
 of 1. If it says **0 rows**, the number is not on any profile — check for a
-typo, and check you used the professional query for a professional and the customer one
+typo, and check you used the service expert query for a service expert and the customer one
 for a customer.
 
 If it complains **schema "extensions" does not exist**, remove the two
@@ -102,7 +102,7 @@ tries). Something like 7392.
 
 ## When to stop doing this by hand
 
-Once MySheher has a few hundred professionals this becomes a nuisance, and somebody
+Once MySheher has a few hundred service experts this becomes a nuisance, and somebody
 will be locked out at midnight when you are asleep. At that point connect
 **WhatsApp Cloud API** and the "Forgotten your PIN?" button starts working on
 its own. See the comment block at the top of `supabase/functions/otp/index.ts`

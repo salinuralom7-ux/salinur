@@ -39,7 +39,7 @@ to the app; you only re-upload the bundle when the shell itself changes.
 
 Personal accounts opened after November 2023 must run a **closed test with at
 least 12 testers for 14 continuous days** before they can go public. Start
-gathering those 12 people now — friends, family, the first professionals who
+gathering those 12 people now — friends, family, the first service experts who
 register. It is the longest pole in the whole process.
 
 ### Step 2 — Build the Android bundle
@@ -163,13 +163,13 @@ earns its place on the home screen.
 
 Build these before submitting, not after a rejection:
 
-1. **Push notifications.** The single strongest argument. A professional learns
+1. **Push notifications.** The single strongest argument. A service expert learns
    about a booking the moment it arrives instead of hunting through WhatsApp;
-   a customer hears back when a professional accepts. This alone answers 4.2.
+   a customer hears back when a service expert accepts. This alone answers 4.2.
 2. **Native camera** for the verification photo, via
    `@capacitor/camera` rather than the web `getUserMedia` path.
 3. **Contacts / share sheet** so a booking can be shared natively.
-4. **Offline behaviour** — the service professional already does most of this.
+4. **Offline behaviour** — the service service expert already does most of this.
 5. **Sign in with Apple** — required by Guideline 4.8 *only if* you add
    third-party logins such as Google or Facebook. MySheher uses a phone number
    and PIN, so this does not apply today. Keep it that way and you save the
@@ -209,7 +209,7 @@ Apple Developer Program membership.
 ## What to check after any release
 
 ```bash
-node tests/test-ks.js          # the whole professional + customer journey
+node tests/test-ks.js          # the whole service expert + customer journey
 node tests/test-hardening.js   # security, back button, reports, ratings
 node tests/test-pages.js       # the legal pages and their links
 node tests/test-pwa.js         # manifest, icons, offline, install

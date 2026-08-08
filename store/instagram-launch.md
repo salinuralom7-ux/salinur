@@ -1,7 +1,7 @@
 # MySheher — Instagram launch pack
 
 Everything needed to open the account and run the first three weeks.
-Professionals first, because a marketplace with nobody listed is an empty shop.
+Service experts first, because a marketplace with nobody listed is an empty shop.
 
 ---
 
@@ -10,7 +10,7 @@ Professionals first, because a marketplace with nobody listed is an empty shop.
 | Field | Value |
 |---|---|
 | **Handle** | `mysheher` — fallbacks: `mysheher.app`, `mysheher.in`, `mysheher.official` |
-| **Name** (searchable, 30 max) | `MySheher · Guwahati Professionals` |
+| **Name** (searchable, 30 max) | `MySheher · Service Experts` — 26 of 30; "Guwahati" pushes it to 35 |
 | **Email on the account** | info@mysheher.com — never a personal Gmail |
 | **Profile picture** | `docs/icons/icon-512.png` |
 | **Link** | https://mysheher.com — swap for the Play link once review clears |
@@ -21,12 +21,12 @@ Professionals first, because a marketplace with nobody listed is an empty shop.
 **Bio** (130 / 150):
 
 ```
-Book trusted local professionals in Guwahati.
+Book trusted local service experts in Guwahati.
 Maids · cooks · electricians · tutors · drivers
-No commission. Professionals set their own rate.
+No commission. Service experts set their own rate.
 ```
 
-Turn on **Settings → Messages → allow requests from everyone.** Professionals will DM
+Turn on **Settings → Messages → allow requests from everyone.** Service experts will DM
 before they will email.
 
 ---
@@ -34,12 +34,12 @@ before they will email.
 ## The first nine posts
 
 Nine because that is one full screen of grid. Post in this order, one a day.
-Numbers 1–6 are aimed at professionals; 7–9 turn to customers.
+Numbers 1–6 are aimed at service experts; 7–9 turn to customers.
 
 ### 1 — We exist
 
 **Image:** the app icon on the brand background, wordmark under it, and one line:
-*Guwahati's own professional marketplace.*
+*Guwahati's own service expert marketplace.*
 
 **Caption**
 
@@ -73,7 +73,7 @@ No commission. No middleman. The rate you agree is the rate that is paid.
 
 ### 2 — List your skill, free
 
-**Image:** split screen — a photo of a professional on one side, the app's profile
+**Image:** split screen — a photo of a service expert on one side, the app's profile
 card on the other. Text: *Your skill. Your price. Your profile.*
 
 **Caption**
@@ -109,7 +109,7 @@ earnings.*
 ```
 0%.
 
-That is what we take from a professional's earnings. Not 10, not 20. Zero.
+That is what we take from a service expert's earnings. Not 10, not 20. Zero.
 
 If a customer pays you ₹500, you keep ₹500. We are not in the middle of
 your money and we do not want to be. You are paid directly, in cash, by
@@ -133,7 +133,7 @@ the person you worked for.
 ```
 How to get listed on MySheher:
 
-1 — Open mysheher.com and tap "Register as a professional"
+1 — Open mysheher.com and tap "Register as a service expert"
 2 — Pick your work, set your rate, take a photo, enter your WhatsApp number
 3 — We check it by hand, usually the same day. Then you are live.
 
@@ -260,7 +260,7 @@ Five, in this order. Covers: plain brand-colour squares with a white icon.
 
 | Cover | Name | What goes in it |
 |---|---|---|
-| 🛠 | **For professionals** | How to register, the 30 free days, no commission |
+| 🛠 | **For service experts** | How to register, the 30 free days, no commission |
 | 📱 | **How to book** | A screen recording of one real booking |
 | ✅ | **Verified** | What checking a profile actually involves |
 | 💬 | **Reviews** | Screenshots of real feedback, once you have some |
@@ -270,17 +270,17 @@ Five, in this order. Covers: plain brand-colour squares with a white icon.
 
 ## Posting rhythm
 
-**Week 1** — posts 1 to 6, one a day. All aimed at professionals. This is recruitment.
-**Week 2** — posts 7 to 9, then start showing real professionals who have joined.
-**Week 3 onward** — two a week is enough. One professional story, one useful post.
+**Week 1** — posts 1 to 6, one a day. All aimed at service experts. This is recruitment.
+**Week 2** — posts 7 to 9, then start showing real service experts who have joined.
+**Week 3 onward** — two a week is enough. One service expert story, one useful post.
 
-The single most valuable thing you can post, once you have professionals: **a real
-professional, photographed, named, with their trade and their rate.** It recruits
-other professionals better than anything written, and it is the only content a
+The single most valuable thing you can post, once you have service experts: **a real
+service expert, photographed, named, with their trade and their rate.** It recruits
+other service experts better than anything written, and it is the only content a
 competitor cannot copy.
 
 Ask permission every time, and get it in writing over WhatsApp. Never post a
-professional's phone number.
+service expert's phone number.
 
 ---
 

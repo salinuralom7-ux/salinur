@@ -73,7 +73,7 @@ const ok = (l, c, x) => console.log((c ? 'PASS  ' : 'FAIL  ') + l + (x !== undef
      await page.locator('.wcard').count() + ' workers');
 
   // ---------- the header ----------
-  ok('No "Browse professionals" link while browsing', await page.locator('#browseLink').isVisible() === false);
+  ok('No "Browse service experts" link while browsing', await page.locator('#browseLink').isVisible() === false);
   await page.evaluate(() => go('home')); await page.waitForTimeout(500);
   ok('It comes back on other screens', await page.locator('#browseLink').isVisible());
 
