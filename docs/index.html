@@ -709,7 +709,14 @@ body.menu-open{overflow:hidden}
 }
 @keyframes nod{0%,52%,100%{transform:translateY(0) rotate(0deg)}70%{transform:translateY(-1px) rotate(-2.5deg)}}
 .cta-text{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
-.cta-text b{font-size:1.19rem;font-weight:800;letter-spacing:-.025em;line-height:1.2}
+/* The two front-door titles have to survive a 360px phone, which is still a
+   very common screen in Guwahati. At a fixed 1.19rem "Find a service expert"
+   wrapped onto two lines there, and the longer "Register…" wrapped even at
+   390. The icon and the arrow take 94px of a 320px card between them, so the
+   text has about 158px to work in and no shortening of a sensible label wins
+   that argument on its own. clamp() gives the smallest screens a smaller
+   title and leaves the roomier ones exactly as they were. */
+.cta-text b{font-size:clamp(1.02rem, 4.4vw, 1.19rem);font-weight:800;letter-spacing:-.025em;line-height:1.2}
 .cta-text i{font-style:normal;font-size:.85rem;font-weight:500;opacity:.74}
 /* the arrow sits in its own chip, so it reads as somewhere to press rather
    than as decoration at the end of a line */
@@ -2544,7 +2551,7 @@ footer a{color:var(--ink-2)}
               </g>
             </svg>
           </span>
-          <span class="cta-text"><b id="ctaWorkTitle">Register as a service expert</b><i id="ctaWorkSub">Free for your first 30 days</i></span>
+          <span class="cta-text"><b id="ctaWorkTitle">List your skill</b><i id="ctaWorkSub">Free for your first 30 days</i></span>
           <span class="cta-go" aria-hidden="true">
             <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
           </span>
@@ -5399,7 +5406,7 @@ function paintWorkDoor(){
   const t = $("ctaWorkTitle"), sub = $("ctaWorkSub");
   if(!t || !sub) return;
   const inside = !!(session && session.registered);
-  t.textContent   = inside ? "Visit your profile" : "Register as a service expert";
+  t.textContent   = inside ? "Visit your profile" : "List your skill";
   sub.textContent = inside ? "Your ID card, work and reviews" : "Free for your first 30 days";
 }
 /* the eight trades people actually open the app for */
