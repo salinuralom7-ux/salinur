@@ -525,7 +525,7 @@ body.menu-open{overflow:hidden}
 }
 
 /* ---------- book in one tap ---------- */
-.quick{margin:clamp(18px,3vw,26px) auto 0;max-width:520px;text-align:left}
+.quick{margin:clamp(18px,3vw,26px) auto 0;max-width:560px;text-align:left}
 /* the shortcut back into a booking already in flight — reads as a row, not
    a third door, so it never competes with the two real choices above it */
 .mine-link{
@@ -596,10 +596,16 @@ body.menu-open{overflow:hidden}
   font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
   color:var(--muted);margin-bottom:9px;
 }
-.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+/* ---------- the photograph tiles ----------
+   A face beats a line drawing every time: somebody looking for a doctor
+   recognises a doctor before they have read the word. The picture is square
+   and fills its rounded box; the icon behind it is what shows while the
+   photograph loads, and what stays if there is no photograph — so a tile
+   looks finished either way and adding a picture is a file drop. */
 .qtile{
-  display:flex;flex-direction:column;align-items:center;gap:6px;
-  padding:12px 4px 10px;border-radius:14px;
+  display:flex;flex-direction:column;align-items:stretch;gap:7px;
+  padding:7px 7px 9px;border-radius:15px;
   border:1px solid var(--line);background:var(--surface);
   color:var(--ink-2);font-size:.69rem;font-weight:700;line-height:1.22;text-align:center;
   -webkit-tap-highlight-color:transparent;touch-action:manipulation;
@@ -607,14 +613,30 @@ body.menu-open{overflow:hidden}
   transition:transform .2s cubic-bezier(.2,.8,.3,1),border-color .2s ease,
              background .2s ease,color .2s ease;
 }
-.qtile svg{width:19px;height:19px;color:var(--brand-2);flex:0 0 auto}
+.qt-pic{
+  position:relative;display:grid;place-items:center;
+  width:100%;aspect-ratio:1;border-radius:11px;overflow:hidden;
+  background:var(--surface-2);
+}
+.qt-pic svg{width:24px;height:24px;color:var(--brand-2)}
+.qt-pic img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;display:block;
+  transition:transform .28s cubic-bezier(.2,.8,.3,1);
+}
+.qtile:hover .qt-pic img{transform:scale(1.04)}
+.qt-label{
+  display:block;width:100%;
+  font-size:.68rem;font-weight:700;line-height:1.2;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
 .qtile:hover{transform:translateY(-2px);border-color:rgba(var(--brand-rgb),.42);
   background:var(--surface-2);color:var(--ink)}
 .qtile:active{transform:translateY(1px) scale(.965)}
 .qtile:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 @media(max-width:360px){
-  .quick-grid{gap:6px}
-  .qtile{padding:10px 3px 9px;font-size:.65rem}
+  .quick-grid{gap:8px}
+  .qtile{padding:6px 6px 8px}
 }
 
 /* ---------- how it works ----------
@@ -3674,7 +3696,7 @@ footer a{color:var(--ink-2)}
       <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
     </div>
     <h3 id="notifyAskTitle">Turn the notification on for better experience</h3>
-    <p class="sub" id="notifyAskWhy">Know the moment a worker replies or a booking arrives — even when MySheher is closed.</p>
+    <p class="sub" id="notifyAskWhy">Know the moment somebody replies or a booking arrives — even when MySheher is closed.</p>
     <button class="btn btn-brand btn-block" style="padding:14px" onclick="acceptNotifyAsk()">Allow</button>
     <button class="btn btn-quiet btn-block btn-sm" style="margin-top:10px" onclick="dismissNotifyAsk()">Don't allow</button>
   </div>
@@ -5523,24 +5545,38 @@ function paintWorkDoor(){
   t.textContent   = inside ? "Visit your profile" : "List your skill";
   sub.textContent = inside ? "Your ID card, work and reviews" : "Free for your first 30 days";
 }
-/* the eight trades people actually open the app for */
+/* The trades people actually open the app for. Fourth column is the
+   photograph: docs/cat/<slug>.webp. A tile with no photograph yet falls back
+   to its line icon rather than to a broken image — so a picture can be added
+   by dropping a file in, with nothing here to change. */
 const QUICK_PICKS = [
-  ["Electrician","repair","Electrician"],
-  ["Plumber","repair","Plumber"],
-  ["Carpenter","build","Carpenter"],
-  ["Housemaid (Daily)","home","Maid"],
-  ["Home Cook (Daily Meals)","cook","Cook"],
-  ["Home Tutor (Class 6\u201310)","tutor","Tutor"],
-  ["AC Service & Repair","repair","AC repair"],
-  ["Beautician (At Home)","beauty","Beautician"]
+  ["Electrician","repair","Electrician","electrician"],
+  ["Plumber","repair","Plumber","plumber"],
+  ["Housemaid (Daily)","home","Maid","housemaid"],
+  ["Home Cook (Daily Meals)","cook","Cook","home-cook"],
+  ["General Physician","health","Doctor","general-physician"],
+  ["Carpenter","build","Carpenter","carpenter"],
+  ["AC Service & Repair","repair","AC repair","ac-repair"],
+  ["Beautician (At Home)","beauty","Beautician","beautician"],
+  ["Home Tutor (Class 6\u201310)","tutor","Tutor","home-tutor"],
+  ["Personal Driver (Monthly)","vehicle","Driver","driver"],
+  ["Packers & Movers","move","Movers","packers-movers"],
+  ["Ladies Tailor","tailor","Tailor","tailor"]
 ];
 function renderQuick(){
   const host = $("quickGrid"); if(!host) return;
-  host.innerHTML = QUICK_PICKS.map(([skill, cat, label]) =>
-    `<button class="qtile" onclick="jumpTo('${jsq(skill)}')" aria-label="Find a ${esc(label)}">
-       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
-            stroke-linecap="round" stroke-linejoin="round">${CAT_ICON[cat]||""}</svg>
-       <span>${esc(label)}</span>
+  /* The icon sits underneath the photograph rather than instead of it, and
+     the photograph removes itself if it does not load. A tile therefore
+     looks finished whether or not its picture exists yet, and adding one is
+     a file drop rather than a code change. */
+  host.innerHTML = QUICK_PICKS.map(([skill, cat, label, slug]) =>
+    `<button class="qtile" onclick="jumpTo('${jsq(skill)}')" aria-label="Find a ${esc(label)} near you">
+       <span class="qt-pic">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round">${CAT_ICON[cat]||""}</svg>
+         ${slug ? `<img src="cat/${slug}.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ""}
+       </span>
+       <span class="qt-label">${esc(label)}</span>
      </button>`).join("");
 }
 /* straight from the landing page into results for that one trade */
