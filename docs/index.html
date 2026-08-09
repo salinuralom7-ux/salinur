@@ -991,6 +991,63 @@ body.menu-open{overflow:hidden}
 
 /* The undo bar. Above the sheets and the chat bar, because five seconds is
    not long enough to go looking for it. */
+/* ---------- the tab bar ----------
+   Sits above everything except a sheet. 58px plus whatever the phone's
+   gesture bar needs; every screen gets that much bottom padding so nothing
+   is ever hidden underneath it. */
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:60;
+  display:grid;grid-template-columns:repeat(5,1fr);align-items:end;
+  background:color-mix(in srgb, var(--bg-2) 92%, transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  padding:6px 2px calc(6px + env(safe-area-inset-bottom));
+}
+.tab{
+  background:none;border:0;cursor:pointer;font:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:5px 2px 3px;color:var(--muted);position:relative;
+  -webkit-tap-highlight-color:transparent;
+  transition:color .16s ease;
+}
+.tab svg{width:21px;height:21px}
+.tab span{font-size:.66rem;font-weight:650;letter-spacing:.01em;line-height:1}
+.tab.on{color:var(--brand)}
+.tab:active{transform:translateY(1px)}
+/* the count of things waiting, on Bookings and on More */
+.tab-n{
+  position:absolute;top:1px;left:calc(50% + 6px);
+  min-width:16px;height:16px;border-radius:9px;
+  background:var(--danger);color:#fff;
+  font-size:.6rem;font-weight:800;font-style:normal;
+  display:grid;place-items:center;padding:0 4px;
+}
+/* The raised centre. It is the only button on the bar with a fill, because
+   listing a skill is the one action the marketplace cannot do without. */
+.tab-fab{
+  justify-self:center;
+  width:58px;height:58px;border-radius:50%;
+  margin-top:-24px;
+  border:3px solid var(--bg-2);
+  background:var(--brand);color:var(--brand-ink);
+  font:inherit;font-size:.6rem;font-weight:800;line-height:1.15;
+  letter-spacing:-.01em;text-align:center;
+  display:grid;place-items:center;cursor:pointer;
+  box-shadow:0 6px 18px rgba(var(--brand-rgb),.34);
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .16s cubic-bezier(.2,.8,.3,1),box-shadow .16s ease;
+}
+.tab-fab:active{transform:scale(.94)}
+.tab-fab.on{box-shadow:0 0 0 3px rgba(var(--brand-rgb),.28),0 6px 18px rgba(var(--brand-rgb),.34)}
+/* room for it under every screen, and under the footer */
+body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+/* a conversation is a full surface with its own composer at the bottom */
+body.in-chat .tabbar{display:none}
+body.in-chat{padding-bottom:0}
+/* the undo bar has to clear the tab bar rather than sit behind it */
+.undo-bar{bottom:calc(76px + env(safe-area-inset-bottom))}
+@media print{ .tabbar{display:none} body{padding-bottom:0} }
+
 .undo-bar{
   position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
   z-index:120;display:flex;align-items:center;gap:12px;
@@ -2495,6 +2552,42 @@ footer a{color:var(--ink-2)}
     <span>© <span id="yearMenu"></span> MySheher</span>
   </div>
 </aside>
+
+<!-- ============================= TAB BAR =============================
+     Everything used to hang off the hamburger, which is where a feature goes
+     to be forgotten: people could not find their bookings, and the one thing
+     the marketplace needs most — somebody listing their skill — was three
+     taps deep behind a menu nobody opened. Four destinations and a raised
+     centre button, present on every screen. The menu survives for the long
+     tail (about, privacy, terms) rather than carrying the navigation. -->
+<nav class="tabbar" id="tabbar" aria-label="Main">
+  <button class="tab" id="tabHome" onclick="go('home')" aria-label="Home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg>
+    <span>Home</span>
+  </button>
+  <button class="tab" id="tabBrowse" onclick="go('hire')" aria-label="Browse">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span>Browse</span>
+  </button>
+
+  <!-- the raised one. Its label changes once you have a profile, because then
+       the thing you came back for is the profile, not the sign-up. -->
+  <button class="tab-fab" id="tabFab" onclick="go('work')">
+    <span id="tabFabLabel">List<br>your skill</span>
+  </button>
+
+  <button class="tab" id="tabBookings" onclick="go('chats')" aria-label="Bookings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Bookings</span>
+    <i class="tab-n" id="tabBookingsN" hidden></i>
+  </button>
+  <button class="tab" id="tabMore" onclick="openMenu()" aria-label="More">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <span>More</span>
+    <i class="tab-n" id="tabMoreN" hidden></i>
+  </button>
+</nav>
+
 <div class="demo-note" id="demoNote">Preview mode — profiles are saved on this device only while the live database connects.</div>
 
 
@@ -5338,6 +5431,7 @@ function go(name, viaHistory){
   if(name === "otp") initOtp(); else stopResendCooldown();
   if(name === "home") initHome();
   paintWorkDoor();
+  paintTabs();
 }
 
 /* ---------- the side menu ----------
@@ -5402,6 +5496,26 @@ window.addEventListener("popstate", e => {
 let homeReady = false;
 /* Somebody who has already registered is not going to register again. The
    door keeps its place and its animation and changes what it offers. */
+/* Which tab is lit, what the raised button says, and whether anything is
+   waiting. Screens are grouped: the profile, the sign-up and everything
+   between them all belong to the raised button, so it stays lit while you
+   are inside that flow rather than blinking off on each step. */
+const TAB_OF = {
+  home:"tabHome",
+  hire:"tabBrowse",
+  chats:"tabBookings", chat:"tabBookings", mine:"tabBookings", inbox:"tabBookings",
+  work:"tabFab", me:"tabFab", register:"tabFab", otp:"tabFab", done:"tabFab",
+  card:"tabFab", profile:"tabFab", account:"tabFab", recover:"tabFab"
+};
+function paintTabs(){
+  const active = TAB_OF[currentScreen] || "";
+  ["tabHome","tabBrowse","tabFab","tabBookings","tabMore"].forEach(id => {
+    const el = $(id); if(el) el.classList.toggle("on", id === active);
+  });
+  const lab = $("tabFabLabel");
+  if(lab) lab.innerHTML = (session && session.registered) ? "My<br>profile" : "List<br>your skill";
+}
+
 function paintWorkDoor(){
   const t = $("ctaWorkTitle"), sub = $("ctaWorkSub");
   if(!t || !sub) return;
@@ -9268,6 +9382,9 @@ function paintChatBadge(rows){
   const n       = waiting.length;
   paintAppBadge(n);
 
+  const tb = $("tabBookingsN");
+  if(tb){ tb.hidden = !n; tb.textContent = n > 9 ? "9+" : n; }
+
   const dot = $("menuDot"), badge = $("chatsBadge"), home = $("myBookingsDot");
   if(dot){ dot.hidden = !n; dot.classList.toggle("urgent", !!n); }
   if(badge){ badge.hidden = !n; badge.textContent = n; badge.classList.toggle("urgent", !!n); }
@@ -11093,6 +11210,10 @@ if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
     watchPending();
   }
   initHome();
+  /* Home is already the open screen in the markup, so go() has not run and
+     the bar has never been painted. Light it before the first frame rather
+     than on the first navigation. */
+  paintTabs();
   /* the entry in the history stack the app started on */
   try{ history.replaceState({screen:"home"}, ""); }catch(e){}
   paintAccountUi();
