@@ -13,8 +13,8 @@ const ok=(l,c,x)=>{console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x
   ok('The bar is there', await page.locator('#tabbar').isVisible());
   ok('Five slots', await page.locator('#tabbar > button').count() === 5);
   ok('Home is lit on open', await page.locator('#tabHome.on').count() === 1);
-  ok('The raised button offers to list a skill',
-     (await page.locator('#tabFabLabel').innerText()).replace(/\s+/g,' ').trim() === 'List your skill');
+  ok('The raised button offers to register a skill',
+     (await page.locator('#tabFabLabel').innerText()).replace(/\s+/g,' ').trim() === 'Register your skill');
 
   await page.locator('#tabBrowse').click(); await page.waitForTimeout(700);
   ok('Browse goes to the results screen', await page.locator('#scr-hire.on').count() === 1);

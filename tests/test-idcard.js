@@ -21,11 +21,11 @@ const ok = (label, cond, extra) =>
 
   // ---------- the door before you are one ----------
   const door = () => p.locator('#ctaWorkTitle').innerText();
-  ok('Door invites you to register', (await door()).trim() === 'List your skill', await door());
+  ok('Door invites you to register', (await door()).trim() === 'Register your skill', await door());
   /* "Set your rates" was the old copy. The offer is the thing that gets
      somebody through this door, so the subtitle leads with it. */
   ok('…with the matching subtitle',
-     (await p.locator('#ctaWorkSub').innerText()).includes('Free for your first 30 days'),
+     (await p.locator('#ctaWorkSub').innerText()).includes('Start your 30 days free trial'),
      await p.locator('#ctaWorkSub').innerText());
 
   // ---------- become one ----------
@@ -46,7 +46,7 @@ const ok = (label, cond, extra) =>
   // reload — that is what made it look like the rename had never shipped
   await p.evaluate(() => { session = null; saveSession(); });
   await p.waitForTimeout(300);
-  ok('Clearing the session repaints the door at once', (await door()).trim() === 'List your skill');
+  ok('Clearing the session repaints the door at once', (await door()).trim() === 'Register your skill');
   await p.evaluate(() => {
     const w = demoAll()[0];
     session = { phone: w.phone, pin: w.pin, name: w.name, registered: true, worker: w };
@@ -64,7 +64,7 @@ const ok = (label, cond, extra) =>
   // signing out puts it back
   await p.evaluate(() => { session = null; go('home'); });
   await p.waitForTimeout(500);
-  ok('Signing out restores "List your skill"', (await door()).trim() === 'List your skill');
+  ok('Signing out restores "Register your skill"', (await door()).trim() === 'Register your skill');
 
   // ---------- the card ----------
   const code = await p.evaluate(() => {

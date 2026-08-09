@@ -2595,7 +2595,7 @@ footer a{color:var(--ink-2)}
   <!-- the raised one. Its label changes once you have a profile, because then
        the thing you came back for is the profile, not the sign-up. -->
   <button class="tab-fab" id="tabFab" onclick="go('work')">
-    <span id="tabFabLabel">List<br>your skill</span>
+    <span id="tabFabLabel">Register<br>your skill</span>
   </button>
 
   <button class="tab" id="tabBookings" onclick="go('chats')" aria-label="Bookings">
@@ -2666,7 +2666,7 @@ footer a{color:var(--ink-2)}
               </g>
             </svg>
           </span>
-          <span class="cta-text"><b id="ctaWorkTitle">List your skill</b><i id="ctaWorkSub">Free for your first 30 days</i></span>
+          <span class="cta-text"><b id="ctaWorkTitle">Register your skill</b><i id="ctaWorkSub">Start your 30 days free trial</i></span>
           <span class="cta-go" aria-hidden="true">
             <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
           </span>
@@ -5535,15 +5535,15 @@ function paintTabs(){
     const el = $(id); if(el) el.classList.toggle("on", id === active);
   });
   const lab = $("tabFabLabel");
-  if(lab) lab.innerHTML = (session && session.registered) ? "My<br>profile" : "List<br>your skill";
+  if(lab) lab.innerHTML = (session && session.registered) ? "My<br>profile" : "Register<br>your skill";
 }
 
 function paintWorkDoor(){
   const t = $("ctaWorkTitle"), sub = $("ctaWorkSub");
   if(!t || !sub) return;
   const inside = !!(session && session.registered);
-  t.textContent   = inside ? "Visit your profile" : "List your skill";
-  sub.textContent = inside ? "Your ID card, work and reviews" : "Free for your first 30 days";
+  t.textContent   = inside ? "Visit your profile" : "Register your skill";
+  sub.textContent = inside ? "Your ID card, work and reviews" : "Start your 30 days free trial";
 }
 /* The trades people actually open the app for. Fourth column is the
    photograph: docs/cat/<slug>.webp. A tile with no photograph yet falls back
