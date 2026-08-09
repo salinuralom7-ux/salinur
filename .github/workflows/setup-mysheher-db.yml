@@ -21,6 +21,14 @@ jobs:
       - name: Run the MySheher schema on Supabase
         env:
           SB_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
+          # Whichever message provider exists. Absent secrets arrive as empty
+          # strings and the step below simply reports that nothing is wired.
+          WA_TOKEN:     ${{ secrets.WA_TOKEN }}
+          WA_PHONE_ID:  ${{ secrets.WA_PHONE_ID }}
+          WA_TEMPLATE:  ${{ secrets.WA_TEMPLATE }}
+          TWILIO_SID:   ${{ secrets.TWILIO_SID }}
+          TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
+          TWILIO_FROM:  ${{ secrets.TWILIO_FROM }}
         run: |
           set -uo pipefail
           R=.github/mysheher-setup-status.txt
@@ -374,6 +382,55 @@ jobs:
             # A 500 here is the expected answer until a provider's secrets are
             # set, and it says which ones are missing — so it is reported, not
             # treated as a failure of the deploy.
+            # ---------- the provider's credentials ----------
+            # "Forgotten your PIN?" has been dead since launch for one reason:
+            # the sender was deployed but never given an account to send
+            # through, so send_otp answers "no-provider" and the app says so
+            # honestly. The token that writes VAPID keys can write these too.
+            #
+            # Nothing here is ever printed. Each value is masked the moment it
+            # is read, and the only thing the report says is which provider is
+            # now live.
+            for v in "$WA_TOKEN" "$TWILIO_TOKEN"; do
+              [ -n "$v" ] && echo "::add-mask::$v"
+            done
+
+            OTP_MODE=""
+            if [ -n "${WA_TOKEN:-}" ] && [ -n "${WA_PHONE_ID:-}" ]; then
+              OTP_MODE=whatsapp
+              jq -n --arg t "$WA_TOKEN" --arg p "$WA_PHONE_ID" \
+                    --arg tpl "${WA_TEMPLATE:-mysheher_code}" \
+                '[{name:"WA_TOKEN",value:$t},
+                  {name:"WA_PHONE_ID",value:$p},
+                  {name:"WA_TEMPLATE",value:$tpl},
+                  {name:"WA_LANG",value:"en"}]' > /tmp/otpsec.json
+            elif [ -n "${TWILIO_SID:-}" ] && [ -n "${TWILIO_TOKEN:-}" ] && [ -n "${TWILIO_FROM:-}" ]; then
+              # a whatsapp: prefix on the number means Twilio carries it over
+              # WhatsApp rather than SMS, and the app should say so
+              case "$TWILIO_FROM" in whatsapp:*) OTP_MODE=whatsapp ;; *) OTP_MODE=sms ;; esac
+              jq -n --arg s "$TWILIO_SID" --arg t "$TWILIO_TOKEN" --arg f "$TWILIO_FROM" \
+                '[{name:"TWILIO_SID",value:$s},
+                  {name:"TWILIO_TOKEN",value:$t},
+                  {name:"TWILIO_FROM",value:$f}]' > /tmp/otpsec.json
+            fi
+
+            if [ -z "$OTP_MODE" ]; then
+              note "otp provider: none configured — add WA_TOKEN and WA_PHONE_ID (or the three TWILIO_*) to this repository's Actions secrets and re-run. Until then \"Forgotten your PIN?\" tells people so rather than pretending."
+            else
+              scode=$(curl -sS -o /tmp/otpsecres.json -w "%{http_code}" "${hdr[@]}" \
+                        -X POST "$api/projects/$ref/secrets" -d @/tmp/otpsec.json)
+              note "otp provider: $OTP_MODE credentials stored in Supabase — HTTP $scode"
+              rm -f /tmp/otpsec.json
+
+              # send_otp reads this and nothing else. Without it the codes are
+              # generated, hashed and never queued.
+              printf "update public.nearse_config set otp_provider = '%s' where id = 1;" "$OTP_MODE" > /tmp/otpmode.sql
+              jq -Rs '{query:.}' /tmp/otpmode.sql > /tmp/otpmode.json
+              mcode=$(curl -sS -o /tmp/otpmoderes.json -w "%{http_code}" "${hdr[@]}" \
+                        -X POST "$api/projects/$ref/database/query" -d @/tmp/otpmode.json)
+              note "otp provider: switched on in the database — HTTP $mcode"
+            fi
+
             ocode=$(curl -sS -o /tmp/optest.json -w "%{http_code}" -X POST "https://$ref.supabase.co/functions/v1/otp" -H "Content-Type: application/json" -d '{}')
             note "otp sender: test call — HTTP $ocode — $(head -c 300 /tmp/optest.json)"
           fi
