@@ -8,7 +8,10 @@ const ok=(l,c,x)=>{console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x
   const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
   const ctx=await b.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});
   const page=await ctx.newPage(); const errs=[]; page.on('pageerror',e=>errs.push(e.message));
-  await page.goto('http://localhost:8840/'); await page.waitForTimeout(1200);
+  await page.goto('http://localhost:8840/');
+  /* boot now also asks the database for banners, so the bar is painted a
+     little later than it used to be. 1200ms caught it about one run in ten. */
+  await page.waitForTimeout(2000);
 
   ok('The bar is there', await page.locator('#tabbar').isVisible());
   ok('Five slots', await page.locator('#tabbar > button').count() === 5);

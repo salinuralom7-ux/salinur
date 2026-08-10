@@ -208,8 +208,8 @@ const ok = (label, cond, extra) =>
   ok('My bookings lists both', await cust.locator('#mineCard .thread-row').count() === 2);
   await cust.evaluate(() => go('home'));
   await cust.waitForTimeout(600);
-  ok('Home shows the bookings link once there is one',
-     await cust.locator('#myBookingsLink:not([hidden])').count() === 1);
+  ok('The Bookings tab shows a count once there is one',
+     await cust.locator('#tabBookingsN:not([hidden])').count() === 1);
 
   ok('No JS errors anywhere', errors.length === 0, errors.join(' | ') || 'none');
   await browser.close(); srv.close();

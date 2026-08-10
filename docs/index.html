@@ -1101,10 +1101,19 @@ body.menu-open{overflow:hidden}
 .tab-n{
   position:absolute;top:1px;left:calc(50% + 6px);
   min-width:16px;height:16px;border-radius:9px;
-  background:var(--danger);color:#fff;
+  background:var(--brand);color:var(--brand-ink);
   font-size:.6rem;font-weight:800;font-style:normal;
   display:grid;place-items:center;padding:0 4px;
 }
+/* The home screen's card carried this: red and pulsing when something is
+   actually waiting for an answer, quiet otherwise. The card is gone, so the
+   signal lives here — the only place it now appears, and one that is on
+   every screen rather than only the home one. */
+.tab-n.urgent{
+  background:var(--danger);color:#2A0C11;
+  animation:waiting-pulse 1.7s cubic-bezier(.4,0,.6,1) infinite;
+}
+@media (prefers-reduced-motion: reduce){ .tab-n.urgent{animation:none} }
 /* The raised centre. It is the only button on the bar with a fill, because
    listing a skill is the one action the marketplace cannot do without. */
 .tab-fab{
@@ -2558,7 +2567,7 @@ footer a{color:var(--ink-2)}
       <img class="mark" src="icons/logo.png?v=6" alt="" width="384" height="373"><img class="wordmark" src="icons/wordmark.png?v=6" alt="MySheher" width="512" height="114">
     </a>
     <div style="display:flex;align-items:center;gap:12px">
-      <a class="hdr-btn" id="profileLink" href="#" onclick="goMyProfile();return false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>My profile</a>
+      <a class="hdr-btn" id="profileLink" href="#" onclick="goMyProfile();return false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg><span class="hdr-btn-text">Sign up / in</span></a>
       <button class="menu-btn" id="menuBtn" onclick="openMenu()" aria-label="Menu" aria-expanded="false">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>
@@ -2699,20 +2708,6 @@ footer a{color:var(--ink-2)}
   <!-- ---------- 3. everything else ---------- -->
   <div class="wrap">
     <button class="btn btn-brand btn-block see-all" onclick="go('hire')">See all services</button>
-  </div>
-
-  <!-- Only here once there is something to come back to. It sits below the
-       three fixed sections so it can appear and disappear without moving
-       them. -->
-  <div class="wrap">
-    <button class="mine-link" id="myBookingsLink" onclick="go('chats')" hidden>
-      <span class="ml-ico" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      </span>
-      <span class="ml-text"><b id="myBookingsTitle">Bookings &amp; chats</b><i id="myBookingsSub">See where your requests have got to</i></span>
-      <i class="ml-n" id="myBookingsDot" hidden></i>
-      <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
-    </button>
   </div>
 
   <!-- ---------- 4. the banner ----------
@@ -5458,7 +5453,7 @@ function go(name, viaHistory){
   document.body.classList.toggle("in-chat", name === "chat");
   /* no point offering the screen somebody is already looking at */
   const pl = $("profileLink");
-  if(pl) pl.hidden = (name === "profile" || name === "account" || name === "me");
+  if(pl) pl.hidden = (name === "profile" || name === "account" || name === "me" || name === "work");
   if(!viaHistory){
     /* admin is private — it gets a history entry but never a shareable URL */
     const url = (name === "home" || name === "admin")
@@ -5535,6 +5530,18 @@ function goMyProfile(){
   else if(signedIn()) go("profile");
   else showAccount("signup");
 }
+/* Before you have an account the header cannot offer you a profile — there is
+   nothing behind it but a sign-up form, and a button that lies about where it
+   goes is worse than no button. So it says what it does: "Sign up / in" until
+   there is somebody signed in, "My profile" after. Painted by paintTabs, which
+   already runs on every navigation and whenever a session appears or goes. */
+function paintProfileBtn(){
+  const el = $("profileLink"); if(!el) return;
+  const inside = signedIn() || !!(session && session.registered);
+  const label = el.querySelector(".hdr-btn-text");
+  if(label) label.textContent = inside ? "My profile" : "Sign up / in";
+  el.setAttribute("aria-label", inside ? "My profile" : "Sign up or sign in");
+}
 /* Keep the menu honest about who is reading it. */
 function paintMenu(){
   const inside = !!(session && session.registered);
@@ -5608,6 +5615,7 @@ function paintTabs(){
   });
   const lab = $("tabFabLabel");
   if(lab) lab.innerHTML = (session && session.registered) ? "My<br>profile" : "Register<br>your skill";
+  paintProfileBtn();
   fitTabbar();
 }
 
@@ -9515,7 +9523,17 @@ function paintChatBadge(rows){
   paintAppBadge(n);
 
   const tb = $("tabBookingsN");
-  if(tb){ tb.hidden = !n; tb.textContent = n > 9 ? "9+" : n; }
+  if(tb){
+    tb.hidden = !n;
+    tb.textContent = n > 9 ? "9+" : n;
+    tb.classList.toggle("urgent", !!n);
+  }
+  /* "2 need your answer" was the card's subtitle and it is the one sentence
+     that gets somebody to open the app. With the card gone it becomes the
+     tab's label, which is where a screen reader looks and where a long press
+     shows a tooltip. */
+  const tab = $("tabBookings");
+  if(tab) tab.setAttribute("aria-label", n ? "Bookings — " + waitingLine(waiting) : "Bookings");
 
   const dot = $("menuDot"), badge = $("chatsBadge"), home = $("myBookingsDot");
   if(dot){ dot.hidden = !n; dot.classList.toggle("urgent", !!n); }
@@ -9549,18 +9567,12 @@ function waitingLine(waiting){
    whole reason they are here. A customer gets it once they have booked
    somebody, and not before, so a first-time visitor still sees two doors and
    nothing else. */
-function paintMineLink(){
-  const link = $("myBookingsLink"); if(!link) return;
-  const asWorker = !!(session && session.registered);
-  const mine = myBookings().length;
-  link.hidden = !asWorker && !mine;
-  if(link.hidden){ link.classList.remove("waiting"); return; }
-  $("myBookingsTitle").textContent = asWorker ? "My jobs & chats" : "Bookings & chats";
-  $("myBookingsSub").textContent = asWorker
-    ? "Accept or decline your requests"
-    : (mine === 1 ? "See where your request has got to"
-                  : "See where your " + mine + " requests have got to");
-}
+/* The home screen used to carry a "Bookings & chats" card. It duplicated the
+   Bookings tab, which is on every screen rather than only this one, and it
+   pushed the banner below the fold. Gone. The count it carried rides the tab
+   instead. Kept as a no-op so the several places that repaint after a booking
+   changes do not each need to know. */
+function paintMineLink(){}
 
 /* ---------- the account screen ---------- */
 let acctMode = "signup";

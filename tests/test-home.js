@@ -54,6 +54,8 @@ const ok=(l,c,x)=>{console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x
   ok('The button is about a tenth', share.btn >= 4 && share.btn <= 14, share.btn + '%');
 
   // ---------- the banner ----------
+  ok('The Bookings card is gone from the home screen',
+     await page.locator('#myBookingsLink').count() === 0);
   ok('The banner is hidden while there is nothing to show',
      await page.locator('#adBand').isVisible() === false);
   // and it appears, rotates and links out when there is
@@ -88,8 +90,18 @@ const ok=(l,c,x)=>{console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x
   // ---------- what survived ----------
   ok('The counts are still there', /\d/.test(await page.locator('#figServices').innerText()));
   ok('How it works is still there', await page.locator('.stepbar li').count() === 3);
-  ok('The header offers My profile',
-     (await page.locator('#profileLink').innerText()).trim() === 'My profile');
+  /* Before anybody signs in the header cannot offer a profile — there is
+     nothing behind it but the sign-up form. */
+  ok('The header offers sign-up before you have an account',
+     (await page.locator('#profileLink').innerText()).trim() === 'Sign up / in',
+     await page.locator('#profileLink').innerText());
+  ok('…and becomes My profile once there is a session', await page.evaluate(() => {
+    const w = demoAll()[0];
+    session = { phone: w.phone, pin: w.pin, name: w.name, registered: true, worker: w };
+    paintTabs();
+    return document.getElementById('profileLink').innerText.trim();
+  }) === 'My profile');
+  await page.evaluate(() => { session = null; paintTabs(); });
   /* and it reads as something you press, not as an aside */
   const btn = await page.evaluate(() => {
     const el = document.getElementById('profileLink'), cs = getComputedStyle(el);

@@ -87,13 +87,10 @@ const row = o => Object.assign({
   // ---------- the card actually turns red ----------
   const painted = await p.evaluate(rows => {
     localStorage.setItem('repto_seen_v1', '{}');
-    document.getElementById('myBookingsLink').hidden = false;
     paintChatBadge(rows);
-    const link = document.getElementById('myBookingsLink');
-    const dot = document.getElementById('myBookingsDot');
+    const dot = document.getElementById('tabBookingsN');
     const cs = getComputedStyle(dot);
     return {
-      waiting: link.classList.contains('waiting'),
       urgent: dot.classList.contains('urgent'),
       hidden: dot.hidden,
       count: dot.textContent,
@@ -107,14 +104,14 @@ const row = o => Object.assign({
         return c;
       })(),
       animation: cs.animationName,
-      sub: document.getElementById('myBookingsSub').textContent,
+      sub: document.getElementById('tabBookings').getAttribute('aria-label'),
       menuDot: document.getElementById('menuDot').classList.contains('urgent'),
       drawer: document.getElementById('chatsBadge').textContent
     };
   }, [row({ code: 'A', side: 'worker', status: 'requested' }),
       row({ code: 'B', status: 'accepted', unread: 3 })]);
 
-  ok('The card is marked as waiting',        painted.waiting === true);
+  ok('The badge is marked urgent',           painted.urgent === true);
   ok('The badge is shown',                   painted.hidden === false);
   ok('The badge counts conversations',       painted.count === '2', painted.count);
   /* Compare against the palette rather than a literal. Hard-coding the value
@@ -130,21 +127,24 @@ const row = o => Object.assign({
   ok('The badge pulses',                     painted.animation === 'waiting-pulse', painted.animation);
   ok('The menu dot agrees',                  painted.menuDot === true);
   ok('The drawer row agrees',                painted.drawer === '2', painted.drawer);
-  ok('The subtitle says what is waiting',
-     painted.sub === '1 to answer · 3 new messages', painted.sub);
+  /* The card's subtitle was the one sentence that gets somebody to open the
+     app. With the card gone it is the tab's label, where a screen reader
+     reads it. */
+  ok('The tab says what is waiting',
+     painted.sub === 'Bookings — 1 to answer · 3 new messages', painted.sub);
 
   // ---------- and goes back to normal when nothing is ----------
   const cleared = await p.evaluate(() => {
     paintChatBadge([]);
-    const dot = document.getElementById('myBookingsDot');
+    const dot = document.getElementById('tabBookingsN');
     return {
-      waiting: document.getElementById('myBookingsLink').classList.contains('waiting'),
+      label: document.getElementById('tabBookings').getAttribute('aria-label'),
       hidden: dot.hidden,
       urgent: dot.classList.contains('urgent'),
       menuDot: document.getElementById('menuDot').hidden
     };
   });
-  ok('Nothing waiting: the card is ordinary again', cleared.waiting === false);
+  ok('Nothing waiting: the tab is ordinary again', cleared.label === 'Bookings', cleared.label);
   ok('…the badge is hidden',                        cleared.hidden === true);
   ok('…and it is no longer urgent',                 cleared.urgent === false);
   ok('…and the menu dot is gone',                   cleared.menuDot === true);
@@ -184,13 +184,12 @@ const row = o => Object.assign({
   await still.goto('http://localhost:8831/');
   await still.waitForTimeout(800);
   const calm = await still.evaluate(() => {
-    document.getElementById('myBookingsLink').hidden = false;
     paintChatBadge([{ code: 'A', side: 'worker', status: 'requested', unread: 0 }]);
     const probe = document.createElement('span');
     probe.style.color = 'var(--danger)';
     document.body.appendChild(probe);
     const danger = getComputedStyle(probe).color; probe.remove();
-    const cs = getComputedStyle(document.getElementById('myBookingsDot'));
+    const cs = getComputedStyle(document.getElementById('tabBookingsN'));
     return { animation: cs.animationName, colour: cs.backgroundColor, dangerRgb: danger };
   });
   ok('Reduced motion: no pulse', calm.animation === 'none', calm.animation);
