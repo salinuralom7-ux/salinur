@@ -230,6 +230,22 @@ header{
    no font gives us. Height drives it, width follows, so it never distorts. */
 .brand .wordmark{height:22px;width:auto;display:block;flex:0 0 auto}
 .header-link{font-size:.88rem;font-weight:600;color:var(--muted)}
+/* "My profile" is a destination, not an aside, so it should look like
+   something you press. Sized to sit level with the three-dot button. */
+.hdr-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  height:38px;padding:0 13px;border-radius:11px;
+  border:1px solid var(--line);background:var(--surface);
+  color:var(--ink-2);font-size:.84rem;font-weight:700;
+  text-decoration:none;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+  transition:background .16s ease,border-color .16s ease,color .16s ease,transform .16s ease;
+}
+.hdr-btn svg{width:15px;height:15px;flex:0 0 auto;color:var(--brand-2)}
+.hdr-btn:hover{background:var(--surface-2);border-color:var(--line-strong);color:var(--ink)}
+.hdr-btn:active{transform:translateY(1px)}
+.hdr-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.hdr-btn[hidden]{display:none}
 .install-btn{
   display:inline-flex;align-items:center;gap:7px;border:1px solid var(--brand);
   background:var(--brand-soft);color:var(--brand-2);border-radius:999px;
@@ -2542,7 +2558,7 @@ footer a{color:var(--ink-2)}
       <img class="mark" src="icons/logo.png?v=6" alt="" width="384" height="373"><img class="wordmark" src="icons/wordmark.png?v=6" alt="MySheher" width="512" height="114">
     </a>
     <div style="display:flex;align-items:center;gap:12px">
-      <a class="header-link" id="profileLink" href="#" onclick="goMyProfile();return false">My profile</a>
+      <a class="hdr-btn" id="profileLink" href="#" onclick="goMyProfile();return false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>My profile</a>
       <button class="menu-btn" id="menuBtn" onclick="openMenu()" aria-label="Menu" aria-expanded="false">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>

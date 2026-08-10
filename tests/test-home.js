@@ -90,6 +90,20 @@ const ok=(l,c,x)=>{console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x
   ok('How it works is still there', await page.locator('.stepbar li').count() === 3);
   ok('The header offers My profile',
      (await page.locator('#profileLink').innerText()).trim() === 'My profile');
+  /* and it reads as something you press, not as an aside */
+  const btn = await page.evaluate(() => {
+    const el = document.getElementById('profileLink'), cs = getComputedStyle(el);
+    const dot = document.getElementById('menuBtn').getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    return { border: cs.borderTopWidth, radius: parseFloat(cs.borderTopLeftRadius),
+             bg: cs.backgroundColor, icon: !!el.querySelector('svg'),
+             level: Math.abs(Math.round(r.top - dot.top)) <= 1,
+             h: Math.round(r.height), dotH: Math.round(dot.height) };
+  });
+  ok('It looks like a button', parseFloat(btn.border) > 0 && btn.radius >= 8 &&
+     btn.bg !== 'rgba(0, 0, 0, 0)', JSON.stringify(btn));
+  ok('…with an icon, and level with the menu button',
+     btn.icon && btn.level && btn.h === btn.dotH, `${btn.h}px vs ${btn.dotH}px`);
 
   ok('No horizontal overflow',
      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1));

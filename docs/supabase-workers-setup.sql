@@ -8889,12 +8889,39 @@ begin
 end;
 $$;
 
+-- MySheher's own three, so the slot is not empty on day one. Written once and
+-- only into slots that have never been filled: the moment somebody saves from
+-- the admin screen these stop being touched, including if they clear a slot
+-- deliberately. That is what `updated_at = created default` cannot tell us, so
+-- the test is "no picture has ever been set anywhere".
 do $$
-declare n int;
+begin
+  if not exists (select 1 from public.home_banners
+                  where nullif(btrim(coalesce(image_url,'')), '') is not null) then
+    update public.home_banners set
+      image_url = case slot
+        when 1 then 'banners/register-your-skill.webp'
+        when 2 then 'banners/nearest-and-rated.webp'
+        when 3 then 'banners/price-comparison.webp' end,
+      alt = case slot
+        when 1 then 'Every skill deserves an earning — register your skill on MySheher'
+        when 2 then 'Browse the nearest and most rated service experts first'
+        when 3 then 'Compare prices and reviews before you book' end,
+      active = true,
+      updated_at = now();
+    raise notice 'PASS  seeded the three MySheher banners';
+  else
+    raise notice 'PASS  banners already configured — left alone';
+  end if;
+end $$;
+
+do $$
+declare n int; live int;
 begin
   select count(*) into n from public.home_banners;
   if n <> 3 then raise exception 'MIGRATION 44: expected 3 banner slots, found %', n; end if;
-  raise notice 'PASS  three banner slots, none showing until somebody fills one';
+  select count(*) into live from public.home_banners();
+  raise notice 'PASS  three banner slots, % showing', live;
 end $$;
 
 -- ---------- the lock, still last ----------
