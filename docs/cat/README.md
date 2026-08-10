@@ -27,22 +27,32 @@ wrong is not worth your time.
 
 ## The twelve, and what each one needs
 
-`general-physician` is done. Eleven to go.
+Nine of the twelve have a photograph. Three to go.
 
 | Slug | Shows | Status |
 |---|---|---|
-| `general-physician` | doctor in a white coat | ✅ done |
-| `electrician` | electrician at a switchboard or on a ladder | — |
-| `plumber` | plumber under a sink with a wrench | — |
-| `housemaid` | woman cleaning a home | — |
-| `home-cook` | woman cooking in an Indian home kitchen | — |
-| `carpenter` | carpenter measuring or sawing wood | — |
-| `ac-repair` | technician servicing a split AC unit | — |
-| `beautician` | beautician doing a facial or threading | — |
-| `home-tutor` | tutor teaching a child at a table | — |
-| `driver` | driver beside a car, holding keys | — |
-| `packers-movers` | two men carrying a cardboard box | — |
-| `tailor` | tailor at a sewing machine | — |
+| `general-physician` | doctor with a stethoscope | ✅ |
+| `electrician` | electrician at a switchboard | ✅ |
+| `plumber` | plumber under a sink | ✅ |
+| `ac-repair` | technician on a split AC unit | ✅ |
+| `home-tutor` | tutor with a schoolchild | ✅ |
+| `beautician` | beautician giving a facial | ✅ |
+| `driver` | driver at the wheel | ✅ |
+| `packers-movers` | two movers with a box | ✅ |
+| `tailor` | tailor at a sewing machine | ✅ |
+| `housemaid` | woman cleaning a home | **wanted** |
+| `home-cook` | woman cooking in a home kitchen | **wanted** |
+| `carpenter` | carpenter measuring a plank | **wanted** |
+
+Three more exist but are not on the home grid, which holds twelve. They are
+ready if the twelve ever change, and they are the right size for Instagram and
+for ad creative in the meantime:
+
+| Slug | Shows |
+|---|---|
+| `home-nurse` | nurse taking an elderly woman's blood pressure |
+| `car-mechanic` | mechanic under a car bonnet |
+| `video-editor` | editor at a timeline |
 
 ---
 

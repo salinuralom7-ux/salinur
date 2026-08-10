@@ -31,12 +31,17 @@ const ok=(l,c,x)=>{console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x
   ok('…and its photograph actually loaded', shown && shown.w > 0 && shown.h > 0,
      shown ? `${shown.src} ${shown.w}x${shown.h}` : 'no img element left');
 
-  // a tile with no photograph yet keeps its icon and drops the broken image
+  /* A tile with no photograph yet keeps its icon and drops the broken image.
+     Picked at runtime rather than named, because the whole point is that these
+     arrive one at a time and any hard-coded example stops being true. */
   const fallback = await page.evaluate(() => {
-    const b = [...document.querySelectorAll('.qtile')].find(x => /Plumber/.test(x.textContent));
-    return { img: !!b.querySelector('.qt-pic img'), icon: !!b.querySelector('.qt-pic svg') };
+    const b = [...document.querySelectorAll('.qtile')].find(x => !x.querySelector('.qt-pic img'));
+    if(!b) return { none: true, img: false, icon: true };
+    return { label: b.textContent.trim(), img: !!b.querySelector('.qt-pic img'),
+             icon: !!b.querySelector('.qt-pic svg') };
   });
-  ok('A tile with no picture yet drops the broken image', fallback.img === false);
+  ok('A tile with no picture yet drops the broken image', fallback.img === false,
+     fallback.none ? 'every tile has one now' : fallback.label);
   ok('…and still shows its icon', fallback.icon === true);
 
   // and it goes somewhere

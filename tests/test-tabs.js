@@ -44,6 +44,24 @@ const ok=(l,c,x)=>{console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x
   ok('Every screen leaves room for it', parseInt(clear.pad) >= clear.barH,
      `bar ${clear.barH}px, body padding ${clear.pad}`);
 
+  /* The reported bug: scrolled to the very bottom, the bar sat on top of the
+     footer's social buttons. The page has to end above the bar, not behind it. */
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(500);
+  const foot = await page.evaluate(() => {
+    const bar = document.getElementById('tabbar').getBoundingClientRect();
+    const links = [...document.querySelectorAll('footer a')];
+    const hidden = links.filter(a => {
+      const r = a.getBoundingClientRect();
+      return r.height > 0 && r.bottom > bar.top + 1 && r.top < bar.bottom;
+    });
+    return { n: links.length, hidden: hidden.map(a => a.textContent.trim().slice(0, 14)) };
+  });
+  ok('At the very bottom the footer is not under the bar',
+     foot.hidden.length === 0, foot.hidden.join(', ') || `all ${foot.n} clear`);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(300);
+
   // the conversation is a full surface
   await page.evaluate(() => document.body.classList.add('in-chat'));
   ok('It gets out of the way in a conversation',

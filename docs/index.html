@@ -1106,8 +1106,12 @@ body.menu-open{overflow:hidden}
 }
 .tab-fab:active{transform:scale(.94)}
 .tab-fab.on{box-shadow:0 0 0 3px rgba(var(--brand-rgb),.28),0 6px 18px rgba(var(--brand-rgb),.34)}
-/* room for it under every screen, and under the footer */
-body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+/* Room for it under every screen and under the footer. The number is a
+   fallback only — fitTabbar() measures the bar at runtime and overrides it,
+   because the bar's real height depends on the phone's text size and on how
+   much of the gesture area the browser reports, and a guess that is 8px short
+   hides the social buttons at the very bottom of the page. */
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
 /* a conversation is a full surface with its own composer at the bottom */
 body.in-chat .tabbar{display:none}
 body.in-chat{padding-bottom:0}
@@ -5553,6 +5557,34 @@ const TAB_OF = {
   work:"tabFab", me:"tabFab", register:"tabFab", otp:"tabFab", done:"tabFab",
   card:"tabFab", profile:"tabFab", account:"tabFab", recover:"tabFab"
 };
+/* The bar floats over the page, so the page has to end above it. Measured
+   rather than assumed: text size, safe-area inset and the browser's own
+   chrome all move it, and being a few pixels short is invisible until
+   somebody scrolls to the very bottom and finds the footer underneath. */
+function fitTabbar(){
+  const bar = $("tabbar");
+  if(!bar || document.body.classList.contains("in-chat") || bar.offsetParent === null){
+    document.body.style.paddingBottom = "";
+    return;
+  }
+  document.body.style.paddingBottom = (bar.offsetHeight + 18) + "px";
+
+  /* On iOS the layout viewport and the visible one are not the same thing
+     while the browser's own toolbar is sliding in and out, and bottom:0 is
+     measured against the layout one — which is how a bar pinned to the bottom
+     ends up floating across the middle of the page. Where the browser tells
+     us the difference, close it. Every other browser reports zero and this
+     does nothing. */
+  const vv = window.visualViewport;
+  if(vv){
+    const gap = Math.round(window.innerHeight - (vv.height + vv.offsetTop));
+    bar.style.transform = gap > 1 ? `translateY(-${gap}px)` : "";
+  }
+}
+addEventListener("resize", fitTabbar);
+addEventListener("orientationchange", fitTabbar);
+if(window.visualViewport) visualViewport.addEventListener("resize", fitTabbar);
+
 function paintTabs(){
   const active = TAB_OF[currentScreen] || "";
   ["tabHome","tabBrowse","tabFab","tabBookings","tabMore"].forEach(id => {
@@ -5560,6 +5592,7 @@ function paintTabs(){
   });
   const lab = $("tabFabLabel");
   if(lab) lab.innerHTML = (session && session.registered) ? "My<br>profile" : "Register<br>your skill";
+  fitTabbar();
 }
 
 /* The two cards this kept honest are gone from the home screen. The door is
