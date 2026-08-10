@@ -64,7 +64,7 @@ const FORCE = `
   ok('The header itself is pinned to the very top', await page.evaluate(() =>
      Math.round(document.querySelector('header').getBoundingClientRect().top) === 0));
   ok('The wordmark clears the status bar', await clearsTop('header .brand'));
-  ok('Browse service experts clears it', await clearsTop('#browseLink'));
+  ok('The My profile link clears it', await clearsTop('#profileLink'));
   ok('The three-dot button clears it', await clearsTop('#menuBtn'));
   const menuTop = await page.evaluate(() => Math.round(document.querySelector('#menuBtn').getBoundingClientRect().top));
   ok('…with room to tap, not flush against it', menuTop >= TOP, menuTop + 'px vs a ' + TOP + 'px status bar');

@@ -73,9 +73,12 @@ const ok = (l, c, x) => console.log((c ? 'PASS  ' : 'FAIL  ') + l + (x !== undef
      await page.locator('.wcard').count() + ' workers');
 
   // ---------- the header ----------
-  ok('No "Browse service experts" link while browsing', await page.locator('#browseLink').isVisible() === false);
-  await page.evaluate(() => go('home')); await page.waitForTimeout(500);
-  ok('It comes back on other screens', await page.locator('#browseLink').isVisible());
+  /* Browse moved to the tab bar; the header slot it used to hold now offers
+     "My profile", which hides only on the screens it would lead to. */
+  ok('The header offers My profile while browsing', await page.locator('#profileLink').isVisible());
+  await page.evaluate(() => go('profile')); await page.waitForTimeout(500);
+  ok('…and stands down on the profile itself', await page.locator('#profileLink').isVisible() === false);
+  await page.evaluate(() => go('hire')); await page.waitForTimeout(500);
 
   // ---------- the promise matches what the app does ----------
   await page.evaluate(() => go('hire')); await page.waitForTimeout(900);

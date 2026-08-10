@@ -19,14 +19,12 @@ const ok = (label, cond, extra) =>
   await p.waitForTimeout(900);
   await silenceAccountOffer(p);
 
-  // ---------- the door before you are one ----------
-  const door = () => p.locator('#ctaWorkTitle').innerText();
-  ok('Door invites you to register', (await door()).trim() === 'Register your skill', await door());
-  /* "Set your rates" was the old copy. The offer is the thing that gets
-     somebody through this door, so the subtitle leads with it. */
-  ok('…with the matching subtitle',
-     (await p.locator('#ctaWorkSub').innerText()).includes('Start your 30 days free trial'),
-     await p.locator('#ctaWorkSub').innerText());
+  /* The two cards on the landing screen are gone — one sentence, twelve
+     services, one button. The door they were is now the raised centre button
+     on the tab bar, present on every screen instead of only this one. */
+  const door = () => p.locator('#tabFabLabel').innerText();
+  const doorText = async () => (await door()).replace(/\s+/g, ' ').trim();
+  ok('Door invites you to register', await doorText() === 'Register your skill', await doorText());
 
   // ---------- become one ----------
   await p.evaluate(() => {
@@ -35,9 +33,7 @@ const ok = (label, cond, extra) =>
     saveSession(); go('home');
   });
   await p.waitForTimeout(600);
-  ok('Door becomes "Visit your profile"', (await door()).trim() === 'Visit your profile', await door());
-  ok('…and the subtitle follows',
-     (await p.locator('#ctaWorkSub').innerText()).toLowerCase().includes('id card'));
+  ok('Door becomes "My profile"', await doorText() === 'My profile', await doorText());
   ok('The door still leads somewhere useful', await p.evaluate(() => {
     go('work'); return (document.querySelector('.screen.on') || {}).id;
   }) === 'scr-me');
@@ -46,25 +42,25 @@ const ok = (label, cond, extra) =>
   // reload — that is what made it look like the rename had never shipped
   await p.evaluate(() => { session = null; saveSession(); });
   await p.waitForTimeout(300);
-  ok('Clearing the session repaints the door at once', (await door()).trim() === 'Register your skill');
+  ok('Clearing the session repaints the door at once', await doorText() === 'Register your skill');
   await p.evaluate(() => {
     const w = demoAll()[0];
     session = { phone: w.phone, pin: w.pin, name: w.name, registered: true, worker: w };
     saveSession();
   });
   await p.waitForTimeout(300);
-  ok('Signing back in repaints it at once', (await door()).trim() === 'Visit your profile');
+  ok('Signing back in repaints it at once', await doorText() === 'My profile');
 
   // and it survives a cold start, which is how a worker actually opens the app
   await p.reload();
   await p.waitForTimeout(1500);
   ok('It is still right after closing and reopening the app',
-     (await door()).trim() === 'Visit your profile', await door());
+     await doorText() === 'My profile', await doorText());
 
   // signing out puts it back
   await p.evaluate(() => { session = null; go('home'); });
   await p.waitForTimeout(500);
-  ok('Signing out restores "Register your skill"', (await door()).trim() === 'Register your skill');
+  ok('Signing out restores "Register your skill"', await doorText() === 'Register your skill');
 
   // ---------- the card ----------
   const code = await p.evaluate(() => {

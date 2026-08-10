@@ -596,7 +596,52 @@ body.menu-open{overflow:hidden}
   font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
   color:var(--muted);margin-bottom:9px;
 }
-.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+/* ---------- the home screen, rebuilt to a brief ----------
+   One sentence, then twelve faces, then one button — roughly a tenth of the
+   screen, then a third, then a tenth. Everything that used to sit above the
+   services (a headline, a subtitle, two large cards and a scrolling band of
+   service names) is gone: none of it was a thing you could book. */
+.home-top{padding-top:clamp(14px,4vw,22px);padding-bottom:clamp(10px,2.5vw,14px)}
+.home-title{
+  margin:0;
+  font-family:var(--serif);
+  /* "Trusted Service Provider Near You" has to hold one line, and it is 33
+     characters of a serif at 700 — so the size is driven by the width of the
+     phone rather than chosen. Measured at 320, 360, 390, 412 and 430. */
+  font-size:clamp(1rem,5.6vw,1.52rem);
+  font-weight:700;line-height:1.18;letter-spacing:-.02em;
+  text-align:center;color:var(--ink);
+  text-wrap:balance;
+}
+.see-all{margin-top:clamp(12px,3vw,16px);padding:14px;font-size:1rem}
+#scr-home .mine-link{margin-top:12px}
+
+/* ---------- the banner ----------
+   Three at most, one at a time, changing on their own. It is a real slot that
+   somebody may one day pay for, so it behaves like one: fixed height, no
+   layout shift as pictures load, and it vanishes rather than showing a hole
+   when there is nothing booked in. */
+.adband{
+  position:relative;margin-top:clamp(16px,4vw,22px);
+  border-radius:var(--r);overflow:hidden;
+  border:1px solid var(--line);background:var(--surface-2);
+  aspect-ratio:2 / 1;
+}
+.adband-track{display:flex;height:100%;transition:transform .5s cubic-bezier(.2,.8,.3,1)}
+.adband-slide{flex:0 0 100%;height:100%;display:block;border:0;padding:0;background:none;cursor:pointer}
+.adband-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.adband-dots{
+  position:absolute;left:0;right:0;bottom:8px;
+  display:flex;justify-content:center;gap:6px;
+}
+.adband-dots i{
+  width:6px;height:6px;border-radius:50%;
+  background:rgba(255,255,255,.45);transition:background .2s ease,width .2s ease;
+}
+.adband-dots i.on{background:#fff;width:16px;border-radius:3px}
+@media (prefers-reduced-motion: reduce){ .adband-track{transition:none} }
+
 /* ---------- the photograph tiles ----------
    A face beats a line drawing every time: somebody looking for a doctor
    recognises a doctor before they have read the word. The picture is square
@@ -627,7 +672,7 @@ body.menu-open{overflow:hidden}
 .qtile:hover .qt-pic img{transform:scale(1.04)}
 .qt-label{
   display:block;width:100%;
-  font-size:.68rem;font-weight:700;line-height:1.2;
+  font-size:clamp(.6rem,2.6vw,.68rem);font-weight:700;line-height:1.2;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .qtile:hover{transform:translateY(-2px);border-color:rgba(var(--brand-rgb),.42);
@@ -635,8 +680,8 @@ body.menu-open{overflow:hidden}
 .qtile:active{transform:translateY(1px) scale(.965)}
 .qtile:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 @media(max-width:360px){
-  .quick-grid{gap:8px}
-  .qtile{padding:6px 6px 8px}
+  .quick-grid{gap:7px}
+  .qtile{padding:5px 5px 7px}
 }
 
 /* ---------- how it works ----------
@@ -2493,7 +2538,7 @@ footer a{color:var(--ink-2)}
       <img class="mark" src="icons/logo.png?v=6" alt="" width="384" height="373"><img class="wordmark" src="icons/wordmark.png?v=6" alt="MySheher" width="512" height="114">
     </a>
     <div style="display:flex;align-items:center;gap:12px">
-      <a class="header-link" id="browseLink" href="#" onclick="go('hire');return false">Browse</a>
+      <a class="header-link" id="profileLink" href="#" onclick="goMyProfile();return false">My profile</a>
       <button class="menu-btn" id="menuBtn" onclick="openMenu()" aria-label="Menu" aria-expanded="false">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/>
@@ -2615,104 +2660,60 @@ footer a{color:var(--ink-2)}
 
 <!-- ============================= LANDING ============================= -->
 <section class="screen on" id="scr-home">
-  <div class="hero">
-    <div class="aurora" aria-hidden="true"></div>
-    <div class="motes" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>
-    <div class="wrap landing">
-      <h1 class="reveal" data-r="2">Trusted people for every job,<br><em>right where you are.</em></h1>
-      <p class="sub reveal" data-r="3">They set the price. We take no commission.</p>
 
-      <div class="doors reveal" data-r="4">
-        <button class="cta primary" id="ctaHire" onclick="go('hire')">
-          <span class="cta-ico" aria-hidden="true">
-            <!-- a worker scanning the horizon through binoculars -->
-            <svg class="art art-find" viewBox="0 0 48 48" fill="none" stroke="currentColor"
-                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <g class="scan">
-                <path d="M12.6 17.2a9.4 9.4 0 0 1 18.8 0"/>
-                <path d="M9.8 17.2h24.4"/>
-                <path d="M22 8.8v2.8"/>
-                <circle cx="16.5" cy="25.8" r="4.7"/>
-                <circle cx="27.5" cy="25.8" r="4.7"/>
-                <path d="M21.2 25.8h1.6"/>
-              </g>
-              <path d="M10.8 45v-3.8a11.2 11.2 0 0 1 22.4 0V45"/>
-              <path d="M17.6 35 22 39.4 26.4 35"/>
-            </svg>
-          </span>
-          <span class="cta-text"><b>Find a service expert</b><i>Verified and near you</i></span>
-          <span class="cta-go" aria-hidden="true">
-            <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
-          </span>
-        </button>
+  <!-- ---------- 1. one sentence ----------
+       The old landing had a headline, a subtitle, two large cards and a
+       category grid before it showed a single thing you could book. One line,
+       then the services. -->
+  <div class="wrap home-top">
+    <h1 class="home-title">Trusted Service Provider Near You</h1>
+  </div>
 
-        <button class="cta secondary" id="ctaWork" onclick="go('work')">
-          <span class="cta-ico" aria-hidden="true">
-            <!-- a worker with a hand raised high: I am here -->
-            <svg class="art art-worker" viewBox="0 0 48 48" fill="none" stroke="currentColor"
-                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <g class="figure">
-                <path d="M13.4 17a8.6 8.6 0 0 1 17.2 0"/>
-                <path d="M10.8 17h23.2"/>
-                <path d="M22 9v2.6"/>
-                <circle cx="22" cy="23.6" r="5.4"/>
-              </g>
-              <path d="M11.6 45v-4a10.4 10.4 0 0 1 20.8 0V45"/>
-              <path d="M17.8 31.6 22 35.8 26.2 31.6"/>
-              <g class="arm">
-                <path d="M31.2 34.6 36.4 25.4 37.8 18"/>
-                <path d="M35.4 17.1v-3.8M38 16.7v-4.4M40.4 17.6v-3.6" stroke-width="2"/>
-                <path d="M34.6 19.3a3.6 3.6 0 0 0 6.8-.9"/>
-              </g>
-            </svg>
-          </span>
-          <span class="cta-text"><b id="ctaWorkTitle">Register your skill</b><i id="ctaWorkSub">Start your 30 days free trial</i></span>
-          <span class="cta-go" aria-hidden="true">
-            <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
-          </span>
-        </button>
-      </div>
+  <!-- ---------- 2. the twelve most booked ----------
+       Four across, three down. Tapping a face opens the results for that
+       trade, nearest to you first. -->
+  <div class="wrap">
+    <div class="quick-grid" id="quickGrid"></div>
+  </div>
 
-      <!-- Once you have a booking in flight, the thing you open the app for is
-           that booking — not the two doors. Burying it in the menu meant people
-           could not find where to accept work or check whether anyone had
-           replied. Hidden until there is actually something to return to. -->
-      <button class="mine-link reveal" id="myBookingsLink" data-r="5" onclick="go('chats')" hidden>
-        <span class="ml-ico" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </span>
-        <span class="ml-text"><b id="myBookingsTitle">Bookings &amp; chats</b><i id="myBookingsSub">See where your requests have got to</i></span>
-        <i class="ml-n" id="myBookingsDot" hidden></i>
-        <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
-      </button>
+  <!-- ---------- 3. everything else ---------- -->
+  <div class="wrap">
+    <button class="btn btn-brand btn-block see-all" onclick="go('hire')">See all services</button>
+  </div>
 
-      <!-- Somebody who already knows what they need should not have to open a
-           screen, then search, then read. One tap from here to the results. -->
-      <div class="quick reveal" data-r="5">
-        <div class="quick-lead">Book in one tap</div>
-        <div class="quick-grid" id="quickGrid"></div>
-      </div>
+  <!-- Only here once there is something to come back to. It sits below the
+       three fixed sections so it can appear and disappear without moving
+       them. -->
+  <div class="wrap">
+    <button class="mine-link" id="myBookingsLink" onclick="go('chats')" hidden>
+      <span class="ml-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </span>
+      <span class="ml-text"><b id="myBookingsTitle">Bookings &amp; chats</b><i id="myBookingsSub">See where your requests have got to</i></span>
+      <i class="ml-n" id="myBookingsDot" hidden></i>
+      <svg class="cta-arrow" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg>
+    </button>
+  </div>
 
+  <!-- ---------- 4. the banner ----------
+       Filled from the database, changed from the admin screen, and simply
+       absent until there is something to show — an empty box on a home
+       screen looks like a fault. -->
+  <div class="wrap">
+    <div class="adband" id="adBand" hidden>
+      <div class="adband-track" id="adBandTrack"></div>
+      <div class="adband-dots" id="adBandDots" aria-hidden="true"></div>
     </div>
   </div>
 
-  <!-- a live band of what is actually in the catalogue: breadth, shown not
-       claimed. It sits directly under the two doors so the first thing after
-       the choice is evidence of how much there is. -->
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker-row" id="tickA"></div>
-    <div class="ticker-row rev" id="tickB"></div>
-  </div>
-
+  <!-- ---------- 5. what this place is ---------- -->
   <div class="wrap">
-    <div class="figures reveal" data-r="5">
+    <div class="figures">
       <div class="fig"><b id="figServices">—</b><span>services you can book</span></div>
       <div class="fig"><b id="figAreas">—</b><span>localities covered</span></div>
       <div class="fig"><b>0%</b><span>commission, ever</span></div>
     </div>
-  </div>
 
-  <div class="wrap">
     <div class="steps">
       <div class="row-label">How it works</div>
       <ol class="stepbar">
@@ -4589,6 +4590,20 @@ const api = {
   /* One page of approved workers, filtered and distance-ranked in the database.
      The browse screen used to pull the whole table and filter in the browser,
      which is ~37 MB per visit at 30,000 workers. */
+  /* The three home-screen banner slots, whichever of them are switched on and
+     hold a picture. Empty is the normal answer and not an error. */
+  async homeBanners(){
+    if(!LIVE) return [];
+    try{ return await sb("rpc/home_banners", {method:"POST", body:"{}"}) || []; }
+    catch(e){ return []; }
+  },
+  async adminBanners(pin){
+    return await sb("rpc/admin_banners", {method:"POST", body:JSON.stringify({p_pin:pin})});
+  },
+  async adminSetBanners(pin, rows){
+    return await sb("rpc/admin_set_banners", {method:"POST",
+      body:JSON.stringify({p_pin:pin, p_rows:rows})});
+  },
   async search(o){
     if(LIVE){
       const rows = await sb("rpc/search_workers", {method:"POST", body:JSON.stringify({
@@ -5422,7 +5437,8 @@ function go(name, viaHistory){
      would otherwise sit on top of its own header bar */
   document.body.classList.toggle("in-chat", name === "chat");
   /* no point offering the screen somebody is already looking at */
-  const bl = $("browseLink"); if(bl) bl.hidden = (name === "hire");
+  const pl = $("profileLink");
+  if(pl) pl.hidden = (name === "profile" || name === "account" || name === "me");
   if(!viaHistory){
     /* admin is private — it gets a history entry but never a shareable URL */
     const url = (name === "home" || name === "admin")
@@ -5489,7 +5505,15 @@ function menuGo(name){ setMenu(false); go(name); }
    if there is not. A row that leads to an empty profile teaches nothing. */
 function menuGoProfile(){
   setMenu(false);
-  signedIn() ? go("profile") : showAccount("signup");
+  goMyProfile();
+}
+/* A service expert's profile and a customer's account are different screens,
+   and somebody who has neither wants the sign-up. One link in the header has
+   to land all three correctly. */
+function goMyProfile(){
+  if(session && session.registered) go("me");
+  else if(signedIn()) go("profile");
+  else showAccount("signup");
 }
 /* Keep the menu honest about who is reading it. */
 function paintMenu(){
@@ -5538,13 +5562,12 @@ function paintTabs(){
   if(lab) lab.innerHTML = (session && session.registered) ? "My<br>profile" : "Register<br>your skill";
 }
 
-function paintWorkDoor(){
-  const t = $("ctaWorkTitle"), sub = $("ctaWorkSub");
-  if(!t || !sub) return;
-  const inside = !!(session && session.registered);
-  t.textContent   = inside ? "Visit your profile" : "Register your skill";
-  sub.textContent = inside ? "Your ID card, work and reviews" : "Start your 30 days free trial";
-}
+/* The two cards this kept honest are gone from the home screen. The door is
+   now the raised tab button, so the eight places that already say "the door
+   has changed" — signing in, signing out, deleting a profile — keep working
+   by pointing at the thing that draws it. Emptying this instead left the
+   button stuck on whatever it said when the screen last changed. */
+function paintWorkDoor(){ paintTabs(); }
 /* The trades people actually open the app for. Fourth column is the
    photograph: docs/cat/<slug>.webp. A tile with no photograph yet falls back
    to its line icon rather than to a broken image — so a picture can be added
@@ -5585,6 +5608,42 @@ function jumpTo(skill){
   searchFor(skill);
 }
 
+/* ---------- the banner slot ----------
+   Up to three, one at a time, changing every six seconds. The whole block is
+   hidden unless the database hands back at least one, because an empty framed
+   box on a home screen reads as something broken rather than as space for
+   sale. */
+let adBanners = [], adIndex = 0, adTimer = null;
+async function loadBanners(){
+  const box = $("adBand"); if(!box) return;
+  adBanners = await api.homeBanners();
+  clearInterval(adTimer); adTimer = null;
+  if(!adBanners.length){ box.hidden = true; return; }
+
+  $("adBandTrack").innerHTML = adBanners.map(b => {
+    const img = `<img src="${esc(b.image_url)}" alt="${esc(b.alt || "")}" loading="lazy" decoding="async">`;
+    /* A link goes to somebody else's site, so it opens away from the app and
+       carries no referrer or opener. The database has already refused
+       anything that is not http(s). */
+    return b.link_url
+      ? `<a class="adband-slide" href="${esc(b.link_url)}" target="_blank" rel="noopener noreferrer nofollow">${img}</a>`
+      : `<span class="adband-slide">${img}</span>`;
+  }).join("");
+  $("adBandDots").innerHTML = adBanners.length > 1
+    ? adBanners.map((_, i) => `<i class="${i ? "" : "on"}"></i>`).join("") : "";
+  adIndex = 0;
+  showBanner(0);
+  box.hidden = false;
+  if(adBanners.length > 1) adTimer = setInterval(() => showBanner(adIndex + 1), 6000);
+}
+function showBanner(i){
+  if(!adBanners.length) return;
+  adIndex = ((i % adBanners.length) + adBanners.length) % adBanners.length;
+  const t = $("adBandTrack"); if(t) t.style.transform = `translateX(-${adIndex * 100}%)`;
+  [...($("adBandDots") ? $("adBandDots").children : [])]
+    .forEach((d, n) => d.classList.toggle("on", n === adIndex));
+}
+
 function initHome(){
   paintWorkDoor();
   renderQuick();
@@ -5594,19 +5653,7 @@ function initHome(){
   homeReady = true;
   $("figServices").textContent = SKILLS.length;
   $("figAreas").textContent = AREAS.length - 1;   /* "Other area" is not a locality */
-
-  /* two rows of real service names, evenly split, each duplicated so the
-     translate(-50%) loop is seamless */
-  const pool = SKILLS.map(s => s.n).filter(n => n.length < 26);
-  const pick = (start) => {
-    const out = [];
-    for(let i = start; i < pool.length; i += 2) out.push(pool[i]);
-    return out.slice(0, 34);
-  };
-  const row = list => (list.concat(list))
-    .map(n => `<span class="tick">${esc(n)}</span>`).join("");
-  $("tickA").innerHTML = row(pick(0));
-  $("tickB").innerHTML = row(pick(1));
+  loadBanners();
 }
 
 /* ---------- auth ---------- */
@@ -10075,6 +10122,7 @@ async function renderAdmin(){
       <button class="tab${adminTab==="review"?" on":""}" onclick="setAdminTab('review')">Review</button>
       <button class="tab${adminTab==="activity"?" on":""}" onclick="setAdminTab('activity')">Activity</button>
       <button class="tab${adminTab==="alerts"?" on":""}" onclick="setAdminTab('alerts')">Alerts</button>
+      <button class="tab${adminTab==="banners"?" on":""}" onclick="setAdminTab('banners')">Banner</button>
     </div>`;
   const exit = `<button class="btn btn-quiet btn-block btn-sm" style="margin-top:18px" onclick="adminPin=null;go('home')">Exit admin</button>`;
 
@@ -10083,6 +10131,13 @@ async function renderAdmin(){
     try{ s = await loadStats(); }
     catch(e){ host.innerHTML = tabs + `<p class="hint">Could not load the numbers — ${esc(e.message||"")}</p>` + exit; return; }
     host.innerHTML = tabs + renderDashboard(s) + exit;
+    return;
+  }
+  if(adminTab === "banners"){
+    let rows;
+    try{ rows = await api.adminBanners(adminPin); }
+    catch(e){ host.innerHTML = tabs + `<p class="hint">Could not load the banners — ${esc(e.message||"")}</p>` + exit; return; }
+    host.innerHTML = tabs + renderBannerAdmin(rows || []) + exit;
     return;
   }
   if(adminTab === "alerts"){
@@ -10782,6 +10837,58 @@ async function generateVapid(){
   }
 }
 
+/* ---------- the home screen banner ----------
+   Three slots, each a picture and an optional link. The picture can be a file
+   committed with the app ("banners/diwali.webp") or a full https:// address
+   somewhere else; both are just a URL to the <img>. All three are saved
+   together, so a half-finished edit cannot leave slot 2 showing the thing
+   slot 1 was meant to replace. */
+function renderBannerAdmin(rows){
+  const by = {};
+  (rows || []).forEach(r => { by[r.slot] = r; });
+  const row = n => {
+    const r = by[n] || {};
+    return `<div class="panel" style="margin-bottom:12px">
+      <label class="lbl" style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <b>Banner ${n}</b>
+        <span style="display:flex;align-items:center;gap:7px;font-weight:600">
+          <input type="checkbox" id="bnOn${n}"${r.active ? " checked" : ""}> Showing
+        </span>
+      </label>
+      <label class="lbl">Picture</label>
+      <input type="text" id="bnImg${n}" placeholder="banners/one.webp  or  https://…" value="${esc(r.image_url || "")}">
+      <label class="lbl">Link when tapped <span class="opt">optional</span></label>
+      <input type="text" id="bnUrl${n}" placeholder="https://…" value="${esc(r.link_url || "")}">
+      <label class="lbl">Describe it <span class="opt">for screen readers</span></label>
+      <input type="text" id="bnAlt${n}" placeholder="What the picture shows" value="${esc(r.alt || "")}">
+    </div>`;
+  };
+  return `<p class="hint" style="margin:14px 0 12px">
+      Up to three banners on the home screen, one at a time, changing every six
+      seconds. A slot with <b>Showing</b> off, or with no picture, is skipped —
+      turn all three off and the whole band disappears rather than leaving a gap.
+      A link must start with <b>https://</b> and opens outside MySheher.
+    </p>
+    ${row(1)}${row(2)}${row(3)}
+    <button class="btn btn-brand btn-block" onclick="saveBanners()">Save the banners</button>`;
+}
+async function saveBanners(){
+  const rows = [1,2,3].map(n => ({
+    slot: n,
+    image_url: ($("bnImg" + n).value || "").trim(),
+    link_url:  ($("bnUrl" + n).value || "").trim(),
+    alt:       ($("bnAlt" + n).value || "").trim(),
+    active:    $("bnOn" + n).checked
+  }));
+  try{
+    await api.adminSetBanners(adminPin, rows);
+    toast("Saved — the home screen picks them up on its next open");
+    /* and immediately here, so it can be checked without leaving admin */
+    loadBanners();
+    renderAdmin();
+  }catch(e){ toast(e.message || "Could not save the banners"); }
+}
+
 async function saveVapidPublic(){
   const key = ($("vapidPublicIn").value || "").trim();
   if(!key){ toast("Paste the public key first"); return; }
@@ -11109,12 +11216,8 @@ async function checkPending(announce){
   }catch(e){ return; }
   const badge = $("weUnread");
   if(badge){ badge.hidden = !n; badge.textContent = n || ""; }
-  const door = $("ctaWorkSub");
-  if(door && currentScreen === "home"){
-    door.textContent = n
-      ? (n === 1 ? "1 request waiting for you" : n + " requests waiting for you")
-      : "Your ID card, work and reviews";
-  }
+  /* This used to write into the home screen's second card. That card is
+     gone; the count now rides the Bookings tab, which paintChatBadge sets. */
   if(announce && n > lastPending && currentScreen !== "inbox" && currentScreen !== "chat"){
     toast(n === 1 ? "A customer is asking to book you" : n + " customers are waiting for your reply");
   }

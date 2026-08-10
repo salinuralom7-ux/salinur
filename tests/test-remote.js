@@ -136,9 +136,11 @@ const ok = (label, cond, extra) =>
   await worker.waitForTimeout(500);
   await worker.evaluate(() => checkPending(false));
   await worker.waitForTimeout(600);
-  ok('The landing door counts what is waiting',
-     (await worker.locator('#ctaWorkSub').innerText()).includes('request'),
-     await worker.locator('#ctaWorkSub').innerText());
+  /* The landing card that carried this count is gone. The count rides the
+     Bookings tab now, which is on every screen rather than only the home one. */
+  ok('The tab bar counts what is waiting',
+     await worker.locator('#tabBookingsN').isVisible(),
+     await worker.locator('#tabBookingsN').innerText().catch(() => 'hidden'));
 
   ok('No JS errors anywhere', errors.length === 0, errors.join(' | ') || 'none');
   await browser.close(); srv.close();

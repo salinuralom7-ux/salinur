@@ -7965,7 +7965,10 @@ declare
     'register_customer','login_customer','customer_me','customer_update',
     'customer_sign_out','delete_customer','send_otp','verify_otp','admin_set_otp',
     'reset_worker_pin','reset_customer_pin',
-    'skill_price_stats','push_endpoint'
+    'skill_price_stats','push_endpoint',
+    -- MIGRATION 44: the home screen reads the banners; the admin screen reads
+    -- and writes them, behind the admin PIN
+    'home_banners','admin_set_banners','admin_banners'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -8027,7 +8030,8 @@ begin
        'admin_set_vapid','test_push','register_customer','login_customer','customer_me',
        'customer_update','customer_sign_out','delete_customer','send_otp','verify_otp',
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
-       'skill_price_stats','push_endpoint');
+       'skill_price_stats','push_endpoint',
+       'home_banners','admin_set_banners','admin_banners');
 
   if leaked is not null then
     raise exception
@@ -8804,6 +8808,95 @@ begin
   raise notice 'PASS  no job holds a coordinate sharper than about 110 metres';
 end $$;
 
+-- ============================================================
+-- MIGRATION 44 — the banner slot on the home screen
+--
+-- Three at most, shown one at a time, changed from the admin screen without a
+-- deploy. It is also the one place MySheher can sell: a local business pays to
+-- sit there, which is a revenue line that never touches a service expert's
+-- earnings and so does not break the promise of no commission.
+--
+-- Deliberately not a general CMS. Three rows, an image, an optional link and a
+-- switch. Anything more becomes a thing that needs maintaining.
+-- ============================================================
+
+create table if not exists public.home_banners (
+  slot       int primary key check (slot between 1 and 3),
+  image_url  text,
+  link_url   text,
+  alt        text,
+  active     boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+-- the three slots always exist, so the admin screen has three rows to fill
+insert into public.home_banners (slot, active)
+select g, false from generate_series(1,3) g
+on conflict (slot) do nothing;
+
+-- reads go through the functions below, never straight at the table
+alter table public.home_banners enable row level security;
+
+-- What the app asks for: only slots switched on that actually hold a picture.
+-- An active row with no image would render an empty box on the home screen.
+create or replace function public.home_banners()
+returns table (slot int, image_url text, link_url text, alt text)
+language sql stable security definer set search_path = public as $$
+  select b.slot, b.image_url, b.link_url, b.alt
+    from public.home_banners b
+   where b.active and nullif(btrim(coalesce(b.image_url,'')), '') is not null
+   order by b.slot;
+$$;
+
+-- What the admin screen posts back: all three, every time. Sending the whole
+-- set avoids a half-saved state where slot 2 still shows the picture slot 1
+-- was meant to replace.
+create or replace function public.admin_set_banners(p_pin text, p_rows jsonb)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare r jsonb; n int;
+begin
+  if not public.admin_check(p_pin) then raise exception 'Wrong admin PIN'; end if;
+  if jsonb_typeof(p_rows) <> 'array' then raise exception 'Expected an array of banners'; end if;
+
+  for r in select * from jsonb_array_elements(p_rows) loop
+    n := (r->>'slot')::int;
+    if n is null or n < 1 or n > 3 then raise exception 'Slot must be 1, 2 or 3'; end if;
+    -- A banner link is followed by a phone that trusts us. http(s) only, so a
+    -- javascript: or data: URL cannot be parked on the home screen.
+    if nullif(btrim(coalesce(r->>'link_url','')), '') is not null
+       and r->>'link_url' !~* '^https?://' then
+      raise exception 'A banner link must start with http:// or https://';
+    end if;
+    update public.home_banners
+       set image_url  = nullif(btrim(coalesce(r->>'image_url','')), ''),
+           link_url   = nullif(btrim(coalesce(r->>'link_url','')), ''),
+           alt        = left(btrim(coalesce(r->>'alt','')), 120),
+           active     = coalesce((r->>'active')::boolean, false),
+           updated_at = now()
+     where slot = n;
+  end loop;
+end;
+$$;
+
+-- and what the admin screen reads: all three, including the empty ones
+create or replace function public.admin_banners(p_pin text)
+returns setof public.home_banners
+language plpgsql stable security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then raise exception 'Wrong admin PIN'; end if;
+  return query select * from public.home_banners order by slot;
+end;
+$$;
+
+do $$
+declare n int;
+begin
+  select count(*) into n from public.home_banners;
+  if n <> 3 then raise exception 'MIGRATION 44: expected 3 banner slots, found %', n; end if;
+  raise notice 'PASS  three banner slots, none showing until somebody fills one';
+end $$;
+
 -- ---------- the lock, still last ----------
 select public.lock_public_functions();
 
@@ -8836,7 +8929,8 @@ begin
        'admin_set_vapid','test_push','register_customer','login_customer','customer_me',
        'customer_update','customer_sign_out','delete_customer','send_otp','verify_otp',
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
-       'skill_price_stats','push_endpoint');
+       'skill_price_stats','push_endpoint',
+       'home_banners','admin_set_banners','admin_banners');
 
   if leaked is not null then
     raise exception
