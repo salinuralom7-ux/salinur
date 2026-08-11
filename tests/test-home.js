@@ -14,7 +14,7 @@ const ok=(l,c,x)=>{console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x
 
   // ---------- one sentence, and only one ----------
   ok('The first line is the one asked for',
-     (await page.locator('.home-title').innerText()).trim() === 'Trusted Service Provider Near You');
+     (await page.locator('.home-title').innerText()).trim() === 'Trusted people for every job');
   ok('…on a single line',
      await page.evaluate(() => {
        const el = document.querySelector('.home-title'), cs = getComputedStyle(el);

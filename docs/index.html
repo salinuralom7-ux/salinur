@@ -674,10 +674,12 @@ body.menu-open #scroll{overflow:hidden}
 .home-title{
   margin:0;
   font-family:var(--serif);
-  /* "Trusted Service Provider Near You" has to hold one line, and it is 33
+  /* "Trusted people for every job" has to hold one line, and it is 28
      characters of a serif at 700 — so the size is driven by the width of the
-     phone rather than chosen. Measured at 320, 360, 390, 412 and 430. */
-  font-size:clamp(1rem,5.6vw,1.52rem);
+     phone rather than chosen. Five characters shorter than the line it
+     replaced, which buys a little size back. Measured at 320, 360, 390, 412
+     and 430. */
+  font-size:clamp(1.05rem,6.2vw,1.62rem);
   font-weight:700;line-height:1.18;letter-spacing:-.02em;
   text-align:center;color:var(--ink);
   text-wrap:balance;
@@ -2730,7 +2732,7 @@ footer a{color:var(--ink-2)}
        category grid before it showed a single thing you could book. One line,
        then the services. -->
   <div class="wrap home-top">
-    <h1 class="home-title">Trusted Service Provider Near You</h1>
+    <h1 class="home-title">Trusted people for every job</h1>
   </div>
 
   <!-- ---------- 2. the twelve most booked ----------
