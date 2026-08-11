@@ -38,18 +38,29 @@ const ok=(l,c,x)=>{console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x
   ok('More opens the menu', await page.locator('#drawer.open').count() === 1);
   await page.keyboard.press('Escape'); await page.waitForTimeout(500);
 
-  // nothing hidden underneath it
+  /* The bar is a row of the shell, not something floating over the page, so
+     "leaving room for it" is no longer a padding the page has to remember to
+     carry — it is a consequence of the layout. Assert the layout instead:
+     one viewport-tall body that does not scroll, a middle that does, and a
+     bar whose bottom edge is the bottom of the screen. */
   const clear = await page.evaluate(() => {
     const bar = document.getElementById('tabbar').getBoundingClientRect();
-    const body = getComputedStyle(document.body).paddingBottom;
-    return { barH: Math.round(bar.height), pad: body };
+    const sc = document.getElementById('scroll');
+    return { barH: Math.round(bar.height), barBottom: Math.round(bar.bottom),
+             win: window.innerHeight,
+             docScrolls: document.documentElement.scrollHeight > window.innerHeight + 1,
+             middleScrolls: sc.scrollHeight > sc.clientHeight + 1,
+             position: getComputedStyle(document.getElementById('tabbar')).position };
   });
-  ok('Every screen leaves room for it', parseInt(clear.pad) >= clear.barH,
-     `bar ${clear.barH}px, body padding ${clear.pad}`);
+  ok('The bar sits in normal flow, not over the page', clear.position === 'relative', clear.position);
+  ok('The document itself does not scroll', clear.docScrolls === false);
+  ok('The middle is what scrolls', clear.middleScrolls);
+  ok('Every screen leaves room for it', Math.abs(clear.barBottom - clear.win) <= 1,
+     `bar ${clear.barH}px ending at ${clear.barBottom} of ${clear.win}`);
 
   /* The reported bug: scrolled to the very bottom, the bar sat on top of the
      footer's social buttons. The page has to end above the bar, not behind it. */
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.evaluate(() => { const s = document.getElementById('scroll'); s.scrollTop = s.scrollHeight; });
   await page.waitForTimeout(500);
   const foot = await page.evaluate(() => {
     const bar = document.getElementById('tabbar').getBoundingClientRect();
@@ -62,7 +73,7 @@ const ok=(l,c,x)=>{console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x
   });
   ok('At the very bottom the footer is not under the bar',
      foot.hidden.length === 0, foot.hidden.join(', ') || `all ${foot.n} clear`);
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => { document.getElementById('scroll').scrollTop = 0; });
   await page.waitForTimeout(300);
 
   // the conversation is a full surface

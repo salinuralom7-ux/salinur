@@ -8924,6 +8924,112 @@ begin
   raise notice 'PASS  three banner slots, % showing', live;
 end $$;
 
+-- ============================================================
+-- MIGRATION 45 — the card says why this person, not only who
+--
+-- A search result carried a name, a trade, a distance and a price. That is a
+-- directory entry; it is not a reason to pick one person over the next one.
+--
+-- The reasons were already in the database and simply were not being handed
+-- over. An earlier search_workers did return on_time_yes/on_time_total — a
+-- later rewrite for remote trades quietly dropped them, which is why the
+-- "On time 92%" chip the app has always known how to draw has never once
+-- appeared on a browse card. Jobs finished was never returned at all, though
+-- verify_worker_id has counted it the same way for the printed ID card.
+--
+-- Nothing new is stored, and nothing is exposed that a customer could not
+-- already see by opening the profile. Same query, four more columns.
+-- ============================================================
+
+-- Counting closed threads per worker is a new access pattern. threads_worker_idx
+-- leads with worker_id but carries every status, so give the count its own
+-- small partial index rather than making it walk a worker's whole history.
+create index if not exists threads_done_idx
+  on public.threads (worker_id) where status = 'closed';
+
+drop function if exists public.search_workers(double precision, double precision, text, text[], text, text, int, int);
+
+create function public.search_workers(
+  p_lat        double precision default null,
+  p_lng        double precision default null,
+  p_q          text             default null,
+  p_cat_skills text[]           default null,
+  p_area       text             default null,
+  p_city       text             default 'Guwahati',
+  p_limit      int              default 20,
+  p_offset     int              default 0
+)
+returns table (
+  id uuid, name text, selfie text, thumb text, city text, area text, about text,
+  skills jsonb, rating_sum int, rating_count int, distance_km double precision,
+  worker_code text, serves_remote boolean, online_until timestamptz,
+  reg_number text, reg_verified boolean,
+  jobs_done int, on_time_yes int, on_time_total int, member_since timestamptz,
+  total_count bigint)
+language sql stable security definer set search_path = public, extensions as $$
+  with base as (
+    select w.*,
+           lower(w.name || ' ' || coalesce(w.area,'') || ' ' || coalesce(w.city,'') || ' ' ||
+                 coalesce(w.skills::text,'')) as hay,
+           case when p_lat is null or w.lat is null or w.serves_remote then null else
+             6371 * 2 * asin(sqrt(
+               power(sin(radians(w.lat - p_lat) / 2), 2) +
+               cos(radians(p_lat)) * cos(radians(w.lat)) *
+               power(sin(radians(w.lng - p_lng) / 2), 2)))
+           end as dist
+      from workers w
+     where w.status = 'approved'
+       and w.available
+       -- a remote trade is offered from wherever the worker happens to be
+       and (p_city is null or w.city = p_city or w.serves_remote)
+       and (p_area is null or w.area = p_area or w.serves_remote)
+       and (p_cat_skills is null or exists (
+             select 1 from jsonb_array_elements(w.skills) s
+              where s->>'skill' = any(p_cat_skills)))
+  ),
+  hit as (
+    select * from base b
+     where p_q is null or btrim(p_q) = '' or (
+       select bool_and(b.hay like '%' || word || '%')
+         from unnest(string_to_array(lower(btrim(p_q)), ' ')) word
+        where word <> '')
+  )
+  select h.id, h.name, h.selfie, h.thumb, h.city, h.area, h.about, h.skills,
+         h.rating_sum, h.rating_count, h.dist, h.worker_code, h.serves_remote,
+         h.online_until, h.reg_number, h.reg_verified,
+         -- a job is finished when the conversation it lived in is closed: the
+         -- same test verify_worker_id prints on the ID card
+         (select count(*)::int from threads t
+           where t.worker_id = h.id and t.status = 'closed') as jobs_done,
+         h.on_time_yes, h.on_time_total, h.created_at as member_since,
+         count(*) over () as total_count
+    from hit h
+   order by
+     case when h.dist is null then 1 else 0 end,
+     round(coalesce(h.dist, 0)::numeric, 1),
+     case when h.rating_count = 0 then 3.4
+          else h.rating_sum::numeric / h.rating_count end desc,
+     h.created_at desc
+   limit greatest(1, least(p_limit, 50))
+  offset greatest(0, p_offset);
+$$;
+
+do $$
+declare cols text;
+begin
+  select string_agg(a.attname, ',' order by a.attnum) into cols
+    from pg_proc p,
+         unnest(p.proallargtypes, p.proargnames) with ordinality
+           as a(atttypid, attname, attnum)
+   where p.pronamespace = 'public'::regnamespace
+     and p.proname = 'search_workers';
+  if cols is null or cols not like '%jobs_done%' or cols not like '%on_time_total%'
+     or cols not like '%member_since%' then
+    raise exception 'MIGRATION 45: search_workers is missing the reason columns: %', cols;
+  end if;
+  raise notice 'PASS  a search result carries jobs finished, punctuality and joining date';
+end $$;
+
 -- ---------- the lock, still last ----------
 select public.lock_public_functions();
 

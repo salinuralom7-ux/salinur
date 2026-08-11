@@ -85,7 +85,7 @@ const ok = (l, c, e) => console.log((c ? 'PASS  ' : 'FAIL  ') + l + (e !== undef
       card: [Math.round(r.width), Math.round(r.height)],
       ratio: +(r.width / r.height).toFixed(3),
       cardDisplay: getComputedStyle(c).display,
-      header: vis('body > header'), footer: vis('body > footer'),
+      header: vis('body > header'), footer: vis('footer'),
       actions: vis('.card-actions'), note: vis('.card-note'),
       // does the cqw sizing survive the switch to mm?
       nameSize: getComputedStyle(document.querySelector('.bd-name')).fontSize,

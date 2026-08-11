@@ -142,7 +142,24 @@
    was hidden — the alerts button stayed on screen after alerts were turned
    on. One rule, rather than remembering it at every call site. */
 [hidden]{display:none !important}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%;height:100%}
+/* ---------- the app shell ----------
+   The page used to be one long document with a `position:fixed` bar pinned to
+   the bottom of it. On a phone that is a losing game: `bottom:0` is measured
+   against the LAYOUT viewport, which on iOS is taller than the part you can
+   actually see while the browser's toolbar is on screen, and which on Android
+   changes height mid-flick as the toolbar collapses. The bar drifts up into
+   the middle of the page and sits on top of whatever is there — the footer's
+   social buttons, a list of search results.
+
+   No amount of measuring in JavaScript fixes that reliably, because the
+   numbers are wrong or stale exactly during the scroll when it matters. So
+   the bar is no longer fixed at all. The body is exactly one viewport tall,
+   it does not scroll, and it is a column: header, a scrolling middle, the
+   bar. The bar cannot drift off the bottom of a box it is the last child of.
+
+   100dvh, not 100vh: dvh is the viewport you can see right now. The 100vh
+   line before it is the fallback for browsers that predate dvh. */
 body{
   font-family:var(--sans);
   background:
@@ -154,7 +171,26 @@ body{
   line-height:1.55;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
+  height:100vh;
+  height:100dvh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  /* no rubber-banding the whole app when the middle reaches its end */
+  overscroll-behavior:none;
 }
+/* The only thing on the page that scrolls. scroll-behavior lives here rather
+   than on <html> now, because "go to the top" means the top of this. */
+#scroll{
+  flex:1 1 auto;
+  min-height:0;                 /* without this a flex child refuses to shrink */
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  scroll-behavior:smooth;
+}
+@media (prefers-reduced-motion: reduce){ #scroll{scroll-behavior:auto} }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;color:inherit;touch-action:manipulation}
@@ -206,9 +242,13 @@ h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.15;font-weight:700}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 
 /* ---------- header ---------- */
+/* Not sticky any more — it is the first row of the shell, so it is always on
+   screen by construction and there is no scroll position at which it can be
+   caught halfway. */
 header{
+  flex:0 0 auto;z-index:50;
   border-bottom:1px solid var(--line);background:rgba(var(--bg-rgb),.88);
-  backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(10px);
 }
 /* The status bar sits ON TOP of the page in an installed iOS app — that is
    what apple-mobile-web-app-status-bar-style: black-translucent means, and
@@ -286,7 +326,8 @@ header{
   overscroll-behavior:contain;
 }
 .drawer.open{transform:translateX(0)}
-body.menu-open{overflow:hidden}
+/* The body has not scrolled since the app became a shell; the middle does. */
+body.menu-open #scroll{overflow:hidden}
 .drawer-head{
   display:flex;align-items:center;gap:9px;
   padding:calc(18px + env(safe-area-inset-top)) 18px 14px;
@@ -1075,11 +1116,13 @@ body.menu-open{overflow:hidden}
 /* The undo bar. Above the sheets and the chat bar, because five seconds is
    not long enough to go looking for it. */
 /* ---------- the tab bar ----------
-   Sits above everything except a sheet. 58px plus whatever the phone's
-   gesture bar needs; every screen gets that much bottom padding so nothing
-   is ever hidden underneath it. */
+   The last row of the shell. It is a normal element in normal flow, which is
+   the whole point: it is not floating over the page, so it cannot land in the
+   middle of one, and nothing needs padding underneath it because it takes up
+   its own room. The raised centre button escapes upward with a negative
+   margin, so the bar keeps a z-index for that to sit above the content. */
 .tabbar{
-  position:fixed;left:0;right:0;bottom:0;z-index:60;
+  flex:0 0 auto;position:relative;z-index:60;
   display:grid;grid-template-columns:repeat(5,1fr);align-items:end;
   background:color-mix(in srgb, var(--bg-2) 92%, transparent);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
@@ -1131,21 +1174,28 @@ body.menu-open{overflow:hidden}
 }
 .tab-fab:active{transform:scale(.94)}
 .tab-fab.on{box-shadow:0 0 0 3px rgba(var(--brand-rgb),.28),0 6px 18px rgba(var(--brand-rgb),.34)}
-/* Room for it under every screen and under the footer. The number is a
-   fallback only — fitTabbar() measures the bar at runtime and overrides it,
-   because the bar's real height depends on the phone's text size and on how
-   much of the gesture area the browser reports, and a guess that is 8px short
-   hides the social buttons at the very bottom of the page. */
-body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+/* The bar occupies its own row, so no screen needs padding to clear it. The
+   raised centre button is the one part that overhangs; give the scrolling
+   area that much room at the end so the last card is never half under it. */
+#scroll{padding-bottom:26px}
 /* a conversation is a full surface with its own composer at the bottom */
 body.in-chat .tabbar{display:none}
-body.in-chat{padding-bottom:0}
-/* the undo bar has to clear the tab bar rather than sit behind it */
-.undo-bar{bottom:calc(76px + env(safe-area-inset-bottom))}
-@media print{ .tabbar{display:none} body{padding-bottom:0} }
+/* Printing wants the whole document, not one screenful of it. */
+@media print{
+  .tabbar{display:none}
+  html,body{height:auto;overflow:visible;display:block}
+  #scroll{overflow:visible;height:auto;padding-bottom:0}
+}
 
+/* Still fixed — it is a transient thing over the whole app — so it is the one
+   element that has to know how tall the tab bar is. --tabbar-h is measured
+   from the bar itself once it is on screen; the calc after the comma is what
+   applies for the instant before that measurement lands, and in a chat, where
+   there is no bar. This used to be declared twice, the later one winning, and
+   the undo bar spent its life behind the tab bar as a result. */
 .undo-bar{
-  position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
+  position:fixed;left:12px;right:12px;
+  bottom:calc(14px + var(--tabbar-h, calc(62px + env(safe-area-inset-bottom))));
   z-index:120;display:flex;align-items:center;gap:12px;
   background:var(--raise);border:1px solid var(--line-strong);
   border-radius:var(--r);padding:12px 14px;
@@ -1154,6 +1204,7 @@ body.in-chat{padding-bottom:0}
 }
 @keyframes undo-in{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.undo-bar{animation:none}}
+body.in-chat .undo-bar{bottom:calc(14px + env(safe-area-inset-bottom))}
 .undo-bar span#undoText{flex:1;font-size:.9rem;font-weight:600;color:var(--ink)}
 .undo-bar button{
   display:flex;align-items:center;gap:8px;
@@ -1604,7 +1655,7 @@ body.in-chat{padding-bottom:0}
 @page{ size:85.6mm 54mm; margin:0 }
 @media print{
   html,body{background:#fff !important;margin:0 !important;padding:0 !important}
-  body > header, body > footer, body > .demo-note, .no-print, .back,
+  body > header, footer, .demo-note, .no-print, .back,
   .screen:not(.on), .overlay, .toast{display:none !important}
   .wrap-sm{max-width:none;padding:0}
   /* .screen carries 72px of bottom padding for the app's own scrolling. Left
@@ -1652,9 +1703,11 @@ body.in-chat{padding-bottom:0}
 .chat-shell{
   position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);z-index:60;
 }
+/* The footer and the preview note moved inside #scroll when the app became a
+   shell, so these can no longer be direct children of body. */
 body.in-chat > header,
-body.in-chat > footer,
-body.in-chat > .demo-note{display:none}
+body.in-chat footer,
+body.in-chat .demo-note{display:none}
 .chat-head{
   display:flex;align-items:center;gap:12px;padding:12px 16px;
   padding-top:calc(12px + env(safe-area-inset-top));
@@ -2649,40 +2702,11 @@ footer a{color:var(--ink-2)}
   </div>
 </aside>
 
-<!-- ============================= TAB BAR =============================
-     Everything used to hang off the hamburger, which is where a feature goes
-     to be forgotten: people could not find their bookings, and the one thing
-     the marketplace needs most — somebody listing their skill — was three
-     taps deep behind a menu nobody opened. Four destinations and a raised
-     centre button, present on every screen. The menu survives for the long
-     tail (about, privacy, terms) rather than carrying the navigation. -->
-<nav class="tabbar" id="tabbar" aria-label="Main">
-  <button class="tab" id="tabHome" onclick="go('home')" aria-label="Home">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg>
-    <span>Home</span>
-  </button>
-  <button class="tab" id="tabBrowse" onclick="go('hire')" aria-label="Browse">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <span>Browse</span>
-  </button>
-
-  <!-- the raised one. Its label changes once you have a profile, because then
-       the thing you came back for is the profile, not the sign-up. -->
-  <button class="tab-fab" id="tabFab" onclick="go('work')">
-    <span id="tabFabLabel">Register<br>your skill</span>
-  </button>
-
-  <button class="tab" id="tabBookings" onclick="go('chats')" aria-label="Bookings">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    <span>Bookings</span>
-    <i class="tab-n" id="tabBookingsN" hidden></i>
-  </button>
-  <button class="tab" id="tabMore" onclick="openMenu()" aria-label="More">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-    <span>More</span>
-    <i class="tab-n" id="tabMoreN" hidden></i>
-  </button>
-</nav>
+<!-- ============================= THE SCROLLING MIDDLE =================
+     The only part of the app that moves. The header above it and the tab bar
+     below it are the other two rows of a full-height column, which is what
+     stops the bar drifting into the middle of a page on a phone. -->
+<div id="scroll">
 
 <div class="demo-note" id="demoNote">Preview mode — profiles are saved on this device only while the live database connects.</div>
 
@@ -3373,6 +3397,47 @@ footer a{color:var(--ink-2)}
     <p class="foot-fine">© <span id="year"></span> MySheher · Guwahati, Assam</p>
   </div>
 </footer>
+
+</div><!-- /#scroll -->
+
+<!-- ============================= TAB BAR =============================
+     Everything used to hang off the hamburger, which is where a feature goes
+     to be forgotten: people could not find their bookings, and the one thing
+     the marketplace needs most — somebody listing their skill — was three
+     taps deep behind a menu nobody opened. Four destinations and a raised
+     centre button, present on every screen. The menu survives for the long
+     tail (about, privacy, terms) rather than carrying the navigation.
+
+     Last row of the shell, after the content it navigates, which is both the
+     right reading order and the reason it can no longer float into the middle
+     of a page. -->
+<nav class="tabbar" id="tabbar" aria-label="Main">
+  <button class="tab" id="tabHome" onclick="go('home')" aria-label="Home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg>
+    <span>Home</span>
+  </button>
+  <button class="tab" id="tabBrowse" onclick="go('hire')" aria-label="Browse">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span>Browse</span>
+  </button>
+
+  <!-- the raised one. Its label changes once you have a profile, because then
+       the thing you came back for is the profile, not the sign-up. -->
+  <button class="tab-fab" id="tabFab" onclick="go('work')">
+    <span id="tabFabLabel">Register<br>your skill</span>
+  </button>
+
+  <button class="tab" id="tabBookings" onclick="go('chats')" aria-label="Bookings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span>Bookings</span>
+    <i class="tab-n" id="tabBookingsN" hidden></i>
+  </button>
+  <button class="tab" id="tabMore" onclick="openMenu()" aria-label="More">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <span>More</span>
+    <i class="tab-n" id="tabMoreN" hidden></i>
+  </button>
+</nav>
 
 <!-- ============================= MODALS ============================= -->
 <div class="overlay" id="wOverlay" onclick="if(event.target===this)closeModal('wOverlay')">
@@ -5446,7 +5511,7 @@ function go(name, viaHistory){
   if(!$("scr-" + name)) name = "home";
   document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
   $("scr-" + name).classList.add("on");
-  window.scrollTo({top:0});
+  toTop();
   currentScreen = name;
   /* the conversation is a full-screen surface — the site header and footer
      would otherwise sit on top of its own header bar */
@@ -5580,33 +5645,31 @@ const TAB_OF = {
   work:"tabFab", me:"tabFab", register:"tabFab", otp:"tabFab", done:"tabFab",
   card:"tabFab", profile:"tabFab", account:"tabFab", recover:"tabFab"
 };
-/* The bar floats over the page, so the page has to end above it. Measured
-   rather than assumed: text size, safe-area inset and the browser's own
-   chrome all move it, and being a few pixels short is invisible until
-   somebody scrolls to the very bottom and finds the footer underneath. */
+/* The bar is a row of the shell now, so nothing has to be measured to keep
+   the page clear of it — it takes its own room. The one thing that still
+   wants its height is the undo bar, which floats over everything and has to
+   land above it rather than behind it.
+
+   This replaced a function that tried to hold a `position:fixed` bar against
+   the visible viewport by translating it in JavaScript. It could not be made
+   to work: on iOS `bottom:0` is measured against a layout viewport that is
+   taller than what you can see, and the correction is computed from numbers
+   that are stale exactly during the scroll when it matters. The bar ended up
+   drifting into the middle of the page. Layout does this correctly for free
+   once the bar stops floating. */
 function fitTabbar(){
   const bar = $("tabbar");
-  if(!bar || document.body.classList.contains("in-chat") || bar.offsetParent === null){
-    document.body.style.paddingBottom = "";
-    return;
-  }
-  document.body.style.paddingBottom = (bar.offsetHeight + 18) + "px";
-
-  /* On iOS the layout viewport and the visible one are not the same thing
-     while the browser's own toolbar is sliding in and out, and bottom:0 is
-     measured against the layout one — which is how a bar pinned to the bottom
-     ends up floating across the middle of the page. Where the browser tells
-     us the difference, close it. Every other browser reports zero and this
-     does nothing. */
-  const vv = window.visualViewport;
-  if(vv){
-    const gap = Math.round(window.innerHeight - (vv.height + vv.offsetTop));
-    bar.style.transform = gap > 1 ? `translateY(-${gap}px)` : "";
-  }
+  const h = bar && bar.offsetParent !== null ? bar.offsetHeight : 0;
+  document.documentElement.style.setProperty("--tabbar-h", h ? h + "px" : "");
 }
 addEventListener("resize", fitTabbar);
 addEventListener("orientationchange", fitTabbar);
 if(window.visualViewport) visualViewport.addEventListener("resize", fitTabbar);
+
+/* Every "back to the top" in the app means the top of the scrolling middle,
+   not the top of the document — the document itself no longer scrolls. */
+const scroller = () => document.getElementById("scroll") || document.documentElement;
+function toTop(){ const s = scroller(); if(s.scrollTo) s.scrollTo({top:0}); else s.scrollTop = 0; }
 
 function paintTabs(){
   const active = TAB_OF[currentScreen] || "";
@@ -6189,7 +6252,7 @@ function regGo(step){
   /* the consent block is only for a first publish */
   $("consentBlock").hidden = !!editing;
   if(last && editing) $("regSaveBtn").hidden = false;
-  window.scrollTo({top:0});
+  toTop();
 }
 
 function regNext(){
@@ -10248,7 +10311,7 @@ function paintReview(){
     ? `<div class="divider"></div><p class="hint" style="margin-bottom:12px"><b>${label}</b>${hint ? " — " + hint : ""}</p>` +
       list.map(adminCard).join("")
     : "";
-  const y = window.scrollY;
+  const y = scroller().scrollTop;
   host.innerHTML = tabs + `
     <h2>Profile review</h2>
     ${reports.length ? `<div class="reports">
@@ -10307,7 +10370,7 @@ function paintReview(){
 
   /* keep the page where it was: approving the fourth card should not throw
      you back to the top of a list of fifty */
-  window.scrollTo(0, y);
+  scroller().scrollTop = y;
   const q = $("adminQ");
   if(q && adminQuery){ q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
 }
