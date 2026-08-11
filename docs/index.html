@@ -2508,6 +2508,15 @@ body.in-chat .demo-note{display:none}
 .shot-none{color:var(--muted);font-size:.88rem;padding:56px 0}
 .shot-actions{display:flex;gap:10px;margin-top:18px}
 .shot-actions .btn{flex:1;padding:13px}
+/* replacing a photograph on somebody's behalf — a label rather than a button,
+   because the file input it opens has to be a real <input type=file> */
+.shot-swap{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  border:1px dashed var(--line-strong);border-radius:var(--r-sm);
+  padding:12px 13px;margin-top:14px;
+}
+.shot-swap label{flex:0 0 auto;cursor:pointer;margin:0}
+.shot-swap span{flex:1;min-width:170px;color:var(--muted);font-size:.8rem;line-height:1.45}
 
 .reject-list{display:flex;flex-direction:column;gap:8px}
 .reject-opt{
@@ -4690,6 +4699,27 @@ const api = {
     try{ return await sb("rpc/home_banners", {method:"POST", body:"{}"}) || []; }
     catch(e){ return []; }
   },
+  /* Staff putting the right photograph on a profile for somebody who cannot.
+     The database orphans whatever it replaced and hands back the paths, so
+     the old file is removed rather than left to be paid for forever. */
+  async adminSetPhoto(id, selfie, thumb){
+    if(LIVE){
+      const rows = await sb("rpc/admin_set_photo", {method:"POST",
+        body:JSON.stringify({p_pin:adminPin, p_id:id, p_selfie:selfie, p_thumb:thumb || null})});
+      const media = (rows && rows[0] && rows[0].media) || [];
+      for(const path of media){
+        try{
+          await fetch(`${SUPABASE_URL}/storage/v1/object/${SELFIE_BUCKET}/${path}`, {
+            method:"DELETE",
+            headers:{ apikey:SUPABASE_ANON_KEY, Authorization:"Bearer " + SUPABASE_ANON_KEY }});
+        }catch(e){ /* the nightly sweep has it queued either way */ }
+      }
+      return true;
+    }
+    const all = demoAll(); const w = all.find(x => x.id === id);
+    if(w){ w.selfie = selfie; w.thumb = thumb || selfie; w.photo_by_admin_at = new Date().toISOString(); demoSave(all); }
+    return true;
+  },
   async adminBanners(pin){
     return await sb("rpc/admin_banners", {method:"POST", body:JSON.stringify({p_pin:pin})});
   },
@@ -6595,29 +6625,17 @@ function handleSelfie(input){
   if(!/^image\//.test(file.type)){ toast("Please choose a photo, not a file"); return; }
   if(file.size > MAX_UPLOAD){ toast("That photo is too large — please choose another"); return; }
 
-  const reader = new FileReader();
   /* every one of these paths used to fail silently, leaving the circle empty
-     with no explanation of why */
-  reader.onerror = () => toast("Could not read that photo — please try another");
-  reader.onload = e => {
-    const img = new Image();
-    img.onerror = () => toast("That image could not be opened — try a JPG or PNG");
-    img.onload = () => {
-      if(!img.width || !img.height){ toast("That image could not be opened"); return; }
-      try{
-        const side = Math.min(img.width, img.height);
-        const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
-        const cv = squareCanvas(img, PHOTO_SIZE, sx, sy, side);
-        selfieData = encodePhoto(cv, .78);
-        thumbData  = encodePhoto(squareCanvas(img, THUMB_SIZE, sx, sy, side), .72);
-        selfieLive = false;
-        renderSelfie();
-        toast("Photo added");
-      }catch(err){ toast("Could not use that photo — please try another"); }
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+     with no explanation of why. photoPairFromFile carries those messages now,
+     and the admin screen shares it, so a staff-supplied photo is squared and
+     encoded by the same code rather than by a near-copy of it. */
+  photoPairFromFile(file).then(pair => {
+    selfieData = pair.selfie;
+    thumbData  = pair.thumb;
+    selfieLive = false;
+    renderSelfie();
+    toast("Photo added");
+  }).catch(err => toast(err.message || "Could not use that photo — please try another"));
 }
 /* ---------- profile photo upload ----------
    Photos live in Supabase Storage, not in the workers table. The column keeps
@@ -10638,11 +10656,86 @@ function openAdminPhoto(id){
     <p class="sub" style="margin:2px 0 0">${esc(w.area ? w.area + ", " : "")}${esc(w.city||"")} · ${esc(w.phone||"")}</p>
     <p class="hint" style="margin-top:8px">${esc((w.skills||[]).map(x=>x.skill + " — ₹" + x.price + " " + x.unit).join(" · "))}</p>
     ${waCodes[w.id] ? `<div class="wa-expect" style="margin-top:12px">Check WhatsApp for <b>${esc(waCodes[w.id])}</b> from <b>${esc(w.phone||"")}</b>.</div>` : ""}
+    ${w.photo_by_admin_at ? `<p class="hint" style="margin-top:8px;color:var(--warn)">
+      This photograph was put here by the team, not taken on ${esc(w.name)}'s own phone
+      — ${esc(new Date(w.photo_by_admin_at).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}))}.
+    </p>` : ""}
+    <div class="shot-swap">
+      <label class="btn btn-outline btn-sm" for="adminPhotoFile" id="adminPhotoBtn">Replace this photo</label>
+      <input type="file" accept="image/*" id="adminPhotoFile" hidden onchange="adminPhotoPicked(event)">
+      <span>For somebody who sent theirs on WhatsApp and cannot upload it themselves.
+            It replaces the picture and nothing else.</span>
+    </div>
     <div class="shot-actions">
       ${st !== "approved" ? `<button class="btn btn-brand" onclick="closeModal('shotOverlay');adminSet('${jsq(w.id)}','approved')">Approve</button>` : ""}
       <button class="btn btn-outline" onclick="closeModal('shotOverlay');adminReject('${jsq(w.id)}')">Reject</button>
     </div>`;
   openModal("shotOverlay");
+}
+
+/* ---------- replacing a photograph on somebody's behalf ----------
+   A profile is turned down for its photograph more than for anything else: a
+   group picture, a screenshot, a motorbike. The team rings them, explains,
+   and the whole thing stalls — because the person who could not work the
+   camera the first time cannot work it the second time either, and what
+   actually happens is they send a photo on WhatsApp and it sits there.
+
+   So the reviewer, who is already looking at the photograph and already
+   deciding about it, can put the right one on. Deliberately only the
+   photograph: the name, the trade, the rate and the number stay the worker's
+   own words, and the database records that this picture came from staff. */
+async function adminPhotoPicked(ev){
+  const file = ev.target.files && ev.target.files[0];
+  ev.target.value = "";                       /* so the same file can be picked twice */
+  const id = adminPhotoId;
+  if(!file || !id) return;
+  if(!/^image\//.test(file.type)){ toast("Please choose a photo, not a file"); return; }
+  if(file.size > MAX_UPLOAD){ toast("That photo is too large — please choose another"); return; }
+
+  const btn = $("adminPhotoBtn");
+  if(btn) btn.textContent = "Working…";
+  try{
+    /* the same squaring, sizes and encoder registration uses, so a staff-
+       supplied photo is indistinguishable in weight and shape from a
+       self-taken one */
+    const pair = await photoPairFromFile(file);
+    const w = (adminRows || []).find(x => x.id === id) || {};
+    const selfie = await uploadSelfie(pair.selfie, (w.phone || "admin") + "-a");
+    const thumb  = await uploadSelfie(pair.thumb,  (w.phone || "admin") + "-at");
+    await api.adminSetPhoto(id, selfie, thumb);
+    toast("Photo replaced");
+    closeModal("shotOverlay");
+    renderAdmin();
+  }catch(e){
+    toast(e.message || "Could not replace that photo");
+    if(btn) btn.textContent = "Replace this photo";
+  }
+}
+
+/* The file-to-two-canvases step, lifted out of the registration handler so
+   both callers square and encode identically rather than nearly identically. */
+function photoPairFromFile(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Could not read that photo — please try another"));
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("That image could not be opened — try a JPG or PNG"));
+      img.onload = () => {
+        if(!img.width || !img.height){ reject(new Error("That image could not be opened")); return; }
+        try{
+          const side = Math.min(img.width, img.height);
+          const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+          resolve({
+            selfie: encodePhoto(squareCanvas(img, PHOTO_SIZE, sx, sy, side), .78),
+            thumb:  encodePhoto(squareCanvas(img, THUMB_SIZE, sx, sy, side), .72),
+          });
+        }catch(err){ reject(new Error("Could not use that photo — please try another")); }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 /* ---------- rejection, from a list ----------

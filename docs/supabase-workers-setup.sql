@@ -7968,7 +7968,9 @@ declare
     'skill_price_stats','push_endpoint',
     -- MIGRATION 44: the home screen reads the banners; the admin screen reads
     -- and writes them, behind the admin PIN
-    'home_banners','admin_set_banners','admin_banners'
+    'home_banners','admin_set_banners','admin_banners',
+    -- MIGRATION 46: staff replacing a photograph for somebody who cannot
+    'admin_set_photo'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -8031,7 +8033,8 @@ begin
        'customer_update','customer_sign_out','delete_customer','send_otp','verify_otp',
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
-       'home_banners','admin_set_banners','admin_banners');
+       'home_banners','admin_set_banners','admin_banners',
+       'admin_set_photo');
 
   if leaked is not null then
     raise exception
@@ -9030,6 +9033,105 @@ begin
   raise notice 'PASS  a search result carries jobs finished, punctuality and joining date';
 end $$;
 
+-- ============================================================
+-- MIGRATION 46 — staff can replace a photo without making the worker do it
+--
+-- A profile is rejected for its photograph more than for anything else: a
+-- group picture, a screenshot, somebody's motorbike. The team rings them,
+-- explains, and then the whole thing stalls, because the person who could not
+-- work the camera the first time cannot work it the second time either. What
+-- actually happens is they send a photo on WhatsApp and it sits there.
+--
+-- So let the admin screen put it on the profile. Not an edit of anything
+-- else — the name, the trade, the rate and the number stay the worker's own
+-- words. Only the picture, which is the one thing the team is already looking
+-- at and already deciding about.
+--
+-- Two things this has to get right:
+--
+--   The old file is orphaned, and orphaned files cost money and outlive their
+--   consent. It goes into deleted_media, the same queue delete_worker uses,
+--   and the paths come back so the caller can remove them from storage.
+--
+--   It has to be visible that a photo is staff-supplied. If somebody later
+--   says "that is not the person who came to my house", the answer to "where
+--   did this picture come from" cannot be a shrug.
+-- ============================================================
+
+alter table public.workers add column if not exists photo_by_admin_at timestamptz;
+
+comment on column public.workers.photo_by_admin_at is
+  'When staff last replaced this profile photograph on the worker''s behalf. '
+  'Null means every photo on this profile came from the worker''s own device.';
+
+create or replace function public.admin_set_photo(
+  p_pin text, p_id uuid, p_selfie text, p_thumb text default null)
+returns table (ok boolean, media text[])
+language plpgsql security definer set search_path = public, extensions as $$
+declare old_urls text[]; paths text[] := '{}'; u text; obj text; s text; t text;
+begin
+  if not public.admin_check(p_pin) then raise exception 'Wrong admin PIN'; end if;
+
+  s := nullif(btrim(coalesce(p_selfie,'')), '');
+  t := nullif(btrim(coalesce(p_thumb,'')), '');
+  if s is null then raise exception 'A photo is required'; end if;
+
+  -- The app uploads to storage and passes back the public URL. Anything that
+  -- is not an https URL has no business being written into a column that ends
+  -- up in an <img src> on a stranger's phone.
+  if s !~* '^https://' then raise exception 'A photo must be an https URL'; end if;
+  if t is not null and t !~* '^https://' then raise exception 'A thumbnail must be an https URL'; end if;
+
+  if not exists (select 1 from workers where id = p_id) then
+    raise exception 'No such profile';
+  end if;
+
+  -- queue whatever is being replaced, exactly as delete_worker does, and only
+  -- when it is genuinely being replaced rather than re-saved
+  select array_remove(array[w.selfie, w.thumb], null) into old_urls
+    from workers w where w.id = p_id;
+  foreach u in array coalesce(old_urls, '{}'::text[]) loop
+    if u = s or u = t then continue; end if;
+    obj := substring(u from '/object/public/selfies/(.+)$');
+    if obj is not null then
+      paths := paths || obj;
+      insert into deleted_media (path) values (obj) on conflict (path) do nothing;
+    end if;
+  end loop;
+
+  update workers
+     set selfie = s,
+         thumb  = coalesce(t, s),
+         photo_by_admin_at = now()
+   where id = p_id;
+
+  return query select true, paths;
+end;
+$$;
+
+do $$
+declare wid uuid; r record; n int;
+begin
+  if not exists (select 1 from pg_proc where proname = 'admin_set_photo'
+                   and pronamespace = 'public'::regnamespace) then
+    raise exception 'MIGRATION 46: admin_set_photo did not get created';
+  end if;
+  if not exists (select 1 from information_schema.columns
+                  where table_name = 'workers' and column_name = 'photo_by_admin_at') then
+    raise exception 'MIGRATION 46: workers.photo_by_admin_at is missing';
+  end if;
+
+  -- a data: or javascript: URL must not be writable into an <img src>
+  begin
+    perform public.admin_set_photo('definitely-not-the-pin', gen_random_uuid(),
+                                   'https://example.com/a.webp');
+    raise exception 'MIGRATION 46: admin_set_photo accepted a wrong PIN';
+  exception when others then
+    if sqlerrm like 'MIGRATION 46:%' then raise; end if;
+  end;
+  raise notice 'PASS  a photo can be replaced by staff, and only with the admin PIN';
+end $$;
+
 -- ---------- the lock, still last ----------
 select public.lock_public_functions();
 
@@ -9063,7 +9165,8 @@ begin
        'customer_update','customer_sign_out','delete_customer','send_otp','verify_otp',
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
-       'home_banners','admin_set_banners','admin_banners');
+       'home_banners','admin_set_banners','admin_banners',
+       'admin_set_photo');
 
   if leaked is not null then
     raise exception
