@@ -28,6 +28,17 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=6">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=6">
 <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png?v=6">
+<!-- Both faces, not just the serif. The sans is what almost every word on the
+     screen is set in, so leaving it to be discovered when the stylesheet is
+     parsed meant the app rendered in Segoe UI first and then reflowed into
+     its own type a moment later — one of the several things that "appeared
+     late". Both files are also smaller than they were: the weight axes are
+     clipped to the range the app actually declares, which took the serif from
+     122 KB to 83 KB and the sans from 27 KB to 21 KB with no change to a
+     single glyph or to any measured width. The serif keeps its optical-size
+     axis; pinning that saved another 50 KB but set the type 2.5% wider, and
+     the one-line home title has no 2.5% to give. -->
+<link rel="preload" href="fonts/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/source-serif-4-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* Plus Jakarta Sans, self-hosted. One variable file, 27 KB, every weight the
@@ -5712,12 +5723,18 @@ function renderQuick(){
      the photograph removes itself if it does not load. A tile therefore
      looks finished whether or not its picture exists yet, and adding one is
      a file drop rather than a code change. */
-  host.innerHTML = QUICK_PICKS.map(([skill, cat, label, slug]) =>
+  /* The first two rows are on screen the moment the app opens, so they are
+     fetched at once and at high priority. Marking them lazy meant the grid
+     filled in tile by tile after the layout had settled, which is the part
+     that looked slow. The third row is below the fold on a phone and can
+     wait for the scroll. */
+  host.innerHTML = QUICK_PICKS.map(([skill, cat, label, slug], i) =>
     `<button class="qtile" onclick="jumpTo('${jsq(skill)}')" aria-label="Find a ${esc(label)} near you">
        <span class="qt-pic">
          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
               stroke-linecap="round" stroke-linejoin="round">${CAT_ICON[cat]||""}</svg>
-         ${slug ? `<img src="cat/${slug}.webp" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ""}
+         ${slug ? `<img src="cat/${slug}.webp" alt="" decoding="async" onerror="this.remove()"
+              ${i < 8 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'}>` : ""}
        </span>
        <span class="qt-label">${esc(label)}</span>
      </button>`).join("");
@@ -5734,14 +5751,21 @@ function jumpTo(skill){
    box on a home screen reads as something broken rather than as space for
    sale. */
 let adBanners = [], adIndex = 0, adTimer = null;
-async function loadBanners(){
+/* `rows` is passed in at start-up, where the request has already been sent
+   alongside the other opening ones rather than after them. Called with
+   nothing — from the admin screen after a save — it fetches for itself. */
+async function loadBanners(rows){
   const box = $("adBand"); if(!box) return;
-  adBanners = await api.homeBanners();
+  adBanners = (rows === undefined ? await api.homeBanners() : rows) || [];
   clearInterval(adTimer); adTimer = null;
   if(!adBanners.length){ box.hidden = true; return; }
 
-  $("adBandTrack").innerHTML = adBanners.map(b => {
-    const img = `<img src="${esc(b.image_url)}" alt="${esc(b.alt || "")}" loading="lazy" decoding="async">`;
+  $("adBandTrack").innerHTML = adBanners.map((b, i) => {
+    /* The first slide is the one on screen. It used to be marked lazy, which
+       on a slide that is already in view only means "start it later". The
+       ones behind it are translated off to the side and genuinely can wait. */
+    const img = `<img src="${esc(b.image_url)}" alt="${esc(b.alt || "")}" decoding="async" ` +
+      (i ? `loading="lazy">` : `loading="eager" fetchpriority="high">`);
     /* A link goes to somebody else's site, so it opens away from the app and
        carries no referrer or opener. The database has already refused
        anything that is not http(s). */
@@ -5773,7 +5797,10 @@ function initHome(){
   homeReady = true;
   $("figServices").textContent = SKILLS.length;
   $("figAreas").textContent = AREAS.length - 1;   /* "Other area" is not a locality */
-  loadBanners();
+  /* The banners are not here any more. Everything above this line is drawn
+     from constants already in the page, so it can be on screen before a
+     single request goes out; the banners need the database and are started
+     by init() in parallel with the other opening requests. */
 }
 
 /* ---------- auth ---------- */
@@ -11438,47 +11465,86 @@ if("serviceWorker" in navigator){
 }
 if(isIOS() && !isStandalone()) $("installBtn").hidden = false;
 
+/* ---------- start-up ----------
+   This used to be a single chain of awaits, and the home screen was drawn at
+   the end of it. Four round trips to the database happened strictly one after
+   another — is the database there, what is configured, who is signed in, log
+   the worker back in — and only then did the tiles, the counts and the banner
+   appear. Measured against a 400ms round trip, which is an ordinary 4G phone
+   in Guwahati: the tiles landed at 886ms and the banner at 1294ms, because
+   the banner request was not even sent until 883ms.
+
+   Nothing in that chain actually depended on the step before it, apart from
+   needing to know whether the database is reachable at all. So:
+
+     - everything the page can draw from what it already has is drawn first,
+       before any request goes out at all;
+     - the opening requests are sent together rather than in sequence;
+     - the two session checks run alongside each other, not one then the next.
+
+   The whole opening is now one round trip deep instead of four. */
 (async function init(){
   loadSession();
   loadCustomer();
   wireAreaSearch();      /* every locality select gets a way to type instead */
-  try{ await sb("workers?select=id&limit=1"); LIVE = true; }
+
+  /* Drawn from constants that are already in the page: the twelve tiles, the
+     two counts, the tab bar, the history entry. None of it needs the network,
+     so none of it should wait for the network. */
+  initHome();
+  paintTabs();
+  paintAccountUi();
+  try{ history.replaceState({screen:"home"}, ""); }catch(e){}
+
+  /* All three go out at once. The banner request is sent before we know the
+     database is reachable, which is the point — if it is not, this fails at
+     the same moment the probe does and costs nothing extra. */
+  const probe   = sb("workers?select=id&limit=1");
+  const config  = sb("nearse_config?select=require_phone_otp,vapid_public,push_url&limit=1")
+                    .catch(() => null);
+  const banners = sb("rpc/home_banners", {method:"POST", body:"{}"}).catch(() => null);
+
+  try{ await probe; LIVE = true; }
   catch(e){ LIVE = false; $("demoNote").classList.add("on"); }
+
   if(LIVE){
     /* off until an SMS/WhatsApp provider is connected — see the admin panel */
-    try{
-      const rows = await sb("nearse_config?select=require_phone_otp,vapid_public,push_url&limit=1");
-      REQUIRE_OTP  = !!(rows && rows[0] && rows[0].require_phone_otp);
-      VAPID_PUBLIC = (rows && rows[0] && rows[0].vapid_public) || null;
-      PUSH_URL     = (rows && rows[0] && rows[0].push_url) || null;
-    }catch(e){ REQUIRE_OTP = false; }
+    const rows = await config;
+    REQUIRE_OTP  = !!(rows && rows[0] && rows[0].require_phone_otp);
+    VAPID_PUBLIC = (rows && rows[0] && rows[0].vapid_public) || null;
+    PUSH_URL     = (rows && rows[0] && rows[0].push_url) || null;
+    /* deliberately not awaited: the banner paints when it arrives, and
+       nothing below here is waiting to hear about it */
+    banners.then(rows => loadBanners(rows || []));
   }
+
+  /* The two things that need a round trip of their own. They are about
+     different people — the customer signed in on this device, and the worker
+     whose profile it is — so they have never had any reason to queue. */
+  const opening = [];
+
   /* A token can be revoked, expire, or belong to an account since deleted.
      Checking once at start-up is the difference between a profile screen that
      is empty for a reason and one that is empty because nobody looked. */
-  if(LIVE && signedIn()){
+  if(LIVE && signedIn()) opening.push((async () => {
     try{
       const me = await api.customerMe(customer.token);
       if(me) { customer = { token: customer.token, ...me }; saveCustomer(); }
       else   { customer = null; saveCustomer(); }
     }catch(e){ /* offline: keep what we have rather than signing them out */ }
     paintAccountUi();
-  }
-  syncCustomerPush();   /* re-register this device against any newer booking */
-  syncWorkerPush();     /* and against the worker, if permission is already given */
-  if(session && session.registered){
+  })());
+
+  if(session && session.registered) opening.push((async () => {
     try{ session.worker = await api.login(session.phone, session.pin); saveSession(); }catch(e){}
     ensureWorkerSession();
     watchStatus();
     watchPending();
-  }
-  initHome();
-  /* Home is already the open screen in the markup, so go() has not run and
-     the bar has never been painted. Light it before the first frame rather
-     than on the first navigation. */
-  paintTabs();
-  /* the entry in the history stack the app started on */
-  try{ history.replaceState({screen:"home"}, ""); }catch(e){}
+  })());
+
+  syncCustomerPush();   /* re-register this device against any newer booking */
+  syncWorkerPush();     /* and against the worker, if permission is already given */
+  await Promise.all(opening);
   paintAccountUi();
   /* Two sheets, never at once — maybeAskNotify already refuses to open over
      an open overlay, and this one refuses too, so whichever is due first wins

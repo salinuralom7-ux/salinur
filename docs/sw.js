@@ -1,7 +1,7 @@
 /* MySheher service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls always go to the network. */
-const CACHE = "mysheher-shell-v22";
+const CACHE = "mysheher-shell-v23";
 const SHELL = [
   "./",
   "./index.html",
