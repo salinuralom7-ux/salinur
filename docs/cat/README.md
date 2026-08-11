@@ -27,7 +27,7 @@ wrong is not worth your time.
 
 ## The twelve, and what each one needs
 
-Nine of the twelve have a photograph. Three to go.
+All twelve have a photograph.
 
 | Slug | Shows | Status |
 |---|---|---|
@@ -40,9 +40,9 @@ Nine of the twelve have a photograph. Three to go.
 | `driver` | driver at the wheel | ✅ |
 | `packers-movers` | two movers with a box | ✅ |
 | `tailor` | tailor at a sewing machine | ✅ |
-| `housemaid` | woman cleaning a home | **wanted** |
-| `home-cook` | woman cooking in a home kitchen | **wanted** |
-| `carpenter` | carpenter measuring a plank | **wanted** |
+| `housemaid` | woman cleaning a home | ✅ |
+| `home-cook` | woman cooking in a home kitchen | ✅ |
+| `carpenter` | carpenter measuring a plank | ✅ |
 
 Three more exist but are not on the home grid, which holds twelve. They are
 ready if the twelve ever change, and they are the right size for Instagram and
