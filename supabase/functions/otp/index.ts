@@ -64,7 +64,42 @@ async function rpc<T>(name: string, args: Record<string, unknown> = {}): Promise
    asks for and what send_otp enforces. The wire wants E.164. */
 const e164 = (phone: string) => "91" + phone.replace(/\D/g, "").slice(-10);
 
-async function sendWhatsApp(phone: string, code: string) {
+/* ---------- WhatsApp ----------
+   Two things about a Meta authentication template are decided when it is
+   created in WhatsApp Manager, not here, and getting either wrong means Meta
+   refuses the message with a number rather than a sentence:
+
+     the copy-code button — an authentication template usually has one, and
+     then the message MUST declare it with the code as its parameter. Created
+     without one, declaring it is an error. Both ways round are rejected.
+
+     the language code — the same template is "en" for some accounts and
+     "en_US" for others, depending on which was picked in the dropdown.
+
+   Rather than make somebody discover that from error 132000 at launch, try
+   the shapes until one is accepted, and remember which worked so the rest of
+   the queue goes straight there. Meta has not accepted the message in any of
+   the failing cases, so nothing is ever sent twice. */
+type Shape = { lang: string; button: boolean };
+let waShape: Shape | null = null;
+
+/* the errors that mean "the template does not look like that" — anything else
+   (a dead token, a number not registered) is not fixed by trying again */
+const RESHAPE = new Set([100, 132000, 132001, 132005, 132012, 132015]);
+
+function waShapes(): Shape[] {
+  const out: Shape[] = [];
+  for (const lang of [...new Set([WA_LANG, "en", "en_US"])])
+    for (const button of [true, false]) out.push({ lang, button });
+  return out;
+}
+
+async function waPost(phone: string, code: string, s: Shape) {
+  const components: unknown[] = [{ type: "body", parameters: [{ type: "text", text: code }] }];
+  if (s.button) {
+    components.push({ type: "button", sub_type: "url", index: "0",
+                      parameters: [{ type: "text", text: code }] });
+  }
   const res = await fetch(`https://graph.facebook.com/v21.0/${WA_PHONE_ID}/messages`, {
     method: "POST",
     headers: { Authorization: `Bearer ${WA_TOKEN}`, "Content-Type": "application/json" },
@@ -72,22 +107,31 @@ async function sendWhatsApp(phone: string, code: string) {
       messaging_product: "whatsapp",
       to: e164(phone),
       type: "template",
-      template: {
-        name: WA_TEMPLATE,
-        language: { code: WA_LANG },
-        components: [
-          { type: "body", parameters: [{ type: "text", text: code }] },
-          /* An authentication template's button is a one-tap copy. Meta
-             rejects the message if the button is declared without its
-             parameter, and rejects it the other way round too, so both halves
-             live here together. */
-          { type: "button", sub_type: "url", index: "0",
-            parameters: [{ type: "text", text: code }] },
-        ],
-      },
+      template: { name: WA_TEMPLATE, language: { code: s.lang }, components },
     }),
   });
-  if (!res.ok) throw new Error(`whatsapp ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  if (res.ok) return null;
+  const text = (await res.text()).slice(0, 400);
+  let num = 0;
+  try { num = JSON.parse(text)?.error?.code ?? 0; } catch { /* not JSON */ }
+  return { status: res.status, num, text };
+}
+
+async function sendWhatsApp(phone: string, code: string) {
+  const all = waShapes();
+  const tries = waShape
+    ? [waShape, ...all.filter((s) => s.lang !== waShape!.lang || s.button !== waShape!.button)]
+    : all;
+  let last: { status: number; num: number; text: string } | null = null;
+  for (const s of tries) {
+    const err = await waPost(phone, code, s);
+    if (!err) { waShape = s; return; }
+    last = err;
+    /* a rejected token or an unauthorised number is not a template problem */
+    if (err.status === 401 || err.status === 403) break;
+    if (!RESHAPE.has(err.num)) break;
+  }
+  throw new Error(`whatsapp ${last?.status}: ${last?.text}`);
 }
 
 async function sendTwilio(phone: string, code: string) {
