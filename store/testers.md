@@ -11,14 +11,15 @@ Console needs rebuilding.
 
 **<https://mysheher.com/tester>**
 
-Not the Play Store link. A plain Play Store link shows "Item not found" to
-anybody who has not already opted in, which is everybody you have just
-invited — so it fails for every single person, every single time, and says
-nothing about why. That is the whole bug.
+Correction to what this page said before: with an **email list** there is no
+opt-in web page and no "Become a tester" button — that flow only exists for
+Google Groups. Play Console's own "How testers join your test" gives the plain
+store link, and it works if and only if the Google account signed in on the
+phone is on the list. The tester page said otherwise for two days and sent
+people looking for a button that was never there.
 
-The page walks them through the three steps in the order that works, and
-answers "Item not found" with the five real causes in the order they actually
-happen.
+So the page now asks for one thing first — the address the Play Store shows —
+and only then points at the store link.
 
 ---
 
@@ -55,10 +56,9 @@ Two related traps:
 1. **Testers tab** — every one of the twelve is listed, spelled exactly as the
    address on their phone. Press **Save** after any edit; the list does not
    save itself when you navigate away.
-2. **Copy the opt-in link from this page** rather than trusting the one on the
-   tester page. It should read
-   `https://play.google.com/apps/testing/com.mysheher.app`. If Play shows you
-   something different, tell me and I will change the button.
+2. **"How testers join your test"** gives the store link,
+   `https://play.google.com/store/apps/details?id=com.mysheher.app`. There is
+   no separate opt-in URL for an email list.
 3. **Releases tab** — the release must say **Available to testers**, not "In
    review", "Draft" or "Pending publication". A release still in review 404s
    for everyone including you.
@@ -72,15 +72,9 @@ Two related traps:
 
 ## The fourteen days
 
-Twelve testers, opted in, **continuously**, for fourteen days. The two ways
-this quietly resets:
-
-- somebody presses **Leave the programme** on the opt-in page;
-- somebody is removed from the tester list.
-
-Uninstalling the app is not the same as leaving the programme, and is
-survivable. Leaving the programme is not. The tester page asks them plainly
-not to.
+Twelve testers, **continuously**, for fourteen days. With an email list the
+way this resets is removing somebody from the list, so do not prune it while
+the count is near the line.
 
 Aim for **fifteen or sixteen** testers rather than exactly twelve, so one
 person losing interest does not restart the clock for everyone else.
