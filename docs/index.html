@@ -4961,6 +4961,13 @@ const api = {
              finished_pct: 100, customers: who.size, repeat_customers: 0,
              days_since_last: done.length ? 0 : null };
   },
+  /* Where a worker stands, in their own trade's terms. A flat "30 jobs"
+     target is meaningless to a wedding planner and trivial to a mechanic. */
+  async standing(){
+    if(LIVE) return (await sb("rpc/worker_standing", {method:"POST",
+      body:JSON.stringify(workerAuth({}))}) || [])[0] || null;
+    return null;
+  },
   /* a worker's own history, month by month */
   async myMonths(){
     if(LIVE) return await sb("rpc/worker_months", {method:"POST",
@@ -10031,18 +10038,26 @@ async function paintMyScore(){
   const w = session && session.worker;
   if(!host || !w) return;
 
-  let card = null, months = [];
-  try{ [card, months] = await Promise.all([
+  let card = null, months = [], st = null;
+  try{ [card, months, st] = await Promise.all([
     api.scorecard(w.id).catch(() => null),
     api.myMonths().catch(() => []),
+    api.standing().catch(() => null),
   ]); }catch(e){ return; }
   if(!$("meScore")) return;                 /* they navigated away */
 
   const t = TIERS[card && card.tier];
-  const next = !t ? { label:"Silver", jobs:5, score:55 }
-             : t.n === 1 ? { label:"Gold", jobs:12, score:70 }
-             : t.n === 2 ? { label:"Platinum", jobs:30, score:85 }
-             : null;
+  /* Each rung asks for a score, a number of different customers, time, and
+     enough work FOR THAT TRADE. The last one is why there is no flat job
+     count here: a wedding planner takes three bookings a month and a month
+     to deliver one, and a flat thirty would have left her unbadged for a
+     year while a mechanic cleared it in a week. */
+  const RUNGS = [
+    { label:"Silver",   score:55, customers:3,  days:30,  pace:0.5 },
+    { label:"Gold",     score:70, customers:6,  days:90,  pace:1.0 },
+    { label:"Platinum", score:85, customers:10, days:180, pace:1.5 },
+  ];
+  const next = RUNGS[t ? t.n : 0] || null;
 
   const line = (label, pct) => pct == null ? "" : `<div class="sc-line">
       <span>${esc(label)}</span>
@@ -10073,9 +10088,29 @@ async function paintMyScore(){
     ${card && card.customers ? `<div class="sc-line">
       <span>Customers who booked you again</span>
       <span class="sc-val" style="min-width:0">${card.repeat_customers} of ${card.customers}</span></div>` : ""}
-    ${next ? `<small class="sc-note"><b style="color:var(--brand-2)">Next: ${next.label}</b> —
-      ${done >= next.jobs ? "you have the jobs" : `${next.jobs - done} more finished ${next.jobs - done === 1 ? "job" : "jobs"}`}
-      and ${next.score} out of 100.</small>` : ""}
+    ${next ? (() => {
+      /* Only what is actually still missing, so the target is a short list
+         rather than a wall the worker has to check themselves against. */
+      const want = [];
+      const sc = (card && card.score) || 0;
+      const cu = (card && card.customers) || 0;
+      const dy = (st && st.days_active) || 0;
+      if(sc < next.score)       want.push(`${next.score} out of 100`);
+      if(cu < next.customers)   want.push(`${next.customers - cu} more ${next.customers - cu === 1 ? "customer" : "different customers"}`);
+      if(dy < next.days)        want.push(`${next.days - dy} more ${next.days - dy === 1 ? "day" : "days"} on MySheher`);
+      if(st && st.pace != null && st.pace < next.pace){
+        want.push(next.pace >= 1
+          ? `${next.pace === 1 ? "as much work as" : "half again more work than"} the usual ${esc((st.trade || "person").toLowerCase())}`
+          : `half as much work as the usual ${esc((st.trade || "person").toLowerCase())}`);
+      }
+      return `<small class="sc-note"><b style="color:var(--brand-2)">Next: ${next.label}</b> —
+        ${want.length ? "you still need " + want.join(", ") + "." : "you have everything it asks for; it lands on the next nightly update."}</small>`;
+    })() : ""}
+    ${st && st.pace != null ? `<small class="sc-note">You have finished
+      <b>${st.trade_jobs}</b> ${esc((st.trade || "").toLowerCase())} ${st.trade_jobs === 1 ? "job" : "jobs"} in six months.
+      The usual for that trade on MySheher is <b>${Math.round(st.trade_median)}</b> — so you are at
+      <b>${st.pace.toFixed(1)}×</b>. Badges are judged against your own trade, never a flat
+      number, because a mechanic finishes in a day what a wedding planner takes a month over.</small>` : ""}
     <small class="sc-note">Only bookings made through MySheher count. Work arranged
       privately cannot be counted, so it does nothing for your badge or for where
       you appear in search.</small>

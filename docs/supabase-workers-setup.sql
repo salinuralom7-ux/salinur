@@ -7979,7 +7979,9 @@ declare
     -- MIGRATION 48: booking the same person again
     'worker_card',
     -- MIGRATION 49: how somebody works, and their own month-by-month history
-    'worker_scorecard','worker_months'
+    'worker_scorecard','worker_months',
+    -- MIGRATION 50: standing measured against the worker's own trade
+    'worker_standing'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -8043,7 +8045,7 @@ begin
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
-       'admin_set_photo','worker_card','worker_scorecard','worker_months');
+       'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing');
 
   if leaked is not null then
     raise exception
@@ -9694,6 +9696,297 @@ begin
   delete from workers where id = wid;
 end $$;
 
+-- ============================================================
+-- MIGRATION 50 — a wedding planner is not a mechanic
+--
+-- Migration 49 gated the badges on a flat count: five finished jobs for
+-- Silver, twelve for Gold, thirty for Platinum. That is a productivity test
+-- wearing a quality badge, and it is unfair in a way that gets worse the
+-- further a trade sits from the middle.
+--
+-- A two-wheeler mechanic can finish eight jobs in a day. A wedding planner
+-- takes three bookings a month and a month to deliver one of them. Under a
+-- flat thirty, the mechanic is Platinum inside a week and the planner is
+-- still unbadged after a year of flawless work. The badge would end up
+-- measuring how short somebody's jobs are.
+--
+-- So volume is now judged against that person's own trade. "Twice as much
+-- work as the typical wedding planner" and "twice as much as the typical
+-- mechanic" count the same, which is what fairness across trades means.
+--
+-- The absolute floors that remain are not about productivity. They are about
+-- having enough independent evidence to say anything at all: distinct
+-- customers, and time. Ten different people over six months is a real record
+-- whatever the trade. Thirty jobs in three days for two customers is not.
+--
+--   Silver    score 55   3 customers    30 days   half the usual for the trade
+--   Gold      score 70   6 customers    90 days   the usual for the trade
+--   Platinum  score 85  10 customers   180 days   half again above it
+--
+-- A trade with fewer than four working members has no "usual" worth the name,
+-- so the pace test is skipped there and the floors carry it alone. Better to
+-- admit we cannot say than to invent a median from two people.
+-- ============================================================
+
+create table if not exists public.trade_pace (
+  skill      text primary key,
+  median_jobs numeric not null,
+  n_workers  int not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.trade_pace enable row level security;   -- read through functions only
+
+-- What a normal six months looks like in each trade: the median number of
+-- jobs finished by the people who actually work in it. Median, not mean, so
+-- one very busy shop does not redefine the trade for everybody else.
+create or replace function public.refresh_trade_pace()
+returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare n int;
+begin
+  with per_worker as (
+    select t.skill, t.worker_id, count(*)::numeric as jobs
+      from threads t
+      join workers w on w.id = t.worker_id and w.status = 'approved'
+     where t.status = 'closed'
+       and t.closed_at > now() - interval '180 days'
+     group by 1, 2
+  ),
+  med as (
+    select skill,
+           percentile_cont(0.5) within group (order by jobs) as median_jobs,
+           count(*)::int as n_workers
+      from per_worker group by 1
+  )
+  insert into trade_pace (skill, median_jobs, n_workers, updated_at)
+  select skill, greatest(median_jobs, 1), n_workers, now() from med
+  on conflict (skill) do update
+    set median_jobs = excluded.median_jobs,
+        n_workers   = excluded.n_workers,
+        updated_at  = now();
+  get diagnostics n = row_count;
+
+  -- a trade nobody has worked in for six months stops having an opinion
+  delete from trade_pace
+   where updated_at < now() - interval '1 day'
+     and skill not in (select skill from per_worker_skills());
+  return n;
+end;
+$$;
+
+-- tiny helper so the delete above reads as what it means
+create or replace function public.per_worker_skills()
+returns table (skill text)
+language sql stable security definer set search_path = public as $$
+  select distinct t.skill from threads t
+   where t.status = 'closed' and t.closed_at > now() - interval '180 days';
+$$;
+
+-- The trade somebody actually works in — the one they have finished most jobs
+-- in, not the first they happened to list at sign-up.
+create or replace function public.worker_main_trade(p_id uuid)
+returns table (skill text, jobs int, trade_median numeric, trade_workers int, pace numeric)
+language sql stable security definer set search_path = public, extensions as $$
+  with mine as (
+    select t.skill, count(*)::int as n
+      from threads t
+     where t.worker_id = p_id and t.status = 'closed'
+       and t.closed_at > now() - interval '180 days'
+     group by 1 order by 2 desc, 1 limit 1
+  )
+  select m.skill, m.n,
+         coalesce(p.median_jobs, 0), coalesce(p.n_workers, 0),
+         case when coalesce(p.n_workers, 0) < 4 then null       -- no usable "usual"
+              else m.n / greatest(p.median_jobs, 1) end
+    from mine m left join trade_pace p on p.skill = m.skill;
+$$;
+
+create or replace function public.recompute_worker_score(p_id uuid)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare p record; tr record; total int; t text; first_at timestamptz; days int;
+begin
+  select * into p from public.worker_score_parts(p_id);
+  if not found then return; end if;
+
+  total := round(100 * (
+      0.25 * p.answered +
+      0.20 * p.on_time  +
+      0.20 * p.finished +
+      0.20 * p.returned +
+      0.15 * p.active));
+
+  select min(closed_at) into first_at
+    from threads where worker_id = p_id and status = 'closed';
+  days := coalesce((extract(epoch from (now() - first_at)) / 86400)::int, 0);
+
+  select * into tr from public.worker_main_trade(p_id);
+
+  /* Volume against that person's own trade, never against a flat number. A
+     trade with too few working members has no usable median, and there the
+     pace test is simply not applied rather than guessed at. */
+  t := case
+         when total >= 85 and p.customers >= 10 and days >= 180
+              and coalesce(tr.pace, 99) >= 1.5 then 'platinum'
+         when total >= 70 and p.customers >= 6  and days >= 90
+              and coalesce(tr.pace, 99) >= 1.0 then 'gold'
+         when total >= 55 and p.customers >= 3  and days >= 30
+              and coalesce(tr.pace, 99) >= 0.5 then 'silver'
+         else null end;
+
+  update workers set score = total, tier = t, scored_at = now() where id = p_id;
+end;
+$$;
+
+-- the medians move as the city does, so they are swept with the scores
+create or replace function public.recompute_all_scores()
+returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare r record; n int := 0;
+begin
+  perform public.refresh_trade_pace();          -- first: the scores read it
+  for r in select id from workers where status = 'approved' loop
+    perform public.recompute_worker_score(r.id);
+    n := n + 1;
+  end loop;
+  return n;
+end;
+$$;
+
+-- What the worker is shown about their own standing, in their trade's terms.
+create or replace function public.worker_standing(p_phone text default null,
+                                                  p_pin text default null,
+                                                  p_token uuid default null)
+returns table (
+  score int, tier text, jobs_done int, customers int, days_active int,
+  trade text, trade_jobs int, trade_median numeric, trade_workers int, pace numeric)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  return query
+    select w.score, w.tier, p.jobs_done, p.customers,
+           coalesce((extract(epoch from (now() - (
+             select min(closed_at) from threads where worker_id = wid and status = 'closed'
+           ))) / 86400)::int, 0),
+           tr.skill, tr.jobs, tr.trade_median, tr.trade_workers, tr.pace
+      from workers w,
+           lateral public.worker_score_parts(w.id) p,
+           lateral (select * from public.worker_main_trade(w.id)
+                    union all select null, null, null, null, null
+                    limit 1) tr
+     where w.id = wid;
+end;
+$$;
+
+do $$
+declare mech uuid; slow uuid; planner uuid; i int; r record;
+begin
+  delete from threads where customer_phone like '9000007%';
+  delete from workers where phone like '9000007%' or phone in ('9000000089','9000000088','9000000087');
+  delete from trade_pace where skill in ('Two-Wheeler Mechanic','Event Photographer');
+
+  -- Five mechanics so the trade has a usable median. Four of them finish 40
+  -- jobs each in six months; the fifth finishes 12 — good work, low volume.
+  for i in 1..4 loop
+    insert into workers (name, phone, city, area, lat, lng, skills, available, status,
+                         on_time_yes, on_time_total)
+    values ('Busy Mech ' || i, '90000079' || lpad(i::text,2,'0'), 'Guwahati','Beltola',26.1,91.7,
+            '[{"skill":"Two-Wheeler Mechanic","price":300,"unit":"per visit"}]'::jsonb,
+            true,'approved', 9, 10)
+    returning id into mech;
+    insert into threads (worker_id, code, skill, customer_name, customer_phone, status,
+                         accepted_at, closed_at, price)
+    select mech, 'MB' || i || lpad(g::text,7,'0'), 'Two-Wheeler Mechanic', 'C',
+           '9000007' || lpad(g::text,3,'0'), 'closed',
+           now() - interval '100 days', now() - interval '99 days', 300
+      from generate_series(1,40) g;
+  end loop;
+
+  insert into workers (name, phone, city, area, lat, lng, skills, available, status,
+                       on_time_yes, on_time_total)
+  values ('Careful Mech','9000000089','Guwahati','Beltola',26.1,91.7,
+          '[{"skill":"Two-Wheeler Mechanic","price":300,"unit":"per visit"}]'::jsonb,
+          true,'approved', 10, 10)
+  returning id into slow;
+  insert into threads (worker_id, code, skill, customer_name, customer_phone, status,
+                       accepted_at, closed_at, price)
+  select slow, 'MS' || lpad(g::text,8,'0'), 'Two-Wheeler Mechanic', 'C',
+         '9000007' || lpad((500+g)::text,3,'0'), 'closed',
+         now() - interval '200 days', now() - interval '190 days' + (g || ' days')::interval, 300
+    from generate_series(1,12) g;
+
+  -- A photographer: the whole trade is slow, and she is the busiest in it.
+  for i in 1..4 loop
+    insert into workers (name, phone, city, area, lat, lng, skills, available, status,
+                         on_time_yes, on_time_total)
+    values ('Snapper ' || i, '90000078' || lpad(i::text,2,'0'), 'Guwahati','Beltola',26.1,91.7,
+            '[{"skill":"Event Photographer","price":8000,"unit":"per day"}]'::jsonb,
+            true,'approved', 9, 10)
+    returning id into planner;
+    insert into threads (worker_id, code, skill, customer_name, customer_phone, status,
+                         accepted_at, closed_at, price)
+    select planner, 'PB' || i || lpad(g::text,7,'0'), 'Event Photographer', 'C',
+           '9000007' || lpad((600 + i*10 + g)::text,3,'0'), 'closed',
+           now() - interval '150 days', now() - interval '140 days', 8000
+      from generate_series(1,3) g;
+  end loop;
+
+  insert into workers (name, phone, city, area, lat, lng, skills, available, status,
+                       on_time_yes, on_time_total)
+  values ('Top Snapper','9000000087','Guwahati','Beltola',26.1,91.7,
+          '[{"skill":"Event Photographer","price":8000,"unit":"per day"}]'::jsonb,
+          true,'approved', 10, 10)
+  returning id into planner;
+  insert into threads (worker_id, code, skill, customer_name, customer_phone, status,
+                       accepted_at, closed_at, price)
+  select planner, 'PT' || lpad(g::text,8,'0'), 'Event Photographer', 'C',
+         '9000007' || lpad((700+g)::text,3,'0'), 'closed',
+         now() - interval '200 days', now() - interval '190 days' + (g*15 || ' days')::interval, 8000
+    from generate_series(1,11) g;
+
+  perform public.recompute_all_scores();
+
+  -- the point of the whole migration
+  select median_jobs, n_workers into r from trade_pace where skill = 'Two-Wheeler Mechanic';
+  raise notice 'mechanics: median % over % workers', r.median_jobs, r.n_workers;
+  select median_jobs, n_workers into r from trade_pace where skill = 'Event Photographer';
+  raise notice 'photographers: median % over % workers', r.median_jobs, r.n_workers;
+
+  if (select tier from workers where id = planner) is null then
+    raise exception 'MIGRATION 50: the busiest photographer in her trade earned no badge on 11 jobs';
+  end if;
+  raise notice 'PASS  eleven jobs in a slow trade earns a badge: %',
+    (select tier from workers where id = planner);
+
+  if (select tier from workers where id = slow) = 'platinum' then
+    raise exception 'MIGRATION 50: a below-median mechanic reached the top rung on volume alone';
+  end if;
+  raise notice 'PASS  twelve jobs in a fast trade does not: % (below the trade median)',
+    coalesce((select tier from workers where id = slow), 'no badge');
+
+  -- and the flat count is genuinely gone: the photographer has fewer finished
+  -- jobs than the mechanic and a better badge
+  if (select count(*) from threads where worker_id = planner and status='closed')
+     >= (select count(*) from threads where worker_id = slow and status='closed') then
+    raise exception 'MIGRATION 50: the test did not set up the comparison it claims';
+  end if;
+  raise notice 'PASS  fewer jobs, better badge — the flat count is gone';
+
+  -- a burst cannot buy a badge, however large
+  update threads set closed_at = now() - interval '2 days'
+   where worker_id = slow and status = 'closed';
+  perform public.recompute_worker_score(slow);
+  if (select tier from workers where id = slow) is not null then
+    raise exception 'MIGRATION 50: twelve jobs in two days bought a badge';
+  end if;
+  raise notice 'PASS  a burst of work in two days buys nothing — time is a floor';
+
+  delete from threads where customer_phone like '9000007%';
+  delete from workers where phone like '9000007%' or phone like '900000008%';
+  delete from trade_pace where skill in ('Two-Wheeler Mechanic','Event Photographer');
+end $$;
+
 -- ---------- and the reason any of it matters ----------
 -- A score nobody is ranked by is decoration. Both of these are redefined here
 -- rather than where they were first written, because they now read columns
@@ -9769,10 +10062,19 @@ language sql stable security definer set search_path = public, extensions as $$
      -- kilometres away is no use compared with somebody good at the end of
      -- the road, and a marketplace that forgets that stops being local.
      --
-     -- An unbadged worker ranks at 55 rather than at their raw score: a
-     -- newcomer must not be buried under people who have had a year to
-     -- accumulate, or nobody new ever gets a first job.
-     case when h.tier is null then 55 else coalesce(h.score, 55) end desc,
+     -- The raw score, not the badge. Migration 50 made badges properly hard —
+     -- they need a track record measured against the trade — so ranking by
+     -- badge would leave almost everybody tied at neutral and the incentive
+     -- would do nothing for the people it is most meant to reach: the ones
+     -- with a handful of jobs deciding whether the next one goes through the
+     -- app or round the back of it.
+     --
+     -- No floor is needed for newcomers. Somebody with no history scores 61
+     -- by construction — full marks on the things they cannot yet have failed
+     -- at, nothing for the two that need a record — which already places them
+     -- above anybody who has been ignoring requests, and below somebody with
+     -- a real one. That is the right order.
+     coalesce(h.score, 61) desc,
      case when h.rating_count = 0 then 3.4
           else h.rating_sum::numeric / h.rating_count end desc,
      h.created_at desc
@@ -9842,9 +10144,16 @@ begin
   end if;
   raise notice 'PASS  same street, and the one who answers and gets booked again is found first';
 
+  /* worker_card has to carry the same two columns the search does, so a
+     rebook shows what a search showed. Whether a badge has been earned is
+     Migration 50's business and is tested there — twelve jobs in five days
+     is deliberately not enough for one. */
   select score, tier into r from public.worker_card(a);
-  if r.tier is null then raise exception 'MIGRATION 49: worker_card lost the badge'; end if;
-  raise notice 'PASS  reopening somebody shows the same badge as the search did';
+  if r.score is null then raise exception 'MIGRATION 49: worker_card lost the score'; end if;
+  if r.score <> (select score from workers where id = a) then
+    raise exception 'MIGRATION 49: worker_card disagrees with the stored score';
+  end if;
+  raise notice 'PASS  reopening somebody shows the same standing the search did: %', r.score;
 
   delete from threads where worker_id in (a, b);
   delete from workers where id in (a, b);
@@ -9905,7 +10214,7 @@ begin
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
-       'admin_set_photo','worker_card','worker_scorecard','worker_months');
+       'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing');
 
   if leaked is not null then
     raise exception

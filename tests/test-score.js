@@ -101,6 +101,9 @@ const ok = (l, c, x) => { console.log((c ? 'PASS  ' : 'FAIL  ') + l + (x !== und
     saveSession();
     api.scorecard = async () => ({ score: 76, tier: 'gold', jobs_done: 14, answered_pct: 81,
       on_time_pct: 88, finished_pct: 93, customers: 11, repeat_customers: 3, days_since_last: 4 });
+    api.standing = async () => ({ score:76, tier:'gold', jobs_done:14, customers:11,
+      days_active:120, trade:'Event Photographer', trade_jobs:11, trade_median:3,
+      trade_workers:5, pace:3.7 });
     api.myMonths = async () => ([
       { month:'2026-08-01', finished:4, earned:1600 },
       { month:'2026-07-01', finished:6, earned:2400 },
@@ -116,8 +119,15 @@ const ok = (l, c, x) => { console.log((c ? 'PASS  ' : 'FAIL  ') + l + (x !== und
     text: (document.getElementById('meScore') || {}).innerText || '',
   }));
   ok('The worker sees the same badge a customer does', /Gold/.test(me.badge), me.badge.trim());
-  ok('…and exactly what the next rung takes', /Platinum/.test(me.next) && /16 more/.test(me.text),
-     me.next + ' — ' + (me.text.match(/16 more[^.]*/) || [''])[0]);
+  ok('…and exactly what the next rung still needs', /Platinum/.test(me.next),
+     (me.text.match(/Next: Platinum[^.]*/) || [''])[0].slice(0, 90));
+  /* The whole point of migration 50: a wedding planner and a mechanic must
+     not be held to the same number of jobs. */
+  ok('…measured against their own trade, not a flat job count',
+     /usual for that trade/.test(me.text) && /3\.7×/.test(me.text),
+     (me.text.match(/The usual for that trade[^.]*\./) || [''])[0]);
+  ok('…and it does not demand a flat number of jobs',
+     !/\d+ more finished jobs/.test(me.text));
   ok('Month by month is drawn', me.counts.length === 4, me.counts.join(','));
   ok('…oldest on the left, so the shape of the year reads correctly',
      JSON.stringify(me.counts) === JSON.stringify(['2','2','6','4']), me.counts.join(','));
