@@ -37,14 +37,28 @@ const ok=(l,c,x)=>console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x:
   // the confirmation before publishing
   await card.locator('.sd-price').fill('2400');
   await p.waitForTimeout(250);
-  let asked = null;
-  p.on('dialog', async d => { asked = d.message(); await d.dismiss(); });
+  /* The question is a sheet the app draws, not window.confirm(). A native
+     confirm can be switched off by the browser, and when it was, Publish
+     silently did nothing — see tests/test-publish.js. Any native dialog
+     reaching this handler is now itself a failure. */
+  const native = [];
+  p.on('dialog', async d => { native.push(d.message()); await d.dismiss(); });
   await p.evaluate(() => { window.__saved = false; });
-  await p.evaluate(() => saveProfile());
-  await p.waitForTimeout(700);
-  ok('Publishing at a high price asks first', !!asked);
-  if (asked) console.log('       dialog: ' + asked.split('\n').filter(Boolean).slice(0,3).join(' | '));
-  ok('Dismissing keeps them on the form', await p.locator('#scr-register.on').count() === 1);
+  p.evaluate(() => saveProfile());              /* resolves on an answer, so not awaited */
+  await p.waitForTimeout(800);
+  const asked = await p.evaluate(() => ({
+    open: document.getElementById('askOverlay').classList.contains('open'),
+    body: (document.getElementById('askBody') || {}).textContent || '',
+  }));
+  ok('Publishing at a high price asks first', asked.open);
+  ok('…in the app, not through a dialog the browser can suppress', native.length === 0,
+     native.join(' | ') || 'none');
+  if (asked.open) console.log('       asked: ' + asked.body.split('\n').filter(Boolean).slice(0,2).join(' | '));
+  await p.evaluate(() => document.getElementById('askNo').click());
+  await p.waitForTimeout(500);
+  ok('Choosing to change it keeps them on the form', await p.locator('#scr-register.on').count() === 1);
+  ok('…and says nothing was published', /Nothing published/.test(
+     await p.evaluate(() => (document.querySelector('.toast.show') || {}).textContent || '')));
 
   ok('No JS errors', errs.length===0, errs.join(' | ')||'none');
   await b.close(); srv.close();

@@ -3861,6 +3861,23 @@ footer a{color:var(--ink-2)}
   </div>
 </div>
 
+<!-- A question the app asks itself, rather than window.confirm().
+     confirm() cost somebody their profile: Chrome offers "prevent this page
+     from creating additional dialogs" after a couple of dismissals, and from
+     then on every confirm() returns false instantly and invisibly. The
+     publish button called one, so it silently did nothing, however many times
+     it was pressed. A dialog the page draws cannot be switched off, and both
+     answers here are buttons with words on them rather than OK and Cancel. -->
+<div class="overlay" id="askOverlay" onclick="if(event.target===this)askAnswer(false)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="askTitle">
+    <button class="close" onclick="askAnswer(false)" aria-label="Close">✕</button>
+    <h3 id="askTitle"></h3>
+    <div class="sub" id="askBody" style="white-space:pre-line"></div>
+    <button class="btn btn-brand btn-block" id="askYes" style="padding:14px;margin-top:18px"></button>
+    <button class="btn btn-outline btn-block" id="askNo" style="padding:13px;margin-top:10px"></button>
+  </div>
+</div>
+
 <div class="overlay" id="goneOverlay" onclick="if(event.target===this)closeModal('goneOverlay')">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="goneTitle">
     <button class="close" onclick="closeModal('goneOverlay')" aria-label="Close">✕</button>
@@ -6934,6 +6951,33 @@ function captureLocation(){
     {enableHighAccuracy:true, timeout:10000}
   );
 }
+/* ---------- asking a question without window.confirm() ----------
+   Resolves true or false, and never resolves on its own: whatever happens,
+   somebody pressed something. The reason this exists rather than confirm():
+   Chrome lets a user suppress page dialogs, after which confirm() returns
+   false immediately and draws nothing — so the publish button did nothing at
+   all, silently, no matter how many times it was pressed. */
+let askResolve = null;
+function askAnswer(v){
+  hideModal("askOverlay");
+  const r = askResolve; askResolve = null;
+  if(r) r(v);
+}
+function ask({ title, body, yes, no }){
+  return new Promise(resolve => {
+    /* a second question while one is open would strand the first */
+    if(askResolve) askAnswer(false);
+    askResolve = resolve;
+    $("askTitle").textContent = title;
+    $("askBody").textContent  = body || "";
+    $("askYes").textContent   = yes || "Yes";
+    $("askNo").textContent    = no  || "Cancel";
+    $("askYes").onclick = () => askAnswer(true);
+    $("askNo").onclick  = () => askAnswer(false);
+    openModal("askOverlay");
+  });
+}
+
 async function saveProfile(){
   if(!session){ go("work"); return; }
   const skills = collectSkills();
@@ -6956,12 +7000,22 @@ async function saveProfile(){
         ? `· ${x.skill}: you ${money0(x.price)} — most charge about ${money0(st.median)}`
         : `· ${x.skill}: ${money0(x.price)} is near the top for this trade`;
     }).join("\n");
-    const ok = confirm(
-      "The lower your price, the more bookings you get.\n\n" + lines +
-      "\n\nCustomers see the cheapest and nearest first, and your first few jobs are what earn you ratings. " +
-      "You can raise your price any time once you are busy.\n\nGo back and lower it, or publish at this price?");
+    const ok = await ask({
+      title: "That is a high price for this trade",
+      body: lines +
+        "\n\nCustomers see the nearest and best-rated first, and your first few jobs are what earn you " +
+        "ratings. You can raise your price any time once you are busy.",
+      yes: "Publish at this price",
+      no:  "Go back and change it",
+    });
     if(ok){ window._pricesConfirmed = true; }
-    else return;                      /* they chose to go back and edit */
+    else {
+      /* Never in silence. The old version simply returned, so somebody who
+         dismissed the dialog — or whose browser had suppressed it — pressed
+         Publish over and over with nothing happening at all. */
+      toast("Nothing published — change your rate, or choose Publish at this price");
+      return;
+    }
   }
   if(!selfieData){ toast("Please take your verification photo"); return; }
   const area = $("regArea").value.trim();
