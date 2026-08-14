@@ -3091,6 +3091,13 @@ footer a{color:var(--ink-2)}
     <!-- One thing at a time. The whole form used to be one 2,400px page with
          45 controls on it, which is a lot to face if reading is work. -->
     <div class="stepper" id="regStepper" aria-hidden="true"></div>
+    <!-- Why they were turned down, carried through from the profile screen.
+         Without it somebody taps "fix it", lands here, and the reason they
+         came is no longer anywhere on screen. -->
+    <div class="vstatus rejected" id="regWhyRejected" hidden>
+      <span class="dotmark">✕</span>
+      <div><b>What to change</b><span id="regRejectNote"></span></div>
+    </div>
     <p class="step-title" id="regStepTitle"></p>
 
     <div class="regstep" data-step="1">
@@ -6251,9 +6258,18 @@ async function sendOtp(isResend){
       $("otpSent").innerHTML = `We sent a 6-digit code ${channel === "whatsapp" ? "on <b>WhatsApp</b>" : "by <b>SMS</b>"} to <b>+91 ${esc(phone)}</b>.`;
       if(isResend) toast("Code sent again");
     }catch(e){
-      $("otpSent").textContent = "We couldn't send the code just now.";
-      toast(e.message || "Could not send the code — please try again");
+      /* Nothing was sent, so a six-digit box and a Verify button are a
+         cruelty: there is no code coming and no way to know that. Fall back
+         to the click-to-chat flow, which is on this very screen and needs no
+         provider at all — the worker sends us a code from their own WhatsApp
+         and the message arriving is what proves the number is theirs. */
       stopResendCooldown();
+      $("codeFlow").hidden = true;
+      $("waFlow").hidden = false;
+      initWaVerify();
+      $("otpSent").innerHTML =
+        `We could not send a code to <b>+91 ${esc(phone)}</b> just now — no matter. ` +
+        `Confirm the number by sending us a message from your own WhatsApp instead.`;
     }
     return;
   }
@@ -6367,6 +6383,15 @@ function initRegister(){
   const w = editing ? session.worker : null;
   $("regTitle").textContent = editing ? "Edit your profile" : "Create your profile";
   $("regSaveBtn").textContent = editing ? "Save changes" : "Publish my profile";
+  /* A rejected profile is being edited for a reason; keep the reason in front
+     of them the whole way through rather than only on the screen they left. */
+  const turnedDown = editing && statusOf(w) === "rejected";
+  $("regWhyRejected").hidden = !turnedDown;
+  if(turnedDown){
+    $("regRejectNote").textContent = (w.review_note || "Please check your photo and details.")
+      + " Save when you have, and it goes straight back for review.";
+    $("regSaveBtn").textContent = "Send back for review";
+  }
   window._pricesConfirmed = false;   /* a later edit gets asked again */
   /* consent is recorded once, when the profile is first published */
   regGo(1);
@@ -7123,8 +7148,18 @@ function renderMe(){
       rejected: `<div class="vstatus rejected">
         <span class="dotmark">✕</span>
         <div><b>Profile not approved</b><span>${w.review_note
-          ? esc(w.review_note) + " — fix this and your profile goes back for review automatically."
-          : "Please check your photo and details, then edit and save your profile to send it back for review."}</span></div>
+          ? esc(w.review_note)
+          : "Please check your photo and details."}<br>
+          Change it and send it back — there is no limit on how many times you can try,
+          and it goes straight back into the queue.</span>
+          <!-- The way back has to be here, next to the reason. It was a small
+               outline button at the very bottom of the screen, under the ID
+               card and the work list, sharing a row with Sign out — so a
+               rejected worker read why they had been turned down and had
+               nothing in front of them to do about it. -->
+          <button class="btn btn-brand btn-sm" style="margin-top:12px"
+                  onclick="go('register')">Fix it and send back for review</button>
+        </div>
       </div>`,
       approved: `<div class="vstatus done">
         <span class="dotmark">✓</span>
