@@ -7977,7 +7977,9 @@ declare
     -- MIGRATION 46: staff replacing a photograph for somebody who cannot
     'admin_set_photo',
     -- MIGRATION 48: booking the same person again
-    'worker_card'
+    'worker_card',
+    -- MIGRATION 49: how somebody works, and their own month-by-month history
+    'worker_scorecard','worker_months'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -8041,7 +8043,7 @@ begin
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
-       'admin_set_photo','worker_card');
+       'admin_set_photo','worker_card','worker_scorecard','worker_months');
 
   if leaked is not null then
     raise exception
@@ -9326,7 +9328,11 @@ end $$;
 -- profile that cannot be booked.
 -- ============================================================
 
-create or replace function public.worker_card(p_id uuid)
+-- Dropped first every time: Migration 49 widens this to carry the score and
+-- the badge, and `create or replace` cannot change OUT parameters. This file
+-- is re-applied whole on every push, so the second run would fail here.
+drop function if exists public.worker_card(uuid);
+create function public.worker_card(p_id uuid)
 returns table (
   id uuid, name text, selfie text, thumb text, city text, area text, about text,
   skills jsonb, rating_sum int, rating_count int,
@@ -9393,6 +9399,456 @@ begin
   raise notice 'PASS  reopening somebody gives away no more than a search does';
 end $$;
 
+-- ============================================================
+-- MIGRATION 49 — a score for how somebody works, not just how well
+--
+-- The problem this exists for: a customer books a plumber here, gets his
+-- number when he accepts, and next time rings him directly. The booking, the
+-- record of it, the review and the next customer who would have found him all
+-- vanish. MySheher takes no commission, so nobody is dodging a fee — it is
+-- pure habit, and habit is what has to be competed with.
+--
+-- What this is NOT: a detector for off-platform work. There is no such
+-- signal, and a "loyalty" number invented from nothing would be unfair to a
+-- new worker and a lie to the customer reading it.
+--
+-- What it is: five things that can only be earned inside the app, measured
+-- from what the app already records. Somebody who takes their work private
+-- stops accruing them — not as a punishment, simply because the evidence
+-- stops. And the strongest of the five is the one that answers the problem
+-- directly: customers who came back. A worker who is good to people through
+-- MySheher gets booked again through MySheher, and that shows.
+--
+--   answers requests      25   replied at all, rather than ignoring
+--   turns up on time      20   the customer's own answer, already collected
+--   finishes what he took 20   accepted jobs that reached the end
+--   customers came back   20   distinct people who booked a second time
+--   still working here    15   how recently a job was finished
+--
+-- Stars stay separate. Stars are how good the work was; this is how somebody
+-- is to deal with. A brilliant electrician who never answers his phone should
+-- score badly here and still keep his five stars.
+--
+-- A badge is only ever a good thing to have. Below five finished jobs nobody
+-- gets one — not a bad one, none — because a new worker must not be branded
+-- on no evidence, and because one perfect job must not buy a badge.
+-- ============================================================
+
+alter table public.workers add column if not exists score     int;
+alter table public.workers add column if not exists tier      text;
+alter table public.workers add column if not exists scored_at timestamptz;
+
+comment on column public.workers.score is
+  '0-100, recomputed from threads. See worker_score_parts. Null until scored.';
+comment on column public.workers.tier is
+  'null, ''reliable'', ''trusted'' or ''gold''. Null means not enough finished '
+  'work to say anything, which is not the same as scoring badly.';
+
+-- counting a worker's threads by status is now the hot path for scoring
+create index if not exists threads_worker_status_idx
+  on public.threads (worker_id, status, created_at desc);
+
+-- The five parts, each 0..1, and the counts behind them. One place, so the
+-- score, the badge and the breakdown a customer reads can never disagree.
+create or replace function public.worker_score_parts(p_id uuid)
+returns table (
+  answered numeric, on_time numeric, finished numeric, returned numeric, active numeric,
+  requests_seen int, answered_n int, jobs_done int, customers int, repeat_customers int,
+  days_since_last int)
+language sql stable security definer set search_path = public, extensions as $$
+  with t as (
+    select * from threads where worker_id = p_id
+  ),
+  recent as (
+    -- Six months, so a bad patch is recoverable and a good spell two years
+    -- ago is not a permanent shield.
+    select * from t where created_at > now() - interval '180 days'
+  ),
+  seen as (
+    -- Requests the worker actually had a chance to answer. A job the customer
+    -- cancelled before anybody looked is not the worker's failure.
+    select count(*)::int as n from recent where status <> 'cancelled'
+  ),
+  ans as (
+    select count(*)::int as n from recent
+     where status in ('accepted','working','done','closed','declined')
+  ),
+  done as (select count(*)::int as n from t where status = 'closed'),
+  quit as (
+    -- accepted and then abandoned: the one that actually costs a customer a day
+    select count(*)::int as n from t where status = 'cancelled' and accepted_at is not null
+  ),
+  cust as (
+    select coalesce(customer_id::text, customer_phone) as who, count(*) as n
+      from t where status = 'closed'
+     group by 1
+  ),
+  last as (select max(closed_at) as at from t where status = 'closed'),
+  w as (select on_time_yes, on_time_total from workers where id = p_id)
+  select
+    case when seen.n = 0 then 1.0 else least(1.0, ans.n::numeric / seen.n) end,
+    case when w.on_time_total < 3 then 0.8
+         else w.on_time_yes::numeric / w.on_time_total end,
+    case when done.n + quit.n = 0 then 1.0
+         else done.n::numeric / (done.n + quit.n) end,
+    -- A third of customers coming back is exceptional for home services, so
+    -- that is what full marks means rather than everybody coming back.
+    case when (select count(*) from cust) = 0 then 0.0
+         else least(1.0, ((select count(*) from cust where n > 1)::numeric
+                          / (select count(*) from cust)) / 0.33) end,
+    case when last.at is null then 0.0
+         when last.at > now() - interval '30 days'  then 1.0
+         when last.at > now() - interval '120 days'
+           then 1.0 - (extract(epoch from (now() - last.at)) / 86400.0 - 30) / 90.0
+         else 0.0 end,
+    seen.n, ans.n, done.n,
+    (select count(*)::int from cust),
+    (select count(*)::int from cust where n > 1),
+    case when last.at is null then null
+         else (extract(epoch from (now() - last.at)) / 86400)::int end
+  from seen, ans, done, quit, last, w;
+$$;
+
+create or replace function public.recompute_worker_score(p_id uuid)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare p record; total int; t text;
+begin
+  select * into p from public.worker_score_parts(p_id);
+  if not found then return; end if;
+
+  total := round(100 * (
+      0.25 * p.answered +
+      0.20 * p.on_time  +
+      0.20 * p.finished +
+      0.20 * p.returned +
+      0.15 * p.active));
+
+  -- Earned, never imposed. Below five finished jobs there is nothing to say
+  -- about somebody, so nothing is said.
+  t := case
+         when p.jobs_done >= 30 and total >= 85 then 'gold'
+         when p.jobs_done >= 12 and total >= 70 then 'trusted'
+         when p.jobs_done >= 5  and total >= 55 then 'reliable'
+         else null end;
+
+  update workers set score = total, tier = t, scored_at = now() where id = p_id;
+end;
+$$;
+
+-- Every change to a booking moves the numbers for exactly one worker.
+create or replace function public.threads_score_trg()
+returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform public.recompute_worker_score(coalesce(new.worker_id, old.worker_id));
+  return null;
+end;
+$$;
+drop trigger if exists threads_score_trg on public.threads;
+create trigger threads_score_trg
+  after insert or update of status on public.threads
+  for each row execute function public.threads_score_trg();
+
+-- "Still working here" decays with the calendar even when nothing happens, so
+-- it has to be swept rather than only recomputed on a change.
+create or replace function public.recompute_all_scores()
+returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare r record; n int := 0;
+begin
+  for r in select id from workers where status = 'approved' loop
+    perform public.recompute_worker_score(r.id);
+    n := n + 1;
+  end loop;
+  return n;
+end;
+$$;
+
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    begin
+      create extension if not exists pg_cron;
+      perform cron.unschedule('mysheher-scores');
+    exception when others then null;
+    end;
+    begin
+      perform cron.schedule('mysheher-scores', '20 20 * * *',
+                            'select public.recompute_all_scores()');
+      raise notice 'nightly score sweep scheduled';
+    exception when others then
+      raise notice 'pg_cron present but not schedulable here (%) — call recompute_all_scores() from a job', sqlerrm;
+    end;
+  else
+    raise notice 'no pg_cron — call recompute_all_scores() from a scheduled job instead';
+  end if;
+end $$;
+
+-- What a customer is shown, and why. Public on purpose: a number nobody can
+-- see the reasons behind is not trust, it is a rating agency.
+create or replace function public.worker_scorecard(p_id uuid)
+returns table (
+  score int, tier text, jobs_done int,
+  answered_pct int, on_time_pct int, finished_pct int,
+  customers int, repeat_customers int, days_since_last int)
+language sql stable security definer set search_path = public, extensions as $$
+  select w.score, w.tier, p.jobs_done,
+         round(100 * p.answered)::int,
+         case when w.on_time_total >= 3 then round(100 * p.on_time)::int end,
+         round(100 * p.finished)::int,
+         p.customers, p.repeat_customers, p.days_since_last
+    from workers w, lateral public.worker_score_parts(w.id) p
+   where w.id = p_id and w.status = 'approved';
+$$;
+
+-- The worker's own history, month by month. Their dashboard, and the honest
+-- version of "experience": not a number they typed into a box at sign-up.
+create or replace function public.worker_months(p_phone text default null,
+                                                p_pin text default null,
+                                                p_token uuid default null)
+returns table (month date, finished int, earned int)
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  return query
+    select date_trunc('month', t.closed_at)::date,
+           count(*)::int,
+           coalesce(sum(t.price), 0)::int
+      from threads t
+     where t.worker_id = wid and t.status = 'closed' and t.closed_at is not null
+       and t.closed_at > now() - interval '24 months'
+     group by 1
+     order by 1 desc;
+end;
+$$;
+
+do $$
+declare wid uuid; cid uuid; r record; n int;
+begin
+  delete from threads where customer_phone like '90000009%';
+  delete from workers where phone = '9000000092';
+  insert into workers (name, phone, city, area, lat, lng, skills, available, status,
+                       on_time_yes, on_time_total)
+  values ('Score Me','9000000092','Guwahati','Beltola',26.1,91.7,
+          '[{"skill":"Plumber","price":300,"unit":"per visit"}]'::jsonb, true, 'approved', 9, 10)
+  returning id into wid;
+
+  -- nobody with no history gets a badge
+  perform public.recompute_worker_score(wid);
+  select tier into r from workers where id = wid;
+  if (select tier from workers where id = wid) is not null then
+    raise exception 'MIGRATION 49: a worker with no jobs was given a badge';
+  end if;
+  raise notice 'PASS  no history, no badge — not a bad one, none';
+
+  -- six finished jobs for five people, one of whom came back twice
+  insert into threads (worker_id, code, skill, customer_name, customer_phone, status,
+                       accepted_at, closed_at, price)
+  select wid, 'SC' || lpad(g::text, 8, '0'), 'Plumber', 'C', '900000900' || least(g,5),
+         'closed', now() - interval '10 days', now() - interval '9 days', 300
+    from generate_series(1,6) g;
+  perform public.recompute_worker_score(wid);
+  select score, tier into r from workers where id = wid;
+  select score, tier from workers where id = wid into r;
+  raise notice 'PASS  six jobs, five customers, one repeat → score %, tier %',
+    (select score from workers where id = wid), (select tier from workers where id = wid);
+  if (select tier from workers where id = wid) is null then
+    raise exception 'MIGRATION 49: six clean jobs earned nothing';
+  end if;
+
+  -- ignoring requests has to cost something
+  select score into n from workers where id = wid;
+  insert into threads (worker_id, code, skill, customer_name, customer_phone, status)
+  select wid, 'IG' || lpad(g::text, 8, '0'), 'Plumber', 'C', '9000009099', 'requested'
+    from generate_series(1,10) g;
+  perform public.recompute_worker_score(wid);
+  if (select score from workers where id = wid) >= n then
+    raise exception 'MIGRATION 49: ignoring ten requests did not cost anything (% then %)',
+      n, (select score from workers where id = wid);
+  end if;
+  raise notice 'PASS  ignoring requests costs score: % → %', n, (select score from workers where id = wid);
+
+  -- the trigger fires by itself
+  update workers set score = null, tier = null where id = wid;
+  update threads set status = 'closed', closed_at = now()
+   where worker_id = wid and code = 'IG00000001';
+  if (select score from workers where id = wid) is null then
+    raise exception 'MIGRATION 49: the trigger did not recompute on a status change';
+  end if;
+  raise notice 'PASS  a booking changing state rescores that worker by itself';
+
+  -- the scorecard agrees with the stored score
+  select * into r from public.worker_scorecard(wid);
+  if r.score <> (select score from workers where id = wid) then
+    raise exception 'MIGRATION 49: the scorecard and the stored score disagree';
+  end if;
+  if r.repeat_customers < 1 then
+    raise exception 'MIGRATION 49: the repeat customer was not counted';
+  end if;
+  raise notice 'PASS  the card a customer reads matches the number they are ranked by';
+
+  delete from threads where worker_id = wid;
+  delete from workers where id = wid;
+end $$;
+
+-- ---------- and the reason any of it matters ----------
+-- A score nobody is ranked by is decoration. Both of these are redefined here
+-- rather than where they were first written, because they now read columns
+-- that this migration adds — a function body is checked when it is created,
+-- and the file is applied top to bottom.
+
+drop function if exists public.search_workers(double precision, double precision, text, text[], text, text, int, int);
+
+create function public.search_workers(
+  p_lat        double precision default null,
+  p_lng        double precision default null,
+  p_q          text             default null,
+  p_cat_skills text[]           default null,
+  p_area       text             default null,
+  p_city       text             default 'Guwahati',
+  p_limit      int              default 20,
+  p_offset     int              default 0
+)
+returns table (
+  id uuid, name text, selfie text, thumb text, city text, area text, about text,
+  skills jsonb, rating_sum int, rating_count int, distance_km double precision,
+  worker_code text, serves_remote boolean, online_until timestamptz,
+  reg_number text, reg_verified boolean,
+  jobs_done int, on_time_yes int, on_time_total int, member_since timestamptz,
+  score int, tier text,
+  total_count bigint)
+language sql stable security definer set search_path = public, extensions as $$
+  with base as (
+    select w.*,
+           lower(w.name || ' ' || coalesce(w.area,'') || ' ' || coalesce(w.city,'') || ' ' ||
+                 coalesce(w.skills::text,'')) as hay,
+           case when p_lat is null or w.lat is null or w.serves_remote then null else
+             6371 * 2 * asin(sqrt(
+               power(sin(radians(w.lat - p_lat) / 2), 2) +
+               cos(radians(p_lat)) * cos(radians(w.lat)) *
+               power(sin(radians(w.lng - p_lng) / 2), 2)))
+           end as dist
+      from workers w
+     where w.status = 'approved'
+       and w.available
+       and (p_city is null or w.city = p_city or w.serves_remote)
+       and (p_area is null or w.area = p_area or w.serves_remote)
+       and (p_cat_skills is null or exists (
+             select 1 from jsonb_array_elements(w.skills) s
+              where s->>'skill' = any(p_cat_skills)))
+  ),
+  hit as (
+    select * from base b
+     where p_q is null or btrim(p_q) = '' or (
+       select bool_and(b.hay like '%' || word || '%')
+         from unnest(string_to_array(lower(btrim(p_q)), ' ')) word
+        where word <> '')
+  )
+  select h.id, h.name, h.selfie, h.thumb, h.city, h.area, h.about, h.skills,
+         h.rating_sum, h.rating_count, h.dist, h.worker_code, h.serves_remote,
+         h.online_until, h.reg_number, h.reg_verified,
+         (select count(*)::int from threads t
+           where t.worker_id = h.id and t.status = 'closed') as jobs_done,
+         h.on_time_yes, h.on_time_total, h.created_at as member_since,
+         h.score, h.tier,
+         count(*) over () as total_count
+    from hit h
+   order by
+     case when h.dist is null then 1 else 0 end,
+     round(coalesce(h.dist, 0)::numeric, 1),
+     -- Within the same hundred metres, the person who answers, turns up and
+     -- gets booked again comes first. That is the whole incentive: a booking
+     -- taken here is what earns the score, and the score is what brings the
+     -- next one. A worker who takes the job privately earns nothing and
+     -- slowly slides down past the ones who did not.
+     --
+     -- Distance still wins outright, deliberately. Somebody excellent four
+     -- kilometres away is no use compared with somebody good at the end of
+     -- the road, and a marketplace that forgets that stops being local.
+     --
+     -- An unbadged worker ranks at 55 rather than at their raw score: a
+     -- newcomer must not be buried under people who have had a year to
+     -- accumulate, or nobody new ever gets a first job.
+     case when h.tier is null then 55 else coalesce(h.score, 55) end desc,
+     case when h.rating_count = 0 then 3.4
+          else h.rating_sum::numeric / h.rating_count end desc,
+     h.created_at desc
+   limit greatest(1, least(p_limit, 50))
+  offset greatest(0, p_offset);
+$$;
+
+drop function if exists public.worker_card(uuid);
+create function public.worker_card(p_id uuid)
+returns table (
+  id uuid, name text, selfie text, thumb text, city text, area text, about text,
+  skills jsonb, rating_sum int, rating_count int,
+  worker_code text, serves_remote boolean, online_until timestamptz,
+  reg_number text, reg_verified boolean,
+  jobs_done int, on_time_yes int, on_time_total int, member_since timestamptz,
+  score int, tier text)
+language sql stable security definer set search_path = public, extensions as $$
+  select w.id, w.name, w.selfie, w.thumb, w.city, w.area, w.about, w.skills,
+         w.rating_sum, w.rating_count, w.worker_code, w.serves_remote,
+         w.online_until, w.reg_number, w.reg_verified,
+         (select count(*)::int from threads t
+           where t.worker_id = w.id and t.status = 'closed'),
+         w.on_time_yes, w.on_time_total, w.created_at, w.score, w.tier
+    from workers w
+   where w.id = p_id
+     and w.status = 'approved'
+     and w.available;
+$$;
+
+do $$
+declare a uuid; b uuid; ids uuid[]; r record;
+begin
+  delete from threads where customer_phone like '90000008%';
+  delete from workers where phone in ('9000000091','9000000090');
+
+  -- two people at the same address, so distance cannot decide between them
+  insert into workers (name, phone, city, area, lat, lng, skills, available, status)
+  values ('Answers Everything','9000000091','Guwahati','Beltola',26.1,91.7,
+          '[{"skill":"Plumber","price":300,"unit":"per visit"}]'::jsonb, true, 'approved')
+  returning id into a;
+  insert into workers (name, phone, city, area, lat, lng, skills, available, status)
+  values ('Ignores Everything','9000000090','Guwahati','Beltola',26.1,91.7,
+          '[{"skill":"Plumber","price":300,"unit":"per visit"}]'::jsonb, true, 'approved')
+  returning id into b;
+
+  -- one finishes twelve jobs for eight people, four of whom came back
+  insert into threads (worker_id, code, skill, customer_name, customer_phone, status,
+                       accepted_at, closed_at, price)
+  select a, 'RK' || lpad(g::text,8,'0'), 'Plumber', 'C', '90000080' || lpad(least(g,8)::text,2,'0'),
+         'closed', now() - interval '5 days', now() - interval '4 days', 300
+    from generate_series(1,12) g;
+  -- the other is sent the same work and never answers
+  insert into threads (worker_id, code, skill, customer_name, customer_phone, status)
+  select b, 'RQ' || lpad(g::text,8,'0'), 'Plumber', 'C', '9000008099', 'requested'
+    from generate_series(1,12) g;
+
+  perform public.recompute_worker_score(a);
+  perform public.recompute_worker_score(b);
+
+  select array_agg(id order by ord) into ids
+    from (select id, row_number() over () as ord
+            from public.search_workers(26.1, 91.7, null, array['Plumber'], null, 'Guwahati', 20, 0)) q;
+
+  if ids[1] <> a then
+    raise exception 'MIGRATION 49: the worker who answers did not come first (% then %)',
+      (select name from workers where id = ids[1]), (select name from workers where id = ids[2]);
+  end if;
+  raise notice 'PASS  same street, and the one who answers and gets booked again is found first';
+
+  select score, tier into r from public.worker_card(a);
+  if r.tier is null then raise exception 'MIGRATION 49: worker_card lost the badge'; end if;
+  raise notice 'PASS  reopening somebody shows the same badge as the search did';
+
+  delete from threads where worker_id in (a, b);
+  delete from workers where id in (a, b);
+end $$;
+
 -- admin_check writes — it stamps last_used on the session token — so any
 -- function that calls it and is declared stable or immutable will fail at
 -- run time with "cannot execute UPDATE in a read-only transaction", and only
@@ -9448,7 +9904,7 @@ begin
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
-       'admin_set_photo','worker_card');
+       'admin_set_photo','worker_card','worker_scorecard','worker_months');
 
   if leaked is not null then
     raise exception
