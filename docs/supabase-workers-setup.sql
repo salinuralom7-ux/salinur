@@ -7356,7 +7356,12 @@ end;
 $$;
 
 -- What the sender drains, mirroring claim_push.
-create or replace function public.claim_otp(p_limit int default 20)
+-- Dropped first every time: Migration 47 widens the return type to carry the
+-- address the code is going to, so on a second run of this file the shape
+-- here and the shape already in the database disagree. `create or replace`
+-- cannot change OUT parameters, and this file is re-applied on every push.
+drop function if exists public.claim_otp(int);
+create function public.claim_otp(p_limit int default 20)
 returns table (id bigint, phone text, code text)
 language plpgsql security definer set search_path = public, extensions as $$
 begin
@@ -9130,6 +9135,163 @@ begin
     if sqlerrm like 'MIGRATION 46:%' then raise; end if;
   end;
   raise notice 'PASS  a photo can be replaced by staff, and only with the admin PIN';
+end $$;
+
+-- ============================================================
+-- MIGRATION 47 — the code can go by email
+--
+-- "Forgotten your PIN?" has never worked, for one reason: sending a message
+-- needs an account with somebody who delivers messages, and the WhatsApp
+-- Cloud API takes over the phone number you give it — it stops working in the
+-- WhatsApp app. The only spare numbers here are ones already carrying real
+-- conversations, so that door is shut until there is a SIM to spare.
+--
+-- Email needs no phone number at all. It does not reach everybody: a good
+-- many service experts in Guwahati have no email address, and the field is
+-- optional at registration. So this is not the whole answer, and the screen
+-- has to say so plainly to the people it cannot help rather than leaving them
+-- watching a phone that will never buzz.
+--
+-- Three changes:
+--   send_otp says where the code went, so the screen can name the address
+--     instead of promising WhatsApp;
+--   claim_otp hands the sender the address, since the outbox is keyed by
+--     phone and the address lives on worker_secrets;
+--   an address is masked before it leaves the database, so typing somebody
+--     else's number tells you almost nothing about them.
+-- ============================================================
+
+-- sa••••••••@gmail.com — enough to recognise your own, not enough to learn
+-- somebody else's
+create or replace function public.mask_email(p_email text)
+returns text
+language sql immutable set search_path = public as $$
+  select case
+    when p_email is null or position('@' in p_email) = 0 then null
+    else left(split_part(p_email, '@', 1), 2)
+         || repeat('•', greatest(3, length(split_part(p_email, '@', 1)) - 2))
+         || '@' || split_part(p_email, '@', 2)
+  end;
+$$;
+
+-- the address for a number, whoever it belongs to. Only workers give one:
+-- the customer table has never had an email column.
+create or replace function public.otp_email_for(p_phone text)
+returns text
+language sql stable security definer set search_path = public as $$
+  select nullif(btrim(s.email), '')
+    from worker_secrets s
+    join workers w on w.id = s.worker_id
+   where w.phone = p_phone
+   limit 1;
+$$;
+
+create or replace function public.send_otp(p_phone text)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare row otp_codes%rowtype; code text; provider text; addr text;
+begin
+  if p_phone !~ '^[6-9]\d{9}$' then
+    raise exception 'Enter a valid 10-digit Indian mobile number';
+  end if;
+
+  select * into row from otp_codes where phone = p_phone;
+  if found then
+    if row.created_at > now() - interval '60 seconds' then
+      raise exception 'Please wait a minute before asking for another code';
+    end if;
+    if row.sends >= 5 and row.created_at > now() - interval '1 hour' then
+      raise exception 'Too many codes sent to this number. Please try again later.';
+    end if;
+  end if;
+
+  select otp_provider into provider from nearse_config where id = 1;
+  provider := coalesce(btrim(provider), '');
+  if provider = '' then
+    -- No provider connected. Say so plainly rather than pretending to send:
+    -- a code that silently goes nowhere is the worst of both worlds.
+    return 'no-provider';
+  end if;
+
+  -- Email only reaches somebody who gave us one. Find that out BEFORE minting
+  -- a code, or a person with no address burns one of their five tries an hour
+  -- on a message that was never going to be sent.
+  if provider = 'email' then
+    addr := public.otp_email_for(p_phone);
+    -- Deliberately the same answer whether the number has no account or an
+    -- account with no address: otherwise this becomes a way to ask which
+    -- numbers are registered.
+    if addr is null then return 'no-email'; end if;
+  end if;
+
+  code := lpad(floor(random() * 1000000)::text, 6, '0');
+  insert into otp_codes (phone, code_hash, sends)
+  values (p_phone, crypt(code, gen_salt('bf')), 1)
+  on conflict (phone) do update
+    set code_hash  = excluded.code_hash,
+        created_at = now(),
+        expires_at = now() + interval '10 minutes',
+        attempts   = 0,
+        verified_at = null,
+        sends = case when otp_codes.created_at > now() - interval '1 hour'
+                     then otp_codes.sends + 1 else 1 end;
+
+  insert into otp_outbox (phone, code) values (p_phone, code);
+  if provider = 'email' then return 'email:' || public.mask_email(addr); end if;
+  return 'sent';
+end;
+$$;
+
+-- The outbox is keyed by phone because that is what a code is about. The
+-- sender needs somewhere to deliver it, so look the address up here rather
+-- than storing a second copy that can go stale.
+drop function if exists public.claim_otp(int);
+create function public.claim_otp(p_limit int default 20)
+returns table (id bigint, phone text, code text, email text)
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  return query
+  with due as (
+    select o.id from otp_outbox o
+     where o.sent_at is null and o.attempts < 3
+       and o.created_at > now() - interval '15 minutes'
+     order by o.id limit greatest(1, least(p_limit, 100))
+     for update skip locked
+  ),
+  bumped as (
+    update otp_outbox o set attempts = o.attempts + 1
+      from due where o.id = due.id
+     returning o.id, o.phone, o.code
+  )
+  select b.id, b.phone, b.code, public.otp_email_for(b.phone) from bumped b order by b.id;
+end;
+$$;
+
+do $$
+declare n int; masked text;
+begin
+  masked := public.mask_email('salinuralom7@gmail.com');
+  if masked is null or masked not like 'sa%@gmail.com' or masked like '%alom%' then
+    raise exception 'MIGRATION 47: mask_email leaks or mangles: %', masked;
+  end if;
+  if public.mask_email('a@b.com') is null then
+    raise exception 'MIGRATION 47: mask_email lost a short address';
+  end if;
+  if public.mask_email('not-an-address') is not null then
+    raise exception 'MIGRATION 47: mask_email accepted a non-address';
+  end if;
+
+  select count(*) into n from pg_proc
+   where pronamespace = 'public'::regnamespace and proname = 'claim_otp';
+  if n <> 1 then raise exception 'MIGRATION 47: expected one claim_otp, found %', n; end if;
+
+  select count(*) into n
+    from unnest((select proargnames from pg_proc
+                  where pronamespace = 'public'::regnamespace and proname = 'claim_otp')) a
+   where a = 'email';
+  if n <> 1 then raise exception 'MIGRATION 47: claim_otp does not hand over an address'; end if;
+
+  raise notice 'PASS  a one-time code can be addressed to an email, masked on the way out';
 end $$;
 
 -- ---------- the lock, still last ----------

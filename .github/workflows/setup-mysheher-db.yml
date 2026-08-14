@@ -29,6 +29,8 @@ jobs:
           TWILIO_SID:   ${{ secrets.TWILIO_SID }}
           TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
           TWILIO_FROM:  ${{ secrets.TWILIO_FROM }}
+          RESEND_KEY:   ${{ secrets.RESEND_KEY }}
+          MAIL_FROM:    ${{ secrets.MAIL_FROM }}
         run: |
           set -uo pipefail
           R=.github/mysheher-setup-status.txt
@@ -391,7 +393,7 @@ jobs:
             # Nothing here is ever printed. Each value is masked the moment it
             # is read, and the only thing the report says is which provider is
             # now live.
-            for v in "$WA_TOKEN" "$TWILIO_TOKEN"; do
+            for v in "$WA_TOKEN" "$TWILIO_TOKEN" "$RESEND_KEY"; do
               [ -n "$v" ] && echo "::add-mask::$v"
             done
 
@@ -412,10 +414,21 @@ jobs:
                 '[{name:"TWILIO_SID",value:$s},
                   {name:"TWILIO_TOKEN",value:$t},
                   {name:"TWILIO_FROM",value:$f}]' > /tmp/otpsec.json
+            elif [ -n "${RESEND_KEY:-}" ]; then
+              # Email. It needs no phone number, which is the whole reason it
+              # is here: the WhatsApp Cloud API takes over whatever number it
+              # is given and stops that number working in the WhatsApp app.
+              # It reaches only the people who gave an address at registration
+              # — send_otp answers "no-email" for the rest and the app says so.
+              OTP_MODE=email
+              jq -n --arg k "$RESEND_KEY" \
+                    --arg f "${MAIL_FROM:-MySheher <codes@mysheher.com>}" \
+                '[{name:"RESEND_KEY",value:$k},
+                  {name:"MAIL_FROM",value:$f}]' > /tmp/otpsec.json
             fi
 
             if [ -z "$OTP_MODE" ]; then
-              note "otp provider: none configured — add WA_TOKEN and WA_PHONE_ID (or the three TWILIO_*) to this repository's Actions secrets and re-run. Until then \"Forgotten your PIN?\" tells people so rather than pretending."
+              note "otp provider: none configured — add RESEND_KEY (email, needs no phone number), or WA_TOKEN and WA_PHONE_ID, or the three TWILIO_*, to this repository's Actions secrets and re-run. Until then \"Forgotten your PIN?\" tells people so rather than pretending."
             else
               scode=$(curl -sS -o /tmp/otpsecres.json -w "%{http_code}" "${hdr[@]}" \
                         -X POST "$api/projects/$ref/secrets" -d @/tmp/otpsec.json)

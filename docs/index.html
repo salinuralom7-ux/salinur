@@ -3210,6 +3210,11 @@ footer a{color:var(--ink-2)}
       <div id="recStep2" hidden>
         <p class="hint" id="recSentTo"></p>
         <div class="otp-preview" id="recPreview" hidden></div>
+        <!-- Everything from here down is hidden when no code is on its way.
+             Showing somebody a six-digit box and a "Set my new PIN" button
+             when nothing was sent is the same cruelty as telling them to
+             check a phone that is never going to buzz. -->
+        <div id="recForm">
         <div class="field">
           <label for="recCode">The 6-digit code</label>
           <input type="text" id="recCode" class="otp-box" placeholder="······" maxlength="6"
@@ -3227,6 +3232,11 @@ footer a{color:var(--ink-2)}
           <button class="linkish" onclick="recoverStep(1)">Wrong number?</button>
         </div>
         <p class="hint" style="margin-top:14px">Setting a new PIN signs you out on every other phone. If somebody else has your account, this is what removes them.</p>
+        </div><!-- /#recForm -->
+        <button class="btn btn-outline btn-block" id="recAskUs" hidden style="padding:14px;margin-top:4px"
+                onclick="window.open('https://wa.me/917086599367?text=' + encodeURIComponent('I have forgotten my MySheher PIN. My number is ' + (recPhone || '')), '_blank', 'noopener')">
+          Message us on WhatsApp
+        </button>
       </div>
     </div>
   </div>
@@ -9790,23 +9800,38 @@ async function recoverSend(again){
   try{
     const res = await api.sendCode(phone);
     recPhone = phone;
-    $("recSentTo").innerHTML = `We sent a 6-digit code on <b>WhatsApp</b> to <b>+91 ${esc(phone)}</b>. It lasts ten minutes.`;
     const box = $("recPreview");
-    /* Two ways there is no message on the way, and they need different words.
-       "no-provider" is the database saying nothing is connected yet; the
-       preview string is this browser having no database at all. Pretending a
-       code was sent in either case leaves somebody staring at a phone that is
-       never going to buzz. */
+    /* Where the code actually went is not something to guess at. The database
+       answers with which of these happened, and each one needs different
+       words — somebody told "check WhatsApp" when it went to their email, or
+       when nothing was sent at all, is left staring at a phone that is never
+       going to buzz. */
+    box.hidden = true;
+    const coming = !(res === "no-email" || res === "no-provider");
+    $("recForm").hidden = !coming;
+    $("recAskUs").hidden = coming;
+    $("recSentTo").innerHTML =
+      `We sent a 6-digit code on <b>WhatsApp</b> to <b>+91 ${esc(phone)}</b>. It lasts ten minutes.`;
+
     if(typeof res === "string" && res.indexOf("preview:") === 0){
       box.innerHTML = `Preview mode — there is no database here, so your code is shown instead of being sent.<b>${esc(res.slice(8))}</b>`;
       box.hidden = false;
+    }else if(typeof res === "string" && res.indexOf("email:") === 0){
+      /* the address comes back masked, which is enough to recognise your own
+         and not enough to learn somebody else's */
+      $("recSentTo").innerHTML =
+        `We emailed a 6-digit code to <b>${esc(res.slice(6))}</b>. It lasts ten minutes.
+         Check your spam folder if it is not there in a minute.`;
+    }else if(res === "no-email"){
+      $("recSentTo").textContent = "";
+      box.innerHTML = `We have no email address for this number, and codes go by email at the moment.
+        Message us on WhatsApp at <b>+91 70865 99367</b> and we will get you back in — usually within the hour.`;
+      box.hidden = false;
     }else if(res === "no-provider"){
+      $("recSentTo").textContent = "";
       box.innerHTML = `No message provider is connected yet, so the code could not be sent.
         Ask us on WhatsApp at <b>+91 70865 99367</b> and we will get you back in.`;
       box.hidden = false;
-      $("recSentTo").textContent = "";
-    }else{
-      box.hidden = true;
     }
     recoverStep(2);
     $("recCode").focus();

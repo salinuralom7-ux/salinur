@@ -16,6 +16,14 @@
  *     supabase secrets set TWILIO_SID=... TWILIO_TOKEN=... TWILIO_FROM=+1...
  *     (prefix TWILIO_FROM with "whatsapp:" to send on WhatsApp instead of SMS)
  *
+ *   Email, which needs no phone number at all — the reason it exists here is
+ *   that the WhatsApp Cloud API takes over whatever number you give it and
+ *   stops that number working in the WhatsApp app, and there was no spare SIM:
+ *     supabase secrets set RESEND_KEY=re_... MAIL_FROM="MySheher <codes@mysheher.com>"
+ *     It reaches only people who gave an email address at registration, which
+ *     is far from all of them. send_otp answers "no-email" for the rest and
+ *     the app tells them to ask on WhatsApp instead of pretending.
+ *
  * Then tell the database a provider exists, or send_otp keeps answering
  * "no-provider" and the app keeps saying so honestly rather than pretending:
  *     select public.admin_set_otp('<admin pin>', 'whatsapp');
@@ -43,7 +51,10 @@ const TW_SID   = Deno.env.get("TWILIO_SID") ?? "";
 const TW_TOKEN = Deno.env.get("TWILIO_TOKEN") ?? "";
 const TW_FROM  = Deno.env.get("TWILIO_FROM") ?? "";
 
-type Row = { id: number; phone: string; code: string };
+const RESEND_KEY = Deno.env.get("RESEND_KEY") ?? "";
+const MAIL_FROM  = Deno.env.get("MAIL_FROM") ?? "MySheher <codes@mysheher.com>";
+
+type Row = { id: number; phone: string; code: string; email: string | null };
 
 async function rpc<T>(name: string, args: Record<string, unknown> = {}): Promise<T> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
@@ -152,11 +163,48 @@ async function sendTwilio(phone: string, code: string) {
   if (!res.ok) throw new Error(`twilio ${res.status}: ${(await res.text()).slice(0, 200)}`);
 }
 
+/* ---------- email ----------
+   Deliberately plain. A one-time code is read in two seconds on a phone, so
+   there is nothing here to lay out and nothing to load: no images, no
+   tracking pixel, no unsubscribe footer on a message somebody just asked for.
+   The plain-text part is not an afterthought either — a code that arrives as
+   an empty message because images are off is worse than no code. */
+function codeEmail(code: string) {
+  const text =
+    `${code} is your MySheher code.\n\n` +
+    `It lasts ten minutes. Never share it with anyone — MySheher will never ask you for it.\n\n` +
+    `If you did not ask to reset your PIN, you can ignore this message; nobody can get in without the code.\n`;
+  const html =
+    `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;color:#15151A">` +
+    `<p style="margin:0 0 18px">Your MySheher code is</p>` +
+    `<p style="margin:0 0 18px;font-size:34px;font-weight:800;letter-spacing:.16em">${code}</p>` +
+    `<p style="margin:0 0 12px">It lasts ten minutes. <b>Never share it with anyone</b> — MySheher will never ask you for it.</p>` +
+    `<p style="margin:0;color:#6b6b76;font-size:14px">If you did not ask to reset your PIN you can ignore this; ` +
+    `nobody can get in without the code.</p></div>`;
+  return { text, html };
+}
+
+async function sendEmail(to: string, code: string) {
+  const { text, html } = codeEmail(code);
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: MAIL_FROM,
+      to: [to],
+      subject: `${code} is your MySheher code`,
+      text, html,
+    }),
+  });
+  if (!res.ok) throw new Error(`email ${res.status}: ${(await res.text()).slice(0, 200)}`);
+}
+
 Deno.serve(async () => {
   const haveWa = !!(WA_TOKEN && WA_PHONE_ID);
   const haveTw = !!(TW_SID && TW_TOKEN && TW_FROM);
-  if (!haveWa && !haveTw) {
-    return json({ error: "No provider configured — set WA_TOKEN/WA_PHONE_ID or the TWILIO_* trio" }, 500);
+  const haveMail = !!RESEND_KEY;
+  if (!haveWa && !haveTw && !haveMail) {
+    return json({ error: "No provider configured — set RESEND_KEY, WA_TOKEN/WA_PHONE_ID, or the TWILIO_* trio" }, 500);
   }
 
   let rows: Row[];
@@ -167,17 +215,32 @@ Deno.serve(async () => {
   }
   if (!rows.length) return json({ sent: 0, note: "queue empty" });
 
-  let sent = 0, failed = 0;
+  let sent = 0, failed = 0, noAddress = 0;
   for (const r of rows) {
     try {
       /* WhatsApp first when it is available, because that is where a phone in
-         Guwahati actually buzzes — and fall back to Twilio rather than
-         dropping the code, since somebody is watching a screen for it. */
+         Guwahati actually buzzes — then Twilio, then email. Falling through
+         rather than dropping the code, since somebody is watching a screen
+         for it. Email last because it is the one that reaches fewest people:
+         a good many service experts here never gave an address. */
       if (haveWa) {
         try { await sendWhatsApp(r.phone, r.code); }
-        catch (e) { if (!haveTw) throw e; await sendTwilio(r.phone, r.code); }
-      } else {
+        catch (e) {
+          if (haveTw) await sendTwilio(r.phone, r.code);
+          else if (haveMail && r.email) await sendEmail(r.email, r.code);
+          else throw e;
+        }
+      } else if (haveTw) {
         await sendTwilio(r.phone, r.code);
+      } else if (r.email) {
+        await sendEmail(r.email, r.code);
+      } else {
+        /* send_otp checks for an address before queueing, so this is a race
+           rather than the normal path — somebody cleared their email between
+           asking for the code and this running. Retrying cannot help. */
+        noAddress++;
+        await rpc("mark_otp_failed", { p_id: r.id, p_error: "no email address on this profile" });
+        continue;
       }
       await rpc("mark_otp_sent", { p_id: r.id });
       sent++;
@@ -188,7 +251,7 @@ Deno.serve(async () => {
       try { await rpc("mark_otp_failed", { p_id: r.id, p_error: String(e) }); } catch (_) { /* ignore */ }
     }
   }
-  return json({ sent, failed });
+  return json({ sent, failed, noAddress });
 });
 
 function json(body: unknown, status = 200) {

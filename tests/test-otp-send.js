@@ -65,29 +65,32 @@ function loadSender(env, graphOrigin, twilioOrigin) {
      fetch. Export the two functions the test drives. */
   src = src.replace(/Deno\.serve\(async \(\) => \{[\s\S]*?\n\}\);/, '');
   src = src.replace(/Deno\.env\.get\("([A-Z_]+)"\)!?/g, (_, k) => JSON.stringify(env[k] ?? ''));
-  /* strip TypeScript that Node's parser will not take: annotations and types */
+  /* Strip the TypeScript Node's parser will not take. Generic rather than a
+     list of exact signatures: the previous version broke the moment a new
+     function was added to the real file, which is the opposite of what a test
+     that reads the real file is for. */
   src = src
-    .replace(/^type [\s\S]*?;\s*$/gm, '')
-    .replace(/^let waShape: Shape \| null = null;$/m, 'let waShape = null;')
-    .replace(/: Shape\[\]/g, '').replace(/: Shape\b/g, '')
-    .replace(/const out: Shape\[\] = \[\];/, 'const out = [];')
-    .replace(/const components: unknown\[\] =/, 'const components =')
-    .replace(/let last: \{ status: number; num: number; text: string \} \| null = null;/,
-             'let last = null;')
-    .replace(/async function rpc<T>\(name: string, args: Record<string, unknown> = \{\}\): Promise<T> \{/,
-             'async function rpc(name, args = {}) {')
-    .replace(/\(text \? JSON\.parse\(text\) : null\) as T/, '(text ? JSON.parse(text) : null)')
-    .replace(/\(phone: string\)/g, '(phone)')
-    .replace(/\(phone: string, code: string, s\)/g, '(phone, code, s)')
-    .replace(/\(phone: string, code: string\)/g, '(phone, code)')
-    .replace(/\(body: unknown, status = 200\)/, '(body, status = 200)')
+    /* standalone type declarations */
+    .replace(/^type .*$/gm, '')
+    /* Parameter annotations, on function-signature lines ONLY. Applied to
+       the whole file it also ate `From: TW_FROM` out of an object literal,
+       which is the sort of thing that makes a test lie rather than fail. */
+    .split('\n').map(line => /\bfunction\s+[A-Za-z_$]/.test(line) || /=>/.test(line)
+      ? line.replace(/([(,]\s*[A-Za-z_$][\w$]*)\s*:\s*[A-Za-z_$][\w$]*(?:\[\])?(?:\s*\|\s*(?:null|undefined))?(?=\s*[,)=])/g, '$1')
+      : line).join('\n')
+    .replace(/\b(let|const)\s+([A-Za-z_$][\w$]*)\s*:\s*(?:\{[^{}]*\}|[^={};]+?)(?:\s*\|\s*(?:null|undefined))?\s*=/g, '$1 $2 =')
+    /* return-type and generic annotations */
+    .replace(/\)\s*:\s*Promise<[^>]*>\s*\{/g, ') {')
+    .replace(/\)\s*:\s*[A-Za-z_$][\w$]*(?:\[\])?(?:\s*\|\s*null)?\s*\{/g, ') {')
+    .replace(/<T>|<Row\[\]>|<[A-Za-z]+\[\]>/g, '')
+    .replace(/:\s*Record<[^>]*>\s*=/g, ' =')
+    .replace(/\s+as\s+T\b/g, '')
     .replace(/waShape!\./g, 'waShape.')
-    .replace(/rpc<Row\[\]>/g, 'rpc')
-    .replace(/\?\?/g, '??')
-    .replace(/JSON\.parse\(text\)\?\.error\?\.code \?\? 0/, '(JSON.parse(text).error||{}).code || 0');
+    .replace(/\?\.error\?\.code\s*\?\?\s*0/, ' && JSON.parse(text).error ? JSON.parse(text).error.code : 0');
   src = src.replace(/https:\/\/graph\.facebook\.com\/v21\.0/g, graphOrigin);
   if (twilioOrigin) src = src.replace(/https:\/\/api\.twilio\.com/g, twilioOrigin);
-  src += '\n;module.exports = { sendWhatsApp, sendTwilio, e164, waShapes };';
+  if (twilioOrigin) src = src.replace(/https:\/\/api\.resend\.com/g, twilioOrigin);
+  src += '\n;module.exports = { sendWhatsApp, sendTwilio, sendEmail, codeEmail, e164, waShapes };';
 
   const mod = { exports: {} };
   vm.runInNewContext(src, { module: mod, exports: mod.exports, fetch, Response, btoa,
@@ -174,6 +177,43 @@ function loadSender(env, graphOrigin, twilioOrigin) {
     ok('…to the right number', got && got.body.To === '+917086599367', got && got.body.To);
     ok('…with the code and a warning never to share it',
        got && got.body.Body.includes('482913') && /never share it/i.test(got.body.Body));
+    await new Promise(r => srv.close(r));
+  }
+
+  /* ---------- email, the provider that needs no phone number ---------- */
+  {
+    PORT++;
+    let got = null;
+    const srv = http.createServer((req, res) => {
+      let b = ''; req.on('data', d => b += d);
+      req.on('end', () => {
+        got = { auth: req.headers.authorization, body: JSON.parse(b || '{}') };
+        res.writeHead(200, {'Content-Type':'application/json'}); res.end('{"id":"em_1"}');
+      });
+    });
+    await new Promise(r => srv.listen(PORT, r));
+    const otp = loadSender(
+      { WA_TOKEN: '', WA_PHONE_ID: '', WA_TEMPLATE: '', WA_LANG: 'en',
+        SUPABASE_URL: 'http://localhost:1', SUPABASE_SERVICE_ROLE_KEY: 'k',
+        TWILIO_SID: '', TWILIO_TOKEN: '', TWILIO_FROM: '',
+        RESEND_KEY: 're_test', MAIL_FROM: 'MySheher <codes@mysheher.com>' },
+      `http://localhost:${PORT}`, `http://localhost:${PORT}`);
+    let err = null;
+    try { await otp.sendEmail('someone@example.com', '482913'); } catch (e) { err = e; }
+    ok('A code goes out by email', !err, err ? String(err).slice(0, 120) : 'sent');
+    ok('…to the right address, from MySheher',
+       got && got.body.to[0] === 'someone@example.com' && /MySheher/.test(got.body.from),
+       got && got.body.from);
+    ok('…with the code in the subject, so it is readable from the notification',
+       got && got.body.subject.includes('482913'), got && got.body.subject);
+    ok('…as text as well as HTML, or images-off means an empty message',
+       got && typeof got.body.text === 'string' && got.body.text.includes('482913')
+           && typeof got.body.html === 'string' && got.body.html.includes('482913'));
+    ok('…warning never to share it', got && /never share it with anyone/i.test(got.body.text));
+    ok('…and telling somebody who did not ask that they can ignore it',
+       got && /did not ask/i.test(got.body.text));
+    ok('…carrying no tracking pixel and nothing to load',
+       got && !/<img/i.test(got.body.html) && !/http/i.test(got.body.html));
     await new Promise(r => srv.close(r));
   }
 
