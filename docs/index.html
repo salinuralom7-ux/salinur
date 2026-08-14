@@ -685,6 +685,46 @@ body.menu-open #scroll{overflow:hidden}
   text-wrap:balance;
 }
 .see-all{margin-top:clamp(12px,3vw,16px);padding:14px;font-size:1rem}
+
+/* ---------- book again ----------
+   A horizontal row rather than a grid: it holds however many people you have
+   had without ever pushing the rest of the home screen down the page. */
+.again-head{display:flex;align-items:baseline;gap:10px;margin:clamp(18px,4.5vw,26px) 0 10px}
+.again-head h2{font-size:1.06rem;margin:0}
+.again-head span{color:var(--muted);font-size:.8rem}
+.again-row{
+  display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;
+  padding-bottom:4px;-webkit-overflow-scrolling:touch;
+}
+.again-row::-webkit-scrollbar{display:none}
+.again-row{scrollbar-width:none}
+.again{
+  flex:0 0 auto;width:96px;scroll-snap-align:start;
+  background:none;border:0;padding:0;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  -webkit-tap-highlight-color:transparent;
+}
+.again .ag-pic{
+  position:relative;width:66px;height:66px;border-radius:50%;overflow:hidden;
+  border:2px solid var(--line-strong);background:var(--surface-2);
+  transition:border-color .16s ease;
+}
+.again:hover .ag-pic,.again:focus-visible .ag-pic{border-color:var(--brand)}
+.again:active .ag-pic{transform:scale(.96)}
+.again .ag-pic img{width:100%;height:100%;object-fit:cover}
+.again .ag-go{
+  position:absolute;right:-1px;bottom:-1px;width:24px;height:24px;border-radius:50%;
+  background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;
+  border:2px solid var(--bg);
+}
+.again b{
+  font-size:.8rem;font-weight:700;line-height:1.2;color:var(--ink);
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.again span{
+  font-size:.7rem;color:var(--muted);line-height:1.2;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
 #scr-home .mine-link{margin-top:12px}
 
 /* ---------- the banner ----------
@@ -1814,6 +1854,18 @@ body.in-chat .demo-note{display:none}
   padding:13px 14px;margin-top:9px;
 }
 .thread-row:hover{border-color:var(--line-strong)}
+/* A sibling of the row rather than a child of it: a button inside a button
+   is invalid, and the browser resolves it by dropping one of them. */
+.tr-again{
+  display:block;width:100%;margin-top:-1px;
+  background:var(--surface-2);border:1px solid var(--line);border-top:0;
+  border-radius:0 0 var(--r) var(--r);
+  padding:9px 14px;font-size:.82rem;font-weight:700;color:var(--brand-2);
+  text-align:left;
+}
+.tr-again:hover{border-color:var(--line-strong);color:var(--brand)}
+/* the row and its button read as one card */
+.thread-row:has(+ .tr-again){border-bottom-left-radius:0;border-bottom-right-radius:0}
 .thread-row.unread{border-color:rgba(var(--brand-rgb),.42);background:var(--surface-2)}
 .tr-main{flex:1;min-width:0}
 .tr-main b{display:flex;align-items:center;gap:7px;font-size:.93rem;margin-bottom:2px}
@@ -2754,6 +2806,19 @@ footer a{color:var(--ink-2)}
   <!-- ---------- 3. everything else ---------- -->
   <div class="wrap">
     <button class="btn btn-brand btn-block see-all" onclick="go('hire')">See all services</button>
+  </div>
+
+  <!-- ---------- 3b. people you have had before ----------
+       Absent for anybody who has not booked yet, which is most people on
+       their first visit, so the screen above is unchanged for them. For
+       everybody else it is the shortest path there is to a booking: the
+       plumber who already knows which tap it is. -->
+  <div class="wrap" id="againWrap" hidden>
+    <div class="again-head">
+      <h2>Book again</h2>
+      <span>People you have had before</span>
+    </div>
+    <div class="again-row" id="againRow"></div>
   </div>
 
   <!-- ---------- 4. the banner ----------
@@ -4788,6 +4853,21 @@ const api = {
   /* A worker's number is handed over one booking at a time. It used to arrive
      with every search result, which made the whole platform's contact list a
      single request away. */
+  /* Reopening somebody you have had before. Answers with nothing at all if
+     they have left, been suspended, or marked themselves unavailable — which
+     is what lets the app say so instead of opening a profile that cannot be
+     booked. */
+  async workerCard(id){
+    if(LIVE){
+      const rows = await sb("rpc/worker_card", {method:"POST", body:JSON.stringify({p_id:id})});
+      const r = (rows || [])[0];
+      if(!r) return null;
+      return {...r, verified:true, status:"approved", available:true,
+              skills: typeof r.skills === "string" ? JSON.parse(r.skills) : (r.skills || [])};
+    }
+    const w = demoAll().find(x => x.id === id);
+    return (w && statusOf(w) === "approved" && w.available !== false) ? w : null;
+  },
   async contact(id){
     if(LIVE) return await sb("rpc/request_worker_contact", {method:"POST",
       body:JSON.stringify({p_id:id, p_requester:CLIENT_ID})});
@@ -7669,6 +7749,7 @@ async function confirmBooking(){
              note:[s.skill, when, area, note].filter(Boolean).join(" | ") });
 
   rememberBooking({ code:started.code, token:started.token, worker:w.name,
+                    workerId:w.id, thumb:w.thumb || w.selfie || null,
                     skill:s.skill, at:new Date().toISOString(),
                     workerPhone:started.worker_phone || w.phone || null,
                     detail:[when, area + ", Guwahati"].filter(Boolean).join(" · ") });
@@ -7892,7 +7973,9 @@ function onJobAccepted(st){
   if(st.thread_code && st.thread_token){
     j.threadCode = st.thread_code;
     rememberBooking({ code: st.thread_code, token: st.thread_token,
-                      worker_name: st.worker_name, skill: j.skill,
+                      worker: st.worker_name, worker_name: st.worker_name,
+                      workerId: st.worker_id || null, skill: j.skill,
+                      at: new Date().toISOString(),
                       created_at: new Date().toISOString() });
     try{ localStorage.setItem("nearse_job_v1", JSON.stringify(j)); }catch(e){}
     refreshChatBadge();
@@ -8081,6 +8164,7 @@ async function confirmSlot(){
   toast(`Booked — ${when} at ${slotPick.time}`);
   if(started && started.code){
     rememberBooking({ code:started.code, token:started.token, worker:w.name,
+                      workerId:w.id, thumb:w.thumb || w.selfie || null,
                       skill:s.skill, at:new Date().toISOString(),
                       detail:`${when} at ${slotPick.time}` });
     openChat(started.code, "customer", "hire");
@@ -9506,6 +9590,14 @@ async function renderChats(){
     <p class="hint">${rows.length} ${rows.length === 1 ? "booking" : "bookings"}</p>` +
     rows.map(t => {
       const st = THREAD_STATE[t.status] || THREAD_STATE.requested;
+      /* Once a job is over, the useful thing on the row is not the
+         conversation — it is having that person again. Only on the
+         customer's own bookings, and only for somebody we can identify. */
+      const over = ["closed","declined","cancelled","expired"].includes(t.status);
+      const again = over && t.side === "customer" && t.worker_id
+        ? `<button class="tr-again" onclick="bookAgain('${jsq(t.worker_id)}')">
+             Book ${esc((t.worker_name || "them").split(" ")[0])} again
+           </button>` : "";
       return `<button class="thread-row${t.unread ? " unread" : ""}"
                 onclick="openChat('${jsq(t.code)}','${t.side}','chats')">
         <span class="tr-main">
@@ -9517,7 +9609,7 @@ async function renderChats(){
           <span class="chat-state ${st.tone}">${st.label}</span>
           <i>${esc(t.side === "worker" ? "you worked" : "you booked")} · ${esc(timeAgo(t.when))}</i>
         </span>
-      </button>`;
+      </button>${again}`;
     }).join("");
 
   /* Every row above shows its own status in words, so this list is where a
@@ -9541,6 +9633,25 @@ async function myConversations(){
     Promise.all(saved.map(b =>
       api.threadView(b.code, b.token).then(v => v ? {...v, token:b.token} : null).catch(() => null)))
   ]);
+
+  /* Bookings made before a booking recorded who it was with have no
+     workerId, so "Book again" would skip them forever. thread_view knows,
+     and this screen already asks it — write the answer back rather than
+     spending a request on it at start-up. */
+  {
+    const byCode = new Map(theirs.filter(Boolean).map(t => [t.code, t]));
+    let list = myBookings(), touched = false;
+    list = list.map(b => {
+      const t = byCode.get(b.code);
+      if(!t || !t.worker_id || b.workerId === t.worker_id) return b;
+      touched = true;
+      return {...b, workerId: t.worker_id,
+              worker: b.worker || t.worker_name || null,
+              thumb: b.thumb || t.worker_thumb || null,
+              skill: b.skill || t.skill || null};
+    });
+    if(touched){ saveMyBookings(list); paintMineLink(); }
+  }
   const when = t => new Date(t.last_message_at || t.created_at || 0);
   return [
     ...(mine || []).map(t => ({...t, side:"worker",
@@ -9692,7 +9803,82 @@ function waitingLine(waiting){
    pushed the banner below the fold. Gone. The count it carried rides the tab
    instead. Kept as a no-op so the several places that repaint after a booking
    changes do not each need to know. */
-function paintMineLink(){}
+/* ---------- book again ----------
+   The plumber who already knows which tap it is. A repeat booking is the
+   cheapest one there is for everybody: the customer skips the choosing, and
+   the service expert gets somebody who already knows their work.
+
+   Drawn from what is already on the device — every booking records who it
+   was with — so this costs no request and appears with the rest of the home
+   screen rather than after it. Whether that person is still working is only
+   checked when somebody actually taps, because that answer goes stale and a
+   list of twelve would be twelve requests at start-up. */
+function rebookList(){
+  const seen = new Set(), out = [];
+  for(const b of myBookings()){
+    const id = b.workerId;
+    if(!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({ id, name: b.worker || b.worker_name || "Service expert",
+               skill: b.skill || "", thumb: b.thumb || null });
+    if(out.length >= 12) break;
+  }
+  return out;
+}
+
+function paintMineLink(){
+  const wrap = $("againWrap"), row = $("againRow");
+  if(!wrap || !row) return;
+  const list = rebookList();
+  if(!list.length){ wrap.hidden = true; row.innerHTML = ""; return; }
+  row.innerHTML = list.map(p => `
+    <button class="again" onclick="bookAgain('${jsq(p.id)}')"
+            aria-label="Book ${esc(p.name)} again${p.skill ? " for " + esc(p.skill) : ""}">
+      <span class="ag-pic">
+        <img src="${avatarOf({name:p.name, thumb:p.thumb, selfie:p.thumb}, true)}" alt=""
+             loading="lazy" decoding="async">
+        <i class="ag-go"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></i>
+      </span>
+      <b>${esc(p.name.split(" ")[0])}</b>
+      <span>${esc(p.skill)}</span>
+    </button>`).join("");
+  wrap.hidden = false;
+}
+
+/* Whether they are still working is checked here, at the moment of tapping,
+   because it is the only moment the answer has to be right. */
+async function bookAgain(id){
+  const entry = rebookList().find(p => p.id === id) || {};
+  let w = null;
+  try{ w = await api.workerCard(id); }
+  catch(e){ toast("Could not open that just now"); return; }
+
+  if(!w){
+    /* Gone, suspended, or switched off. Say which of those it is not — we do
+       not know — but do not leave somebody staring at a dead button, and do
+       not make them go hunting for the trade from scratch. */
+    toast(entry.name ? entry.name.split(" ")[0] + " is not taking work at the moment" : "Not available");
+    if(entry.skill) jumpTo(entry.skill); else go("hire");
+    return;
+  }
+
+  /* Pre-select the trade they had last time, if that person still offers it.
+     If they have dropped it, open the profile on whatever they do now rather
+     than booking the wrong thing. */
+  const i = (w.skills || []).findIndex(s => s.skill === entry.skill);
+  openWorkerCard(w, i < 0 ? 0 : i);
+}
+
+/* Opening a profile that did not come out of the current search results.
+   openWorker() looks the person up in `workers`, which is whatever the last
+   search returned, so a rebook from the home screen would find nothing. */
+function openWorkerCard(w, skillIndex){
+  if(!workers.some(x => x.id === w.id)) workers = workers.concat([w]);
+  openWorker(w.id);
+  if(skillIndex) pickService(skillIndex);
+}
 
 /* ---------- the account screen ---------- */
 let acctMode = "signup";

@@ -7975,7 +7975,9 @@ declare
     -- and writes them, behind the admin PIN
     'home_banners','admin_set_banners','admin_banners',
     -- MIGRATION 46: staff replacing a photograph for somebody who cannot
-    'admin_set_photo'
+    'admin_set_photo',
+    -- MIGRATION 48: booking the same person again
+    'worker_card'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -8039,7 +8041,7 @@ begin
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
-       'admin_set_photo');
+       'admin_set_photo','worker_card');
 
   if leaked is not null then
     raise exception
@@ -9302,6 +9304,95 @@ begin
   raise notice 'PASS  a one-time code can be addressed to an email, masked on the way out';
 end $$;
 
+-- ============================================================
+-- MIGRATION 48 — booking the same person again
+--
+-- Somebody who liked the plumber who came last month should not have to go
+-- looking for him. Swiggy and Zomato put "order again" first on the home
+-- screen because a repeat is the cheapest booking there is, and for a
+-- service expert a customer who comes back is worth more than a new one:
+-- they already know the house, the tap, the child being tutored.
+--
+-- The app already remembers a customer's past bookings on their own device,
+-- and a booking already carries the worker's id. What was missing is a way
+-- to open that person again: search_workers finds people by trade and
+-- distance, not by who they are.
+--
+-- Deliberately the same shape and the same rules as one row of
+-- search_workers — approved, available, nothing about them a search would
+-- not already tell you. It answers with nothing at all if the person has
+-- left, been suspended or marked themselves unavailable, which is exactly
+-- what the app needs in order to say so plainly instead of opening a
+-- profile that cannot be booked.
+-- ============================================================
+
+create or replace function public.worker_card(p_id uuid)
+returns table (
+  id uuid, name text, selfie text, thumb text, city text, area text, about text,
+  skills jsonb, rating_sum int, rating_count int,
+  worker_code text, serves_remote boolean, online_until timestamptz,
+  reg_number text, reg_verified boolean,
+  jobs_done int, on_time_yes int, on_time_total int, member_since timestamptz)
+language sql stable security definer set search_path = public, extensions as $$
+  select w.id, w.name, w.selfie, w.thumb, w.city, w.area, w.about, w.skills,
+         w.rating_sum, w.rating_count, w.worker_code, w.serves_remote,
+         w.online_until, w.reg_number, w.reg_verified,
+         (select count(*)::int from threads t
+           where t.worker_id = w.id and t.status = 'closed'),
+         w.on_time_yes, w.on_time_total, w.created_at
+    from workers w
+   where w.id = p_id
+     and w.status = 'approved'
+     and w.available;
+$$;
+
+do $$
+declare wid uuid; n int;
+begin
+  delete from workers where phone = '9000000093';
+  insert into workers (name, phone, city, area, lat, lng, skills, available, status)
+  values ('Rebook Me','9000000093','Guwahati','Beltola',26.1,91.7,
+          '[{"skill":"Plumber","price":300,"unit":"per visit"}]'::jsonb, true, 'approved')
+  returning id into wid;
+
+  select count(*) into n from public.worker_card(wid);
+  if n <> 1 then raise exception 'MIGRATION 48: an approved worker could not be reopened'; end if;
+
+  -- somebody who has gone, or been suspended, or switched themselves off must
+  -- come back as nothing, so the app can say so rather than offer a booking
+  -- that cannot happen
+  update workers set available = false where id = wid;
+  select count(*) into n from public.worker_card(wid);
+  if n <> 0 then raise exception 'MIGRATION 48: an unavailable worker is still bookable'; end if;
+
+  update workers set available = true, status = 'pending' where id = wid;
+  select count(*) into n from public.worker_card(wid);
+  if n <> 0 then raise exception 'MIGRATION 48: an unapproved worker is still bookable'; end if;
+
+  select count(*) into n from public.worker_card(gen_random_uuid());
+  if n <> 0 then raise exception 'MIGRATION 48: an unknown id returned something'; end if;
+
+  delete from workers where id = wid;
+  raise notice 'PASS  a past booking can be reopened, and only while that person is still working';
+end $$;
+
+do $$
+declare leaked text;
+begin
+  -- the same rule search_workers lives under: a card must not carry a phone
+  -- number. The number is handed over one booking at a time, and it would be
+  -- absurd to close that door and leave this one open.
+  select string_agg(a, ', ') into leaked
+    from unnest((select proargnames from pg_proc
+                  where proname = 'worker_card'
+                    and pronamespace = 'public'::regnamespace)) a
+   where a in ('phone','lat','lng');
+  if leaked is not null then
+    raise exception 'MIGRATION 48: worker_card hands over %', leaked;
+  end if;
+  raise notice 'PASS  reopening somebody gives away no more than a search does';
+end $$;
+
 -- admin_check writes — it stamps last_used on the session token — so any
 -- function that calls it and is declared stable or immutable will fail at
 -- run time with "cannot execute UPDATE in a read-only transaction", and only
@@ -9357,7 +9448,7 @@ begin
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
-       'admin_set_photo');
+       'admin_set_photo','worker_card');
 
   if leaked is not null then
     raise exception
