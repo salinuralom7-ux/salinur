@@ -8887,10 +8887,18 @@ begin
 end;
 $$;
 
--- and what the admin screen reads: all three, including the empty ones
+-- and what the admin screen reads: all three, including the empty ones.
+--
+-- NOT `stable`, and it was. A stable function runs inside a read-only
+-- transaction, and admin_check writes — it stamps last_used on the admin
+-- session every time a token is used. The admin screen swaps the PIN for a
+-- token the moment you sign in, so every single call took the writing path
+-- and the Banner tab answered "cannot execute UPDATE in a read-only
+-- transaction". Nothing else here is stable and calls admin_check; this was
+-- the only one.
 create or replace function public.admin_banners(p_pin text)
 returns setof public.home_banners
-language plpgsql stable security definer set search_path = public, extensions as $$
+language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not public.admin_check(p_pin) then raise exception 'Wrong admin PIN'; end if;
   return query select * from public.home_banners order by slot;
@@ -9292,6 +9300,27 @@ begin
   if n <> 1 then raise exception 'MIGRATION 47: claim_otp does not hand over an address'; end if;
 
   raise notice 'PASS  a one-time code can be addressed to an email, masked on the way out';
+end $$;
+
+-- admin_check writes — it stamps last_used on the session token — so any
+-- function that calls it and is declared stable or immutable will fail at
+-- run time with "cannot execute UPDATE in a read-only transaction", and only
+-- for people signed in with a token, which is everybody using the screen.
+-- admin_banners shipped like that and the Banner tab was dead. Catch the
+-- next one here rather than in somebody's hands.
+do $$
+declare bad text;
+begin
+  select string_agg(p.proname, ', ' order by p.proname) into bad
+    from pg_proc p
+   where p.pronamespace = 'public'::regnamespace
+     and p.prosrc like '%admin_check%'
+     and p.provolatile <> 'v';
+  if bad is not null then
+    raise exception 'these call admin_check but are not volatile, so they cannot write '
+                    'the session stamp and will fail at run time: %', bad;
+  end if;
+  raise notice 'PASS  nothing that checks the admin PIN is stuck in a read-only transaction';
 end $$;
 
 -- ---------- the lock, still last ----------
