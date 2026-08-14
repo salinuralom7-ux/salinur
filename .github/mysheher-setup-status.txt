@@ -1,4 +1,4 @@
-run: 2026-08-11T15:42:01Z
+run: 2026-08-14T04:04:10Z
 secret: present (44 chars)
 list projects: HTTP 200
 project: mpufunsitqtdkqlibxof
@@ -14,8 +14,8 @@ sender: url recorded for the trigger — HTTP 201
 sender: test call — HTTP 200 — {"sent":0,"note":"queue empty"}
 otp sender: updated existing function — HTTP 200
 otp sender: deployed as https://mpufunsitqtdkqlibxof.supabase.co/functions/v1/otp
-otp provider: none configured — add WA_TOKEN and WA_PHONE_ID (or the three TWILIO_*) to this repository's Actions secrets and re-run. Until then "Forgotten your PIN?" tells people so rather than pretending.
-otp sender: test call — HTTP 500 — {"error":"No provider configured — set WA_TOKEN/WA_PHONE_ID or the TWILIO_* trio"}
+otp provider: none configured — add RESEND_KEY (email, needs no phone number), or WA_TOKEN and WA_PHONE_ID, or the three TWILIO_*, to this repository's Actions secrets and re-run. Until then "Forgotten your PIN?" tells people so rather than pretending.
+otp sender: test call — HTTP 500 — {"error":"No provider configured — set RESEND_KEY, WA_TOKEN/WA_PHONE_ID, or the TWILIO_* trio"}
 OK: nothing deletes from storage.objects in SQL any more
 read service_rates: HTTP 201
 app services: 184, priced in the database: 184
