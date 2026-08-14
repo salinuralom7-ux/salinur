@@ -9432,6 +9432,7 @@ end $$;
 -- A badge is only ever a good thing to have. Below five finished jobs nobody
 -- gets one — not a bad one, none — because a new worker must not be branded
 -- on no evidence, and because one perfect job must not buy a badge.
+-- Silver at 5 jobs and 55 points, Gold at 12 and 70, Platinum at 30 and 85.
 -- ============================================================
 
 alter table public.workers add column if not exists score     int;
@@ -9441,7 +9442,7 @@ alter table public.workers add column if not exists scored_at timestamptz;
 comment on column public.workers.score is
   '0-100, recomputed from threads. See worker_score_parts. Null until scored.';
 comment on column public.workers.tier is
-  'null, ''reliable'', ''trusted'' or ''gold''. Null means not enough finished '
+  'null, ''silver'', ''gold'' or ''platinum''. Null means not enough finished '
   'work to say anything, which is not the same as scoring badly.';
 
 -- counting a worker's threads by status is now the hot path for scoring
@@ -9527,9 +9528,9 @@ begin
   -- Earned, never imposed. Below five finished jobs there is nothing to say
   -- about somebody, so nothing is said.
   t := case
-         when p.jobs_done >= 30 and total >= 85 then 'gold'
-         when p.jobs_done >= 12 and total >= 70 then 'trusted'
-         when p.jobs_done >= 5  and total >= 55 then 'reliable'
+         when p.jobs_done >= 30 and total >= 85 then 'platinum'
+         when p.jobs_done >= 12 and total >= 70 then 'gold'
+         when p.jobs_done >= 5  and total >= 55 then 'silver'
          else null end;
 
   update workers set score = total, tier = t, scored_at = now() where id = p_id;
@@ -9652,7 +9653,7 @@ begin
   perform public.recompute_worker_score(wid);
   select score, tier into r from workers where id = wid;
   select score, tier from workers where id = wid into r;
-  raise notice 'PASS  six jobs, five customers, one repeat → score %, tier %',
+  raise notice 'PASS  six jobs, five customers, one repeat → score %, badge %',
     (select score from workers where id = wid), (select tier from workers where id = wid);
   if (select tier from workers where id = wid) is null then
     raise exception 'MIGRATION 49: six clean jobs earned nothing';

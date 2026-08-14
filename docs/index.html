@@ -2317,6 +2317,60 @@ body.in-chat .demo-note{display:none}
   font-variant-numeric:tabular-nums;
 }
 .wcard .price small{color:var(--muted);font-weight:500;font-size:.82rem}
+/* ---------- the badge ----------
+   Earned, never imposed: there is no badge for scoring badly, only the
+   absence of one, so this element simply is not drawn below five finished
+   jobs. Three rungs so somebody at ten jobs can see the next one. */
+.tierbadge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:.68rem;font-weight:800;letter-spacing:.03em;
+  padding:2px 8px;border-radius:999px;white-space:nowrap;
+  border:1px solid transparent;
+}
+.tierbadge svg{width:11px;height:11px}
+.tierbadge.silver  {color:#CFD4DB;background:rgba(207,212,219,.13);border-color:rgba(207,212,219,.32)}
+.tierbadge.gold    {color:var(--brand-2);background:var(--brand-soft);border-color:rgba(var(--brand-rgb),.42)}
+.tierbadge.platinum{color:#7FE9DC;background:rgba(var(--accent-rgb),.14);border-color:rgba(var(--accent-rgb),.42)}
+
+/* the five lines behind the badge, on the profile */
+.scorecard{
+  border:1px solid var(--line-strong);background:var(--surface-2);
+  border-radius:var(--r);padding:14px 15px;margin:14px 0 4px;
+}
+.sc-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.sc-top b{font-size:.95rem}
+.sc-top .sc-num{margin-left:auto;font-weight:800;font-size:1.05rem;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.sc-top .sc-num small{color:var(--muted);font-weight:600;font-size:.75rem}
+.sc-line{display:flex;align-items:center;gap:10px;margin-top:8px}
+.sc-line span{flex:1;min-width:0;font-size:.82rem;color:var(--ink-2)}
+.sc-bar{flex:0 0 74px;height:6px;border-radius:3px;background:var(--surface);overflow:hidden}
+.sc-bar i{display:block;height:100%;border-radius:3px;background:var(--brand)}
+.sc-bar.warn i{background:var(--warn)}
+.sc-val{flex:0 0 auto;font-size:.78rem;font-weight:700;color:var(--ink);
+  font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.sc-note{display:block;margin-top:11px;font-size:.74rem;color:var(--muted);line-height:1.5}
+
+/* month by month, the worker's own. Bars rather than a table: the shape of a
+   year is the thing worth seeing, not the exact figures. */
+.months{
+  border:1px solid var(--line-strong);background:var(--surface-2);
+  border-radius:var(--r);padding:14px 15px;margin:10px 0 4px;
+}
+.mo-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.mo-head b{font-size:.92rem}
+.mo-head span{color:var(--muted);font-size:.74rem}
+.mo-chart{display:flex;align-items:flex-end;gap:6px;overflow-x:auto;padding-bottom:2px}
+.mo-chart::-webkit-scrollbar{display:none}
+.mo-chart{scrollbar-width:none}
+.mbar{flex:1 0 30px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.mbar i{
+  display:block;width:100%;max-width:26px;min-height:3px;border-radius:3px 3px 0 0;
+  background:linear-gradient(180deg,var(--brand),rgba(var(--brand-rgb),.45));
+}
+.mbar b{order:-1;font-size:.72rem;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.mbar span{font-size:.66rem;color:var(--muted)}
+
 .stars{color:var(--gold);letter-spacing:.5px;font-size:.82rem;display:inline-flex;align-items:center;gap:5px}
 .stars small{color:var(--muted);font-weight:600;letter-spacing:0}
 .new-tag{
@@ -4605,6 +4659,25 @@ function avatarOf(w, small){
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="160" height="160" fill="hsl(${hue},26%,19%)"/><text x="80" y="106" text-anchor="middle" font-family="Georgia,serif" font-size="72" fill="hsl(${hue},78%,70%)">${letter}</text></svg>`);
 }
+/* ---------- the badge ----------
+   Silver at five finished jobs, Gold at twelve, Platinum at thirty — each
+   with a score to match. Nothing at all below that: a new worker must not be
+   branded on no evidence, so the absence of a badge means "too early to say"
+   and never "bad". */
+const TIERS = {
+  silver:   { label:"Silver",   n:1 },
+  gold:     { label:"Gold",     n:2 },
+  platinum: { label:"Platinum", n:3 },
+};
+function tierBadge(w){
+  const t = TIERS[w && w.tier];
+  if(!t) return "";
+  /* one, two or three chevrons — readable at a glance without reading */
+  const marks = "▲".repeat(t.n);
+  return `<span class="tierbadge ${esc(w.tier)}" title="${esc(t.label)} — how this person is to deal with, out of 100: ${w.score}">`
+       + `${marks} ${esc(t.label)}</span>`;
+}
+
 function starsOf(w){
   const n = w.rating_count || 0;
   if(!n) return '<span class="new-tag">New</span>';
@@ -4867,6 +4940,37 @@ const api = {
     }
     const w = demoAll().find(x => x.id === id);
     return (w && statusOf(w) === "approved" && w.available !== false) ? w : null;
+  },
+  /* The five lines behind the badge. Public on purpose: a score whose
+     reasons nobody can see is not trust, it is a rating agency. */
+  async scorecard(id){
+    if(LIVE){
+      const rows = await sb("rpc/worker_scorecard", {method:"POST", body:JSON.stringify({p_id:id})});
+      return (rows || [])[0] || null;
+    }
+    const w = demoAll().find(x => x.id === id);
+    if(!w) return null;
+    const done = allThreads().filter(t => t.worker_id === w.id && t.status === "closed");
+    const seen = allThreads().filter(t => t.worker_id === w.id && t.status !== "cancelled");
+    const ans  = seen.filter(t => !["requested"].includes(t.status));
+    const who  = new Set(done.map(t => t.customer_phone));
+    return { score: w.score ?? null, tier: w.tier ?? null, jobs_done: done.length,
+             answered_pct: seen.length ? Math.round(100*ans.length/seen.length) : 100,
+             on_time_pct: (w.on_time_total||0) >= 3
+               ? Math.round(100*w.on_time_yes/w.on_time_total) : null,
+             finished_pct: 100, customers: who.size, repeat_customers: 0,
+             days_since_last: done.length ? 0 : null };
+  },
+  /* a worker's own history, month by month */
+  async myMonths(){
+    if(LIVE) return await sb("rpc/worker_months", {method:"POST",
+      body:JSON.stringify(workerAuth({}))}) || [];
+    const mine = allThreads().filter(t => t.worker_id === (session.worker||{}).id && t.status === "closed");
+    const by = {};
+    mine.forEach(t => { const m = (t.closed_at || t.created_at || "").slice(0,7) + "-01";
+                        by[m] = by[m] || {month:m, finished:0, earned:0};
+                        by[m].finished++; by[m].earned += (t.price||0); });
+    return Object.values(by).sort((a,b) => b.month.localeCompare(a.month));
   },
   async contact(id){
     if(LIVE) return await sb("rpc/request_worker_contact", {method:"POST",
@@ -6939,6 +7043,7 @@ async function saveProfile(){
 /* ---------- my profile ---------- */
 function renderMe(){
   setTimeout(renderPushState, 0);      /* the card is rebuilt below; paint after */
+  setTimeout(paintMyScore, 0);
   const w = session && session.worker; if(!w){ go("work"); return; }
   $("meCard").innerHTML = `
     <div class="profile-top">
@@ -6965,6 +7070,7 @@ function renderMe(){
         <div><b>Verified profile</b><span>You're visible to customers searching near you.</span></div>
       </div>`
     }[statusOf(w)]}
+    <div id="meScore"></div>
     <div class="switch-row">
       <div><b>Available for work</b><span>Turn this off when you're busy — you won't appear in search.</span></div>
       <label class="switch"><input type="checkbox" id="avSwitch" ${w.available!==false?"checked":""} onchange="toggleAvailable(this.checked)"><span class="track"></span></label>
@@ -7502,7 +7608,7 @@ function paintResults(q, areaPick){
     return `<button class="wcard" onclick="openWorker('${jsq(w.id)}')">
       <span class="avatar"><img src="${avatarOf(w, true)}" alt="" loading="lazy" decoding="async"></span>
       <span class="info">
-        <h3>${esc(w.name)} <span class="verified-badge">✓ Verified</span>${w.is_online ? '<span class="online-dot" title="Available right now">● Now</span>' : ""}</h3>
+        <h3>${esc(w.name)} <span class="verified-badge">✓ Verified</span>${tierBadge(w)}${isOnlineNow(w) ? '<span class="online-dot" title="Available right now">● Now</span>' : ""}</h3>
         <div class="trade">${trades}</div>
         <div class="row">
           <span class="where">${w.serves_remote
@@ -7528,17 +7634,19 @@ function openWorker(id){
   if(!w) return;
   currentWorker = w;
   const d = distanceTo(w);
+  setTimeout(() => paintScorecard(w.id), 0);
   $("wDetail").innerHTML = `
     <div class="detail-head">
       <div class="avatar"><img src="${avatarOf(w)}" alt=""></div>
       <div>
-        <h3>${esc(w.name)}</h3>
+        <h3>${esc(w.name)} ${tierBadge(w)}</h3>
         <div class="sub" style="margin:0">${w.serves_remote
           ? '<em class="remote-tag">Works remotely</em>' + (w.city ? " · " + esc(w.city) : "")
           : esc(w.area ? w.area + ", " : "") + esc(w.city||"") + (d!=null ? " · " + showDist(d) : "")}</div>
         <div style="margin-top:5px">${starsOf(w)}${onTimeText(w)}</div>
       </div>
     </div>
+    <div id="wScore"></div>
     ${w.reg_number ? `<p class="reg-line">${w.reg_verified ? "✓ Registration checked by MySheher" : "Registration"}: ${esc(w.reg_number)}</p>` : ""}
     ${w.about ? `<p class="hint" style="margin-bottom:6px">${esc(w.about)}</p>` : ""}
     <div class="price-list">
@@ -9869,6 +9977,113 @@ async function bookAgain(id){
      than booking the wrong thing. */
   const i = (w.skills || []).findIndex(s => s.skill === entry.skill);
   openWorkerCard(w, i < 0 ? 0 : i);
+}
+
+/* The five lines behind the badge, fetched when the sheet is already open so
+   the profile does not wait on them. Absent entirely for somebody too new to
+   have any — an empty scorecard says less than no scorecard. */
+async function paintScorecard(id){
+  const host = $("wScore");
+  if(!host) return;
+  host.innerHTML = "";
+  let c = null;
+  try{ c = await api.scorecard(id); }catch(e){ return; }
+  if(!c || !currentWorker || currentWorker.id !== id) return;   /* they moved on */
+  if(!c.tier && (c.jobs_done || 0) < 5) return;
+
+  const line = (label, pct, extra) => {
+    if(pct == null) return "";
+    return `<div class="sc-line">
+      <span>${esc(label)}</span>
+      <span class="sc-bar${pct < 70 ? " warn" : ""}"><i style="width:${Math.max(3, Math.min(100, pct))}%"></i></span>
+      <span class="sc-val">${pct}%</span>
+    </div>`;
+  };
+  const t = TIERS[c.tier];
+  host.innerHTML = `<div class="scorecard">
+    <div class="sc-top">
+      ${t ? tierBadge(c) : ""}
+      <b>${c.jobs_done} ${c.jobs_done === 1 ? "job" : "jobs"} finished on MySheher</b>
+      ${c.score != null ? `<span class="sc-num">${c.score}<small>/100</small></span>` : ""}
+    </div>
+    ${line("Answers a request", c.answered_pct)}
+    ${line("Turns up on time", c.on_time_pct)}
+    ${line("Finishes what they take on", c.finished_pct)}
+    ${c.repeat_customers > 0
+      ? `<div class="sc-line"><span>Customers who booked them again</span>
+           <span class="sc-val" style="min-width:0">${c.repeat_customers} of ${c.customers}</span></div>`
+      : ""}
+    <small class="sc-note">Counted from bookings made through MySheher. Work arranged
+      privately is not counted, so this only ever grows by using the app.</small>
+  </div>`;
+}
+
+/* ---------- the worker's own standing ----------
+   Two things, and they are the same two things a customer sees, deliberately:
+   there is no private version of the score, and nothing here is a surprise.
+
+   The point of showing the parts rather than the number is that a number
+   cannot be acted on. "You answered 6 of 10 requests" can. */
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+async function paintMyScore(){
+  const host = $("meScore");
+  const w = session && session.worker;
+  if(!host || !w) return;
+
+  let card = null, months = [];
+  try{ [card, months] = await Promise.all([
+    api.scorecard(w.id).catch(() => null),
+    api.myMonths().catch(() => []),
+  ]); }catch(e){ return; }
+  if(!$("meScore")) return;                 /* they navigated away */
+
+  const t = TIERS[card && card.tier];
+  const next = !t ? { label:"Silver", jobs:5, score:55 }
+             : t.n === 1 ? { label:"Gold", jobs:12, score:70 }
+             : t.n === 2 ? { label:"Platinum", jobs:30, score:85 }
+             : null;
+
+  const line = (label, pct) => pct == null ? "" : `<div class="sc-line">
+      <span>${esc(label)}</span>
+      <span class="sc-bar${pct < 70 ? " warn" : ""}"><i style="width:${Math.max(3, Math.min(100, pct))}%"></i></span>
+      <span class="sc-val">${pct}%</span>
+    </div>`;
+
+  const done = (card && card.jobs_done) || 0;
+  const peak = Math.max(1, ...months.map(m => m.finished || 0));
+  const bars = months.slice(0, 12).reverse().map(m => {
+    const d = new Date(m.month);
+    return `<div class="mbar" title="${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()} — ${m.finished} finished">
+      <i style="height:${Math.round(100 * (m.finished || 0) / peak)}%"></i>
+      <span>${MONTH_NAMES[d.getMonth()]}</span>
+      <b>${m.finished}</b>
+    </div>`;
+  }).join("");
+
+  host.innerHTML = `<div class="scorecard">
+    <div class="sc-top">
+      ${t ? tierBadge(card) : `<span class="tierbadge silver" style="opacity:.5">No badge yet</span>`}
+      <b>${done} ${done === 1 ? "job" : "jobs"} finished</b>
+      ${card && card.score != null ? `<span class="sc-num">${card.score}<small>/100</small></span>` : ""}
+    </div>
+    ${line("Answering requests", card && card.answered_pct)}
+    ${line("Turning up on time", card && card.on_time_pct)}
+    ${line("Finishing what you take on", card && card.finished_pct)}
+    ${card && card.customers ? `<div class="sc-line">
+      <span>Customers who booked you again</span>
+      <span class="sc-val" style="min-width:0">${card.repeat_customers} of ${card.customers}</span></div>` : ""}
+    ${next ? `<small class="sc-note"><b style="color:var(--brand-2)">Next: ${next.label}</b> —
+      ${done >= next.jobs ? "you have the jobs" : `${next.jobs - done} more finished ${next.jobs - done === 1 ? "job" : "jobs"}`}
+      and ${next.score} out of 100.</small>` : ""}
+    <small class="sc-note">Only bookings made through MySheher count. Work arranged
+      privately cannot be counted, so it does nothing for your badge or for where
+      you appear in search.</small>
+  </div>
+  ${months.length ? `<div class="months">
+    <div class="mo-head"><b>Jobs finished each month</b><span>Customers see the total as your experience</span></div>
+    <div class="mo-chart">${bars}</div>
+  </div>` : ""}`;
 }
 
 /* Opening a profile that did not come out of the current search results.
