@@ -44,6 +44,18 @@ jobs:
           fi
           note "secret: present (${#SB_TOKEN} chars)"
           echo "::add-mask::$SB_TOKEN"
+
+          # Which message-provider secrets this run can actually see. Names and
+          # lengths only, never a value. Added because RESEND_KEY was set in
+          # the repository and the run still reported no provider, and there
+          # was no way to tell from the outside whether it was missing, named
+          # differently, or saved somewhere the job cannot read — an
+          # environment secret rather than a repository one, say.
+          for nm in RESEND_KEY MAIL_FROM WA_TOKEN WA_PHONE_ID TWILIO_SID; do
+            eval "v=\${$nm:-}"
+            if [ -n "$v" ]; then note "otp secret $nm: visible (${#v} chars)"
+            else                 note "otp secret $nm: NOT VISIBLE to this job"; fi
+          done
           api=https://api.supabase.com/v1
           hdr=(-H "Authorization: Bearer $SB_TOKEN" -H "Content-Type: application/json")
 
