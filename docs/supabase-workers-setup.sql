@@ -10151,6 +10151,136 @@ begin
   delete from workers where id = wid;
 end $$;
 
+-- ============================================================
+-- MIGRATION 52 — a new profile comes with an address
+--
+-- The email box was optional and update_worker never saved it, so most
+-- workers had no way to reset their own PIN and no way to acquire one.
+-- Migration 51 made it editable. This stops the hole being dug again with
+-- every new registration.
+--
+-- Only new profiles. Nobody already registered is locked out or nagged; they
+-- can add one from the edit screen whenever they like.
+--
+-- Worth being clear about who this could turn away: somebody with no email at
+-- all. In practice that is very few — installing MySheher from the Play Store
+-- needs a Google account, which is an email address — and the alternative is
+-- worse: an account they are one forgotten PIN away from losing for good.
+-- ============================================================
+
+create or replace function public.register_worker(p_phone text, p_pin text, p_data jsonb)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  new_id uuid; jwt_phone text; need_otp boolean; total int; remote int; addr text;
+begin
+  if exists (select 1 from workers where phone = p_phone) then
+    raise exception 'This phone number is already registered — please sign in';
+  end if;
+  if p_pin !~ '^\d{4}$' then raise exception 'PIN must be exactly 4 digits'; end if;
+  if p_phone !~ '^[6-9]\d{9}$' then raise exception 'Enter a valid 10-digit Indian mobile number'; end if;
+
+  -- The address is the only self-serve way back into a forgotten account.
+  addr := nullif(btrim(coalesce(p_data->>'email','')), '');
+  if addr is null then
+    raise exception 'Please add your email — it is how you get back in if you forget your PIN';
+  end if;
+  if addr !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
+    raise exception 'That email address does not look right';
+  end if;
+
+  perform check_rate_bands(p_data->'skills');
+
+  select count(*), count(*) filter (where exists (
+           select 1 from remote_skills r where r.skill = s->>'skill'))
+    into total, remote
+    from jsonb_array_elements(coalesce(p_data->'skills','[]'::jsonb)) s;
+  if total > remote and coalesce(p_data->>'city','') <> 'Guwahati' then
+    raise exception 'Work done at a customer''s home is Guwahati only for now';
+  end if;
+
+  select require_phone_otp into need_otp from nearse_config where id = 1;
+  jwt_phone := regexp_replace(
+    coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'phone', ''), '\D', '', 'g');
+  if length(jwt_phone) > 10 then jwt_phone := right(jwt_phone, 10); end if;
+  if coalesce(need_otp,false) and jwt_phone = '' then
+    raise exception 'Please verify your WhatsApp number first';
+  end if;
+  if jwt_phone <> '' and jwt_phone <> p_phone then
+    raise exception 'Verify the same number you are registering with';
+  end if;
+
+  insert into workers (name, phone, selfie, thumb, city, area, about, lat, lng, skills,
+                       available, phone_verified, terms_version, consent_at, age_confirmed)
+  values (coalesce(p_data->>'name',''), p_phone, p_data->>'selfie', p_data->>'thumb',
+          nullif(btrim(coalesce(p_data->>'city','')),''), p_data->>'area', p_data->>'about',
+          (p_data->>'lat')::double precision, (p_data->>'lng')::double precision,
+          coalesce(p_data->'skills','[]'::jsonb),
+          coalesce((p_data->>'available')::boolean, true), jwt_phone <> '',
+          nullif(p_data->>'terms_version',''),
+          case when coalesce((p_data->>'age_confirmed')::boolean, false) then now() end,
+          coalesce((p_data->>'age_confirmed')::boolean, false))
+  returning id into new_id;
+  insert into worker_secrets (worker_id, pin_hash, email, wa_code)
+    values (new_id, crypt(p_pin, gen_salt('bf', 10)), addr,
+            nullif(btrim(coalesce(p_data->>'wa_code','')), ''));
+  return query select * from workers where id = new_id;
+end;
+$$;
+
+do $$
+declare n int; msg text;
+begin
+  delete from workers where phone in ('9000000085','9000000084');
+
+  -- no address, no profile
+  begin
+    perform public.register_worker('9000000085','1234',
+      '{"name":"No Email","city":"Guwahati","area":"Beltola",
+        "skills":[{"skill":"Plumber","price":300,"unit":"per visit"}]}'::jsonb);
+    raise exception 'MIGRATION 52: a profile was created with no address';
+  exception when others then
+    if sqlerrm like 'MIGRATION 52:%' then raise; end if;
+    msg := sqlerrm;
+  end;
+  if msg not like '%forget your PIN%' then
+    raise exception 'MIGRATION 52: refused for the wrong reason: %', msg;
+  end if;
+  if exists (select 1 from workers where phone = '9000000085') then
+    raise exception 'MIGRATION 52: the row was written anyway';
+  end if;
+  raise notice 'PASS  a new profile cannot be created without an address';
+
+  -- rubbish is refused too
+  begin
+    perform public.register_worker('9000000085','1234',
+      '{"name":"Bad Email","email":"nope","city":"Guwahati","area":"Beltola",
+        "skills":[{"skill":"Plumber","price":300,"unit":"per visit"}]}'::jsonb);
+    raise exception 'MIGRATION 52: a malformed address was accepted';
+  exception when others then
+    if sqlerrm like 'MIGRATION 52:%' then raise; end if;
+  end;
+  raise notice 'PASS  and not with a malformed one';
+
+  -- with one, it registers and the address is immediately usable
+  perform public.register_worker('9000000084','1234',
+    '{"name":"Has Email","email":"new@example.com","city":"Guwahati","area":"Beltola",
+      "skills":[{"skill":"Plumber","price":300,"unit":"per visit"}]}'::jsonb);
+  if public.otp_email_for('9000000084') <> 'new@example.com' then
+    raise exception 'MIGRATION 52: the address did not reach worker_secrets';
+  end if;
+  raise notice 'PASS  with one, the profile is created and can reset its own PIN from day one';
+
+  -- and nobody already registered is disturbed
+  select count(*) into n from workers w
+   where not exists (select 1 from worker_secrets s
+                      where s.worker_id = w.id
+                        and nullif(btrim(coalesce(s.email,'')),'') is not null);
+  raise notice 'PASS  % existing profile(s) without an address, left alone and still able to add one', n;
+
+  delete from workers where phone in ('9000000085','9000000084');
+end $$;
+
 -- ---------- and the reason any of it matters ----------
 -- A score nobody is ranked by is decoration. Both of these are redefined here
 -- rather than where they were first written, because they now read columns

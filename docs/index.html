@@ -2966,9 +2966,18 @@ footer a{color:var(--ink-2)}
           </div>
           <p class="hint" style="margin-top:6px">Bookings arrive in MySheher, and customers can nudge you on WhatsApp — so this must be a number with WhatsApp on it.</p>
         </div>
+        <!-- Required, and the label says what it is actually for. It was
+             optional, and update_worker never saved it, so anybody who
+             skipped it could never reset their own PIN — the one thing an
+             address is needed for. Anybody installing from the Play Store
+             already has a Google account, so this asks for something they
+             have; it is only the website that could meet somebody without
+             one. -->
         <div class="field">
-          <label for="upEmail">Email <span class="sublabel">— optional</span></label>
-          <input type="email" id="upEmail" placeholder="Only if you want booking copies by email" autocomplete="email">
+          <label for="upEmail">Email</label>
+          <input type="email" id="upEmail" placeholder="you@example.com" autocomplete="email" required>
+          <p class="hint" style="margin-top:6px">Customers never see this. It is how you get back
+            into your account if you forget your PIN — without it, the only way back is to message us.</p>
         </div>
         <div class="field">
           <label for="upPin">Create a 4-digit PIN</label>
@@ -6100,7 +6109,8 @@ async function signUp(){
   const pin   = $("upPin").value.trim();
   if(!name){ toast("Please enter your name"); return; }
   if(!PHONE_RE.test(phone)){ toast("Enter a valid 10-digit WhatsApp number"); return; }
-  if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast("That email address doesn't look right"); return; }
+  if(!email){ toast("Please add your email — it is how you get back in if you forget your PIN"); return; }
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast("That email address doesn't look right"); return; }
   if(!/^\d{4}$/.test(pin)){ toast("PIN must be exactly 4 digits"); return; }
   const btn = $("signUpBtn"); btn.disabled = true;
   try{
