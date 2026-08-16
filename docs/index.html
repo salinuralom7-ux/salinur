@@ -3209,6 +3209,19 @@ footer a{color:var(--ink-2)}
       </div>
     </div>
 
+    <!-- The address is what gets somebody back in when they forget their PIN.
+         It was asked for once on the sign-up screen and never again, and
+         update_worker did not save it, so anybody who skipped that box could
+         never reset their own PIN — not later, not ever, without messaging
+         us. It is never shown to a customer; it lives in worker_secrets. -->
+    <div class="field">
+      <label for="regEmail">Email <span class="sublabel">— private, only used if you forget your PIN</span></label>
+      <input type="email" id="regEmail" maxlength="120" autocomplete="email"
+             placeholder="you@example.com">
+      <p class="hint" style="margin-top:6px">Customers never see this. Without it, the only way
+        back into a forgotten account is to message us.</p>
+    </div>
+
     <div class="field">
       <label>Location <span class="sublabel">— so nearby customers find you first</span></label>
       <button class="loc-btn" id="regLocBtn" onclick="captureLocation()">
@@ -3318,7 +3331,7 @@ footer a{color:var(--ink-2)}
     </button>
     <div class="panel">
       <h2>Forgotten your PIN</h2>
-      <p class="hint" id="recWhy">We will send a 6-digit code to your WhatsApp number. Confirm it and you can choose a new PIN.</p>
+      <p class="hint" id="recWhy">Enter the number on your account and we will send you a 6-digit code. Confirm it and you can choose a new PIN.</p>
 
       <div id="recStep1">
         <div class="field">
@@ -4985,6 +4998,12 @@ const api = {
              finished_pct: 100, customers: who.size, repeat_customers: 0,
              days_since_last: done.length ? 0 : null };
   },
+  /* The address on file, behind the worker's own PIN. Never returned by any
+     public function — it is not part of a profile. */
+  async myEmail(){
+    if(LIVE) return await sb("rpc/my_email", {method:"POST", body:JSON.stringify(workerAuth({}))});
+    return (session && session.email) || null;
+  },
   /* Where a worker stands, in their own trade's terms. A flat "30 jobs"
      target is meaningless to a wedding planner and trivial to a mechanic. */
   async standing(){
@@ -6385,6 +6404,12 @@ function initRegister(){
   $("regSaveBtn").textContent = editing ? "Save changes" : "Publish my profile";
   /* A rejected profile is being edited for a reason; keep the reason in front
      of them the whole way through rather than only on the screen they left. */
+  /* what is already on file, fetched behind their own PIN */
+  const eb = $("regEmail");
+  if(eb){
+    eb.value = session.email || "";
+    if(editing) api.myEmail().then(v => { if(v && !eb.value) eb.value = v; }).catch(() => {});
+  }
   const turnedDown = editing && statusOf(w) === "rejected";
   $("regWhyRejected").hidden = !turnedDown;
   if(turnedDown){
@@ -7103,7 +7128,10 @@ async function saveProfile(){
   data.reg_council  = regCouncil;
   data.reg_number   = regNumber;
   data.availability = availability;
-  if(session.email) data.email = session.email;
+  /* Always sent, so clearing the box clears the address. session.email is
+     what the sign-up screen collected; the field wins once it exists. */
+  const emailBox = $("regEmail");
+  data.email = emailBox ? emailBox.value.trim() : (session.email || "");
   if(session.waCode) data.wa_code = session.waCode;
   if(firstTime){ data.age_confirmed = true; data.terms_version = TERMS_VERSION; }
   btn.textContent = "Saving…";

@@ -7981,7 +7981,9 @@ declare
     -- MIGRATION 49: how somebody works, and their own month-by-month history
     'worker_scorecard','worker_months',
     -- MIGRATION 50: standing measured against the worker's own trade
-    'worker_standing'
+    'worker_standing',
+    -- MIGRATION 51: the address that gets a worker back in
+    'my_email'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -8045,7 +8047,7 @@ begin
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
-       'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing');
+       'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email');
 
   if leaked is not null then
     raise exception
@@ -9987,6 +9989,168 @@ begin
   delete from trade_pace where skill in ('Two-Wheeler Mechanic','Event Photographer');
 end $$;
 
+-- ============================================================
+-- MIGRATION 51 — a worker can add the address that gets them back in
+--
+-- "Forgotten your PIN?" now sends the code by email, because the WhatsApp
+-- Cloud API takes over whatever number it is given and there was no spare
+-- SIM. That works — for anybody who gave an address.
+--
+-- The address is asked for once, on the sign-up screen, and it is optional.
+-- update_worker has never touched it. So somebody who skipped that box, which
+-- most people will have, can never reset their own PIN: not now, not later,
+-- not ever, with no way to fix it from inside the app. The only route back is
+-- to message us and have it done by hand.
+--
+-- The address lives on worker_secrets, which has no RLS policy and is never
+-- returned by any public function — it is not part of a profile and does not
+-- become one by being editable. Passing "" clears it, which is the same right
+-- to withdraw the rest of the profile already has.
+-- ============================================================
+
+create or replace function public.update_worker(p_phone text, p_pin text, p_data jsonb,
+                                                p_token uuid default null)
+returns setof public.workers
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; is_edit boolean; identity_changed boolean; clean jsonb; addr text;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return; end if;
+
+  clean := public.clean_worker_data(p_data);
+  if clean ? 'skills' then perform check_rate_bands(clean->'skills'); end if;
+
+  is_edit := (clean ?| array['name','selfie','area','about','skills']);
+
+  select (clean->>'name'   is not null and clean->>'name'   is distinct from w.name)
+      or (clean->>'selfie' is not null and clean->>'selfie' is distinct from w.selfie)
+    into identity_changed
+    from workers w where w.id = wid;
+
+  update workers set
+    name = coalesce(clean->>'name', name),
+    selfie = coalesce(clean->>'selfie', selfie),
+    thumb = coalesce(clean->>'thumb', thumb),
+    city = coalesce(clean->>'city', city),
+    area = coalesce(clean->>'area', area),
+    about = coalesce(clean->>'about', about),
+    lat = coalesce((clean->>'lat')::double precision, lat),
+    lng = coalesce((clean->>'lng')::double precision, lng),
+    skills = coalesce(clean->'skills', skills),
+    available = coalesce((clean->>'available')::boolean, available),
+    status = case
+               when identity_changed then 'pending'
+               when is_edit and status = 'rejected' then 'pending'
+               else status
+             end,
+    review_note = case
+               when identity_changed then null
+               when is_edit and status = 'rejected' then null
+               else review_note
+             end
+  where id = wid;
+
+  /* Only when the key is actually sent, so every other kind of save leaves it
+     alone. An empty string clears it deliberately; a missing key changes
+     nothing. Changing an address must not put a profile back into review —
+     it is not part of what the team looked at. */
+  if clean ? 'email' then
+    addr := nullif(btrim(coalesce(clean->>'email','')), '');
+    if addr is not null and addr !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
+      raise exception 'That email address does not look right';
+    end if;
+    insert into worker_secrets (worker_id, pin_hash, email)
+    values (wid, '', addr)
+    on conflict (worker_id) do update set email = excluded.email;
+  end if;
+
+  return query select * from workers where id = wid;
+end;
+$$;
+
+-- So the edit screen can show what is already there. Behind the worker's own
+-- PIN, and it returns only their own — this is not a lookup for anybody else.
+create or replace function public.my_email(p_phone text default null,
+                                           p_pin text default null,
+                                           p_token uuid default null)
+returns text
+language plpgsql stable security definer set search_path = public, extensions as $$
+declare wid uuid;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return null; end if;
+  return (select nullif(btrim(coalesce(email,'')), '') from worker_secrets where worker_id = wid);
+end;
+$$;
+
+do $$
+declare wid uuid; got text;
+begin
+  delete from workers where phone = '9000000086';
+  insert into workers (name, phone, city, area, lat, lng, skills, available, status)
+  values ('No Address','9000000086','Guwahati','Beltola',26.1,91.7,
+          '[{"skill":"Plumber","price":300,"unit":"per visit"}]'::jsonb, true, 'approved')
+  returning id into wid;
+  insert into worker_secrets (worker_id, pin_hash)
+  values (wid, extensions.crypt('1234', extensions.gen_salt('bf',10)));
+
+  if public.otp_email_for('9000000086') is not null then
+    raise exception 'MIGRATION 51: expected no address to start with';
+  end if;
+
+  perform public.update_worker('9000000086','1234','{"email":"worker@example.com"}'::jsonb);
+  got := public.otp_email_for('9000000086');
+  if got <> 'worker@example.com' then
+    raise exception 'MIGRATION 51: the address did not save (%)', got;
+  end if;
+  raise notice 'PASS  a worker who skipped the box at sign-up can add one later';
+
+  -- and that is exactly what makes a code sendable
+  update nearse_config set otp_provider = 'email' where id = 1;
+  if public.send_otp('9000000086') not like 'email:%' then
+    raise exception 'MIGRATION 51: adding an address did not make a code sendable';
+  end if;
+  raise notice 'PASS  and can then reset their own PIN';
+  update nearse_config set otp_provider = null where id = 1;
+  delete from otp_codes where phone = '9000000086';
+  delete from otp_outbox where phone = '9000000086';
+
+  -- rubbish is refused rather than quietly stored
+  begin
+    perform public.update_worker('9000000086','1234','{"email":"not an address"}'::jsonb);
+    raise exception 'MIGRATION 51: a bad address was accepted';
+  exception when others then
+    if sqlerrm like 'MIGRATION 51:%' then raise; end if;
+  end;
+  if public.otp_email_for('9000000086') <> 'worker@example.com' then
+    raise exception 'MIGRATION 51: a refused address overwrote the good one';
+  end if;
+  raise notice 'PASS  a bad address is refused and does not overwrite the good one';
+
+  -- an ordinary save leaves it alone
+  perform public.update_worker('9000000086','1234','{"about":"I fix taps"}'::jsonb);
+  if public.otp_email_for('9000000086') is null then
+    raise exception 'MIGRATION 51: an unrelated save wiped the address';
+  end if;
+  raise notice 'PASS  a save that says nothing about it leaves it alone';
+
+  -- and it can be withdrawn
+  perform public.update_worker('9000000086','1234','{"email":""}'::jsonb);
+  if public.otp_email_for('9000000086') is not null then
+    raise exception 'MIGRATION 51: the address could not be cleared';
+  end if;
+  raise notice 'PASS  and it can be taken away again';
+
+  -- it is theirs, and it is not part of the profile anybody can read
+  if exists (select 1 from information_schema.columns
+              where table_schema='public' and table_name='workers' and column_name='email') then
+    raise exception 'MIGRATION 51: an address ended up on the public workers table';
+  end if;
+  raise notice 'PASS  the address is still nowhere a customer can read it';
+
+  delete from workers where id = wid;
+end $$;
+
 -- ---------- and the reason any of it matters ----------
 -- A score nobody is ranked by is decoration. Both of these are redefined here
 -- rather than where they were first written, because they now read columns
@@ -10214,7 +10378,7 @@ begin
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
-       'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing');
+       'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email');
 
   if leaked is not null then
     raise exception
