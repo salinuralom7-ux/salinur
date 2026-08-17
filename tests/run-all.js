@@ -74,8 +74,14 @@ const run = f => new Promise(resolve => {
   for (const r of bad) {
     console.log(`\n──── ${r.f}  (exit ${r.code})`);
     const lines = r.out.split('\n').filter(l => /^FAIL/.test(l));
-    console.log(lines.length ? lines.map(l => '  ' + l).join('\n')
-                             : '  ' + r.out.trim().split('\n').slice(-6).join('\n  '));
+    if (lines.length) { console.log(lines.map(l => '  ' + l).join('\n')); continue; }
+    /* A crash, not a failed assertion. The last six lines of a Playwright
+       timeout are the closing brackets of the call log — the one line that
+       says WHICH element it waited for is thirty lines up, so print the
+       lines that actually identify it. */
+    const out = r.out.trim().split('\n');
+    const useful = out.filter(l => /Error|error:|waiting for|at \/home|Timeout|not of type/.test(l));
+    console.log((useful.length ? useful.slice(0, 8) : out.slice(-8)).map(l => '  ' + l.trim()).join('\n'));
   }
   process.exitCode = bad.length ? 1 : 0;
 })();
