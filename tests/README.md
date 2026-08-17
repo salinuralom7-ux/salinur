@@ -6,8 +6,15 @@ what it found, so a failure reads like a sentence rather than a stack trace.
 
 ```bash
 npm i playwright        # once
-node tests/test-ks.js
+node tests/test-ks.js   # one harness
+node tests/run-all.js   # all of them, in sequence — they share ports
 ```
+
+`run-all.js` prints one line per file and then the failures in full. Use it
+before a release: five of these files were quietly broken for weeks — a
+deleted button, a missing module, two elements that no longer exist — and
+each printed its stack trace to a terminal nobody was watching, because
+there was no way to run the set in one go.
 
 | File | What it covers |
 |---|---|
@@ -31,9 +38,10 @@ node tests/test-ks.js
 | `test-bulk.js` | Bulk approval from a pasted WhatsApp thread |
 | `lint-app.js` | Parse errors, `$()` calls with no element, undefined handlers, CSS braces |
 | `band-audit.js` | Every price band printed against its pricing unit, to spot mismatches |
+| `run-all.js` | Runs every harness in sequence and reports which are not clean |
 | `make-store-assets.js` | Regenerates the Play screenshots and feature graphic into `docs/store/` |
 
-The database schema has its own check: `.github/workflows/setup-kaamsetu-db.yml`
+The database schema has its own check: `.github/workflows/setup-mysheher-db.yml`
 applies `docs/supabase-workers-setup.sql` on every push and then queries the
 live database to confirm the result. The file is applied whole each time, so
 **every statement in it must be safe to run again** — test with three
@@ -82,6 +90,17 @@ roles and grants them what Supabase grants by default. Without it the
 column-grant block in Migration 10 has no role to apply to, skips silently,
 and the verification still reports a pass — leaving the one property it exists
 to prove, that the public cannot read the phone column in bulk, untested.
+
+It also puts pgcrypto in a schema called `extensions` and on the search path,
+which is where Supabase keeps it. A plain Postgres installs it into `public`
+instead, and then unqualified `crypt()` resolves while `extensions.crypt()`
+does not — a difference invisible until some self-check happens to write the
+qualified form, which is a miserable way to find out that the test database
+was never shaped like the real one.
+
+`dispatch-verify.sql` needs the same database and can be run after
+`schema-verify.sql`. Both are re-runnable: they clear their own fixtures
+first, because the schema file is applied to a database that keeps its rows.
 
 ## Scale and abuse
 

@@ -26,19 +26,20 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(700);
   await signInDemoCustomer(page);
 
-  // ---- landing: exactly two doors ----
-  console.log('Landing buttons (expect 2):', await page.locator('.cta').count());
-  console.log('Button order:', (await page.locator('.cta .cta-text b').allTextContents()).join(' | '));
-  console.log('Both doors carry an animated illustration:',
-              await page.locator('#ctaHire .art-find').count() === 1 &&
-              await page.locator('#ctaWork .art-worker').count() === 1);
-  console.log('Worker arm animates:', await page.evaluate(
-    () => getComputedStyle(document.querySelector('.art-worker .arm')).animationName));
-  console.log('Binoculars scan animates:', await page.evaluate(
-    () => getComputedStyle(document.querySelector('.art-find .scan')).animationName));
-  console.log('Card title and subtitle stack:', await page.evaluate(
-    () => getComputedStyle(document.querySelector('.cta-text')).flexDirection));
-  console.log('First is a real button:', await page.evaluate(() => document.querySelector('.cta').tagName));
+  /* ---- landing ----
+     Two illustrated doors — Hire somebody / Work with us — were the whole
+     landing screen when this was written. It is a grid of the twelve most
+     booked trades now, with See all services under it and the worker door
+     moved to the raised tab in the bar, so the illustrations, their
+     animations and .cta itself no longer exist. */
+  console.log('Trade tiles on the landing screen:', await page.locator('.qtile').count());
+  console.log('Tile order:', (await page.locator('.qt-label').allTextContents()).slice(0, 4).join(' | '));
+  console.log('Every tile draws something:',
+              await page.locator('.qtile .qt-pic svg').count() === await page.locator('.qtile').count());
+  console.log('See all services is there:', await page.locator('.see-all').count() === 1);
+  console.log('The worker door is the raised tab:',
+              (await page.locator('#tabFab').innerText()).replace(/\s+/g, ' ').trim());
+  console.log('Tiles are real buttons:', await page.evaluate(() => document.querySelector('.qtile').tagName));
   console.log('Budget Cars strip gone:', await page.locator('#carsNote').count() === 0);
   console.log('Dark theme:', await page.evaluate(() => getComputedStyle(document.body).backgroundColor));
   console.log('Catalogue size:', await page.evaluate(() => SKILLS.length), 'services in',
@@ -47,7 +48,7 @@ const srv = http.createServer((req, res) => {
   await page.screenshot({ path: 'ks-landing.png' });
 
   // ---- worker side: banner + auth ----
-  await page.locator('#ctaWork').click();
+  await page.locator('#tabFab').click();
   await page.waitForTimeout(400);
   console.log('Banner text:', (await page.locator('.banner h1').textContent()).trim());
   console.log('Sign in tab default:', await page.locator('#tabIn.on').count() === 1);
@@ -265,8 +266,13 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(1200);
   await page.evaluate(() => go('me'));
   await page.waitForTimeout(500);
-  console.log('Worker sees rejection:', await page.locator('.vstatus.rejected').count() === 1);
-  console.log('Worker sees the reason:', (await page.locator('.vstatus.rejected').innerText()).includes(REJECT_REASON));
+  /* Scoped to #meCard on purpose: the registration wizard now carries a
+     second, hidden copy of this block so the reason travels with somebody
+     going back to fix their profile, and an unscoped selector reads that
+     one — silently, since it is hidden and therefore empty. */
+  console.log('Worker sees rejection:', await page.locator('#meCard .vstatus.rejected').count() === 1);
+  console.log('Worker sees the reason:',
+    (await page.locator('#meCard .vstatus.rejected').innerText()).includes(REJECT_REASON));
 
   await adminPage.evaluate(() => renderAdmin());
   await adminPage.waitForTimeout(600);
@@ -379,7 +385,7 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(300);
   await page.locator('button', { hasText: 'Sign out' }).click();
   await page.waitForTimeout(400);
-  await page.locator('#ctaWork').click();
+  await page.locator('#tabFab').click();
   await page.waitForTimeout(300);
   await page.fill('#inPhone', '9435012345');
   await page.fill('#inPin', '4321');
@@ -388,7 +394,7 @@ const srv = http.createServer((req, res) => {
   console.log('Sign in returns to profile:', await page.locator('#scr-me.on').count() === 1);
   await page.locator('button', { hasText: 'Sign out' }).click();
   await page.waitForTimeout(400);
-  await page.locator('#ctaWork').click();
+  await page.locator('#tabFab').click();
   await page.fill('#inPhone', '9435012345');
   await page.fill('#inPin', '0000');
   await page.locator('#signInBtn').click();
@@ -434,7 +440,7 @@ const srv = http.createServer((req, res) => {
   await desk.goto('http://localhost:8777/');
   await desk.waitForTimeout(900);
   await desk.screenshot({ path: 'ks-landing-desk.png' });
-  await desk.locator('#ctaHire').click();
+  await desk.locator('.see-all').click();
   await desk.waitForTimeout(1000);
   await desk.screenshot({ path: 'ks-hire-desk.png' });
 

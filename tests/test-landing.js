@@ -41,12 +41,27 @@ const srv=http.createServer((q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]
   console.log('\nFigures read from the real catalogue:',
     await p.evaluate(()=>document.getElementById('figServices').textContent + ' services, ' +
                         document.getElementById('figAreas').textContent + ' localities'));
-  console.log('Reduced motion respected:', await p.evaluate(()=>{
-    return getComputedStyle(document.querySelector('.reveal')).opacity;
-  }) === '1' ? 'content visible after animation' : 'check');
+  /* This used to read .reveal, the rise-in animation on the two landing
+     doors. Both doors are gone and nothing carries that class any more, so
+     querySelector returned null and getComputedStyle threw — taking the
+     whole file down before it printed a single line. The property worth
+     keeping is the one the old check was after: with reduced motion asked
+     for, nothing on the home screen is mid-animation, and everything on it
+     is visible. */
+  console.log('Home screen is fully opaque:', await p.evaluate(()=>
+    [...document.querySelectorAll('#scr-home .qtile, #scr-home .see-all, #scr-home h1')]
+      .every(e => getComputedStyle(e).opacity === '1')));
   const rm = await b.newContext({viewport:{width:390,height:844}, reducedMotion:'reduce'});
-  const p2 = await rm.newPage(); await p2.goto('http://localhost:8805/'); await p2.waitForTimeout(600);
-  console.log('With prefers-reduced-motion, hero content is visible:',
-    await p2.evaluate(()=>getComputedStyle(document.querySelector('.reveal')).opacity) === '1');
+  const p2 = await rm.newPage(); await p2.goto('http://localhost:8805/'); await p2.waitForTimeout(900);
+  console.log('With prefers-reduced-motion, the home screen is visible and still:',
+    await p2.evaluate(()=>{
+      const els=[...document.querySelectorAll('#scr-home .qtile, #scr-home .see-all, #scr-home h1')];
+      return els.length > 0
+        && els.every(e => getComputedStyle(e).opacity === '1')
+        && els.every(e => {
+             const d = getComputedStyle(e).animationDuration;
+             return d === '0s' || parseFloat(d) < 0.01;
+           });
+    }));
   await b.close(); srv.close();
 })();

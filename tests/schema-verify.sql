@@ -27,9 +27,14 @@ select id from public.register_worker('9435012345','1234',
     'selfie','https://x.supabase.co/storage/v1/object/public/selfies/a.webp',
     'thumb','https://x.supabase.co/storage/v1/object/public/selfies/a-t.webp',
     'skills', jsonb_build_array(jsonb_build_object('skill','Carpenter','price',900,'unit','per day')),
+    'email','test.approved@example.com',
     'age_confirmed', true, 'terms_version','2026-07-27')) \gset w1_
+-- an address is required to register since Migration 52; it is how somebody
+-- who forgets their PIN gets back in, so there is no such thing as a profile
+-- without one
 select id from public.register_worker('9435012346','1234',
   jsonb_build_object('name','Test Pending','city','Guwahati','area','Beltola',
+    'email','test.pending@example.com',
     'skills', jsonb_build_array(jsonb_build_object('skill','Plumber','price',400,'unit','per visit')))) \gset w2_
 update workers set status='approved', verified=true where phone='9435012345';
 

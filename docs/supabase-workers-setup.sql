@@ -7234,6 +7234,31 @@ create index if not exists threads_customer_idx on public.threads (customer_id, 
 alter table public.nearse_config add column if not exists require_customer_otp boolean not null default false;
 alter table public.nearse_config add column if not exists otp_provider text;
 
+-- Migration 53, hoisted. The reasoning is at the end of this file, under its
+-- own heading; the repair has to happen here because a gate that refuses
+-- every registration also refuses the dozen self-checks further down that
+-- register somebody in order to test something else. Leaving it at the end
+-- meant the whole file stopped applying — which is how the live database came
+-- to be several migrations behind without anybody being told.
+do $$
+declare provider text;
+begin
+  select coalesce(btrim(otp_provider), '') into provider from nearse_config where id = 1;
+  if provider in ('whatsapp','sms','twilio') then return; end if;
+
+  if (select require_phone_otp from nearse_config where id = 1) then
+    update nearse_config set require_phone_otp = false where id = 1;
+    raise notice
+      'MIGRATION 53: phone verification was on with provider "%", which cannot reach a '
+      'phone — switched off, because it was refusing every new registration',
+      coalesce(nullif(provider,''), 'none');
+  end if;
+  if (select require_customer_otp from nearse_config where id = 1) then
+    update nearse_config set require_customer_otp = false where id = 1;
+    raise notice 'MIGRATION 53: customer verification was on for the same reason — switched off';
+  end if;
+end $$;
+
 create table if not exists public.otp_codes (
   phone      text primary key,
   code_hash  text not null,
@@ -10472,6 +10497,167 @@ begin
                     'the session stamp and will fail at run time: %', bad;
   end if;
   raise notice 'PASS  nothing that checks the admin PIN is stuck in a read-only transaction';
+end $$;
+
+-- ============================================================
+-- Migration 53 — a gate nobody can get through is a closed door
+--
+-- require_phone_otp means "prove this number is yours before you register".
+-- The only proof is a code we send to the number itself, so the switch is
+-- honest exactly while a provider can reach a phone.
+--
+-- It was on. The provider was 'email'. Those two facts together shut the door
+-- on every new worker, and did it in the least visible way possible:
+--
+--   * send_otp looks up an address for the number. A number registering for
+--     the first time has no profile and therefore no address, so it answers
+--     'no-email' — correctly, and with nothing sent.
+--   * The app treats that as a failed send and falls through to the WhatsApp
+--     route, which needs no provider: the worker sends us a code from their
+--     own number, and staff match it against the sender when reviewing.
+--     The screen says "Thanks — we'll match your code when we review your
+--     profile" and hands them back to the form. So far so good.
+--   * Then register_worker looks for a verified phone claim in the JWT, finds
+--     none, and raises 'Please verify your WhatsApp number first' — after the
+--     photo, the trades, the prices and the consent boxes.
+--
+-- Nobody could finish signing up, and the failure arrived at the last step
+-- wearing the name of a thing they had just been told was done.
+--
+-- The switch now follows what can actually be delivered. Email can prove an
+-- address; it cannot prove a phone. Only a channel that reaches the phone
+-- itself may hold this gate shut, and turning it on by hand against a
+-- provider that cannot is refused rather than accepted and forgotten.
+-- ============================================================
+
+-- The repair itself is hoisted to just after otp_provider is added, several
+-- thousand lines above: everything between here and there registers somebody
+-- at some point, and none of it can run while the gate is shut.
+--
+-- Kept as a plain expression rather than a function on purpose: a new public
+-- function has to be threaded through lock_public_functions()'s allow-list in
+-- three places, and this is one comparison.
+
+create or replace function public.admin_set_require_otp(p_pin text, p_require boolean)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare provider text;
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+
+  if coalesce(p_require, false) then
+    select coalesce(btrim(otp_provider), '') into provider from nearse_config where id = 1;
+    if provider not in ('whatsapp','sms','twilio') then
+      raise exception
+        'There is no way to send a code to a phone yet (the message provider is "%"), so '
+        'switching this on would refuse every new registration. Connect WhatsApp or SMS '
+        'first.', coalesce(nullif(provider,''), 'none');
+    end if;
+  end if;
+
+  update nearse_config set require_phone_otp = p_require where id = 1;
+end;
+$$;
+
+do $$
+declare
+  msg text; n int;
+  -- Everything this block touches is real configuration, so it is put back
+  -- exactly as found. An apply must never change which provider is connected.
+  keep_provider text; keep_gate boolean; keep_cgate boolean; keep_pin text;
+begin
+  select otp_provider, require_phone_otp, require_customer_otp
+    into keep_provider, keep_gate, keep_cgate from nearse_config where id = 1;
+  select pin_hash into keep_pin from nearse_admin where id = 1;
+  update nearse_admin set pin_hash = crypt('migration-53-check', gen_salt('bf', 4)) where id = 1;
+
+  delete from workers where phone in ('9000000083','9000000082');
+
+  -- the exact live configuration on the morning this was found
+  update nearse_config set otp_provider = 'email', require_phone_otp = true where id = 1;
+
+  -- an apply puts the door back on its hinges
+  update nearse_config set require_phone_otp = false where id = 1;
+
+  perform public.register_worker('9000000083','1234',
+    '{"name":"First Timer","email":"first.timer@example.com","city":"Guwahati",
+      "area":"Beltola","wa_code":"481920",
+      "skills":[{"skill":"Plumber","price":300,"unit":"per visit"}]}'::jsonb);
+  select count(*) into n from workers where phone = '9000000083';
+  if n <> 1 then
+    raise exception 'MIGRATION 53: a first-time worker still cannot register';
+  end if;
+  raise notice 'PASS  somebody signing up for the first time can finish';
+
+  -- their claimed code survives for the reviewer to match, which is what
+  -- stands in for the code we could not send
+  if (select wa_code from worker_secrets s join workers w on w.id = s.worker_id
+       where w.phone = '9000000083') <> '481920' then
+    raise exception 'MIGRATION 53: the WhatsApp claim was not kept for review';
+  end if;
+  raise notice 'PASS  the code they sent us is waiting on the review screen';
+
+  -- turning the gate on against an email provider is refused, out loud, to
+  -- somebody holding the right PIN — the point is that being staff is not
+  -- enough when the switch cannot work
+  begin
+    perform public.admin_set_require_otp('migration-53-check', true);
+    raise exception 'MIGRATION 53: the gate was switched on with no way through it';
+  exception when others then
+    if sqlerrm like 'MIGRATION 53:%' then raise; end if;
+    msg := sqlerrm;
+  end;
+  if msg not like '%no way to send a code%' then
+    raise exception 'MIGRATION 53: refused for the wrong reason: %', msg;
+  end if;
+  if (select require_phone_otp from nearse_config where id = 1) then
+    raise exception 'MIGRATION 53: refused and switched it on anyway';
+  end if;
+  raise notice 'PASS  the switch cannot be left in a state that refuses everybody';
+
+  -- with a phone-capable provider it is allowed again
+  update nearse_config set otp_provider = 'whatsapp' where id = 1;
+  perform public.admin_set_require_otp('migration-53-check', true);
+  if not (select require_phone_otp from nearse_config where id = 1) then
+    raise exception 'MIGRATION 53: the switch will not go on even with a provider';
+  end if;
+
+  -- and then it bites
+  begin
+    perform public.register_worker('9000000082','1234',
+      '{"name":"Unverified","email":"unverified@example.com","city":"Guwahati",
+        "area":"Beltola","skills":[{"skill":"Plumber","price":300,"unit":"per visit"}]}'::jsonb);
+    raise exception 'MIGRATION 53: the gate stopped working when it could work';
+  exception when others then
+    if sqlerrm like 'MIGRATION 53:%' then raise; end if;
+    msg := sqlerrm;
+  end;
+  if msg not like '%verify your WhatsApp number%' then
+    raise exception 'MIGRATION 53: wrong refusal with a real provider: %', msg;
+  end if;
+  raise notice 'PASS  once a code can be sent, the gate is a gate again';
+
+  delete from workers where phone in ('9000000083','9000000082');
+  update nearse_config set otp_provider        = keep_provider,
+                           require_phone_otp    = keep_gate,
+                           require_customer_otp = keep_cgate where id = 1;
+  update nearse_admin set pin_hash = keep_pin where id = 1;
+end $$;
+
+-- The restore above runs only if nothing raised. Re-assert the invariant the
+-- migration exists for, so a half-finished check can never leave the live
+-- database with a gate it cannot open.
+do $$
+declare provider text;
+begin
+  select coalesce(btrim(otp_provider), '') into provider from nearse_config where id = 1;
+  if provider not in ('whatsapp','sms','twilio')
+     and (select require_phone_otp from nearse_config where id = 1) then
+    update nearse_config set require_phone_otp = false where id = 1;
+    raise exception 'MIGRATION 53: the self-check left the gate shut — switched off, apply again';
+  end if;
 end $$;
 
 -- ---------- the lock, still last ----------

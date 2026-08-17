@@ -38,8 +38,14 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   // ---------- the three-dot button ----------
   ok('Three-dot button in the header', await page.locator('#menuBtn').isVisible());
   ok('Menu starts closed', await page.locator('#drawer.open').count() === 0);
+  /* About, Privacy and the rest used to sit in the header as plain text
+     links. They belong in the menu, which is checked below. Counting what
+     was left behind broke the moment the last one moved, so assert the
+     property instead: nothing in the header goes to a legal page. */
   ok('Legal links are no longer loose in the header',
-     await page.locator('header .header-link').count() === 1);
+     (await page.locator('header a[href]').evaluateAll(
+        as => as.map(a => a.getAttribute('href') || '')))
+       .every(h => !/(about|privacy|terms|refund|cancel|delete)/i.test(h)));
 
   await page.locator('#menuBtn').click();
   await page.waitForTimeout(500);

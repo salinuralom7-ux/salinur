@@ -223,7 +223,11 @@ const ok = (label, cond, extra) =>
   await p.waitForTimeout(900);
   const shot = await p.locator('.bd-qr svg').screenshot({ scale: 'css' });
   const { createCanvas, loadImage } = (() => { try { return require('canvas'); } catch (e) { return {}; } })();
-  const jsQR = require('jsqr');
+  /* jsqr is optional and is not in tests/package.json — a machine without it
+     used to throw MODULE_NOT_FOUND here and take the other 51 assertions
+     down with it, after they had all passed. Say the scan was skipped and
+     keep going; `npm i jsqr` in tests/ turns it back on. */
+  const jsQR = (() => { try { return require('jsqr'); } catch (e) { return null; } })();
   // decode straight from the module matrix the page produced, upscaled
   const decoded = await p.evaluate(url => {
     const m = qrMatrix(url);
@@ -236,9 +240,13 @@ const ok = (label, cond, extra) =>
       }
     return { data: Array.from(d), px };
   }, 'https://mysheher.com/#id=' + code);
-  const got = jsQR(new Uint8ClampedArray(decoded.data), decoded.px, decoded.px);
-  ok('The badge QR decodes to the verification link',
-     got && got.data === 'https://mysheher.com/#id=' + code, got ? got.data : 'nothing');
+  if (jsQR) {
+    const got = jsQR(new Uint8ClampedArray(decoded.data), decoded.px, decoded.px);
+    ok('The badge QR decodes to the verification link',
+       got && got.data === 'https://mysheher.com/#id=' + code, got ? got.data : 'nothing');
+  } else {
+    console.log('SKIP  The badge QR decodes to the verification link  → jsqr not installed');
+  }
   void shot;
 
   ok('No JS errors anywhere', errors.length === 0, errors.join(' | ') || 'none');

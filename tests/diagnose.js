@@ -70,13 +70,43 @@ const H = t => console.log('\n── ' + t + ' ' + '─'.repeat(Math.max(0, 56 -
         v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
       return 0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2];
     };
-    const bgl = lum('rgb(12,10,7)');
+    /* The background was hardcoded to the page's own dark colour, so every
+       brand-gold button — dark ink on gold, the highest-contrast thing in
+       the app — was reported at 1.1:1 and the three real numbers were
+       buried under three false ones. Walk up to whatever is actually
+       painted behind the text instead. */
+    const parse = c => {
+      const n = (c.match(/[\d.]+/g) || []).map(Number);
+      return n.length >= 3 ? { r:n[0], g:n[1], b:n[2], a:n.length > 3 ? n[3] : 1 } : null;
+    };
+    /* Translucent tints have to be composited, not read at full strength: an
+       amber notice painted at 12% over a near-black page is a dark brown,
+       and taking the amber literally reports 1:1 against amber text sitting
+       on it. Walk outwards collecting layers, then paint them back down
+       onto the page colour. */
+    const bgOf = el => {
+      const layers = [];
+      for (let e = el; e; e = e.parentElement) {
+        const c = parse(getComputedStyle(e).backgroundColor);
+        if (!c || c.a === 0) continue;
+        layers.push(c);
+        if (c.a === 1) break;
+      }
+      let out = { r:12, g:10, b:7 };
+      for (let i = layers.length - 1; i >= 0; i--) {
+        const l = layers[i];
+        out = { r: l.r*l.a + out.r*(1-l.a),
+                g: l.g*l.a + out.g*(1-l.a),
+                b: l.b*l.a + out.b*(1-l.a) };
+      }
+      return `rgb(${out.r},${out.g},${out.b})`;
+    };
     const seen = new Map();
     document.querySelectorAll('p,span,b,i,small,li,label,a,button,div').forEach(el => {
       if (el.children.length || !el.textContent || el.textContent.trim().length < 3) return;
       const cs = getComputedStyle(el);
       if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) < 0.9) return;
-      const size = parseFloat(cs.fontSize), fg = lum(cs.color);
+      const size = parseFloat(cs.fontSize), fg = lum(cs.color), bgl = lum(bgOf(el));
       const ratio = (Math.max(fg, bgl) + 0.05) / (Math.min(fg, bgl) + 0.05);
       const need = (size >= 24 || (size >= 18.66 && parseInt(cs.fontWeight) >= 700)) ? 3 : 4.5;
       if (ratio < need) {

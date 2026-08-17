@@ -14,6 +14,18 @@
 --   psql -d repto_test -f docs/supabase-workers-setup.sql   # three times
 --   psql -d repto_test -f tests/schema-verify.sql
 
+-- Supabase keeps pgcrypto in a schema called `extensions`, not in `public`,
+-- and puts that schema on the search path. A plain Postgres has neither, so
+-- `create extension if not exists pgcrypto` at the top of the schema file
+-- lands the functions in `public` instead — bare crypt() then resolves and
+-- everything looks fine, while `extensions.crypt(...)` fails with "schema
+-- extensions does not exist". That difference is invisible until a self-check
+-- happens to qualify the call, which is a miserable way to find out that the
+-- test database was never shaped like the real one. Shape it here.
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
+alter role postgres set search_path = public, extensions;
+
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'anon') then
@@ -27,7 +39,7 @@ begin
   end if;
 end $$;
 
-grant usage on schema public to anon, authenticated, service_role;
+grant usage on schema public, extensions to anon, authenticated, service_role;
 grant all on all tables    in schema public to anon, authenticated, service_role;
 grant all on all sequences in schema public to anon, authenticated, service_role;
 alter default privileges in schema public grant all on tables    to anon, authenticated, service_role;

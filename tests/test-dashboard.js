@@ -33,14 +33,33 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   await page.goto('http://localhost:8817/#admin');
   await page.waitForTimeout(1600);
   ok('Admin opens', await page.locator('#scr-admin.on').count() === 1);
-  /* Dashboard, Review, Activity, and Alerts — Alerts arrived with push and
-     this count was never moved with it. Naming them rather than counting
-     them, so the next tab fails the assertion with the reason on screen. */
-  ok('Four tabs, in order',
-     (await page.locator('.admin-tabs .tab').allTextContents()).join(' | ')
-       === 'Dashboard | Review | Activity | Alerts',
-     (await page.locator('.admin-tabs .tab').allTextContents()).join(' | '));
-  ok('Dashboard is the default tab', await page.locator('.admin-tabs .tab.on').innerText() === 'Dashboard');
+  /* Stats, Review, Activity, Alerts, Banner — Alerts arrived with push and
+     Banner with the home-screen slots, and each time this line failed with
+     the new name printed beside it, which is the whole reason it names the
+     tabs instead of counting them. */
+  const tabNames = () => page.locator('.admin-tabs .tab').allTextContents();
+  ok('Five tabs, in order',
+     (await tabNames()).join(' | ') === 'Stats | Review | Activity | Alerts | Banner',
+     (await tabNames()).join(' | '));
+  ok('Stats is the default tab', await page.locator('.admin-tabs .tab.on').innerText() === 'Stats');
+  /* They must all fit on one line: pinned at three columns while five tabs
+     existed, the last two wrapped underneath. */
+  ok('…on a single row',
+     await page.locator('.admin-tabs .tab').evaluateAll(
+       els => new Set(els.map(e => Math.round(e.getBoundingClientRect().top))).size) === 1);
+
+  /* And the row survives changing tab. paintReview carried its own copy of
+     this markup, three tabs old, so an admin on Review — where they spend
+     their time — could not see Alerts or Banner at all. */
+  await page.evaluate(() => setAdminTab('review'));
+  await page.waitForTimeout(1200);
+  ok('The same five tabs are there from Review',
+     (await tabNames()).join(' | ') === 'Stats | Review | Activity | Alerts | Banner',
+     (await tabNames()).join(' | '));
+  ok('…with Review marked as the one you are on',
+     await page.locator('.admin-tabs .tab.on').innerText() === 'Review');
+  await page.evaluate(() => setAdminTab('stats'));
+  await page.waitForTimeout(1200);
 
   // headline tiles
   const tiles = await page.locator('.stat-grid').first().locator('.stat').evaluateAll(
@@ -86,7 +105,7 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   ok('Review tab still shows the queue', (await page.locator('#adminPanel').innerText()).includes('Profile review'));
 
   // and back to the dashboard
-  await page.locator('.admin-tabs .tab', { hasText: 'Dashboard' }).click();
+  await page.locator('.admin-tabs .tab', { hasText: 'Stats' }).click();
   await page.waitForTimeout(700);
   ok('Returns to the dashboard', await page.locator('.stat-grid').count() > 0);
 

@@ -14,7 +14,12 @@ const defined = new Set([...js.matchAll(/(?:^|\n)(?:async )?function ([A-Za-z0-9
   .concat([...js.matchAll(/(?:const|let|var) ([A-Za-z0-9_]+) = (?:async )?(?:function|\()/g)].map(x => x[1])));
 const handlers = new Set([...s.matchAll(/\bon[a-z]+="\s*([A-Za-z0-9_]+)\(/g)].map(x => x[1])
   .concat([...js.matchAll(/onclick=\\?["']([A-Za-z0-9_]+)\(/g)].map(x => x[1])));
-const undef = [...handlers].filter(h => !defined.has(h));
+/* `onclick="if(event.target===this)closeModal(...)"` is the overlay
+   dismiss idiom, used a dozen times. The pattern above reads the `if` as a
+   function name and reports it every run, which is exactly how a real
+   undefined handler would go unnoticed in the noise. */
+const KEYWORDS = new Set(['if', 'for', 'while', 'switch', 'return', 'typeof', 'catch']);
+const undef = [...handlers].filter(h => !defined.has(h) && !KEYWORDS.has(h));
 console.log('inline handlers not defined:', undef.length ? undef.join(', ') : 'none');
 
 // CSS sanity: every rule closes
