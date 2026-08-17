@@ -1,9 +1,13 @@
 /* MySheher service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls always go to the network. */
-const CACHE = "mysheher-shell-v23";
+const CACHE = "mysheher-shell-v24";
 const SHELL = [
-  "./",
+  /* "./" was here as well as "./index.html". They are the same 600 KB
+     document under two cache keys, so installing fetched it twice on top of
+     the navigation that had just fetched it — and the fetch handler below
+     only ever reads "./index.html" first, so the second copy was never once
+     served. */
   "./index.html",
   "./manifest.webmanifest",
   "./icons/icon-192.png?v=6",

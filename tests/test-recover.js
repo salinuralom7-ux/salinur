@@ -172,8 +172,14 @@ const fnBody = name => {
     const m = JSON.parse(localStorage.getItem('repto_recovery_demo_v1'));
     return await api.resetWorkerPin('9998887776', m['9998887776'].code, '1111');
   });
+  /* The database says "There is no worker profile on this number" and
+     preview mode says "There is no profile on this number". Both are the
+     same answer and both are given only once the code has matched, which is
+     the property under test — matching the exact sentence made this fail on
+     a reworded string while the ordering it exists to protect was fine. */
   ok('An unregistered number is told only after the code is right',
-     stranger.token === null && /no worker profile/i.test(stranger.error), stranger.error);
+     stranger.token === null && /no (worker )?profile on this number/i.test(stranger.error),
+     stranger.error);
 
   ok('No JS errors', errs.length === 0, errs.join(' | ') || 'none');
   await b.close(); srv.close();

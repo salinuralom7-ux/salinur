@@ -63,9 +63,18 @@ const CASES = [
                               document.querySelectorAll('.overlay.open')
                                       .forEach(o => o.classList.remove('open')); });
 
+  /* Waiting a fixed 350ms for the screen to arrive lost the race under load
+     — the click then spent its full thirty seconds looking for a button on a
+     screen that had not been drawn, and the file died there rather than
+     failing an assertion. Wait for the screen. */
+  const onRecover = async () => {
+    await page.waitForSelector('#scr-recover.on', { timeout: 8000 });
+    await page.waitForSelector('#recSendBtn:not([hidden])', { state: 'visible', timeout: 8000 });
+  };
+
   for (const c of CASES) {
     await page.evaluate(a => { api.sendCode = async () => a; go('recover'); recoverStep(1); }, c.answer);
-    await page.waitForTimeout(350);
+    await onRecover();
     await page.fill('#recPhone', '7086599367');
     await page.click('#recSendBtn');
     await page.waitForTimeout(450);
@@ -96,7 +105,7 @@ const CASES = [
      the screen must not be quietly undoing that by showing something else. */
   await page.evaluate(() => { api.sendCode = async () => 'email:sa••••••••@gmail.com';
                               go('recover'); recoverStep(1); });
-  await page.waitForTimeout(300);
+  await onRecover();
   await page.fill('#recPhone', '7086599367');
   await page.click('#recSendBtn'); await page.waitForTimeout(400);
   const shown = await page.evaluate(() => document.getElementById('recSentTo').innerText);

@@ -14,11 +14,29 @@ const ok=(l,c,x)=>console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x:
   await p.goto('http://localhost:8831/'); await p.waitForTimeout(1500);
   await p.evaluate(()=>{const n=document.getElementById('demoNote'); if(n) n.style.display='none';});
 
-  ok('Eight one-tap tiles rendered', await p.locator('.qtile').count()===8);
-  ok('Each tile has an icon', await p.locator('.qtile svg').count()===8);
+  /* Eight when this was written, twelve now — the home screen was rebuilt
+     around the grid. Read the count off the list the app actually renders
+     from, so growing it is a one-line change there and not a failure here,
+     and keep the properties that matter: four across, and never a tile with
+     nothing drawn in it. */
+  const n = await p.evaluate(()=>QUICK_PICKS.length);
+  ok(`${n} one-tap tiles rendered`, await p.locator('.qtile').count()===n, n);
+  ok('Each tile has an icon', await p.locator('.qtile svg').count()===n);
   ok('Tiles sit four across',
-     await p.evaluate(()=>new Set([...document.querySelectorAll('.qtile')]
-        .map(e=>Math.round(e.getBoundingClientRect().top))).size===2));
+     await p.evaluate(()=>{
+       const tops=[...document.querySelectorAll('.qtile')].map(e=>Math.round(e.getBoundingClientRect().top));
+       const rows=new Set(tops).size;
+       return rows===Math.ceil(tops.length/4);
+     }));
+  /* The first two rows are above the fold and are fetched eagerly on
+     purpose; the rest wait for the scroll. Getting that backwards is what
+     made the grid fill in tile by tile after the layout had settled. */
+  ok('The rows above the fold do not wait for the scroll',
+     await p.evaluate(()=>{
+       const imgs=[...document.querySelectorAll('.qtile img')];
+       return imgs.slice(0,8).every(i=>i.getAttribute('loading')==='eager')
+           && imgs.slice(8).every(i=>i.getAttribute('loading')==='lazy');
+     }));
   ok('No horizontal overflow', await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
 
   await p.screenshot({path:'tests/shots/full-landing.png', fullPage:true});

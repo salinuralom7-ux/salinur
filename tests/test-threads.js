@@ -86,6 +86,10 @@ const ok = (label, cond, extra) =>
   await work.locator('.work-entry', { hasText: 'My work' }).click();
   await work.waitForTimeout(900);
   ok('Inbox opens', await work.locator('#scr-inbox.on').count() === 1);
+  /* The inbox fetches before it draws, and a fixed 900ms sleep lost that
+     race about one run in ten — this and the unread flag below then failed
+     together, on a screen that was about to be correct. Wait for the row. */
+  await work.locator('.thread-row').first().waitFor({ timeout: 8000 }).catch(() => {});
   ok('The request is listed', await work.locator('.thread-row').count() >= 1);
   ok('It is flagged unread', await work.locator('.thread-row.unread').count() >= 1);
   ok('Stats strip is shown', await work.locator('.stat').count() === 4);

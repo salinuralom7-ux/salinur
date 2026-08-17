@@ -58,7 +58,13 @@ const srv = http.createServer((req, res) => {
   let offlineOK = false;
   try {
     await off.goto('http://localhost:8790/', { timeout: 15000 });
-    offlineOK = (await off.locator('.cta').count()) === 2;
+    await off.waitForTimeout(1200);
+    /* Two .cta doors were the landing screen. It is a grid of trades now:
+       the shell has loaded when the tiles are there and one of them can be
+       pressed, which is also the only thing worth being able to do with no
+       signal. */
+    offlineOK = (await off.locator('.qtile').count()) > 0
+             && (await off.locator('.see-all').count()) === 1;
   } catch (e) { offlineOK = false; }
   console.log('Works offline (app shell):', offlineOK);
   await off.close();

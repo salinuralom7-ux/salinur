@@ -204,7 +204,14 @@ body{
 @media (prefers-reduced-motion: reduce){ #scroll{scroll-behavior:auto} }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
-button{font-family:inherit;cursor:pointer;color:inherit;touch-action:manipulation}
+/* touch-action was here from the start; the grey flash was not. Android
+   paints its own translucent square over any button that has not opted out,
+   and it lands a beat after the finger and lingers a beat after it lifts —
+   which reads as the app being slow rather than as the system being helpful.
+   Every hand-rolled control in this file already turns it off one at a time;
+   this makes that the default and leaves those declarations harmless. */
+button{font-family:inherit;cursor:pointer;color:inherit;touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent}
 a,label,select,summary{touch-action:manipulation}
 input,select,textarea{font-family:inherit;font-size:1rem;color:var(--ink);color-scheme:dark}
 svg{display:block}
@@ -234,6 +241,13 @@ h1,h2,h3,h4{letter-spacing:-.02em;line-height:1.15;font-weight:700}
   transition:background .16s ease,color .16s ease,border-color .16s ease,box-shadow .16s ease;
 }
 .btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+/* Every tile in this app dips when pressed and the buttons did not, so the
+   one control on the home screen that is unambiguously a button was the only
+   thing that gave no sign it had been hit. transform is not in the
+   transition list above on purpose: the dip should be instant, and only
+   coming back up should ease. */
+.btn:active{transform:translateY(1px) scale(.985)}
+@media(prefers-reduced-motion:reduce){ .btn:active{transform:none} }
 .btn-brand{background:var(--brand);color:var(--brand-ink);font-weight:700}
 .btn-brand:hover{background:var(--brand-2)}
 .btn-outline{background:transparent;color:var(--ink);border-color:var(--line-strong)}
@@ -280,7 +294,6 @@ header{
 /* The wordmark is the drawn logo, not type: the R carries a gold slash that
    no font gives us. Height drives it, width follows, so it never distorts. */
 .brand .wordmark{height:22px;width:auto;display:block;flex:0 0 auto}
-.header-link{font-size:.88rem;font-weight:600;color:var(--muted)}
 /* "My profile" is a destination, not an aside, so it should look like
    something you press. Sized to sit level with the three-dot button. */
 .hdr-btn{
@@ -392,7 +405,6 @@ body.menu-open #scroll{overflow:hidden}
   display:grid;place-items:center;font-size:.78rem;font-weight:800;flex:0 0 auto;
 }
 .ios-step p{font-size:.9rem;color:var(--ink-2);line-height:1.5}
-.header-link:hover{color:var(--ink)}
 .demo-note{
   display:none;font-size:.78rem;font-weight:600;color:var(--warn);background:rgba(var(--warn-rgb),.10);
   border-bottom:1px solid rgba(var(--warn-rgb),.22);padding:8px 20px;text-align:center;
@@ -1402,8 +1414,17 @@ body.in-chat .undo-bar{bottom:calc(14px + env(safe-area-inset-bottom))}
 .bulk-row{display:flex;align-items:center;gap:12px;margin-top:11px;flex-wrap:wrap}
 .bulk-row .hint{margin:0}
 /* ---------- admin dashboard ---------- */
-.admin-tabs{margin-bottom:18px;display:grid;grid-template-columns:repeat(3,1fr)}
-.admin-tabs .tab{padding-left:6px;padding-right:6px;white-space:nowrap}
+/* Five tabs now. Pinned at three, the last two wrapped onto a second row and
+   the whole strip grew taller the moment Banner was added. The count comes
+   from the list that renders them, so a sixth tab widens the grid by itself
+   instead of quietly starting a third row. */
+.admin-tabs{margin-bottom:18px;display:grid;
+  grid-template-columns:repeat(var(--admin-tab-n,5),1fr)}
+/* Narrower type to fit five across, but taller padding to make up for it —
+   a 33px tab is under every thumb-target guideline going, and shrinking the
+   text without adding height would have made that worse rather than better. */
+.admin-tabs .tab{padding:13px 2px;white-space:nowrap;
+  font-size:.74rem;min-width:0;overflow:hidden;text-overflow:ellipsis}
 /* the one thing on the dashboard that is a call to action, not a number */
 .todo-bar{
   width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -1878,8 +1899,11 @@ body.in-chat .demo-note{display:none}
   font-style:normal;font-size:.63rem;font-weight:800;min-width:17px;height:17px;padding:0 5px;
   border-radius:999px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;
 }
-.tabs.three{flex-wrap:nowrap}
-.tabs.three .tab{flex:1 1 0;min-width:0;font-size:.79rem;padding:9px 2px;white-space:nowrap}
+/* .tabs is a grid, so `flex-wrap` and `flex:1 1 0` were addressed to nobody:
+   three tabs went into two 1fr columns and Closed dropped onto a second row
+   by itself, on My work, which is the screen a worker lives on. */
+.tabs.three{grid-template-columns:repeat(3,1fr)}
+.tabs.three .tab{min-width:0;font-size:.79rem;padding:9px 2px;white-space:nowrap}
 .tabs.three .tab i{font-style:normal;opacity:.7;margin-left:2px}
 
 /* ---------- the worker's numbers ---------- */
@@ -3400,7 +3424,9 @@ footer a{color:var(--ink-2)}
       <h2 id="acctTitle">Create your account</h2>
       <p class="hint" id="acctWhy">So your bookings, replies and chats stay in one place.</p>
 
-      <div class="tabs three" style="margin:16px 0 4px">
+      <!-- two tabs, so the plain two-column .tabs is the right one; `three`
+           was harmless only while .tabs.three did nothing -->
+      <div class="tabs" style="margin:16px 0 4px">
         <button class="tab on" id="acctTabSignup" onclick="showAccount('signup')">Sign up</button>
         <button class="tab" id="acctTabSignin" onclick="showAccount('signin')">I have an account</button>
       </div>
@@ -10008,16 +10034,15 @@ function paintChatBadge(rows){
   const tab = $("tabBookings");
   if(tab) tab.setAttribute("aria-label", n ? "Bookings — " + waitingLine(waiting) : "Bookings");
 
-  const dot = $("menuDot"), badge = $("chatsBadge"), home = $("myBookingsDot");
+  const dot = $("menuDot"), badge = $("chatsBadge");
   if(dot){ dot.hidden = !n; dot.classList.toggle("urgent", !!n); }
   if(badge){ badge.hidden = !n; badge.textContent = n; badge.classList.toggle("urgent", !!n); }
-  if(home){ home.hidden = !n; home.textContent = n; home.classList.toggle("urgent", !!n); }
 
-  const link = $("myBookingsLink");
-  if(link) link.classList.toggle("waiting", !!n);
-  const sub = $("myBookingsSub");
-  if(sub && n) sub.textContent = waitingLine(waiting);
-  else if(sub) paintMineLink();
+  /* myBookingsDot / myBookingsLink / myBookingsSub belonged to the home
+     "Bookings & chats" card, which went when the tab took over the count.
+     Their guards kept them harmless but they were three lookups that could
+     never find anything. */
+  paintMineLink();
 }
 
 /* Say what is waiting, not just that something is. "2 need your answer" gets
@@ -10873,16 +10898,25 @@ function adminMatches(w){
   return adminQuery.split(/\s+/).every(word => hay.includes(word));
 }
 
+/* One row of tabs, written once.
+   There were two copies. The second lived in paintReview, still listing the
+   three tabs there had been when it was written, so an admin standing on
+   Review — where they spend all their time — could not see Alerts or Banner
+   at all, and had to go back to Dashboard to find them. Both tabs had been
+   added to the other copy and nobody looked at this one. */
+const ADMIN_TABS = [["stats","Stats"], ["review","Review"], ["activity","Activity"],
+                    ["alerts","Alerts"], ["banners","Banner"]];
+function adminTabsHtml(){
+  return `<div class="tabs admin-tabs" style="--admin-tab-n:${ADMIN_TABS.length}">`
+    + ADMIN_TABS.map(([k, label]) =>
+    `<button class="tab${adminTab === k ? " on" : ""}" onclick="setAdminTab('${k}')">${label}</button>`
+  ).join("") + `</div>`;
+}
+
 async function renderAdmin(){
   const host = $("adminPanel");
   host.innerHTML = '<div class="skeleton"></div>';
-  const tabs = `<div class="tabs admin-tabs">
-      <button class="tab${adminTab==="stats"?" on":""}" onclick="setAdminTab('stats')">Dashboard</button>
-      <button class="tab${adminTab==="review"?" on":""}" onclick="setAdminTab('review')">Review</button>
-      <button class="tab${adminTab==="activity"?" on":""}" onclick="setAdminTab('activity')">Activity</button>
-      <button class="tab${adminTab==="alerts"?" on":""}" onclick="setAdminTab('alerts')">Alerts</button>
-      <button class="tab${adminTab==="banners"?" on":""}" onclick="setAdminTab('banners')">Banner</button>
-    </div>`;
+  const tabs = adminTabsHtml();
   const exit = `<button class="btn btn-quiet btn-block btn-sm" style="margin-top:18px" onclick="adminPin=null;go('home')">Exit admin</button>`;
 
   if(adminTab === "stats"){
@@ -10931,11 +10965,7 @@ function paintReview(){
   const host = $("adminPanel");
   const all = adminRows || [];
   const reports = adminReportsCache, exits = adminExitsCache;
-  const tabs = `<div class="tabs admin-tabs">
-      <button class="tab" onclick="setAdminTab('stats')">Dashboard</button>
-      <button class="tab on" onclick="setAdminTab('review')">Review</button>
-      <button class="tab" onclick="setAdminTab('activity')">Activity</button>
-    </div>`;
+  const tabs = adminTabsHtml();
   const exit = `<button class="btn btn-quiet btn-block btn-sm" style="margin-top:18px" onclick="adminPin=null;go('home')">Exit admin</button>`;
 
   const hit = all.filter(adminMatches);

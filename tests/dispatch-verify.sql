@@ -8,19 +8,23 @@ delete from public.jobs where customer_phone like '98765000%';
 
 -- three electricians at increasing distance from the customer
 select public.register_worker('9435010001','1111', jsonb_build_object(
-  'name','Near Online','city','Guwahati','area','Jalukbari','lat',26.1445,'lng',91.7362,
+  'name','Near Online',
+  'email','near.online@example.com','city','Guwahati','area','Jalukbari','lat',26.1445,'lng',91.7362,
   'skills', jsonb_build_array(jsonb_build_object('skill','Electrician','price',400,'unit','per visit')))) is not null as w1;
 select public.register_worker('9435010002','1111', jsonb_build_object(
-  'name','Mid Offline','city','Guwahati','area','Beltola','lat',26.1600,'lng',91.7700,
+  'name','Mid Offline',
+  'email','mid.offline@example.com','city','Guwahati','area','Beltola','lat',26.1600,'lng',91.7700,
   'skills', jsonb_build_array(jsonb_build_object('skill','Electrician','price',450,'unit','per visit')))) is not null as w2;
 select public.register_worker('9435010003','1111', jsonb_build_object(
-  'name','Far Online','city','Guwahati','area','Narengi','lat',26.2000,'lng',91.8500,
+  'name','Far Online',
+  'email','far.online@example.com','city','Guwahati','area','Narengi','lat',26.2000,'lng',91.8500,
   'skills', jsonb_build_array(jsonb_build_object('skill','Electrician','price',500,'unit','per visit')))) is not null as w3;
 update workers set status='approved', verified=true where phone like '943501000%';
 
 -- a dentist with a calendar
 select (public.register_worker('9435010004','1111', jsonb_build_object(
-  'name','Dr Slot','city','Guwahati','area','Dispur','lat',26.1400,'lng',91.7900,
+  'name','Dr Slot',
+  'email','dr.slot@example.com','city','Guwahati','area','Dispur','lat',26.1400,'lng',91.7900,
   'reg_council',1,'reg_number','ASDC/2019/4471',
   'availability', jsonb_build_object('from','10:00','to','13:00','len',30,'days',jsonb_build_array(1,2,3,4,5,6)),
   'skills', jsonb_build_array(jsonb_build_object('skill','Dentist','price',400,'unit','per session'))))).id as doc_id \gset
@@ -79,8 +83,21 @@ select code from public.create_job('Wedding Planner','Nobody Home','9876500001',
 select status, asked from public.job_state(:'j2_code');
 
 \echo '--- 9. punctuality is recorded once and shows up on the worker'
-select public.rate_punctuality(:'j1_code', true);
-select public.rate_punctuality(:'j1_code', false);   -- ignored: one vote per job
+-- Migration 24.2 made the vote belong to whoever booked: it now needs the
+-- customer token handed out with the job, so that a passer-by holding only
+-- the job code cannot mark somebody late.
+select customer_token from jobs where code = :'j1_code' \gset j1_
+select public.rate_punctuality(:'j1_code', true,  :'j1_customer_token'::uuid);
+select public.rate_punctuality(:'j1_code', false, :'j1_customer_token'::uuid);   -- ignored: one vote per job
+do $$ begin
+  begin
+    perform public.rate_punctuality((select code from jobs where status='done' limit 1), false);
+    raise exception 'FAIL: a job can be rated without the token it was booked with';
+  exception when others then
+    if sqlerrm like '%cannot be rated%' then raise notice 'PASS  the punctuality vote needs the booking token';
+    else raise; end if;
+  end;
+end $$;
 select name, on_time_yes, on_time_total from workers where phone = :'live_offer_phone';
 
 \echo '--- 10. slots: booking one takes it out of circulation'
@@ -119,17 +136,33 @@ begin
       when insufficient_privilege then raise notice 'PASS  anon has no access to %', t;
     end;
   end loop;
-  -- the report form still has to work
+  -- The report form still has to work, but it goes through the RPC now.
+  -- Migration 15 took the table-level INSERT away precisely so that the
+  -- daily cap in report_worker cannot be walked around, and schema-verify
+  -- asserts the table itself is shut; this file was still writing straight
+  -- into it and calling that the form working.
+  begin
+    perform public.report_worker((select id from public.workers limit 1),
+                                 'Rude', 'anon can still report');
+    raise notice 'PASS  anon can still file a report, through the RPC';
+  exception when others then raise exception 'FAIL: report form broken for anon (%)', sqlerrm;
+  end;
   begin
     insert into public.worker_reports (worker_id, reason)
-      values ((select id from public.workers limit 1), 'anon can still report');
-    raise notice 'PASS  anon can still file a report';
-  exception when others then raise exception 'FAIL: report form broken for anon (%)', sqlerrm;
+      values ((select id from public.workers limit 1), 'straight into the table');
+    raise exception 'FAIL: anon can write worker_reports directly, so the cap means nothing';
+  exception
+    when insufficient_privilege then raise notice 'PASS  and cannot write the table directly';
   end;
 end $$;
 reset role;
 
 \echo '--- 13. search reports online state and punctuality'
-select name, is_online, on_time_yes, on_time_total, (availability is not null) as has_calendar
+-- The search stopped returning a computed is_online and a whole availability
+-- blob: it hands back online_until and the caller decides, which is one
+-- column instead of two and cannot go stale between query and render. A
+-- calendar is no longer any of a search result's business — taken_slots is
+-- asked at the moment somebody opens the day, and section 10 covers that.
+select name, (online_until > now()) as is_online, on_time_yes, on_time_total, jobs_done, tier
   from public.search_workers(26.1445, 91.7362, null, null, null, 'Guwahati', 10, 0)
- order by is_online desc, name;
+ order by (online_until > now()) desc nulls last, name;

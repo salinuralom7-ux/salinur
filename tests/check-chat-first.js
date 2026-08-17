@@ -79,7 +79,10 @@ const ok = (l, c, x) => console.log((c ? 'PASS  ' : 'FAIL  ') + l + (x !== undef
   await cust.locator('#chatSend').click();
   await cust.waitForTimeout(900);
   const own = cust.locator('#chatLog .msg.own').last();
-  ok('The customer\'s message carries a tick', await own.locator('.tick').count() === 1);
+  /* `.tick` was renamed to `.msg-ticks` when the service ticker's own .tick
+     was found to be styling the read receipt as well — a 15px pair of ticks
+     in a chat bubble. This selector was not renamed with it. */
+  ok('The customer\'s message carries a tick', await own.locator('.msg-ticks').count() === 1);
   ok('One tick until the worker opens it', !(await own.getAttribute('class')).includes('read'),
      await own.getAttribute('class'));
 
@@ -125,9 +128,10 @@ const ok = (l, c, x) => console.log((c ? 'PASS  ' : 'FAIL  ') + l + (x !== undef
      (await worker.locator('#chatLog .msg.own').last().getAttribute('class')).includes('read'),
      await worker.locator('#chatLog .msg.own').last().getAttribute('class'));
 
-  // a message from the other side never carries a tick
+  /* Also .msg-ticks: as `.tick` this passed whatever the markup did, because
+     nothing in a chat bubble has carried that class since the rename. */
   ok('Incoming messages carry no tick',
-     await worker.locator('#chatLog .msg.them .tick').count() === 0);
+     await worker.locator('#chatLog .msg.them .msg-ticks').count() === 0);
 
   ok('No JS errors anywhere', errors.length === 0, errors.join(' | ') || 'none');
   await b.close(); srv.close();

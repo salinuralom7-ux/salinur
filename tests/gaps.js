@@ -10,12 +10,19 @@ const srv=http.createServer((q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]
   const p=await b.newPage({viewport:{width:402,height:874},reducedMotion:'reduce'});  // iPhone 16 CSS px
   await p.goto('http://localhost:8829/'); await p.waitForTimeout(1500);
   const rows = await p.evaluate(()=>{
-    const sel = ['.city-pill','.landing h1','.landing .sub','.doors','.quick','.figures','.ticker',
+    /* The old landing — a city pill, a headline, a subtitle, two doors, a
+       quick strip and a scrolling ticker — is gone. What is above the fold
+       now is the title, the grid of twelve trades, and See all services. */
+    const sel = ['.home-title','.quick-grid','.see-all','#againWrap','.figures',
                  '.steps .row-label','.stepbar','.assure','footer','.foot-reach','.foot-fine'];
     const out=[]; let prev=null;
     for(const s of sel){
       const e=document.querySelector(s); if(!e) { out.push([s,'MISSING']); continue; }
       const r=e.getBoundingClientRect();
+      /* A section that is not showing — the rebook row before anybody has
+         booked — has no top and no bottom, and counting it as one makes the
+         gap to the next section read as the whole page. */
+      if(r.height === 0){ out.push([s,'not shown']); continue; }
       const top=Math.round(r.top+scrollY), bot=Math.round(r.bottom+scrollY);
       out.push([s, top, bot, Math.round(r.height), prev===null?'-':top-prev]);
       prev=bot;
@@ -24,7 +31,7 @@ const srv=http.createServer((q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]
   });
   console.log('section'.padEnd(20),'top'.padStart(6),'bottom'.padStart(7),'height'.padStart(7),'  GAP above');
   for(const r of rows.out){
-    if(r[1]==='MISSING'){ console.log(r[0].padEnd(20),' MISSING'); continue; }
+    if(r[1]==='MISSING' || r[1]==='not shown'){ console.log(r[0].padEnd(20),' '+r[1]); continue; }
     const gap = r[4]==='-'?'-':r[4];
     console.log(r[0].padEnd(20), String(r[1]).padStart(6), String(r[2]).padStart(7), String(r[3]).padStart(7),
                 '  '+String(gap).padStart(5) + (typeof gap==='number'&&gap>=40?'   <-- big':''));

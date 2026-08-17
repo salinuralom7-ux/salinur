@@ -459,6 +459,36 @@ jobs:
             ocode=$(curl -sS -o /tmp/optest.json -w "%{http_code}" -X POST "https://$ref.supabase.co/functions/v1/otp" -H "Content-Type: application/json" -d '{}')
             note "otp sender: test call — HTTP $ocode — $(head -c 300 /tmp/optest.json)"
           fi
+
+          # Can somebody still sign up?
+          #
+          # This step sets otp_provider last, after the schema has been
+          # applied, so Migration 53's repair has already run against
+          # whatever the provider was BEFORE this run. Setting an email
+          # provider here while require_phone_otp is on leaves the database
+          # in the state that refused every new worker for a day: email
+          # cannot prove a phone number, a number registering for the first
+          # time has no address on file anyway, and register_worker then
+          # rejects the profile after the photo and the prices are in.
+          #
+          # It is one query and it is the last thing anybody would notice by
+          # eye, so it is asserted rather than printed.
+          cat > /tmp/gate.sql <<'GSQL'
+          select coalesce(btrim(otp_provider),'none') as provider,
+                 require_phone_otp as gate,
+                 (require_phone_otp and coalesce(btrim(otp_provider),'')
+                    not in ('whatsapp','sms','twilio')) as registration_is_shut
+            from public.nearse_config where id = 1;
+          GSQL
+          jq -Rs '{query:.}' /tmp/gate.sql > /tmp/gate.json
+          gcode=$(curl -sS -o /tmp/gateres.json -w "%{http_code}" "${hdr[@]}" \
+                    -X POST "$api/projects/$ref/database/query" -d @/tmp/gate.json)
+          note "sign-up gate: HTTP $gcode — $(head -c 200 /tmp/gateres.json)"
+          if grep -q '"registration_is_shut":true' /tmp/gateres.json; then
+            note "FAILED: phone verification is on but no provider can send a code to a phone, so no new worker can register. Turn it off, or connect WhatsApp/SMS."
+            exit 1
+          fi
+          note "OK: a new worker can register"
           [ "$code" = "200" ] || [ "$code" = "201" ] || exit 1
           # these two are warnings, not failures: only the owner can fix them
           if grep -q '"admin_pin_still_published_change_it":true' /tmp/harden.json; then

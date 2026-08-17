@@ -72,37 +72,56 @@ const srv = http.createServer((q, r) => {
   await shot('08-signup');
   await page.fill('#upName', 'Sweep Tester');
   await page.fill('#upPhone', '9435012345');
+  /* An address is required to sign up since Migration 52 — it is the way
+     back in for somebody who forgets their PIN. Without one the form refuses
+     and every screen after this was swept in the wrong state, ending in a
+     30-second wait for a button on a screen never reached. */
+  await page.fill('#upEmail', 'sweep.tester@example.com');
   await page.fill('#upPin', '4321');
   await page.locator('#signUpBtn').click(); await page.waitForTimeout(900);
   await shot('09-verify-number');
   const waBtn = page.locator('#waSendBtn');
-  if (await waBtn.count()) {
+  if (await waBtn.isVisible().catch(() => false)) {
     await page.evaluate(() => markWaOpened());
     await page.locator('#waDoneBtn').click(); await page.waitForTimeout(900);
   }
-  await shot('10-register-top');
-  await page.evaluate(() => window.scrollTo(0, 700)); await shot('11-register-mid');
-  await page.evaluate(() => window.scrollTo(0, 99999)); await shot('12-register-bottom');
-
-  // fill it in and publish, so the later screens have something in them
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.fill('#skillSearch', 'electric'); await page.waitForTimeout(500);
+  /* Registration is a four-step wizard now, not one long scrolling form, so
+     scrolling it top / middle / bottom photographed the same first step
+     three times. One picture per step, and the same filling-in that
+     test-wizard does, so the screens after this have a real profile behind
+     them. */
+  await shot('10-register-1-work');
+  await page.fill('#skillSearch', 'electric'); await page.waitForTimeout(600);
   const svc = page.locator('.svc-row').first();
   if (await svc.count()) { await svc.click(); await page.waitForTimeout(500); }
-  const price = page.locator('.sd-price').first();
+  const price = page.locator('.picked-card .sd-price').first();
   if (await price.count()) await price.fill('450');
-  await page.locator('#photoBtn').click(); await page.waitForTimeout(800);
+  await page.waitForTimeout(300);
+  await page.locator('#stepNext').click(); await page.waitForTimeout(600);
+
+  await shot('11-register-2-photo');
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR4nGP8z8DwnwEKmBhQAAAA//8DVgn+/hZorNMAAAAASUVORK5CYII=', 'base64');
   await page.setInputFiles('#selfieInput', { name: 's.png', mimeType: 'image/png', buffer: png });
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(800);
+  await page.locator('#stepNext').click(); await page.waitForTimeout(600);
+
+  await shot('12-register-3-where');
   await page.selectOption('#regArea', 'Jalukbari').catch(()=>{});
+  await page.waitForTimeout(300);
+  await page.locator('#stepNext').click(); await page.waitForTimeout(600);
+
+  await shot('12b-register-4-publish');
   await page.locator('#consentPublish').check().catch(()=>{});
   await page.locator('#consentAge').check().catch(()=>{});
-  await page.locator('#regSaveBtn').click(); await page.waitForTimeout(1400);
+  await page.locator('#regSaveBtn').click(); await page.waitForTimeout(1600);
+  /* Pricing at the top of a band asks the question that used to be a
+     window.confirm; answer it so the sweep does not stop on a sheet. */
+  const askYes = page.locator('#askYes');
+  if (await askYes.isVisible().catch(() => false)) { await askYes.click(); await page.waitForTimeout(1400); }
   await shot('13-submitted');
   await page.evaluate(() => go('me')); await page.waitForTimeout(900);
   await shot('14-my-profile');
-  await page.evaluate(() => window.scrollTo(0, 99999)); await shot('15-my-profile-bottom');
+  await page.evaluate(() => scroller().scrollTo(0, 99999)); await shot('15-my-profile-bottom');
   await page.evaluate(() => go('card')); await page.waitForTimeout(1000);
   await shot('16-id-card');
   await page.evaluate(() => go('inbox')); await page.waitForTimeout(1000);
@@ -122,7 +141,7 @@ const srv = http.createServer((q, r) => {
   await page.evaluate(() => { adminPin = '4242'; go('admin'); renderAdmin(); });
   await page.waitForTimeout(1600);
   await shot('21-admin-top');
-  await page.evaluate(() => window.scrollTo(0, 900)); await shot('22-admin-mid');
+  await page.evaluate(() => scroller().scrollTo(0, 900)); await shot('22-admin-mid');
 
   console.log('\nscreen                 words  press  screens-tall');
   console.log('─'.repeat(56));

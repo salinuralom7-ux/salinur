@@ -65,8 +65,15 @@ const ok=(l,c,x)=>console.log((c?'PASS  ':'FAIL  ')+l+(x!==undefined?'  → '+x:
     const pg = await c.newPage();
     await pg.addInitScript(setup);
     await pg.goto('http://localhost:8842/');
-    await pg.waitForTimeout(2600);          // the sheet is scheduled at 2200ms
-    const shown = await pg.locator('#notifyOverlay.open').count() === 1;
+    /* The 2200ms timer starts after boot's opening requests settle, not at
+       page load, so a fixed 2600ms sleep raced them: when Supabase was slow
+       to refuse the connection the sheet opened just after the check and
+       "comes back a week later" failed about one run in three. Wait for the
+       sheet instead, and only give up after long enough that not-appearing
+       is a real answer. */
+    let shown = false;
+    try { await pg.waitForSelector('#notifyOverlay.open', { timeout: 7000 }); shown = true; }
+    catch (e) { shown = false; }
     await pg.close(); await c.close();
     return shown;
   };

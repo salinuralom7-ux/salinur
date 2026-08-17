@@ -2,6 +2,7 @@
    manifest shortcuts, rating abuse, reporting, and the admin PIN no longer
    being written down in the source. */
 const { chromium } = require('playwright');
+const { signInDemoCustomer } = require('./helpers');
 const http = require('http');
 const fs = require('fs');
 
@@ -27,7 +28,10 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
 
   // ---------- back button walks the app, not out of it ----------
   const screen = () => page.evaluate(() => (document.querySelector('.screen.on') || {}).id);
-  await page.locator('#ctaHire').click(); await page.waitForTimeout(600);
+  /* #ctaHire was the "Hire somebody" door. The home screen is a grid of
+     trades and one See-all button now; See all opens browse unfiltered,
+     which is what the rest of this section assumes. */
+  await page.locator('.see-all').click(); await page.waitForTimeout(600);
   ok('Browse opens', await screen() === 'scr-hire');
   ok('Browse has its own URL', (await page.evaluate(() => location.hash)) === '#hire');
   await page.goBack(); await page.waitForTimeout(400);
@@ -44,8 +48,14 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
   await page.goBack(); await page.waitForTimeout(400);
   ok('Back again leaves the screen', await screen() === 'scr-home');
 
+  /* Booking needs an account now — openBookingFor sends a signed-out
+     visitor to the sign-up screen instead of opening a sheet, which is
+     right, and is not what this section is about. Sign in first so the
+     back-button behaviour is what gets measured. */
+  await signInDemoCustomer(page);
+
   // a sheet that replaces another still only costs one back press
-  await page.locator('#ctaHire').click(); await page.waitForTimeout(600);
+  await page.locator('.see-all').click(); await page.waitForTimeout(600);
   await page.locator('.wcard').first().click(); await page.waitForTimeout(400);
   await page.locator('#bookCta').click(); await page.waitForTimeout(400);
   // which sheet opens depends on the service's booking mode; whichever it is,

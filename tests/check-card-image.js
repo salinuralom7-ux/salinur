@@ -105,15 +105,28 @@ const ok = (l, c, x) => console.log((c ? 'PASS  ' : 'FAIL  ') + l + (x !== undef
     const all = ctx.getImageData(0, 0, img.width, img.height).data;
     let lit = 0;
     for (let i = 0; i < all.length; i += 4 * 97) if (all[i] > 90 || all[i+1] > 90) lit++;
+    /* The QR was checked by reading one pixel at (0.845, 0.72) and demanding
+       it be white. Whether any given pixel inside a QR is a light or a dark
+       module depends on what is encoded, and what is encoded is the worker's
+       own ID — so that pixel was white for the worker it was written against
+       and black for the next one. Measure the block instead: a QR is roughly
+       half light, and no white backing at all reads as near zero. */
+    const x0 = Math.round(img.width*0.82),  x1 = Math.round(img.width*0.945);
+    const y0 = Math.round(img.height*0.65), y1 = Math.round(img.height*0.855);
+    const q = ctx.getImageData(x0, y0, x1-x0, y1-y0).data;
+    let light = 0, n = 0;
+    for (let i = 0; i < q.length; i += 4) { n++; if (q[i] > 200 && q[i+1] > 200 && q[i+2] > 200) light++; }
     return { frameLeft: at(0.004, 0.5), footer: at(0.06, 0.965), face: at(0.5, 0.06),
-             qrWhite: at(0.845, 0.72), litFraction: lit / (all.length / (4*97)),
+             qrLight: light / n, litFraction: lit / (all.length / (4*97)),
              goldFrame: gold(at(0.004, 0.5)), goldFooter: gold(at(0.06, 0.965)),
              darkFace: dark(at(0.5, 0.06)) };
   }, shot.dataUrl);
   ok('The gold frame is there', look.goldFrame, look.frameLeft.join(','));
   ok('The gold footer band is there', look.goldFooter, look.footer.join(','));
   ok('The card face is dark, not blank white', look.darkFace, look.face.join(','));
-  ok('The QR is white where it should be', look.qrWhite[0] > 200, look.qrWhite.join(','));
+  ok('The QR is drawn on white, and is a QR rather than a white square',
+     look.qrLight > 0.3 && look.qrLight < 0.9,
+     (look.qrLight*100).toFixed(0) + '% of the code block is white');
   ok('The image is not mostly empty', look.litFraction > 0.05 && look.litFraction < 0.75,
      (look.litFraction*100).toFixed(1) + '% lit');
 
