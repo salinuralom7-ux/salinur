@@ -1,0 +1,186 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif; }
+    a { color: #FFC300; text-decoration: none; } a:hover { color: #FFDD57; }
+    * { box-sizing: border-box; }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; background: #0B0B0E; color: #FFFFFF; display: flex; flex-direction: column; overflow: hidden">
+
+  <!-- header: one line, not seven rows of chrome -->
+  <div style="flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 8px 8px 8px 4px; background: #101116">
+    <div style="display: grid; place-items: center; width: 44px; height: 44px">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1">
+      <div style="font-size: 17px; font-weight: 800; letter-spacing: -.02em">Electrician</div>
+      <div style="font-size: 12px; font-weight: 600; color: #878C99">12 near Six Mile</div>
+    </div>
+    <div style="display: grid; place-items: center; width: 44px; height: 44px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+    </div>
+  </div>
+
+  <!-- one filter row, scrolls sideways -->
+  <div style="flex: 0 0 auto; display: flex; gap: 8px; padding: 10px 16px 12px; background: #101116; box-shadow: 0 1px 0 rgba(255,255,255,.07); overflow: hidden">
+    <div style="display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 13px; border-radius: 10px; background: #FFC300; flex: 0 0 auto">
+      <span style="font-size: 13px; font-weight: 700; color: #171200">Nearest</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#171200" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+    <div style="display: flex; align-items: center; gap: 6px; height: 38px; padding: 0 13px; border-radius: 10px; background: #1E2027; flex: 0 0 auto">
+      <span style="font-size: 13px; font-weight: 600; color: #FFFFFF">Six Mile</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+    <div style="display: flex; align-items: center; height: 38px; padding: 0 13px; border-radius: 10px; background: #1E2027; flex: 0 0 auto">
+      <span style="font-size: 13px; font-weight: 600; color: #FFFFFF">Top rated</span>
+    </div>
+    <div style="display: flex; align-items: center; height: 38px; padding: 0 13px; border-radius: 10px; background: #1E2027; flex: 0 0 auto">
+      <span style="font-size: 13px; font-weight: 600; color: #FFFFFF">Free now</span>
+    </div>
+  </div>
+
+  <!-- results start immediately -->
+  <div style="flex-grow: 1; overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 0">
+
+    <!-- card 1, with the one thing that sells: a real sentence -->
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 15px; background: #16171C; border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07)">
+      <div style="display: flex; gap: 13px">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: #1E2027; flex: 0 0 auto; display: grid; place-items: center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6E7382" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.6" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0; flex-grow: 1">
+          <div style="display: flex; align-items: center; gap: 6px">
+            <span style="font-size: 16.5px; font-weight: 800; letter-spacing: -.02em">Rahim Ali</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#4FC98D" aria-hidden="true"><path d="M12 2.6 14.4 5l3.3-.2.5 3.3 2.7 1.9-1.6 2.9 1.6 2.9-2.7 1.9-.5 3.3-3.3-.2L12 21.4 9.6 19l-3.3.2-.5-3.3L3.1 14l1.6-2.9L3.1 8.2l2.7-1.9.5-3.3 3.3.2Z"/><path d="m8.9 12.1 2 2 4-4.2" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div style="flex-grow: 1"></div>
+            <div style="display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; background: #2E2610">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="#FFC300" aria-hidden="true"><path d="M12 2.5 15 9l7 .6-5.3 4.6 1.6 6.8L12 17.4 5.7 21l1.6-6.8L2 9.6 9 9Z"/></svg>
+              <span style="font-size: 10.5px; font-weight: 800; letter-spacing: .03em; color: #FFC300">GOLD</span>
+            </div>
+          </div>
+          <div style="font-size: 13.5px; font-weight: 600; color: #C6C9D2">Electrician · 9 years</div>
+          <div style="display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; color: #C6C9D2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#FFC300" aria-hidden="true"><path d="M12 2.5 15 9l7 .6-5.3 4.6 1.6 6.8L12 17.4 5.7 21l1.6-6.8L2 9.6 9 9Z"/></svg>
+            <span>4.7</span>
+            <span style="font-weight: 500; color: #878C99">(10)</span>
+            <span style="color: #565C6B">•</span>
+            <span>34 jobs</span>
+            <span style="color: #565C6B">•</span>
+            <span style="color: #4FC98D">93% on time</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 10px 12px; background: #1E2027; border-radius: 10px; font-size: 12.5px; font-weight: 500; font-style: italic; line-height: 1.45; color: #C6C9D2; text-wrap: pretty">“Came the same evening and fixed both fans. Charged what he said.”</div>
+
+      <div style="display: flex; align-items: flex-end; gap: 10px; padding-top: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08)">
+        <div style="display: flex; align-items: center; gap: 5px; flex-grow: 1; padding-top: 12px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#878C99" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span style="font-size: 12.5px; font-weight: 600; color: #8B909C">Six Mile · 1.3 km</span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 4px; padding-top: 12px">
+          <span style="font-size: 18px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums">₹400</span>
+          <span style="font-size: 12px; font-weight: 500; color: #878C99">per visit</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- card 2 -->
+    <div style="display: flex; flex-direction: column; gap: 12px; padding: 15px; background: #16171C; border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07)">
+      <div style="display: flex; gap: 13px">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: #1E2027; flex: 0 0 auto; display: grid; place-items: center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6E7382" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.6" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0; flex-grow: 1">
+          <div style="display: flex; align-items: center; gap: 6px">
+            <span style="font-size: 16.5px; font-weight: 800; letter-spacing: -.02em">Bhaskar Bora</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#4FC98D" aria-hidden="true"><path d="M12 2.6 14.4 5l3.3-.2.5 3.3 2.7 1.9-1.6 2.9 1.6 2.9-2.7 1.9-.5 3.3-3.3-.2L12 21.4 9.6 19l-3.3.2-.5-3.3L3.1 14l1.6-2.9L3.1 8.2l2.7-1.9.5-3.3 3.3.2Z"/><path d="m8.9 12.1 2 2 4-4.2" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div style="flex-grow: 1"></div>
+            <div style="display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; background: #24262D">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="#A8AEBC" aria-hidden="true"><path d="M12 2.5 15 9l7 .6-5.3 4.6 1.6 6.8L12 17.4 5.7 21l1.6-6.8L2 9.6 9 9Z"/></svg>
+              <span style="font-size: 10.5px; font-weight: 800; letter-spacing: .03em; color: #A8AEBC">SILVER</span>
+            </div>
+          </div>
+          <div style="font-size: 13.5px; font-weight: 600; color: #C6C9D2">Electrician · 4 years</div>
+          <div style="display: flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 700; color: #C6C9D2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#FFC300" aria-hidden="true"><path d="M12 2.5 15 9l7 .6-5.3 4.6 1.6 6.8L12 17.4 5.7 21l1.6-6.8L2 9.6 9 9Z"/></svg>
+            <span>4.4</span>
+            <span style="font-weight: 500; color: #878C99">(6)</span>
+            <span style="color: #565C6B">•</span>
+            <span>17 jobs</span>
+            <span style="color: #565C6B">•</span>
+            <span style="color: #4FC98D">88% on time</span>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: flex-end; gap: 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08)">
+        <div style="display: flex; align-items: center; gap: 5px; flex-grow: 1; padding-top: 12px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#878C99" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span style="font-size: 12.5px; font-weight: 600; color: #8B909C">Beltola · 2.1 km</span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 4px; padding-top: 12px">
+          <span style="font-size: 18px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums">₹350</span>
+          <span style="font-size: 12px; font-weight: 500; color: #878C99">per visit</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- card 3, partially in view: the list obviously continues -->
+    <div style="display: flex; gap: 13px; padding: 15px; background: #16171C; border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07)">
+      <div style="width: 60px; height: 60px; border-radius: 50%; background: #1E2027; flex: 0 0 auto; display: grid; place-items: center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6E7382" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8.6" r="3.6"/><path d="M4.8 20a7.2 7.2 0 0 1 14.4 0"/></svg>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1">
+        <span style="font-size: 16.5px; font-weight: 800; letter-spacing: -.02em">Nayan Deka</span>
+        <div style="font-size: 13.5px; font-weight: 600; color: #C6C9D2">Electrician · 2 years</div>
+        <div style="font-size: 12.5px; font-weight: 600; color: #878C99">New here · 3 jobs done</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- tab bar -->
+  <div style="flex: 0 0 auto; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end; background: #101116; padding: 8px 2px 12px; box-shadow: 0 -1px 0 rgba(255,255,255,.08)">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 46px; justify-content: center">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8B909C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z"/></svg>
+      <span style="font-size: 10.5px; font-weight: 600; color: #8B909C">Home</span>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 46px; justify-content: center">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+      <span style="font-size: 10.5px; font-weight: 700; color: #FFFFFF">Browse</span>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: center">
+      <div style="width: 58px; height: 58px; border-radius: 50%; background: #FFC300; display: grid; place-items: center; text-align: center; box-shadow: 0 6px 16px rgba(255,195,0,.42)">
+        <span style="font-size: 10px; font-weight: 800; line-height: 1.15; color: #171200; white-space: pre-line">Register
+your skill</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 46px; justify-content: center">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8B909C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span style="font-size: 10.5px; font-weight: 600; color: #8B909C">Bookings</span>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; height: 46px; justify-content: center">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#8B909C" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <span style="font-size: 10.5px; font-weight: 600; color: #8B909C">More</span>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

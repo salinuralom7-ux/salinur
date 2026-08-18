@@ -1,0 +1,23 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",         "title": "Home · Light",    "x": 0,   "y": 0,    "w": 390, "h": 844 },
+    { "file": "HomeDark.dc.html",     "title": "Home · Dark",     "x": 470, "y": 0,    "w": 390, "h": 844 },
+    { "file": "BrowseLight.dc.html",  "title": "Browse · Light",  "x": 0,   "y": 980,  "w": 390, "h": 844 },
+    { "file": "BrowseDark.dc.html",   "title": "Browse · Dark",   "x": 470, "y": 980,  "w": 390, "h": 844 },
+    { "file": "ProfileLight.dc.html", "title": "Profile · Light", "x": 0,   "y": 1960, "w": 390, "h": 844 },
+    { "file": "ProfileDark.dc.html",  "title": "Profile · Dark",  "x": 470, "y": 1960, "w": 390, "h": 844 }
+  ],
+  "annotations": [
+    { "id": "dir-a", "x": 0, "y": -132, "w": 390,
+      "text": "DIRECTION A — LIGHT\nWhite cards on soft grey, elevation instead of outlines. This is what Swiggy, Zomato, Urban Company and PhonePe all do, and it is what an Indian customer reads as 'real company'." },
+    { "id": "dir-b", "x": 470, "y": -132, "w": 390,
+      "text": "DIRECTION B — DARK, REBUILT\nTrue black ground, hairlines instead of the teal-tinted borders, one gold moment per screen. Same structure as A, so the only thing you are judging is the ground." },
+    { "id": "photos", "x": -340, "y": 0, "w": 300,
+      "text": "The grey circles and squares are where the real worker photos go.\n\nNothing is drawn in them yet on purpose — no face goes in until that person has signed a short consent line. The old AI-generated tiles are gone from both directions." },
+    { "id": "card", "x": -340, "y": 980, "w": 300,
+      "text": "The worker card now carries jobs done, on-time percentage and the tier badge — all of it already in your database since Migration 45, none of it shown today.\n\nResults also start one row below the header instead of seven." },
+    { "id": "sheet", "x": -340, "y": 1960, "w": 300,
+      "text": "The profile answers 'can I trust him' in four numbers before it asks for anything.\n\nThe second trade is legible here — on the live app it renders white-on-white and cannot be read." }
+  ],
+  "launch": { "view": "canvas" }
+}
