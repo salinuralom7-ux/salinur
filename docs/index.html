@@ -526,7 +526,7 @@ body.menu-open #scroll{overflow:hidden}
    their own centring — .landing's text-align does not reach them here. */
 .figures{
   display:grid;grid-template-columns:repeat(3,1fr);
-  max-width:520px;margin:clamp(30px,5vw,42px) auto 0;padding:0 2px;
+  max-width:520px;margin:clamp(20px,3.5vw,28px) auto 0;padding:0 2px;
   text-align:center;
 }
 .fig{display:flex;flex-direction:column;gap:4px;padding:0 6px;position:relative}
@@ -814,22 +814,31 @@ body.menu-open #scroll{overflow:hidden}
 .steps .row-label{margin:0 0 11px}
 .stepbar{
   list-style:none;margin:0;padding:0;
-  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+  display:flex;flex-direction:column;gap:1px;
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  background:var(--line);   /* shows through the 1px gaps as hairline rules */
 }
+/* Three columns forced every description onto three centred lines, which is
+   what made this block 400px tall and ragged. One panel of three rows reads
+   left to right like a sentence and costs a third of the height. */
 .stepbar li{
-  border:1px solid var(--line);border-radius:var(--r);background:var(--surface);
-  padding:16px 11px 15px;
-  display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;
-  transition:transform .22s ease,border-color .22s ease,background .22s ease;
+  display:grid;grid-template-columns:auto auto 1fr;align-items:center;gap:11px;
+  background:var(--surface);padding:12px 14px;text-align:left;
+  transition:background .22s ease;
 }
-.stepbar li:hover{transform:translateY(-2px);border-color:var(--line-strong);background:var(--surface-2)}
+.stepbar li:hover{background:var(--surface-2)}
 .stepbar .sn{
   width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
   background:var(--brand-soft);border:1px solid rgba(var(--brand-rgb),.34);
   font-size:.73rem;font-weight:800;color:var(--brand-2);font-variant-numeric:tabular-nums;
 }
 .stepbar b{font-size:.96rem;letter-spacing:-.02em;line-height:1.2}
-.stepbar li span:last-child{color:var(--muted);font-size:.76rem;line-height:1.45}
+.stepbar li span:last-child{color:var(--muted);font-size:.76rem;line-height:1.4}
+.stepbar .sn{width:24px;height:24px}
+.steps-note{
+  margin:11px 2px 0;font-size:.76rem;font-weight:600;line-height:1.45;
+  color:var(--muted);text-align:center;
+}
 @media(max-width:390px){
   .stepbar{gap:7px}
   .stepbar li{padding:14px 7px 13px;gap:6px}
@@ -2670,36 +2679,23 @@ body.in-chat .demo-note{display:none}
 footer{
   position:relative;overflow:hidden;margin-top:auto;
   border-top:1px solid var(--line);
-  padding:26px 0 calc(26px + env(safe-area-inset-bottom));
+  padding:20px 0 calc(18px + env(safe-area-inset-bottom));
 }
 /* a slow gold sweep along the top edge — the only thing in the footer that
    moves on its own, so it reads as a highlight rather than as noise */
-footer::before{
-  content:"";position:absolute;inset:0 0 auto;height:1px;
-  background:linear-gradient(90deg,transparent,var(--brand),transparent);
-  background-size:46% 100%;background-repeat:no-repeat;
-  animation:footSweep 8s ease-in-out infinite;
-}
-@keyframes footSweep{
-  0%{background-position:-50% 0}
-  100%{background-position:150% 0}
-}
+/* A gold beam used to sweep across this edge on an eight-second loop, for
+   ever, under everything else on the screen. It is the sort of flourish that
+   reads as a template rather than as a company, and it repainted the footer
+   sixty times a second to do it. */
 footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
 /* warmth behind the buttons, breathing slowly */
-.foot-glow{
-  position:absolute;left:50%;top:-14px;width:min(540px,92%);height:170px;
-  transform:translateX(-50%);pointer-events:none;
-  background:radial-gradient(closest-side, rgba(var(--brand-rgb),.17), transparent 74%);
-  animation:footBreathe 9s ease-in-out infinite;
-}
-@keyframes footBreathe{
-  0%,100%{opacity:.5;transform:translateX(-50%) scale(.92)}
-  50%{opacity:1;transform:translateX(-50%) scale(1.06)}
-}
+/* .foot-glow was a 170px breathing radial behind this whole block. At arm's
+   length on a phone it is not atmosphere, it is a smudge across the last
+   thing anybody sees. Gone, with the pulsing ring that sat on WhatsApp. */
 /* centred over the contact row, in the brand gold so it reads as a heading
    rather than another line of small print */
 .foot-lead{
-  position:relative;text-align:center;margin-bottom:14px;
+  position:relative;text-align:center;margin-bottom:12px;
   font-size:.74rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
   color:var(--brand-2);
 }
@@ -2708,10 +2704,9 @@ footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
   max-width:420px;margin:0 auto;      /* four across on any phone, never wrapped */
 }
 .reach{
-  display:inline-flex;flex-direction:column;align-items:center;gap:9px;
-  flex:1 1 0;min-width:0;max-width:100px;padding:15px 6px 13px;border-radius:17px;
-  border:1px solid var(--line);background:var(--surface);
-  color:var(--ink-2);font-size:.78rem;font-weight:700;letter-spacing:-.01em;
+  display:inline-flex;flex-direction:column;align-items:center;gap:6px;
+  flex:1 1 0;min-width:0;max-width:88px;padding:4px 2px;border-radius:12px;
+  color:var(--muted);font-size:.7rem;font-weight:600;letter-spacing:-.01em;
   animation:reachIn .55s cubic-bezier(.2,.75,.3,1) both;
   transition:transform .26s cubic-bezier(.2,.75,.3,1),border-color .26s ease,
              background .26s ease,color .26s ease;
@@ -2726,22 +2721,13 @@ footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
 }
 .reach-ico{
   width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
-  position:relative;background:var(--surface-2);color:var(--brand-2);
+  position:relative;background:var(--surface);border:1px solid var(--line);
+  color:var(--brand-2);
   transition:transform .3s cubic-bezier(.2,.75,.3,1),background .26s ease,
              color .26s ease,box-shadow .26s ease;
 }
 /* one quiet ring on WhatsApp: it is the fastest way to reach a real person */
-.reach.wa .reach-ico::after{
-  content:"";position:absolute;inset:0;border-radius:50%;
-  border:1px solid rgba(37,211,102,.55);
-  animation:footPing 3.4s cubic-bezier(.2,.7,.3,1) infinite;
-}
-@keyframes footPing{
-  0%{transform:scale(1);opacity:.65}
-  70%,100%{transform:scale(1.5);opacity:0}
-}
-.reach:hover{transform:translateY(-5px);border-color:var(--line-strong);
-  background:var(--surface-2);color:var(--ink);text-decoration:none}
+.reach:hover{transform:translateY(-3px);color:var(--ink);text-decoration:none}
 .reach:hover .reach-ico{transform:scale(1.09)}
 /* each one lights up in its own colour, so the row is recognisable at a glance */
 .reach.wa:hover   .reach-ico{background:#25D366;color:#062B16;box-shadow:0 9px 24px rgba(37,211,102,.36)}
@@ -2751,13 +2737,13 @@ footer .wrap{position:relative;display:flex;flex-direction:column;gap:0}
 .reach:active{transform:translateY(-1px)}
 .reach:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
 .foot-fine{
-  position:relative;text-align:center;margin:16px 0 0;
-  color:var(--muted);font-size:.78rem;
+  position:relative;text-align:center;margin:14px 0 0;
+  color:var(--muted);font-size:.74rem;
 }
 @media (max-width:380px){
   .foot-reach{gap:7px}
-  .reach{padding:13px 3px 11px;font-size:.72rem}
-  .reach-ico{width:40px;height:40px}
+  .reach{font-size:.66rem}
+  .reach-ico{width:42px;height:42px}
 }
 footer a{color:var(--ink-2)}
 
@@ -2925,10 +2911,17 @@ footer a{color:var(--ink-2)}
 
   <!-- ---------- 5. what this place is ---------- -->
   <div class="wrap">
+    <!-- Four blocks used to stand here — three figures, three how-it-works
+         cards, four trust pills, and a footer of four tiles. Between them
+         they said "we take no commission" four times over ("0% commission",
+         "we take nothing", "They set the rate", "No commission") and
+         "nearest first" twice, across roughly a thousand pixels of scrolling
+         with nothing on it anybody can book. Every claim is still here; each
+         is now made once. -->
     <div class="figures">
-      <div class="fig"><b id="figServices">—</b><span>services you can book</span></div>
-      <div class="fig"><b id="figAreas">—</b><span>localities covered</span></div>
-      <div class="fig"><b>0%</b><span>commission, ever</span></div>
+      <div class="fig"><b id="figServices">—</b><span>services</span></div>
+      <div class="fig"><b id="figAreas">—</b><span>localities</span></div>
+      <div class="fig"><b>0%</b><span>commission</span></div>
     </div>
 
     <div class="steps">
@@ -2938,13 +2931,8 @@ footer a{color:var(--ink-2)}
         <li><span class="sn">2</span><b>Request</b><span>Opens a chat with them</span></li>
         <li><span class="sn">3</span><b>Agree</b><span>You settle it, we take nothing</span></li>
       </ol>
-    </div>
-
-    <div class="assure">
-      <span><i class="dot"></i>Verified profiles</span>
-      <span><i class="dot"></i>Nearest first</span>
-      <span><i class="dot"></i>They set the rate</span>
-      <span><i class="dot"></i>No commission</span>
+      <!-- the one thing the four pills said that nothing else here says -->
+      <p class="steps-note">Every profile is checked by a person before it appears.</p>
     </div>
   </div>
 </section>
@@ -3604,7 +3592,6 @@ footer a{color:var(--ink-2)}
 
 <footer>
   <div class="wrap">
-    <span class="foot-glow" aria-hidden="true"></span>
     <p class="foot-lead">Connect with us on</p>
     <nav class="foot-reach" aria-label="Contact MySheher">
       <a class="reach wa" href="https://wa.me/917086599367" target="_blank" rel="noopener" aria-label="Message MySheher on WhatsApp">

@@ -14,7 +14,7 @@ const srv=http.createServer((q,r)=>{let p=decodeURIComponent(q.url.split('?')[0]
        quick strip and a scrolling ticker — is gone. What is above the fold
        now is the title, the grid of twelve trades, and See all services. */
     const sel = ['.home-title','.quick-grid','.see-all','#againWrap','.figures',
-                 '.steps .row-label','.stepbar','.assure','footer','.foot-reach','.foot-fine'];
+                 '.steps .row-label','.stepbar','.steps-note','footer','.foot-reach','.foot-fine'];
     const out=[]; let prev=null;
     for(const s of sel){
       const e=document.querySelector(s); if(!e) { out.push([s,'MISSING']); continue; }
