@@ -8008,7 +8008,9 @@ declare
     -- MIGRATION 50: standing measured against the worker's own trade
     'worker_standing',
     -- MIGRATION 51: the address that gets a worker back in
-    'my_email'
+    'my_email',
+    -- MIGRATION 54: whether their photograph may be used to advertise us
+    'set_photo_promo'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -8072,7 +8074,8 @@ begin
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
-       'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email');
+       'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email',
+       'set_photo_promo');
 
   if leaked is not null then
     raise exception
@@ -10660,6 +10663,129 @@ begin
   end if;
 end $$;
 
+-- ============================================================
+-- Migration 54 — permission to use somebody's face
+--
+-- The box on the sign-up form already says "I want my name, photo, services,
+-- rates, locality and WhatsApp number shown publicly to customers". That
+-- covers the profile card, which is the service itself: a customer cannot
+-- pick a plumber they cannot see.
+--
+-- It does not cover the other thing we want to do with those photographs.
+-- The tiles on the home screen, and anything posted to Instagram, are
+-- advertising — the person is not being shown to somebody deciding whether to
+-- book them, they are being used to represent a trade to strangers. Bundling
+-- that into a six-item tickbox somebody must accept in order to register is
+-- exactly the kind of consent the DPDP Act does not count: not specific, and
+-- not freely given, because refusing would mean no profile at all.
+--
+-- So it is its own question, and it is optional. Nothing about a registration
+-- depends on the answer, and a profile that never answers is the normal case.
+--
+-- Withdrawal has to work or the consent was never real: sending false clears
+-- the stamp, and a cleared stamp means the photograph comes off the tiles.
+-- ============================================================
+
+alter table public.workers add column if not exists photo_promo_at timestamptz;
+
+comment on column public.workers.photo_promo_at is
+  'When this worker agreed their photograph may be used to advertise MySheher '
+  '(home-screen tiles, social posts) — as opposed to appearing on their own '
+  'profile, which the publish consent covers. NULL means no permission: do not '
+  'use the photograph anywhere except their own profile.';
+
+-- Turning it on stamps the moment. Turning it off erases the stamp rather
+-- than recording a "false", because what has to be provable is the
+-- permission; its absence is the default state of every row in this table.
+create or replace function public.set_photo_promo(p_phone text, p_pin text,
+                                                  p_allow boolean,
+                                                  p_token uuid default null)
+returns timestamptz
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; out_at timestamptz;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then raise exception 'Wrong number or PIN'; end if;
+
+  update workers
+     set photo_promo_at = case
+           when not coalesce(p_allow, false) then null
+           -- already given: keep the original date. Re-saving a profile is
+           -- not a fresh act of consent and must not be recorded as one.
+           when photo_promo_at is not null then photo_promo_at
+           else now()
+         end
+   where id = wid
+   returning photo_promo_at into out_at;
+
+  return out_at;
+end;
+$$;
+
+do $$
+declare wid uuid; t1 timestamptz; t2 timestamptz;
+begin
+  delete from workers where phone = '9000000081';
+  perform public.register_worker('9000000081','1234',
+    '{"name":"Promo Test","email":"promo.test@example.com","city":"Guwahati","area":"Beltola",
+      "skills":[{"skill":"Plumber","price":300,"unit":"per visit"}]}'::jsonb);
+  select id into wid from workers where phone = '9000000081';
+
+  if (select photo_promo_at from workers where id = wid) is not null then
+    raise exception 'MIGRATION 54: a new profile started out already agreeing';
+  end if;
+  raise notice 'PASS  nobody agrees to be advertised by simply registering';
+
+  t1 := public.set_photo_promo('9000000081','1234',true);
+  if t1 is null then raise exception 'MIGRATION 54: agreeing did not stamp'; end if;
+  raise notice 'PASS  agreeing records the moment it was agreed';
+
+  perform pg_sleep(0.05);
+  t2 := public.set_photo_promo('9000000081','1234',true);
+  if t2 <> t1 then
+    raise exception 'MIGRATION 54: saving again moved the date of consent';
+  end if;
+  raise notice 'PASS  saving the profile again does not re-date the permission';
+
+  if public.set_photo_promo('9000000081','1234',false) is not null then
+    raise exception 'MIGRATION 54: it cannot be withdrawn';
+  end if;
+  if (select photo_promo_at from workers where id = wid) is not null then
+    raise exception 'MIGRATION 54: withdrawal left the stamp behind';
+  end if;
+  raise notice 'PASS  it can be withdrawn, and withdrawal erases the permission';
+
+  begin
+    perform public.set_photo_promo('9000000081','9999',true);
+    raise exception 'MIGRATION 54: a wrong PIN could answer for somebody else';
+  exception when others then
+    if sqlerrm like 'MIGRATION 54:%' then raise; end if;
+  end;
+  if (select photo_promo_at from workers where id = wid) is not null then
+    raise exception 'MIGRATION 54: a wrong PIN changed the row anyway';
+  end if;
+  raise notice 'PASS  only that worker, with their own PIN, can answer it';
+
+  delete from workers where phone = '9000000081';
+end $$;
+
+-- The column must not join the public view of a worker. Nobody outside the
+-- team has any business knowing who has agreed to be advertised.
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then return; end if;
+  if has_column_privilege('anon', 'public.workers', 'photo_promo_at', 'select') then
+    raise exception 'MIGRATION 54: anon can read photo_promo_at';
+  end if;
+  if exists (select 1 from pg_proc p
+              where p.pronamespace = 'public'::regnamespace
+                and p.proname = 'search_workers'
+                and pg_get_function_result(p.oid) like '%photo_promo_at%') then
+    raise exception 'MIGRATION 54: search hands out photo_promo_at';
+  end if;
+  raise notice 'PASS  who may be advertised is staff-only';
+end $$;
+
 -- ---------- the lock, still last ----------
 select public.lock_public_functions();
 
@@ -10694,7 +10820,8 @@ begin
        'admin_set_otp','reset_worker_pin','reset_customer_pin',
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
-       'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email');
+       'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email',
+       'set_photo_promo');
 
   if leaked is not null then
     raise exception

@@ -1989,6 +1989,19 @@ body.in-chat .demo-note{display:none}
 .consent-row b{color:var(--ink);font-weight:700}
 .consent-row a{color:var(--brand-2);text-decoration:underline;text-underline-offset:2px}
 .consent-note{margin-top:7px;font-size:.78rem;color:var(--muted);line-height:1.55}
+/* The optional one has to LOOK optional, or somebody scanning three identical
+   rows assumes all three are required and ticks past the choice. A rule above
+   it and the word said out loud in the row itself. */
+.promo-flag{
+  margin-top:9px;padding:7px 10px;border-radius:9px;
+  font-size:.74rem;font-weight:600;line-height:1.45;
+}
+.promo-flag.yes{background:rgba(var(--ok-rgb),.12);color:var(--ok)}
+.promo-flag.no{background:var(--surface-2);color:var(--muted)}
+.consent-row.optional{margin-top:9px;padding-top:12px;border-top:1px solid var(--line)}
+.consent-row.optional em{
+  display:block;margin-top:4px;font-style:normal;font-size:.76rem;color:var(--muted);
+}
 
 /* the rate rows double as the service picker when a worker offers several */
 .price-line.pick{
@@ -3281,7 +3294,18 @@ footer a{color:var(--ink-2)}
         <input type="checkbox" id="consentAge">
         <span>I am <b>18 years or older</b>.</span>
       </label>
-      <p class="consent-note">You can withdraw this at any time by deleting your profile, which erases it from MySheher for good.</p>
+      <!-- Deliberately separate, and deliberately optional. The box above is
+           about being findable, which is the service. This one is about being
+           an advertisement for it, which is a different thing to ask of
+           somebody and cannot be a condition of joining. -->
+      <label class="consent-row optional">
+        <input type="checkbox" id="consentPhotoPromo">
+        <span>MySheher may also use my photo <b>elsewhere in the app and in its posts</b>
+          — to show what a real MySheher worker looks like.
+          <em>Optional. Your profile works exactly the same either way, and you can
+          change your mind whenever you like.</em></span>
+      </label>
+      <p class="consent-note">You can withdraw all of this at any time by deleting your profile, which erases it from MySheher for good.</p>
     </div>
 
     <button class="btn btn-brand btn-block" id="regSaveBtn" onclick="saveProfile()" style="padding:14px;margin-top:6px">Publish my profile</button>
@@ -4897,6 +4921,24 @@ const api = {
     if(!w) throw new Error("Wrong number or PIN");
     return w;
   },
+  /* Its own call rather than a field on update_worker: a standing permission
+     with its own date does not belong in the same write as a name change,
+     and this way withdrawing it never sends a profile back for review. */
+  async setPhotoPromo(phone, pin, allow){
+    if(LIVE){
+      return await sb("rpc/set_photo_promo",
+        {method:"POST", body:JSON.stringify(workerAuth({p_allow: !!allow}))});
+    }
+    const all = demoAll();
+    const i = all.findIndex(x => x.phone === phone && x.pin === pin);
+    if(i < 0) throw new Error("Session expired — please sign in again");
+    all[i].photo_promo_at = allow
+      ? (all[i].photo_promo_at || new Date().toISOString())
+      : null;
+    demoSave(all);
+    return all[i].photo_promo_at;
+  },
+
   async update(phone, pin, data){
     if(LIVE){
       const rows = await sb("rpc/update_worker", {method:"POST", body:JSON.stringify(workerAuth({p_data:data}))});
@@ -6458,6 +6500,11 @@ function initRegister(){
   regGo(1);
   const alt = $("uploadAlt"); if(alt) alt.hidden = true;   /* only after the camera fails */
   if(!editing){ $("consentPublish").checked = false; $("consentAge").checked = false; }
+  /* Unlike the other two this one survives an edit, because it is a standing
+     permission rather than something agreed once at sign-up — so the box has
+     to show what is currently on file, and unticking it is how you withdraw. */
+  const promoBox = $("consentPhotoPromo");
+  if(promoBox) promoBox.checked = !!(w && w.photo_promo_at);
   picked = w ? (w.skills||[]).map(s=>s.skill) : [];
   selfieData = w ? w.selfie : null;
   thumbData  = w ? (w.thumb || null) : null;
@@ -7179,6 +7226,17 @@ async function saveProfile(){
     session.worker = {...(session.worker||{}), ...w, ...data, phone:session.phone};
     saveSession();
     await ensureWorkerSession();
+    /* Recorded after the profile is safely saved, and on its own call: it is a
+       separate permission with its own date, and a profile save that failed
+       must never leave a consent behind for a photo nobody stored. Its own
+       try/catch too — if this is the thing that breaks, the profile is still
+       published and the worker is not sent back to the form. */
+    try{
+      const allow = !!($("consentPhotoPromo") || {}).checked;
+      const at = await api.setPhotoPromo(session.phone, session.pin, allow);
+      session.worker.photo_promo_at = at || null;
+      saveSession();
+    }catch(e){ /* the profile is saved; this can be answered again from the form */ }
     if(firstTime && statusOf(w || {}) !== "approved"){
       $("donePhone").textContent = "We will message you on +91 " + session.phone + " when it is done.";
       go("done");
@@ -11202,6 +11260,14 @@ function adminCard(w){
             Profiles saved before the limits existed keep their old rate until the worker edits.
             A rate <i>below</i> the usual range is not flagged — there is no minimum on MySheher.
           </div>`).join("")}
+      <!-- Says it on the card because the moment somebody is choosing a photo
+           for a tile is the moment they need to know, and guessing wrong here
+           means using a person's face without their permission. -->
+      ${w.selfie ? `<div class="promo-flag ${w.photo_promo_at ? "yes" : "no"}">
+        ${w.photo_promo_at
+          ? `Photo may be used in the app and in posts — agreed ${esc(new Date(w.photo_promo_at).toLocaleDateString("en-IN", {day:"numeric", month:"short", year:"numeric"}))}`
+          : "Photo is for this profile only — not for tiles or posts"}
+      </div>` : ""}
       ${w.reg_number ? `<div class="wa-expect" style="border-color:${w.reg_verified ? "rgba(var(--ok-rgb),.45)" : "rgba(var(--warn-rgb),.5)"}">
         ${w.reg_verified ? "✓ Registration checked" : "<b style='letter-spacing:0;font-size:.8rem'>Check this on the council register before approving</b>"}
         <br>${esc(COUNCILS[w.reg_council] || "Council")}<br>
