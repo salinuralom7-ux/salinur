@@ -350,8 +350,13 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(400);
   console.log('Tapping it again clears the filter:',
               await page.locator('.tile.on').count() === 0);
+  /* The trade chips are the search box's suggestions now, not a permanent
+     band above it, so they appear on focus — which is also when somebody
+     would actually be looking for one. */
+  await page.locator('#hireSearch').focus();
+  await page.waitForTimeout(350);
   await page.locator('.suggest', { hasText: 'Plumber' }).first().click();
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(500);
   console.log('Suggestion chip search works:', await page.locator('.wcard').count() > 0);
   await page.locator('#clearSearch').click();
   await page.waitForTimeout(300);

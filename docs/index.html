@@ -1209,8 +1209,9 @@ body.menu-open #scroll{overflow:hidden}
 .area-pick.on{border-color:var(--brand);color:var(--brand)}
 .area-pick mark{background:rgba(var(--brand-rgb),.22);color:var(--brand-2);border-radius:3px;padding:0 1px}
 .area-none{color:var(--muted);font-size:var(--fs-callout);padding:18px 2px;line-height:1.6}
-.loc-find{display:inline-flex;align-items:center;gap:5px;background:none;border:0;padding:6px 2px;
-  color:var(--brand);font:inherit;font-size:var(--fs-caption);font-weight:700;cursor:pointer}
+.loc-find{display:inline-flex;align-items:center;justify-content:center;background:none;border:0;
+  color:var(--muted);cursor:pointer;border-radius:var(--r-sm)}
+.loc-find:hover{color:var(--ink)}
 
 /* The undo bar. Above the sheets and the chat bar, because five seconds is
    not long enough to go looking for it. */
@@ -2222,7 +2223,13 @@ body.in-chat .demo-note{display:none}
 .loc-btn.ok{border-style:solid;border-color:var(--ok);color:var(--ok);background:rgba(var(--ok-rgb),.08)}
 
 /* ---------- hire: search ---------- */
-.search-head{padding:14px 0 2px}
+.search-head{padding:var(--sp-2) 0 2px}
+/* Back is an arrow at the head of the locality row now, not a worded button
+   on a row of its own. The tab bar already carries Home. */
+.back-inline{
+  margin:0 2px 0 -8px;flex:0 0 auto;width:36px;min-width:36px;
+  color:var(--ink-2);justify-content:center;
+}
 .search-head h1{font-size:clamp(var(--fs-xl),4.6vw,var(--fs-hero));letter-spacing:var(--tr-display)}
 .search-head p{color:var(--muted);margin-top:8px;font-size:var(--fs-body)}
 .searchbar{
@@ -2257,10 +2264,15 @@ body.in-chat .demo-note{display:none}
 .fpill svg{opacity:.8}
 .fpill.clear-all{border-style:dashed;background:none;color:var(--muted)}
 .fpill.clear-all:hover{color:var(--ink);background:var(--surface-2)}
+/* A whole band for two facts, one of which — "Sorted by distance" — is a
+   statement of what already happened, not a control, and was styled like a
+   link anybody might reasonably tap. */
 .result-meta{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
-  padding:13px 0 2px;border-top:1px solid var(--line);margin-top:13px;color:var(--muted);font-size:var(--fs-caption);font-weight:600;
+  display:flex;align-items:baseline;justify-content:space-between;gap:var(--sp-3);
+  padding:var(--sp-3) 0 var(--sp-2);margin-top:2px;
+  color:var(--muted);font:var(--t-caption);letter-spacing:var(--tr-flat);
 }
+.result-meta > :last-child{color:var(--muted);font-weight:500;flex:0 0 auto}
 .result-meta button{
   border:none;background:none;color:var(--brand);font-weight:700;font-size:var(--fs-caption);
   text-decoration:underline;text-underline-offset:2px;
@@ -2268,7 +2280,7 @@ body.in-chat .demo-note{display:none}
 .suggests{display:flex;flex-wrap:wrap;gap:7px}
 /* one line that scrolls sideways, rather than a block that wraps to three */
 .suggest-row{
-  display:flex;flex-wrap:nowrap;align-items:center;gap:7px;margin-top:10px;
+  display:flex;flex-wrap:nowrap;align-items:center;gap:var(--sp-2);margin-top:var(--sp-2);
   overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
 }
 .suggest-row::-webkit-scrollbar{display:none}
@@ -2285,7 +2297,7 @@ body.in-chat .demo-note{display:none}
 
 /* ---------- location bar ---------- */
 .loc-bar{
-  display:flex;align-items:center;gap:9px;flex-wrap:nowrap;
+  display:flex;align-items:center;gap:var(--sp-2);flex-wrap:nowrap;
   padding:2px 0 0;
 }
 /* A <select> carries an intrinsic minimum width and will not shrink below it,
@@ -2312,8 +2324,17 @@ body.in-chat .demo-note{display:none}
 /* A four-by-three grid of categories pushed the first worker below the fold
    — you opened Find a worker and saw no workers. One row that scrolls
    sideways shows the same categories in a third of the height. */
+/* Both of these run past the right edge and stop dead, so the categories
+   after the fourth might as well not exist. A mask fades the last few pixels
+   of whichever side has more to show — the standard way of saying "keep
+   going" without spending a row on arrows. */
+.tile-grid,.suggest-row{
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
+}
+.tile-grid.at-end,.suggest-row.at-end{-webkit-mask-image:none;mask-image:none}
 .tile-grid{
-  display:flex;gap:8px;margin-top:12px;overflow-x:auto;
+  display:flex;gap:var(--sp-2);margin-top:var(--sp-3);overflow-x:auto;
   scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:2px;
 }
 .tile-grid::-webkit-scrollbar{display:none}
@@ -3704,15 +3725,16 @@ footer a{color:var(--ink-2)}
 <!-- ============================= HIRE ============================= -->
 <section class="screen" id="scr-hire">
   <div class="wrap">
-    <button class="back" onclick="go('home')">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
-      Back
-    </button>
     <div class="search-head">
+      <!-- Back had a 44px row to itself above a locality row that was mostly
+           empty. Two bands, one line of content between them. -->
       <!-- The headline said "What do you need help with?" directly above a box
            whose placeholder says the same thing. The locality sits beside it
            rather than on a line of its own. -->
       <div class="loc-bar">
+        <button class="back back-inline" onclick="go('home')" aria-label="Back">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        </button>
         <span class="loc-city">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
           Guwahati
@@ -3724,7 +3746,12 @@ footer a{color:var(--ink-2)}
         <input type="text" id="hireSearch" placeholder="Search: maid, cook, electrician…" oninput="onSearchInput()" autocomplete="off">
         <button class="clear" id="clearSearch" onclick="clearSearch()" aria-label="Clear search">✕</button>
       </div>
-      <div class="suggest-row" id="suggests"></div>
+      <!-- These fill the search box, which makes them search suggestions,
+           not a category row. Standing open permanently they were a band of
+           pill-shaped things directly above another band of pill-shaped
+           things doing an unrelated job. They appear while the box has
+           focus, which is when a suggestion is wanted. -->
+      <div class="suggest-row" id="suggests" hidden></div>
     </div>
 
     <!-- One category control. There used to be twelve tiles AND a second row
@@ -4366,7 +4393,11 @@ function wireAreaSearch(){
     btn.type = "button";
     btn.className = "loc-find";
     btn.setAttribute("aria-label", "Search localities");
-    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Search`;
+    /* It used to read "Search", in brand gold, immediately beside a box for
+       searching services — two searches on one row, one of them the loudest
+       thing on the screen, and neither saying which was which. The glyph and
+       its position say locality; the label is there for a screen reader. */
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>`;
     btn.onclick = () => openAreaSearch(id);
     sel.insertAdjacentElement("afterend", btn);
   });
@@ -7830,6 +7861,7 @@ let pageOffset = 0, resultTotal = 0, loadingPage = false, searchSeq = 0;
 async function initHire(){
   renderTiles();
   renderSuggests();
+  wireSuggests();
   renderAreaFilter();
   if(!myLoc) requestLocation(false);
   renderResults();
@@ -7855,6 +7887,7 @@ function renderTiles(){
     <b>${tilesOpen ? "Less" : (all.length - shown.length) + " more"}</b>
   </button>`;
   $("tileGrid").innerHTML = shown.map(tile).join("") + (all.length > shown.length || tilesOpen ? more : "");
+  setTimeout(wireScrollFades, 0);
 }
 function toggleTiles(){ tilesOpen = !tilesOpen; renderTiles(); }
 
@@ -7892,12 +7925,56 @@ function renderAreaFilter(){
   sel.value = cur || "";
 }
 function renderSuggests(){
-  $("suggests").innerHTML = '<span class="suggest-lead">Popular</span>' +
+  /* The "POPULAR" label ate a third of the row and told nobody anything a
+     row of trade names does not already say. */
+  $("suggests").innerHTML =
     POPULAR.slice(0,5).map(s=>`<button class="suggest" onclick="searchFor('${jsq(s)}')">${esc(s)}</button>`).join("");
 }
-function setCat(k){ hireCat = k; renderTiles(); renderResults(); }
-function searchFor(s){ $("hireSearch").value = s; hireCat = ""; renderTiles(); onSearchInput(); }
+/* The fade means "there is more this way", so it has to go when there is
+   not — a permanent gradient over a row that has reached its end reads as a
+   rendering artefact rather than an invitation. Watched rather than computed
+   once, because the row is rebuilt whenever a category is chosen. */
+function watchScrollFade(el){
+  if(!el || el.dataset.fadeWired) return;
+  el.dataset.fadeWired = "1";
+  const mark = () => el.classList.toggle("at-end",
+    el.scrollWidth - el.clientWidth - el.scrollLeft < 4);
+  el.addEventListener("scroll", mark, { passive: true });
+  new ResizeObserver(mark).observe(el);
+  mark();
+}
+function wireScrollFades(){
+  ["tileGrid", "suggests"].forEach(id => {
+    const el = $(id); if(!el) return;
+    watchScrollFade(el);
+    el.classList.toggle("at-end", el.scrollWidth - el.clientWidth - el.scrollLeft < 4);
+  });
+}
+
+function setCat(k){ hireCat = k; renderTiles(); renderResults(); setTimeout(wireScrollFades, 0); }
+function searchFor(s){
+  $("hireSearch").value = s; hireCat = "";
+  const row = $("suggests"); if(row) row.hidden = true;
+  renderTiles(); onSearchInput();
+}
 function clearSearch(){ $("hireSearch").value = ""; onSearchInput(); }
+
+/* Blur fires before the tap lands, so hiding on blur alone eats the very
+   click the row exists for. A short delay lets the chip win. */
+let suggestHide = null;
+function wireSuggests(){
+  const box = $("hireSearch"), row = $("suggests");
+  if(!box || !row || box.dataset.sugWired) return;
+  box.dataset.sugWired = "1";
+  box.addEventListener("focus", () => {
+    clearTimeout(suggestHide);
+    row.hidden = false;
+    setTimeout(wireScrollFades, 0);
+  });
+  box.addEventListener("blur", () => {
+    suggestHide = setTimeout(() => { row.hidden = true; }, 180);
+  });
+}
 function onSearchInput(){
   $("clearSearch").classList.toggle("on", !!$("hireSearch").value);
   clearTimeout(searchTimer);
