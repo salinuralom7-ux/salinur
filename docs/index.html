@@ -3029,7 +3029,10 @@ footer a{color:var(--ink-2)}
 }
 .theme-pick .tp{
   display:flex;flex-direction:column;align-items:center;gap:5px;
-  min-height:60px;padding:var(--sp-2) 2px;border:0;border-radius:8px;background:none;
+  /* Nested inside a 10px container with 4px of padding, so 6 — the inner
+     curve has to be the outer one minus the gap or the corners look wrong
+     against each other. The guard caught this as a hand-picked 8. */
+  min-height:60px;padding:var(--sp-2) 2px;border:0;border-radius:var(--r-xs);background:none;
   font:var(--t-footnote);letter-spacing:var(--tr-flat);font-weight:700;color:var(--muted);
   cursor:pointer;transition:background var(--dur-1) var(--ease),color var(--dur-1) var(--ease);
 }

@@ -46,7 +46,14 @@ const isLight = c => { const n = (c.match(/\d+/g)||[]).map(Number); return n[0] 
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto('http://localhost:8859/'); await page.waitForTimeout(1700);
   await page.evaluate(() => { maybeAskNotify = () => {}; maybeOfferAccount = () => {}; });
-  await page.locator('#menuBtn').click(); await page.waitForTimeout(500);
+  /* The drawer slides in, and Playwright will not click an element that is
+     still moving. A fixed sleep is enough on an idle machine and not enough
+     when the whole suite is running — wait for the drawer to be open and
+     for the control to have stopped. */
+  await page.locator('#menuBtn').click();
+  await page.waitForSelector('#drawer.open', { timeout: 8000 });
+  await page.locator('.theme-pick .tp[data-theme-set="light"]').waitFor({ state: 'visible', timeout: 8000 });
+  await page.waitForTimeout(350);
 
   const opts = await page.locator('.theme-pick .tp').allInnerTexts();
   ok('The menu offers the choice', opts.length === 3, opts.map(s => s.trim()).join(' / '));
