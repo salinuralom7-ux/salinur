@@ -2,7 +2,7 @@
    auto-divert, appointment slots, punctuality, and the registration numbers
    that regulated trades cannot publish without. */
 const { chromium } = require('playwright');
-const { signInDemoCustomer } = require('./helpers');
+const { signInDemoCustomer, editBookingIdentity } = require('./helpers');
 const http = require('http');
 const fs = require('fs');
 
@@ -79,6 +79,7 @@ const SEED = `
   await cust.waitForTimeout(400);
   ok('Instant sheet opens', await cust.locator('#nowOverlay.open').count() === 1);
 
+  await editBookingIdentity(cust);
   await cust.fill('#nowName', 'Anita');
   await cust.fill('#nowPhone', '9876500000');
   await cust.selectOption('#nowArea', 'Jalukbari');
@@ -281,6 +282,7 @@ const SEED = `
   await cust.locator('.dchip').nth(1).click();       // tomorrow, so nothing is in the past
   await cust.waitForTimeout(600);
   await cust.locator('button.tslot').first().click();
+  await editBookingIdentity(cust);
   await cust.fill('#slotName', 'Bikash');
   await cust.fill('#slotPhone', '9876500002');
   await cust.evaluate(() => { window.open = () => null; });

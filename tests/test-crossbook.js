@@ -66,20 +66,30 @@ const beWorker = (p, i = 0) => p.evaluate(i => {
   ok('…the booking sheet opens', booked.open.length === 1, booked.open.join(',') || 'none');
 
   // and it is filled in from the profile they already have
+  /* The name and number are shown as one confirmable line now rather than
+     two prefilled boxes, so the inputs are present and carry the values but
+     are not on screen. What matters here is that the sheet knows who is
+     booking — and, since that line is what somebody actually reads, that it
+     says so too. */
   const filled = await p.evaluate(() => {
+    const sheet = document.querySelector('.overlay.open');
     const ids = [['nowName','nowPhone','nowArea'],['slotName','slotPhone',null],
                  ['bookName','bookPhone','bookArea']];
     for (const [n, ph, a] of ids) {
       const el = document.getElementById(n);
-      if (el && el.offsetParent !== null)
+      if (el && sheet && sheet.contains(el))
         return { name: el.value, phone: document.getElementById(ph).value,
-                 area: a ? document.getElementById(a).value : null };
+                 area: a ? document.getElementById(a).value : null,
+                 shown: (sheet.querySelector('.who-line') || {}).innerText || '' };
     }
     return null;
   });
   ok('…carrying their own name from the worker profile',
      filled && filled.name === me.name, filled && filled.name);
   ok('…and their number', filled && filled.phone === me.phone, filled && filled.phone);
+  ok('…and showing both back, so they can see who it is being booked as',
+     filled && filled.shown.includes(me.name) && filled.shown.includes(me.phone),
+     filled && filled.shown.replace(/\s+/g, ' ').trim());
 
   // but not themselves
   const self = await p.evaluate(async myId => {

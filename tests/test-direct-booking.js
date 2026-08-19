@@ -63,6 +63,11 @@ const ok = (label, cond, extra) => console.log((cond ? 'PASS  ' : 'FAIL  ') + la
      explain.split('\n')[0]);
   ok('Button says send, not find', (await page.locator('#nowGoBtn').innerText()).toLowerCase().includes('send'));
 
+  /* Signed in, so the sheet shows the account's name and number as a line.
+     Somebody booking on behalf of a neighbour presses Change first — which
+     is exactly what filling these boxes means. */
+  const change = page.locator('#nowOverlay .who-change');
+  if (await change.count()) { await change.click(); await page.waitForTimeout(250); }
   await page.fill('#nowName', 'Test Customer');
   await page.fill('#nowPhone', '9876543210');
   await page.selectOption('#nowArea', 'Beltola');

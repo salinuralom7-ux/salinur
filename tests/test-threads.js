@@ -3,7 +3,7 @@
    This drives that whole arc in preview mode, from two browser contexts —
    one the customer, one the worker. */
 const { chromium } = require('playwright');
-const { signInDemoCustomer } = require('./helpers');
+const { signInDemoCustomer, editBookingIdentity } = require('./helpers');
 const http = require('http'); const fs = require('fs');
 
 const html = fs.readFileSync('/home/user/salinur/docs/index.html', 'utf8');
@@ -40,6 +40,7 @@ const ok = (label, cond, extra) =>
   ok('A booking sheet opened', !!sheet, sheet);
 
   if (sheet === 'bookOverlay') {
+    await editBookingIdentity(cust);
     await cust.fill('#bookName', 'Priya Das');
     await cust.fill('#bookPhone', '9876543210');
     await cust.fill('#bookNote', 'Two ceiling fans to fit.');

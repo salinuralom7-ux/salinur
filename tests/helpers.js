@@ -28,4 +28,13 @@ async function signInDemoCustomer(page, who = {}) {
 const silenceAccountOffer = page =>
   page.evaluate(() => localStorage.setItem('repto_account_asked_v1', '1'));
 
-module.exports = { DEMO, signInDemoCustomer, silenceAccountOffer };
+/* A booking sheet shows a signed-in person's name and number as one line
+   they confirm, not two prefilled boxes — so a test that wants to type
+   different details has to press Change first, exactly as somebody booking
+   on behalf of a neighbour would. Call this before filling those fields. */
+const editBookingIdentity = async page => {
+  const change = page.locator('.overlay.open .who-change');
+  if (await change.count()) { await change.first().click(); await page.waitForTimeout(250); }
+};
+
+module.exports = { DEMO, signInDemoCustomer, silenceAccountOffer, editBookingIdentity };

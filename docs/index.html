@@ -1209,8 +1209,29 @@ body.menu-open #scroll{overflow:hidden}
 .area-pick.on{border-color:var(--brand);color:var(--brand)}
 .area-pick mark{background:rgba(var(--brand-rgb),.22);color:var(--brand-2);border-radius:3px;padding:0 1px}
 .area-none{color:var(--muted);font-size:var(--fs-callout);padding:18px 2px;line-height:1.6}
+/* who the booking is for, in one line instead of two boxes */
+.who-line{
+  display:flex;align-items:center;gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
+  background:var(--surface-2);border-radius:var(--r-sm);
+}
+.who-line .who-ico{
+  width:34px;height:34px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;
+  background:var(--surface);color:var(--muted);
+}
+.who-line .who-ico svg{width:18px;height:18px}
+.who-line .who-text{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.who-line .who-text b{font:var(--t-strong);letter-spacing:var(--tr-body);color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who-line .who-text > span{font:var(--t-caption);letter-spacing:var(--tr-flat);color:var(--muted);
+  font-variant-numeric:tabular-nums}
+.who-line .who-change{flex:0 0 auto;color:var(--brand-2);font:var(--t-caption);
+  letter-spacing:var(--tr-flat);font-weight:700;background:none;border:0;cursor:pointer}
+
+.loc-row{display:flex;align-items:center;gap:var(--sp-1)}
+.loc-row > select{flex:1 1 auto;min-width:0}
 .loc-find{display:inline-flex;align-items:center;justify-content:center;background:none;border:0;
-  color:var(--muted);cursor:pointer;border-radius:var(--r-sm)}
+  color:var(--muted);cursor:pointer;border-radius:var(--r-sm);flex:0 0 auto}
 .loc-find:hover{color:var(--ink)}
 
 /* The undo bar. Above the sheets and the chat bar, because five seconds is
@@ -2305,8 +2326,7 @@ body.in-chat .demo-note{display:none}
    of a 390px phone and the whole page scrolled sideways. min-width:0 is what
    lets a flex child ignore that intrinsic floor; the button keeps its own
    width because it is flex:0 0 auto. */
-.loc-bar > select{min-width:0;flex:1 1 auto}
-.loc-bar > .loc-find{flex:0 0 auto}
+.loc-bar > .loc-row{min-width:0;flex:1 1 auto}
 .loc-city{
   display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-callout);font-weight:700;color:var(--ink);
 }
@@ -4430,6 +4450,16 @@ function wireAreaSearch(){
     const sel = $(id);
     if(!sel || sel.dataset.findWired) return;
     sel.dataset.findWired = "1";
+    /* The button used to read "Search" and sat inline as a text link, so it
+       flowed after the select wherever it landed. As an icon it needs to be
+       beside the select, not under it — in a .field block it was dropping
+       onto a line of its own with nothing next to it. Wrapping the pair in
+       a flex row puts it where it belongs on every screen at once. */
+    const row = document.createElement("div");
+    row.className = "loc-row";
+    sel.insertAdjacentElement("beforebegin", row);
+    row.appendChild(sel);
+
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "loc-find";
@@ -8439,6 +8469,48 @@ function prefillFromAccount(nameId, phoneId, areaId){
   if(n) n.value = me.name;
   if(p) p.value = me.phone;
   if(a) a.value = me.area;
+  collapseIdentity(n, p);
+}
+
+/* Somebody with an account has already told us their name and number, and
+   the booking sheet asked for both again in two full-size boxes — 160px of
+   a 740px sheet spent re-collecting what we hold, which pushed the button
+   that sends the request off the bottom of the screen.
+
+   It is one line they can confirm at a glance, and one tap to correct if
+   they are booking on behalf of somebody else. The inputs stay in the DOM
+   and keep their values, because that is what the send code reads. */
+function collapseIdentity(nameEl, phoneEl){
+  if(!nameEl || !phoneEl) return;
+  const nf = nameEl.closest(".field"), pf = phoneEl.closest(".field");
+  if(!nf || !pf) return;
+
+  let line = nf.previousElementSibling;
+  if(!line || !line.classList.contains("who-line")){
+    line = document.createElement("div");
+    line.className = "who-line field full";
+    nf.insertAdjacentElement("beforebegin", line);
+  }
+
+  const known = nameEl.value.trim() && phoneEl.value.trim();
+  if(!known){                      /* no account: ask, as before */
+    line.hidden = true; nf.hidden = false; pf.hidden = false; return;
+  }
+  line.hidden = false; nf.hidden = true; pf.hidden = true;
+  line.innerHTML = `
+    <span class="who-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8.4" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+    </span>
+    <span class="who-text">
+      <b>${esc(nameEl.value.trim())}</b>
+      <span>${esc(phoneEl.value.trim())}</span>
+    </span>
+    <button type="button" class="linkish who-change">Change</button>`;
+  line.querySelector(".who-change").onclick = () => {
+    line.hidden = true; nf.hidden = false; pf.hidden = false; nameEl.focus();
+  };
 }
 
 function bookingModeFor(w){
