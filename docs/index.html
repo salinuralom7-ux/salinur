@@ -2551,9 +2551,25 @@ body.in-chat .demo-note{display:none}
   padding:2px 8px;border-radius:var(--r-pill);letter-spacing:var(--tr-flat);
 }
 .empty{
-  text-align:center;padding:56px 20px;color:var(--muted);background:var(--surface);
-  border:1px dashed var(--line-strong);border-radius:var(--r);margin-top:14px;
+  display:flex;flex-direction:column;align-items:center;gap:var(--sp-2);
+  text-align:center;padding:var(--sp-8) var(--sp-5);color:var(--muted);
+  background:var(--surface);border:1px dashed var(--line-strong);
+  border-radius:var(--r);margin-top:var(--sp-3);
 }
+.empty b{font:var(--t-strong);letter-spacing:var(--tr-body);color:var(--ink)}
+.empty span{font:var(--t-callout);letter-spacing:var(--tr-body);line-height:1.55;max-width:34ch}
+
+/* An error is not an empty shelf. It gets a mark, so it is distinguishable at
+   a glance from "nothing here yet", and a button, because telling somebody
+   to try again on a screen with nothing to press is not telling them
+   anything. */
+.empty.is-error{border-style:solid;border-color:rgba(var(--danger-rgb),.28)}
+.empty .empty-ico{
+  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(var(--danger-rgb),.12);color:var(--danger);margin-bottom:2px;
+}
+.empty .empty-ico svg{width:20px;height:20px}
+.empty .empty-act{margin-top:var(--sp-3);min-width:140px}
 .empty b{display:block;color:var(--ink);font-size:var(--fs-lead);margin-bottom:6px}
 .more-btn{grid-column:1/-1;margin-top:6px;padding:14px;flex-direction:column;gap:2px}
 .more-btn small{display:block;font-weight:500;color:var(--muted);font-size:var(--fs-footnote)}
@@ -8000,6 +8016,28 @@ function wireSuggests(){
     suggestHide = setTimeout(() => { row.hidden = true; }, 180);
   });
 }
+/* Every error state in the app told somebody what had gone wrong and then
+   left them there. "Check your connection and try again" is not a way to
+   try again — on a results screen there is nothing to pull and nothing to
+   press, so the only route was to leave the screen and come back.
+
+   One shape, used everywhere: what happened, and the button that undoes it. */
+function errorState(title, detail, retryFn, retryLabel){
+  return `<div class="empty is-error">
+    <span class="empty-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7.5v5"/><path d="M12 16.2v.1"/>
+      </svg>
+    </span>
+    <b>${esc(title)}</b>
+    ${detail ? `<span>${esc(detail)}</span>` : ""}
+    <button class="btn btn-outline btn-sm empty-act" onclick="${retryFn}">
+      ${esc(retryLabel || "Try again")}
+    </button>
+  </div>`;
+}
+
 function onSearchInput(){
   $("clearSearch").classList.toggle("on", !!$("hireSearch").value);
   clearTimeout(searchTimer);
@@ -8044,7 +8082,10 @@ async function loadPage(reset){
     console.error(e);
     loadingPage = false;
     if(seq === searchSeq) $("results").innerHTML =
-      `<div class="empty" style="grid-column:1/-1"><b>Couldn't load service experts</b>Check your connection and try again.</div>`;
+      `<div style="grid-column:1/-1">${errorState(
+        "Could not load the list",
+        "Your connection dropped, or we did. Nothing is lost.",
+        "renderResults()", "Try again")}</div>`;
     return;
   }
   loadingPage = false;
@@ -9686,7 +9727,16 @@ async function refreshChat(full){
     }
     paintTicks();
   }catch(e){
-    if(full) $("chatLog").innerHTML = `<div class="empty"><b>Could not open this conversation</b>${esc(e.message||"")}</div>`;
+    /* The raw message went straight to the screen — "Failed to fetch" and
+       the like, which names a problem the reader cannot do anything about.
+       It goes to the console, where it is useful. */
+    if(full){
+      console.error(e);
+      $("chatLog").innerHTML = errorState(
+        "Could not open this conversation",
+        "It is still there. This was a connection problem, not a lost message.",
+        "refreshChat(true)", "Try again");
+    }
   }
 }
 async function refreshChatHead(){
