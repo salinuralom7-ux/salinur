@@ -1,7 +1,10 @@
 const fs = require('fs');
 const s = fs.readFileSync('/home/user/salinur/docs/index.html', 'utf8');
-const m = s.match(/<script>\n([\s\S]*?)\n<\/script>/);
-const js = m[1];
+/* The app is not the first <script> in the file any more — a small one in
+   the head decides the theme before the first paint. Take the biggest block,
+   which is the app by four orders of magnitude, rather than the first. */
+const blocks = [...s.matchAll(/<script>\n([\s\S]*?)\n<\/script>/g)].map(x => x[1]);
+const js = blocks.sort((a, b) => b.length - a.length)[0];
 try { new Function(js); console.log('JS parses: OK'); }
 catch (e) { console.log('JS PARSE ERROR:', e.message); process.exitCode = 1; }
 

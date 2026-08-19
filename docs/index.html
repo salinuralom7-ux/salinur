@@ -19,7 +19,24 @@
 <meta property="og:image:alt" content="MySheher logo — an interlocking M drawn as a gold heart">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://mysheher.com/icons/icon-512.png?v=6">
-<meta name="theme-color" content="#15151A">
+<meta name="theme-color" content="#15151A" id="themeColor">
+
+<!-- The theme has to be decided before the first pixel. Anything later —
+     an onload handler, a module, the app's own boot — paints the default
+     first and corrects it a frame afterwards, which somebody who chose
+     light sees as a black flash on every single launch. So it is inline,
+     in the head, above the stylesheet, and deliberately tiny. -->
+<script>
+(function(){
+  try{
+    var pick = localStorage.getItem("mysheher_theme_v1") || "system";
+    var dark = pick === "dark" ||
+      (pick === "system" && window.matchMedia &&
+       !window.matchMedia("(prefers-color-scheme: light)").matches);
+    if(!dark) document.documentElement.setAttribute("data-theme", "light");
+  }catch(e){}   /* private mode, storage disabled: dark, as before */
+})();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -356,7 +373,13 @@ a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;color:inherit;touch-action:manipulation;
   background:transparent;-webkit-tap-highlight-color:transparent}
 a,label,select,summary{touch-action:manipulation}
-input,select,textarea{font-family:inherit;font-size:var(--fs-lead);color:var(--ink);color-scheme:dark}
+/* color-scheme was pinned to dark, which is what tells the browser how to
+   paint the things the page does not own: the scrollbar, the caret, the
+   native date and select pickers, the autofill wash. On a light page those
+   all stayed dark. It follows the theme now. */
+:root{color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
+input,select,textarea{font-family:inherit;font-size:var(--fs-lead);color:var(--ink)}
 svg{display:block}
 /* max() rather than a flat 20px: on a rotated phone the notch eats one side,
    and text otherwise runs underneath it. */
@@ -2997,6 +3020,26 @@ footer a{color:var(--ink-2)}
 .hdr-btn{min-height:44px}
 .brand{min-height:44px;display:inline-flex;align-items:center}
 .loc-area{min-height:44px}
+/* Three equal choices, so the current one is legible without reading — a
+   two-state switch would have to fold System into one of the others. */
+.theme-pick{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-1);
+  padding:var(--sp-1);margin:2px 0 var(--sp-2);
+  background:var(--surface-2);border-radius:var(--r-sm);
+}
+.theme-pick .tp{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  min-height:60px;padding:var(--sp-2) 2px;border:0;border-radius:8px;background:none;
+  font:var(--t-footnote);letter-spacing:var(--tr-flat);font-weight:700;color:var(--muted);
+  cursor:pointer;transition:background var(--dur-1) var(--ease),color var(--dur-1) var(--ease);
+}
+.theme-pick .tp svg{width:19px;height:19px}
+.theme-pick .tp:hover{color:var(--ink-2)}
+.theme-pick .tp[aria-checked="true"]{
+  background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm);
+}
+.theme-pick .tp:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+
 .drawer-row{min-height:48px}
 .back{min-height:44px;display:inline-flex;align-items:center}
 .undo-bar button{min-height:44px}
@@ -3063,6 +3106,26 @@ footer a{color:var(--ink-2)}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <span>Find a service expert</span>
     </button>
+
+    <div class="dg-label">Appearance</div>
+    <!-- Three, not two. "System" is what most people want and never think
+         about: the app follows the phone, so it goes dark at night with
+         everything else. The other two are for people who have decided, and
+         they should not have to argue with their phone about it. -->
+    <div class="theme-pick" role="radiogroup" aria-label="Appearance">
+      <button class="tp" data-theme-set="system" onclick="setTheme('system')" role="radio" aria-checked="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2.2"/><path d="M8.5 20.5h7"/></svg>
+        System
+      </button>
+      <button class="tp" data-theme-set="light" onclick="setTheme('light')" role="radio" aria-checked="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4 17 7M7 17l-1.6 1.6"/></svg>
+        Light
+      </button>
+      <button class="tp" data-theme-set="dark" onclick="setTheme('dark')" role="radio" aria-checked="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.4 8.4 0 1 0 10.2 10.2Z"/></svg>
+        Dark
+      </button>
+    </div>
 
     <div class="dg-label">MySheher</div>
     <a class="drawer-row" href="about/">
@@ -6186,6 +6249,7 @@ function setMenu(on){
 }
 function openMenu(){
   paintMenu();
+  applyTheme();      /* mark the current choice before the menu is seen */
   setMenu(true);
   const cur = history.state && history.state.modal;
   if(cur === "drawer") return;
@@ -6471,6 +6535,46 @@ async function sbAuth(path, body){
     throw new Error(msg || ("HTTP " + res.status));
   }
   return data;
+}
+
+/* ---------- appearance ----------
+   The head already resolved the theme before the first paint; this is the
+   part that lets somebody change it, and keeps the choice.
+
+   Three states, and "system" is not a third colour — it is the absence of a
+   decision, so it has to keep listening. Somebody on System whose phone
+   switches to dark at sunset should watch the app follow while it is open,
+   not on next launch. */
+const THEME_KEY = "mysheher_theme_v1";
+const prefersLight = () => window.matchMedia
+  && window.matchMedia("(prefers-color-scheme: light)").matches;
+
+function themeChoice(){
+  try{ return localStorage.getItem(THEME_KEY) || "system"; }catch(e){ return "system"; }
+}
+function applyTheme(){
+  const pick = themeChoice();
+  const light = pick === "light" || (pick === "system" && prefersLight());
+  document.documentElement.toggleAttribute("data-theme", light);
+  if(light) document.documentElement.setAttribute("data-theme", "light");
+  /* The phone paints its own status bar and address bar from this, so a
+     light app with a black bar above it looks like two applications. */
+  const meta = document.getElementById("themeColor");
+  if(meta) meta.setAttribute("content", light ? "#F4F5F7" : "#15151A");
+  document.querySelectorAll(".theme-pick .tp").forEach(b =>
+    b.setAttribute("aria-checked", String(b.dataset.themeSet === pick)));
+}
+function setTheme(pick){
+  try{ localStorage.setItem(THEME_KEY, pick); }catch(e){}
+  applyTheme();
+}
+/* Only meaningful while the choice is "system"; applyTheme reads the choice
+   itself, so the guard lives there rather than in an add/remove dance. */
+if(window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme: light)");
+  const onSystemChange = () => { if(themeChoice() === "system") applyTheme(); };
+  if(mq.addEventListener) mq.addEventListener("change", onSystemChange);
+  else if(mq.addListener) mq.addListener(onSystemChange);
 }
 
 const REPTO_WA = "917086599367";   /* the MySheher business WhatsApp number */

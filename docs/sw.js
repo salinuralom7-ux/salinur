@@ -1,7 +1,7 @@
 /* MySheher service worker — app shell caching.
    Deliberately conservative: only this app's own static files are cached.
    Supabase API calls always go to the network. */
-const CACHE = "mysheher-shell-v24";
+const CACHE = "mysheher-shell-v25";
 const SHELL = [
   /* "./" was here as well as "./index.html". They are the same 600 KB
      document under two cache keys, so installing fetched it twice on top of
@@ -16,7 +16,10 @@ const SHELL = [
   "./icons/logo.png?v=6",
   "./fonts/plus-jakarta-sans-latin.woff2",
   "./fonts/source-serif-4-latin.woff2",
-  "./icons/wordmark.png?v=6"
+  "./icons/wordmark.png?v=6",
+  /* The light theme's wordmark. Without it here, somebody who chose Light
+     and opened the app with no signal got a header with no name in it. */
+  "./icons/wordmark-light.png?v=6"
 ];
 
 self.addEventListener("install", e => {
