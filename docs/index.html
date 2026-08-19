@@ -2368,8 +2368,75 @@ body.in-chat .demo-note{display:none}
 @media(max-width:680px){.results{grid-template-columns:1fr}}
 .wcard{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
-  padding:18px;display:flex;gap:15px;text-align:left;width:100%;
-  transition:border-color var(--dur-1) var(--ease),box-shadow var(--dur-1) var(--ease);
+  padding:var(--sp-4);display:flex;gap:var(--sp-3);text-align:left;width:100%;
+  /* A grid item defaults to min-width:auto, so it will not shrink below its
+     own content's minimum. Ellipsing the name and trade with nowrap raised
+     that minimum to the length of the longest trade string, and the card
+     grew straight out of its 350px track — clipped rather than wrapped, so
+     nothing looked broken until it was measured. */
+  min-width:0;
+  transition:border-color var(--dur-1) var(--ease),box-shadow var(--dur-1) var(--ease),
+             transform var(--dur-1) var(--ease);
+}
+.wcard:active{transform:scale(.99)}
+@media(prefers-reduced-motion:reduce){ .wcard:active{transform:none} }
+
+/* the name owns its line; only the earned badge shares it */
+.wcard .wc-top{display:flex;align-items:flex-start;gap:var(--sp-2);margin-bottom:2px}
+.wcard .wc-top h3{
+  flex:1;min-width:0;display:flex;align-items:center;gap:5px;
+  font:var(--t-heading);letter-spacing:var(--tr-heading);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+/* "✓ Verified" was a worded pill on the name line, competing with the tier
+   badge and a green Now tag — three colours, wrapping to two rows. It is a
+   mark beside the name now, the way a verified account is marked everywhere
+   else, with the word carried in its title for anybody who needs it read. */
+.wcard .tick{width:15px;height:15px;flex:0 0 auto;color:var(--ok)}
+.wcard .wc-top .tierbadge{flex:0 0 auto;margin:1px 0 0}
+
+/* the trade is what they do, not the loudest thing about them: it was set in
+   brand gold, which on this card should mean the price */
+.wcard .trade{
+  color:var(--ink-2);font:var(--t-callout);letter-spacing:var(--tr-body);
+  margin-bottom:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* one quiet line of facts in place of two coloured pills arguing */
+.wcard .facts{
+  display:flex;align-items:center;flex-wrap:wrap;gap:0 6px;
+  font:var(--t-caption);letter-spacing:var(--tr-flat);color:var(--muted);
+}
+.wcard .facts .f{display:inline-flex;align-items:baseline;white-space:nowrap}
+.wcard .facts b{color:var(--ink-2);font-weight:700;font-variant-numeric:tabular-nums}
+.wcard .facts .f-rate{color:var(--brand-2)}
+.wcard .facts .f-good{color:var(--ok)}
+.wcard .facts .f-poor{color:var(--warn)}
+.wcard .facts .f-dot{font-style:normal;color:var(--line-strong);margin:0 1px}
+.wcard .facts .f-new{color:var(--muted)}
+
+/* where and how much, on one line, divided from the rest */
+.wcard .wc-foot{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:2px var(--sp-3);flex-wrap:wrap;
+  margin-top:var(--sp-3);padding-top:var(--sp-3);border-top:1px solid var(--line);
+}
+/* A long price — ₹14,000 per month — squeezed the locality until it truncated
+   mid-number, "Paltan Bazar · 1.3…", which looks like a rendering fault
+   rather than a shortage of room. The price is never abbreviated; when the
+   two cannot share a line the locality takes its own. */
+.wcard .wc-foot .price{margin-left:auto;white-space:nowrap}
+
+/* "● Now" was a green tag wedged between a name and two badges. Being
+   available is a property of the person, so it sits on the person. */
+.avatar.live{position:relative;overflow:visible}
+.avatar.live img{border-radius:50%}
+.avatar.live::after{
+  /* On a circle the bottom-right of the bounding box is outside the shape,
+     so a dot pinned there hangs off it. 14% in along both axes puts the dot
+     centre on the circle's own edge at 45°. */
+  content:"";position:absolute;right:6%;bottom:6%;width:13px;height:13px;
+  border-radius:50%;background:var(--ok);box-shadow:0 0 0 2.5px var(--surface);
 }
 .wcard:hover{border-color:var(--line-strong);box-shadow:var(--shadow)}
 .avatar{
@@ -2378,11 +2445,14 @@ body.in-chat .demo-note{display:none}
 }
 .avatar img{width:100%;height:100%;object-fit:cover}
 .wcard .info{min-width:0;flex:1}
-.wcard h3{font-size:var(--fs-lead);letter-spacing:var(--tr-heading);margin-bottom:2px}
-.wcard .trade{color:var(--brand-quiet);font-size:var(--fs-callout);font-weight:600;margin-bottom:6px}
-.wcard .row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:var(--fs-caption);font-weight:600}
+
+
+
 .wcard .where{color:var(--ink-2)}
 .wcard .where em{font-style:normal;color:var(--muted);font-weight:500}
+.wcard .where{flex:1 1 auto;min-width:9ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font:var(--t-caption);letter-spacing:var(--tr-flat);color:var(--ink-2)}
+.wcard .wc-foot .price small{font:var(--t-footnote);letter-spacing:var(--tr-flat)}
 .wcard .price{
   margin-top:9px;font-size:var(--fs-body);font-weight:700;letter-spacing:var(--tr-heading);
   font-variant-numeric:tabular-nums;
@@ -4870,7 +4940,7 @@ function distanceTo(w){
   const a = Math.sin(dLa/2)**2 + Math.cos(myLoc.lat*Math.PI/180)*Math.cos(w.lat*Math.PI/180)*Math.sin(dLo/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
-const showDist = d => d < 1 ? Math.round(d*1000) + " m away" : d.toFixed(1) + " km away";
+const showDist = d => d < 1 ? Math.round(d*1000) + " m" : d.toFixed(1) + " km";
 
 /* ---------- Supabase REST ---------- */
 async function sb(path, opts = {}){
@@ -7906,18 +7976,35 @@ function paintResults(q, areaPick){
     const d = w.distance_km != null ? w.distance_km : distanceTo(w);
     const s0 = (w.skills||[])[0] || {};
     const trades = (w.skills||[]).map(s=>esc(s.skill)).join(" · ");
+    /* Four bands, in the order somebody actually reads a list: who, what,
+       how they have done, then where and how much. Everything that used to
+       compete on the name line — a worded Verified pill, a tier badge and a
+       green "Now" tag, three colours across two rows — is either quiet
+       enough to ignore or moved to where it answers a question.
+
+       The facts line is the point of this card. jobs_done, punctuality and
+       joining date have been in the database since Migration 45 and none of
+       them was ever drawn; a stranger deciding whether to let this person
+       into their house was shown a star average and nothing else. */
     return `<button class="wcard" onclick="openWorker('${jsq(w.id)}')">
-      <span class="avatar"><img src="${avatarOf(w, true)}" alt="" loading="lazy" decoding="async"></span>
+      <span class="avatar${isOnlineNow(w) ? " live" : ""}"${isOnlineNow(w) ? ' title="Working right now"' : ""}>
+        <img src="${avatarOf(w, true)}" alt="" loading="lazy" decoding="async">
+      </span>
       <span class="info">
-        <h3>${esc(w.name)} <span class="verified-badge">✓ Verified</span>${tierBadge(w)}${isOnlineNow(w) ? '<span class="online-dot" title="Available right now">● Now</span>' : ""}</h3>
+        <span class="wc-top">
+          <h3>${esc(w.name)}${w.verified !== false
+            ? '<svg class="tick" viewBox="0 0 24 24" aria-label="Verified by MySheher" role="img"><title>Verified by MySheher</title><path d="M12 2.6 14.4 5l3.3-.2.5 3.3 2.7 1.9-1.6 2.9 1.6 2.9-2.7 1.9-.5 3.3-3.3-.2L12 21.4 9.6 19l-3.3.2-.5-3.3L3.1 14l1.6-2.9L3.1 8.2l2.7-1.9.5-3.3 3.3.2Z" fill="currentColor"/><path d="m8.9 12.1 2 2 4-4.2" fill="none" stroke="var(--surface)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+            : ""}</h3>
+          ${tierBadge(w)}
+        </span>
         <div class="trade">${trades}</div>
-        <div class="row">
+        <div class="facts">${workerFacts(w)}</div>
+        <span class="wc-foot">
           <span class="where">${w.serves_remote
             ? '<em class="remote-tag">Works remotely</em>' + (w.city ? " · " + esc(w.city) : "")
             : esc(w.area || w.city || "") + (d != null ? ' <em>· ' + esc(showDist(d)) + '</em>' : "")}</span>
-          <span>${starsOf(w)}${onTimeText(w)}</span>
-        </div>
-        <div class="price">${money(s0.price||0)} <small>${esc(s0.unit||"")}</small></div>
+          <span class="price">${money(s0.price||0)} <small>${esc(s0.unit||"")}</small></span>
+        </span>
       </span>
     </button>`;
   }).join("") + (list.length < resultTotal
@@ -8626,6 +8713,33 @@ async function answerPunctuality(onTime){
   try{ await api.ratePunctuality(j.code, onTime, j.token); }catch(e){}
   toast(onTime ? "Thank you" : "Thank you — that counts against their on-time score");
 }
+/* One quiet line of facts instead of two coloured pills arguing.
+   Only what is actually known: a worker with no history says so plainly
+   rather than showing three zeroes, because "0 jobs · 0% on time" reads as
+   a bad worker when it means a new one. */
+function workerFacts(w){
+  /* Each fact is one atom. Emitted as loose <b> and <span> the flex row
+     broke between them and left "on time" stranded on a line under "91%",
+     which reads as a different fact rather than the tail of one. */
+  const bits = [];
+  const n = w.rating_count || 0;
+  if(n) bits.push(`<b class="f-rate">★&nbsp;${(w.rating_sum / n).toFixed(1)}</b>&nbsp;<span>(${n})</span>`);
+  const jobs = w.jobs_done || 0;
+  if(jobs >= 1) bits.push(`<b>${jobs}</b>&nbsp;<span>${jobs === 1 ? "job" : "jobs"}</span>`);
+  const ot = w.on_time_total || 0;
+  if(ot >= 3){
+    const pct = Math.round(100 * w.on_time_yes / ot);
+    bits.push(`<b class="${pct >= 80 ? "f-good" : "f-poor"}">${pct}%</b>&nbsp;<span>on&nbsp;time</span>`);
+  }
+  if(!bits.length){
+    const since = w.member_since ? new Date(w.member_since) : null;
+    return since
+      ? `<span class="f-new">New here · joined ${esc(since.toLocaleDateString("en-IN",{month:"short",year:"numeric"}))}</span>`
+      : `<span class="f-new">New here</span>`;
+  }
+  return bits.map(x => `<span class="f">${x}</span>`).join('<i class="f-dot">·</i>');
+}
+
 const onTimeText = w => (w.on_time_total || 0) >= 3
   ? `<span class="ontime${Math.round(100*w.on_time_yes/w.on_time_total) >= 80 ? " good" : " poor"}">On time ${Math.round(100*w.on_time_yes/w.on_time_total)}%</span>`
   : "";
