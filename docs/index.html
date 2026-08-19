@@ -2504,9 +2504,20 @@ body.in-chat .demo-note{display:none}
 .sc-top .sc-num{margin-left:auto;font-weight:800;font-size:var(--fs-heading);color:var(--ink);
   font-variant-numeric:tabular-nums}
 .sc-top .sc-num small{color:var(--muted);font-weight:600;font-size:var(--fs-footnote)}
-.sc-line{display:flex;align-items:center;gap:10px;margin-top:8px}
-.sc-line span{flex:1;min-width:0;font-size:var(--fs-caption);color:var(--ink-2)}
-.sc-bar{flex:0 0 74px;height:6px;border-radius:3px;background:var(--surface);overflow:hidden}
+/* Every label wrapped: "Answers a / request", "Turns up on / time",
+   "Finishes what / they take on". Three two-line labels stacked reads as a
+   dense block rather than three quick facts, and the bar is decoration
+   beside the number — it can give the words their room back. */
+/* `.sc-line span` is specificity 0,1,1 and matched all three children —
+   label, bar and value are every one of them a span — so it beat both
+   `.sc-bar{flex:0 0 74px}` and `.sc-val{flex:0 0 auto}` and split the row
+   into equal thirds. The bar was never 74px and the label never had more
+   than a third of the width, which is why every label wrapped onto two
+   lines from the day this was written. Scoped to the label alone. */
+.sc-line{display:flex;align-items:center;gap:var(--sp-2);margin-top:var(--sp-2)}
+.sc-line > span:first-child{flex:1 1 auto;min-width:0;
+  font:var(--t-caption);letter-spacing:var(--tr-flat);color:var(--ink-2)}
+.sc-bar{flex:0 0 72px;height:6px;border-radius:3px;background:var(--surface);overflow:hidden}
 .sc-bar i{display:block;height:100%;border-radius:3px;background:var(--brand)}
 .sc-bar.warn i{background:var(--warn)}
 .sc-val{flex:0 0 auto;font-size:var(--fs-footnote);font-weight:700;color:var(--ink);
@@ -2662,9 +2673,23 @@ body.in-chat .demo-note{display:none}
   display:grid;place-items:center;font-size:var(--fs-callout);
 }
 .close:hover{color:var(--ink);border-color:var(--line-strong)}
-.detail-head{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+.detail-head{display:flex;gap:var(--sp-4);align-items:center;margin-bottom:var(--sp-5)}
 .detail-head .avatar{width:72px;height:72px}
-.detail-head h3{margin-bottom:3px}
+.detail-head .dh-body{min-width:0;flex:1}
+.detail-head .dh-top{display:flex;align-items:flex-start;gap:var(--sp-2);margin-bottom:3px}
+.detail-head h3{
+  flex:1;min-width:0;margin:0;display:flex;align-items:center;gap:5px;
+  font:var(--t-title);letter-spacing:var(--tr-title);
+}
+.detail-head .tick{width:16px;height:16px;flex:0 0 auto;color:var(--ok)}
+/* The rung is shown once, in the scorecard, beside the number it stands for.
+   A second copy up here also ran under the close button, which sits over the
+   sheet's top-right corner. */
+.detail-head .dh-top{padding-right:34px}
+.detail-head .dh-rate{
+  margin-top:6px;font:var(--t-caption);letter-spacing:var(--tr-flat);color:var(--muted);
+}
+.detail-head .dh-rate b{color:var(--brand-2);font-weight:700;font-variant-numeric:tabular-nums}
 .price-list{display:flex;flex-direction:column;gap:9px;margin:16px 0 18px}
 .price-line{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -8070,7 +8095,7 @@ function paintResults(q, areaPick){
       <span class="info">
         <span class="wc-top">
           <h3>${esc(w.name)}${w.verified !== false
-            ? '<svg class="tick" viewBox="0 0 24 24" aria-label="Verified by MySheher" role="img"><title>Verified by MySheher</title><path d="M12 2.6 14.4 5l3.3-.2.5 3.3 2.7 1.9-1.6 2.9 1.6 2.9-2.7 1.9-.5 3.3-3.3-.2L12 21.4 9.6 19l-3.3.2-.5-3.3L3.1 14l1.6-2.9L3.1 8.2l2.7-1.9.5-3.3 3.3.2Z" fill="currentColor"/><path d="m8.9 12.1 2 2 4-4.2" fill="none" stroke="var(--surface)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+            ? '<svg class="tick" viewBox="0 0 24 24" aria-label="Verified by MySheher" role="img"><path d="M12 2.6 14.4 5l3.3-.2.5 3.3 2.7 1.9-1.6 2.9 1.6 2.9-2.7 1.9-.5 3.3-3.3-.2L12 21.4 9.6 19l-3.3.2-.5-3.3L3.1 14l1.6-2.9L3.1 8.2l2.7-1.9.5-3.3 3.3.2Z" fill="currentColor"/><path d="m8.9 12.1 2 2 4-4.2" fill="none" stroke="var(--surface)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
             : ""}</h3>
           ${tierBadge(w)}
         </span>
@@ -8101,14 +8126,27 @@ function openWorker(id){
   const d = distanceTo(w);
   setTimeout(() => paintScorecard(w.id), 0);
   $("wDetail").innerHTML = `
+    <!-- The head is identity: who, verified, what rung, where. The facts
+         belong to the scorecard directly below it, and putting punctuality
+         in both meant the same number twice, half a centimetre apart, in two
+         different visual languages. The card one tap back showed these same
+         facts a third way. -->
     <div class="detail-head">
-      <div class="avatar"><img src="${avatarOf(w)}" alt=""></div>
-      <div>
-        <h3>${esc(w.name)} ${tierBadge(w)}</h3>
+      <div class="avatar${isOnlineNow(w) ? " live" : ""}"><img src="${avatarOf(w)}" alt=""></div>
+      <div class="dh-body">
+        <div class="dh-top">
+          <h3>${esc(w.name)}${w.verified !== false
+            ? '<svg class="tick" viewBox="0 0 24 24" aria-label="Verified by MySheher" role="img"><path d="M12 2.6 14.4 5l3.3-.2.5 3.3 2.7 1.9-1.6 2.9 1.6 2.9-2.7 1.9-.5 3.3-3.3-.2L12 21.4 9.6 19l-3.3.2-.5-3.3L3.1 14l1.6-2.9L3.1 8.2l2.7-1.9.5-3.3 3.3.2Z" fill="currentColor"/><path d="m8.9 12.1 2 2 4-4.2" fill="none" stroke="var(--surface)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+            : ""}</h3>
+        </div>
         <div class="sub" style="margin:0">${w.serves_remote
           ? '<em class="remote-tag">Works remotely</em>' + (w.city ? " · " + esc(w.city) : "")
           : esc(w.area ? w.area + ", " : "") + esc(w.city||"") + (d!=null ? " · " + showDist(d) : "")}</div>
-        <div style="margin-top:5px">${starsOf(w)}${onTimeText(w)}</div>
+        <div class="dh-rate">${w.rating_count
+          ? `<b class="f-rate">★&nbsp;${(w.rating_sum / w.rating_count).toFixed(1)}</b> <span>(${w.rating_count} ${w.rating_count === 1 ? "review" : "reviews"})</span>`
+          : `<span class="f-new">${w.member_since
+              ? "New here · joined " + esc(new Date(w.member_since).toLocaleDateString("en-IN",{month:"short",year:"numeric"}))
+              : "New here"}</span>`}</div>
       </div>
     </div>
     <div id="wScore"></div>
@@ -10517,11 +10555,11 @@ async function paintScorecard(id){
       <b>${c.jobs_done} ${c.jobs_done === 1 ? "job" : "jobs"} finished on MySheher</b>
       ${c.score != null ? `<span class="sc-num">${c.score}<small>/100</small></span>` : ""}
     </div>
-    ${line("Answers a request", c.answered_pct)}
+    ${line("Answers requests", c.answered_pct)}
     ${line("Turns up on time", c.on_time_pct)}
-    ${line("Finishes what they take on", c.finished_pct)}
+    ${line("Finishes the job", c.finished_pct)}
     ${c.repeat_customers > 0
-      ? `<div class="sc-line"><span>Customers who booked them again</span>
+      ? `<div class="sc-line"><span>Booked them again</span>
            <span class="sc-val" style="min-width:0">${c.repeat_customers} of ${c.customers}</span></div>`
       : ""}
     <small class="sc-note">Counted from bookings made through MySheher. Work arranged
