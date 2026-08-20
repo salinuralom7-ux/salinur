@@ -93,6 +93,22 @@ nobody as (
           or (j.status = 'searching' and j.search_until < now() - interval '1 hour'))
 ),
 
+-- ---------- what the clock closed, and who let it ----------
+-- nudge_threads() chases an unanswered request and closes it after a day.
+-- That stops the customer being stranded, but it does not fix anything: a
+-- request the clock had to close is still a booking that was won and lost.
+-- This is the number that says whether the automation is papering over a
+-- worker who should not be taking requests at all.
+timed_out as (
+  select t.skill,
+         coalesce(nullif(btrim(t.customer_area), ''), 'area not given') as area,
+         count(*) as n
+    from threads t
+   where t.timed_out
+     and t.closed_at > now() - interval '30 days'
+   group by 1, 2
+),
+
 -- ---------- supply: registrations that never finished ----------
 -- Somebody filled the form, we never looked at it. Two days is generous.
 stuck as (
@@ -206,6 +222,13 @@ select section, item, detail, n, ord from (
          count(*)::int, 3, 1e9
     from gap where asked = 0 and rn > 12
    having count(*) > 0
+
+  union all
+  select 'Closed because nobody replied', skill || ' in ' || area,
+         n || ' request(s) in 30 days the clock had to close · '
+           || 'the customer was told and offered somebody else',
+         n::int, 2, -n::numeric
+    from timed_out
 
   union all
   select 'Localities with nobody', skill || ' in ' || area,

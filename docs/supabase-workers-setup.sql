@@ -10786,6 +10786,417 @@ begin
   raise notice 'PASS  who may be advertised is staff-only';
 end $$;
 
+
+-- ============================================================
+-- MIGRATION 55 — nobody has to watch the inbox
+--
+-- There are two ways a customer reaches a worker. Instant dispatch already
+-- runs itself: advance_jobs() fires every minute from pg_cron, an offer that
+-- is not answered in sixty seconds expires, and the job moves to the next
+-- person. Nobody has to be awake for it.
+--
+-- The other way — a request sent to a named worker from their profile — has
+-- had nothing behind it at all. It sits at 'requested' until the worker
+-- happens to open the app. If they never do, it sits there for fourteen days
+-- and is then deleted by the retention job. The customer is told nothing, is
+-- offered nobody else, and has long since phoned somebody from a shop
+-- window. Every one of those is a booking that was already won and then
+-- dropped on the floor.
+--
+-- That is a job description: somebody who watches the queue, chases the
+-- worker, and tells the customer to try someone else when the chase fails.
+-- It is also the first person a marketplace this size would hire, and it is
+-- entirely rules. So it is written down here instead.
+--
+-- Three steps, on a clock, with the waits configurable because the right
+-- numbers are not knowable from a desk:
+--
+--   after 20 minutes   the worker is pushed: somebody is waiting
+--   after 90 minutes   the customer is told, and told how many other people
+--                      in that trade are free nearby
+--   after 24 hours     the request is closed as timed out, which frees the
+--                      customer's screen and puts a mark on the worker's
+--                      record rather than leaving the thread to rot
+--
+-- Each step is stamped, so a restart cannot send the same nudge twice, and
+-- the whole thing is a no-op the moment a worker replies.
+-- ============================================================
+
+alter table public.nearse_config
+  add column if not exists nudge_after_min    int not null default 20;
+alter table public.nearse_config
+  add column if not exists tell_customer_min  int not null default 90;
+alter table public.nearse_config
+  add column if not exists give_up_after_hours int not null default 24;
+alter table public.nearse_config
+  add column if not exists quiet_from int not null default 21;
+alter table public.nearse_config
+  add column if not exists quiet_to   int not null default 8;
+
+comment on column public.nearse_config.nudge_after_min is
+  'Minutes of silence before the worker is pushed about a waiting request.';
+comment on column public.nearse_config.tell_customer_min is
+  'Minutes of silence before the customer is told nobody has replied and '
+  'offered other workers in the same trade.';
+comment on column public.nearse_config.give_up_after_hours is
+  'Hours of silence before the request is closed as timed out.';
+comment on column public.nearse_config.quiet_from is
+  'Hour (Guwahati time, 0-23) after which the clock stops sending anything. '
+  'Set equal to quiet_to to switch quiet hours off.';
+comment on column public.nearse_config.quiet_to is
+  'Hour (Guwahati time, 0-23) at which the clock starts again.';
+
+-- Set to zero to switch a step off entirely. Somebody will want to, the
+-- first time a nudge goes out at four in the morning.
+-- Dropped and re-added rather than added once. This file is re-applied
+-- whole on every push, and a database that already had the first version of
+-- this constraint would otherwise keep it forever and never learn about the
+-- columns added afterwards.
+alter table public.nearse_config drop constraint if exists nearse_config_waits_chk;
+alter table public.nearse_config add constraint nearse_config_waits_chk
+  check (nudge_after_min >= 0 and tell_customer_min >= 0 and give_up_after_hours >= 0
+         and quiet_from between 0 and 23 and quiet_to between 0 and 24);
+
+alter table public.threads add column if not exists nudged_at  timestamptz;
+alter table public.threads add column if not exists told_at    timestamptz;
+alter table public.threads add column if not exists timed_out  boolean not null default false;
+
+comment on column public.threads.nudged_at is
+  'When the worker was pushed about this unanswered request. NULL means not yet.';
+comment on column public.threads.told_at is
+  'When the customer was told nobody had replied. NULL means not yet.';
+comment on column public.threads.timed_out is
+  'True when this was closed by the clock rather than by either person. It '
+  'reads as ''declined'' to the app on purpose — the customer needs a dead '
+  'end they can act on, not a new state to learn — but the two must stay '
+  'distinguishable in the numbers, because a worker who declines is working '
+  'and a worker who never answers is not.';
+
+-- Finding the queue has to stay cheap: this runs every few minutes forever.
+create index if not exists threads_unanswered_idx
+  on public.threads (created_at) where status = 'requested';
+
+-- ---------- the clock ----------
+-- Returns how many threads it touched, which is what makes it testable and
+-- what the admin screen can show. Volatile by necessity: it writes.
+create or replace function public.nudge_threads()
+returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  cfg     record;
+  t       record;
+  touched int := 0;
+  others  int;
+  wname   text;
+  first   text;
+  hr      int;
+begin
+  select coalesce(nudge_after_min, 20)     as nudge_min,
+         coalesce(tell_customer_min, 90)   as tell_min,
+         coalesce(give_up_after_hours, 24) as give_up_h,
+         coalesce(quiet_from, 21)          as quiet_from,
+         coalesce(quiet_to, 8)             as quiet_to
+    into cfg
+    from nearse_config where id = 1;
+  if not found then
+    cfg := row(20, 90, 24, 21, 8);
+  end if;
+
+  -- Nothing this function does is urgent enough to wake somebody up. Every
+  -- step of it ends in a push, so the whole clock stops overnight rather
+  -- than each step guarding itself — a request that arrives at midnight is
+  -- chased at eight, which is when the worker could have acted on it anyway.
+  -- The database runs in UTC and the people do not, hence the conversion.
+  -- from = to means somebody has switched quiet hours off deliberately.
+  if cfg.quiet_from <> cfg.quiet_to then
+    hr := extract(hour from (now() at time zone 'Asia/Kolkata'))::int;
+    if (cfg.quiet_from < cfg.quiet_to and hr >= cfg.quiet_from and hr < cfg.quiet_to)
+       or (cfg.quiet_from > cfg.quiet_to and (hr >= cfg.quiet_from or hr < cfg.quiet_to))
+    then
+      return 0;
+    end if;
+  end if;
+
+  -- ---- 1. chase the worker ----
+  -- Only once, and only if they have genuinely said nothing. A worker who
+  -- has already sent a message is talking to the customer; leave them alone.
+  if cfg.nudge_min > 0 then
+    for t in
+      select th.id, th.worker_id, th.skill, th.customer_area
+        from threads th
+       where th.status = 'requested'
+         and th.nudged_at is null
+         and th.created_at < now() - make_interval(mins => cfg.nudge_min)
+         and not exists (select 1 from messages m
+                          where m.thread_id = th.id and m.sender = 'worker')
+       limit 500
+    loop
+      perform public.enqueue_push(
+        t.worker_id,
+        'Somebody is still waiting',
+        coalesce(t.skill, 'A customer')
+          || coalesce(' in ' || nullif(btrim(coalesce(t.customer_area, '')), ''), '')
+          || ' asked you and has had no reply. Accept or decline — either is '
+          || 'better than silence.',
+        './?src=push#inbox',
+        'thread-' || t.id::text);
+      update threads set nudged_at = now() where id = t.id;
+      touched := touched + 1;
+    end loop;
+  end if;
+
+  -- ---- 2. tell the customer, and give them somewhere to go ----
+  -- A notification that only says "no reply" makes the app the bearer of bad
+  -- news. It has to carry the way out in the same breath, which means
+  -- counting who else is actually free in that trade right now.
+  if cfg.tell_min > 0 then
+    for t in
+      select th.id, th.worker_id, th.skill, th.customer_area, th.customer_token
+        from threads th
+       where th.status = 'requested'
+         and th.told_at is null
+         and th.created_at < now() - make_interval(mins => cfg.tell_min)
+         and not exists (select 1 from messages m
+                          where m.thread_id = th.id and m.sender = 'worker')
+       limit 500
+    loop
+      select count(*) into others
+        from workers w
+       where w.status = 'approved' and w.available and w.id <> t.worker_id
+         and exists (select 1 from jsonb_array_elements(w.skills) s
+                      where s->>'skill' = t.skill);
+
+      insert into messages (thread_id, sender, body) values (
+        t.id, 'system',
+        case when others > 0
+             then 'No reply yet. There ' || case when others = 1 then 'is 1 other '
+                                                 else 'are ' || others || ' other ' end
+                  || t.skill || case when others = 1 then '' else 's' end
+                  || ' available on MySheher — you do not have to keep waiting.'
+             else 'No reply yet. We have pushed a reminder; if nothing comes '
+                  || 'back we will close this so it is not sitting on your screen.'
+        end);
+      update threads
+         set told_at = now(),
+             last_message_at = now(),
+             customer_unread = customer_unread + 1
+       where id = t.id;
+
+      perform public.enqueue_customer_push(
+        t.customer_token,
+        'Still no reply',
+        case when others > 0
+             then 'Nobody has answered yet. ' || others || ' other '
+                  || t.skill || case when others = 1 then ' is' else 's are' end
+                  || ' free nearby.'
+             else 'Nobody has answered yet. We have sent them a reminder.' end,
+        './?src=push#mine',
+        'thread-' || t.id::text);
+      touched := touched + 1;
+    end loop;
+  end if;
+
+  -- ---- 3. give up, out loud ----
+  -- 'declined' rather than a new status, because the app already knows how
+  -- to show a dead end and the customer does not need a vocabulary lesson.
+  -- decline_reason is what the existing push trigger reads, so setting it
+  -- here is what sends the message; timed_out is what keeps the books
+  -- honest afterwards.
+  if cfg.give_up_h > 0 then
+    for t in
+      select th.id, th.worker_id
+        from threads th
+       where th.status = 'requested'
+         and th.created_at < now() - make_interval(hours => cfg.give_up_h)
+         and not exists (select 1 from messages m
+                          where m.thread_id = th.id and m.sender = 'worker')
+       limit 500
+    loop
+      select w.name into wname from workers w where w.id = t.worker_id;
+      first := coalesce(nullif(split_part(coalesce(wname, ''), ' ', 1), ''), 'They');
+
+      insert into messages (thread_id, sender, body) values (
+        t.id, 'system',
+        first || ' did not reply, so this request has been closed. '
+          || 'Nothing was charged. Somebody else in the same trade can start today.');
+      update threads
+         set status = 'declined',
+             timed_out = true,
+             decline_reason = 'No reply. Open MySheher to find somebody else nearby.',
+             closed_at = now(),
+             last_message_at = now(),
+             customer_unread = customer_unread + 1
+       where id = t.id;
+      touched := touched + 1;
+    end loop;
+  end if;
+
+  return touched;
+end;
+$$;
+
+revoke all on function public.nudge_threads() from public;
+
+-- ---------- run it ----------
+-- Every five minutes. The waits are measured in tens of minutes, so a
+-- per-minute schedule would be four wasted wake-ups in five, and the
+-- dispatch clock already has that slot.
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    begin
+      create extension if not exists pg_cron;
+      perform cron.unschedule('mysheher-nudge')
+        where exists (select 1 from cron.job where jobname = 'mysheher-nudge');
+      perform cron.schedule('mysheher-nudge', '*/5 * * * *',
+                            'select public.nudge_threads()');
+      raise notice 'PASS  the request queue is watched every five minutes';
+    exception when others then
+      raise notice 'pg_cron present but not schedulable here (%) — call nudge_threads() from a scheduled job instead', sqlerrm;
+    end;
+  else
+    raise notice 'no pg_cron — call nudge_threads() from a scheduled job instead';
+  end if;
+end $$;
+
+-- ---------- does it actually do the three things ----------
+-- Built out of real rows and rolled back. The alternative is finding out on
+-- a Sunday that the give-up step closes threads a worker has already
+-- answered.
+do $$
+declare
+  wid  uuid;
+  cid  uuid;
+  tid  uuid;
+  n    int;
+  st   text;
+  cfg_n int; cfg_t int; cfg_g int; cfg_qf int; cfg_qt int;
+begin
+  select nudge_after_min, tell_customer_min, give_up_after_hours, quiet_from, quiet_to
+    into cfg_n, cfg_t, cfg_g, cfg_qf, cfg_qt from nearse_config where id = 1;
+  -- CI runs at whatever hour it runs at, and half of those are quiet ones.
+  update nearse_config set quiet_from = 0, quiet_to = 0 where id = 1;
+
+  insert into workers (name, phone, city, area, status, available, skills)
+  values ('Nudge Test Worker', '+919999000055', 'Guwahati', 'Beltola', 'approved', true,
+          '[{"skill":"Electrician","price":300,"unit":"visit"}]'::jsonb)
+  returning id into wid;
+
+  -- (a) a request nobody has answered gets chased, exactly once
+  insert into threads (code, worker_id, skill, customer_name, customer_phone,
+                       customer_area, created_at)
+  values ('NUDGETEST1', wid, 'Electrician', 'Test Customer', '+919999000056',
+          'Beltola', now() - interval '3 hours')
+  returning id into tid;
+
+  n := public.nudge_threads();
+  if n < 1 then
+    raise exception 'MIGRATION 55: an unanswered request three hours old was not touched';
+  end if;
+  if (select nudged_at from threads where id = tid) is null then
+    raise exception 'MIGRATION 55: the worker was never chased';
+  end if;
+  if (select told_at from threads where id = tid) is null then
+    raise exception 'MIGRATION 55: the customer was never told';
+  end if;
+  if not exists (select 1 from messages where thread_id = tid and sender = 'system') then
+    raise exception 'MIGRATION 55: nothing was written into the thread';
+  end if;
+
+  -- running again must change nothing: the stamps are the guard
+  n := public.nudge_threads();
+  if (select count(*) from messages where thread_id = tid and sender = 'system') <> 1 then
+    raise exception 'MIGRATION 55: a second run sent the customer a second message';
+  end if;
+
+  -- (b) a worker who has replied is left alone, however old the thread
+  insert into threads (code, worker_id, skill, customer_name, customer_phone,
+                       customer_area, created_at)
+  values ('NUDGETEST2', wid, 'Electrician', 'Test Customer', '+919999000056',
+          'Beltola', now() - interval '9 days')
+  returning id into tid;
+  insert into messages (thread_id, sender, body)
+  values (tid, 'worker', 'On my way, will call in ten minutes');
+
+  n := public.nudge_threads();
+  select status into st from threads where id = tid;
+  if st <> 'requested' then
+    raise exception 'MIGRATION 55: a thread the worker had answered was closed as timed out (now %)', st;
+  end if;
+  if (select nudged_at from threads where id = tid) is not null then
+    raise exception 'MIGRATION 55: a worker who had already replied was chased anyway';
+  end if;
+
+  -- (c) silence past the deadline is closed, and marked as the clock's doing
+  insert into threads (code, worker_id, skill, customer_name, customer_phone,
+                       customer_area, created_at)
+  values ('NUDGETEST3', wid, 'Electrician', 'Test Customer', '+919999000056',
+          'Beltola', now() - interval '9 days')
+  returning id into tid;
+
+  n := public.nudge_threads();
+  select status into st from threads where id = tid;
+  if st <> 'declined' then
+    raise exception 'MIGRATION 55: a request silent for nine days is still % ', st;
+  end if;
+  if not (select timed_out from threads where id = tid) then
+    raise exception 'MIGRATION 55: a timed-out request is indistinguishable from a real decline';
+  end if;
+  if coalesce((select decline_reason from threads where id = tid), '') = '' then
+    raise exception 'MIGRATION 55: the customer was given no reason';
+  end if;
+
+  -- (d) zero switches a step off
+  update nearse_config set nudge_after_min = 0, tell_customer_min = 0,
+                           give_up_after_hours = 0 where id = 1;
+  insert into threads (code, worker_id, skill, customer_name, customer_phone,
+                       customer_area, created_at)
+  values ('NUDGETEST4', wid, 'Electrician', 'Test Customer', '+919999000056',
+          'Beltola', now() - interval '9 days')
+  returning id into tid;
+  n := public.nudge_threads();
+  if n <> 0 then
+    raise exception 'MIGRATION 55: the clock ran with every wait set to zero';
+  end if;
+  if (select status from threads where id = tid) <> 'requested' then
+    raise exception 'MIGRATION 55: a switched-off clock still closed a request';
+  end if;
+
+  -- (e) quiet hours stop everything, whatever else is due
+  update nearse_config set nudge_after_min = cfg_n, tell_customer_min = cfg_t,
+                           give_up_after_hours = cfg_g,
+                           quiet_from = 0, quiet_to = 24 where id = 1;
+  insert into threads (code, worker_id, skill, customer_name, customer_phone,
+                       customer_area, created_at)
+  values ('NUDGETEST5', wid, 'Electrician', 'Test Customer', '+919999000056',
+          'Beltola', now() - interval '9 days')
+  returning id into tid;
+  n := public.nudge_threads();
+  if n <> 0 then
+    raise exception 'MIGRATION 55: the clock ran during quiet hours';
+  end if;
+
+  update nearse_config
+     set nudge_after_min = cfg_n, tell_customer_min = cfg_t, give_up_after_hours = cfg_g,
+         quiet_from = cfg_qf, quiet_to = cfg_qt
+   where id = 1;
+
+  delete from workers where id = wid;   -- threads and messages cascade
+  raise notice 'PASS  the request queue chases, tells, and closes on its own';
+end $$;
+
+-- Nothing here is reachable from a browser. nudge_threads() runs from cron
+-- and from the admin screen; a customer must not be able to make the app
+-- close somebody else's request.
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then return; end if;
+  if has_function_privilege('anon', 'public.nudge_threads()', 'execute') then
+    raise exception 'MIGRATION 55: anon can run the dispatch clock';
+  end if;
+  raise notice 'PASS  the clock is not reachable from a browser';
+end $$;
+
 -- ---------- the lock, still last ----------
 select public.lock_public_functions();
 
