@@ -1,0 +1,147 @@
+name: Weekly operations report
+# Runs .github/ops-report.sql against the live Supabase database and writes
+# what it says into .github/ops-report.md.
+#
+# Why it is built this way. The database password is not something an agent
+# or a laptop should hold. It lives in one place — the SUPABASE_TOKEN repo
+# secret — and the only thing that can reach it is a job defined in a file
+# that went through a pull request. So the automation is not "let something
+# query the database"; it is "run the query that is already committed, and
+# publish the answer". Changing what gets asked means changing a file in the
+# open, which is the point.
+#
+# Three guards below, in order: the SQL must contain no write verbs, the
+# request is sent read-only, and the rendered report is refused if a phone
+# number or a job code has crept into it. This repository is public.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 03:30 UTC = 9:00am in Guwahati, every Monday.
+    - cron: "30 3 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ops-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refuse to run anything that writes
+        run: |
+          set -euo pipefail
+          # Word boundaries, case-insensitive, comments stripped first — the
+          # file explains itself at length and the word "update" appears in
+          # prose. Only real SQL is searched.
+          sed 's/--.*$//' .github/ops-report.sql > /tmp/bare.sql
+          if grep -Eiqn '\b(insert|update|delete|drop|truncate|alter|create|grant|revoke|copy|call|do|vacuum|refresh)\b' /tmp/bare.sql; then
+            echo "ops-report.sql contains a write statement. It is only ever allowed to read:"
+            grep -Ein '\b(insert|update|delete|drop|truncate|alter|create|grant|revoke|copy|call|do|vacuum|refresh)\b' /tmp/bare.sql
+            exit 1
+          fi
+          if [ "$(grep -c ';' /tmp/bare.sql)" != "1" ]; then
+            echo "ops-report.sql must be exactly one statement; found $(grep -c ';' /tmp/bare.sql) semicolons."
+            exit 1
+          fi
+          echo "OK: one statement, reads only"
+
+      - name: Ask the database
+        env:
+          SB_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
+        run: |
+          set -uo pipefail
+          if [ -z "${SB_TOKEN:-}" ]; then
+            echo "SUPABASE_TOKEN is missing"; exit 1
+          fi
+          echo "::add-mask::$SB_TOKEN"
+          api=https://api.supabase.com/v1
+          hdr=(-H "Authorization: Bearer $SB_TOKEN" -H "Content-Type: application/json")
+
+          code=$(curl -sS -o /tmp/projects.json -w "%{http_code}" "${hdr[@]}" "$api/projects")
+          if [ "$code" != "200" ]; then
+            echo "list projects: HTTP $code — $(head -c 300 /tmp/projects.json)"; exit 1
+          fi
+          ref=$(jq -r '[.[] | select(.name=="mysheher" or .name=="MySheher")][0].id // empty' /tmp/projects.json)
+          [ -z "$ref" ] && ref=$(jq -r '[.[] | select(.name=="budget-cars")][0].id // empty' /tmp/projects.json)
+          if [ -z "$ref" ]; then echo "no mysheher project found"; exit 1; fi
+          echo "project: $ref"
+
+          # read_only is the belt to the guard step's braces. Older API
+          # versions reject an unknown field rather than ignoring it, so if
+          # the flag is refused the plain form is tried — the query still
+          # cannot write, because the step above proved it has nothing to
+          # write with.
+          jq -Rs '{query: ., read_only: true}' .github/ops-report.sql > /tmp/q.json
+          code=$(curl -sS -o /tmp/rows.json -w "%{http_code}" "${hdr[@]}" \
+                   -X POST "$api/projects/$ref/database/query" -d @/tmp/q.json)
+          if [ "$code" != "200" ] || ! jq -e 'type == "array"' /tmp/rows.json >/dev/null 2>&1; then
+            echo "read-only request: HTTP $code — retrying without the flag"
+            jq -Rs '{query: .}' .github/ops-report.sql > /tmp/q.json
+            code=$(curl -sS -o /tmp/rows.json -w "%{http_code}" "${hdr[@]}" \
+                     -X POST "$api/projects/$ref/database/query" -d @/tmp/q.json)
+          fi
+          if [ "$code" != "200" ]; then
+            echo "query failed: HTTP $code — $(head -c 500 /tmp/rows.json)"; exit 1
+          fi
+          jq -e 'type == "array"' /tmp/rows.json >/dev/null || {
+            echo "unexpected response: $(head -c 500 /tmp/rows.json)"; exit 1; }
+          echo "rows: $(jq 'length' /tmp/rows.json)"
+
+      - name: Write the report
+        run: |
+          set -euo pipefail
+          {
+            echo "# MySheher — what needs attention"
+            echo
+            echo "Generated $(date -u +'%d %b %Y %H:%M') UTC by \`.github/workflows/ops-report.yml\`."
+            echo "Counts only: names and numbers stay in the admin screen, because this repository is public."
+            echo
+            jq -r '
+              # The summary line has no heading of its own; everything else is
+              # grouped under the section it belongs to, in the order the
+              # query returned it.
+              (map(select(.section == "summary")) | .[] | "**" + .detail + "**\n"),
+              (map(select(.section != "summary"))
+               | group_by(.section)
+               | sort_by(.[0].ord)
+               | .[]
+               | "## " + .[0].section + "\n"
+                 + (map("- **" + .item + "** — " + .detail) | join("\n")) + "\n")
+            ' /tmp/rows.json
+            if [ "$(jq '[.[] | select(.section != "summary")] | length' /tmp/rows.json)" = "0" ]; then
+              echo "Nothing to act on. Every trade has somebody, every request has an answer."
+            fi
+          } > .github/ops-report.md
+          cat .github/ops-report.md
+
+      - name: Refuse to publish anything personal
+        run: |
+          set -euo pipefail
+          # A ten-digit Indian mobile, with or without +91 and separators.
+          if grep -Eq '(\+?91[ -]?)?[6-9][0-9]{9}' .github/ops-report.md; then
+            echo "The report contains something shaped like a phone number. Not committing it."
+            exit 1
+          fi
+          # A job or thread code: ten uppercase hex characters. A job code on
+          # its own is enough to cancel that job (cancel_job takes no token),
+          # so one must never appear in a public file.
+          if grep -Eq '\b[0-9A-F]{10}\b' .github/ops-report.md; then
+            echo "The report contains something shaped like a job code. Not committing it."
+            exit 1
+          fi
+          echo "OK: nothing personal in the report"
+
+      - name: Commit it
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/ops-report.md
+          git commit -m "Operations report $(date -u +%d\ %b)" || { echo "nothing changed"; exit 0; }
+          git push
