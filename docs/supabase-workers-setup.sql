@@ -8010,7 +8010,9 @@ declare
     -- MIGRATION 51: the address that gets a worker back in
     'my_email',
     -- MIGRATION 54: whether their photograph may be used to advertise us
-    'set_photo_promo'
+    'set_photo_promo',
+    -- MIGRATION 56: a worker's own website and social links, and the takedown
+    'set_worker_links','admin_clear_links'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -8075,7 +8077,7 @@ begin
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
        'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email',
-       'set_photo_promo');
+       'set_photo_promo','set_worker_links','admin_clear_links');
 
   if leaked is not null then
     raise exception
@@ -11197,6 +11199,344 @@ begin
   raise notice 'PASS  the clock is not reachable from a browser';
 end $$;
 
+
+-- ============================================================
+-- MIGRATION 56 — a worker's own website and social links
+--
+-- An interior designer is hired on the strength of rooms they have already
+-- finished, and three photographs on a profile cannot carry that. A
+-- photographer has a portfolio, a cook has an Instagram of what came out of
+-- the kitchen, a tailor has a Facebook page going back four years. Refusing
+-- to show any of it makes MySheher the thinnest version of each of them, and
+-- the customer goes and searches for the name anyway.
+--
+-- Nothing in Indian law is in the way of this. A person may publish their
+-- own website; the DPDP Act is about personal data handled without consent,
+-- and this is the worker deliberately publishing their own. Hosting what
+-- somebody else wrote makes MySheher an intermediary, and s.79 of the IT Act
+-- protects an intermediary that does not choose the content and does take it
+-- down when told — which is why admin_clear_links() exists below, and why it
+-- is part of this migration rather than a later idea.
+--
+-- The trap is not legal, it is structural.
+--
+-- A wa.me link is not a portfolio. It is a one-tap route around
+-- request_worker_contact(), which is the function that decides whether a
+-- customer may have a worker's number, rate-limits who asks, and leaves the
+-- record of it. Let those through and the safety design is decoration: the
+-- app can no longer say who was put in touch with whom. So the messaging
+-- hosts are refused by name, and refused with a reason rather than silently.
+--
+-- What this does NOT pretend to do is stop a number appearing on somebody's
+-- own website. It cannot, and a tradesperson's site with a contact page on
+-- it is a legitimate thing to link. The line drawn here is the one-tap
+-- bypass, not the existence of a phone number somewhere on the internet.
+--
+-- The other thing links attract is people who want a backlink from a real
+-- domain and will register a fake worker to get one. That is answered where
+-- the link is rendered — rel="nofollow ugc" — not here.
+-- ============================================================
+
+alter table public.workers add column if not exists links jsonb not null default '[]'::jsonb;
+
+comment on column public.workers.links is
+  'Up to five links the worker published themselves: [{"kind":"Instagram",'
+  '"url":"https://..."}]. kind is derived from the host by clean_worker_links '
+  'and is never taken from the client. Set by the worker, cleared by admin.';
+
+-- ---------- what a host is called ----------
+-- A label, so the profile can show an Instagram link as "Instagram" rather
+-- than as a naked URL. A table rather than a CASE, for the same reason
+-- photo_hosts is a table: the list changes and the function should not.
+create table if not exists public.link_hosts (
+  pattern text primary key,
+  label   text not null
+);
+insert into public.link_hosts (pattern, label) values
+  ('instagram.com',        'Instagram'),
+  ('%.instagram.com',      'Instagram'),
+  ('facebook.com',         'Facebook'),
+  ('%.facebook.com',       'Facebook'),
+  ('fb.com',               'Facebook'),
+  ('youtube.com',          'YouTube'),
+  ('%.youtube.com',        'YouTube'),
+  ('youtu.be',             'YouTube'),
+  ('linkedin.com',         'LinkedIn'),
+  ('%.linkedin.com',       'LinkedIn'),
+  ('behance.net',          'Behance'),
+  ('%.behance.net',        'Behance'),
+  ('dribbble.com',         'Dribbble'),
+  ('pinterest.com',        'Pinterest'),
+  ('%.pinterest.com',      'Pinterest'),
+  ('in.pinterest.com',     'Pinterest'),
+  ('x.com',                'X'),
+  ('twitter.com',          'X'),
+  ('threads.net',          'Threads'),
+  ('%.threads.net',        'Threads'),
+  ('houzz.com',            'Houzz'),
+  ('%.houzz.in',           'Houzz')
+on conflict (pattern) do update set label = excluded.label;
+alter table public.link_hosts enable row level security;
+-- no select policy: only the function below reads it
+
+-- ---------- what a host must never be ----------
+-- Every one of these turns a profile into a direct line, which is the one
+-- thing the contact gate exists to prevent.
+create table if not exists public.blocked_link_hosts (
+  pattern text primary key,
+  why     text not null
+);
+insert into public.blocked_link_hosts (pattern, why) values
+  ('wa.me',                'WhatsApp'),
+  ('api.whatsapp.com',     'WhatsApp'),
+  ('chat.whatsapp.com',    'WhatsApp'),
+  ('%.whatsapp.com',       'WhatsApp'),
+  ('whatsapp.com',         'WhatsApp'),
+  ('t.me',                 'Telegram'),
+  ('telegram.me',          'Telegram'),
+  ('telegram.dog',         'Telegram'),
+  ('m.me',                 'Messenger'),
+  ('messenger.com',        'Messenger'),
+  ('signal.me',            'Signal'),
+  ('join.skype.com',       'Skype')
+on conflict (pattern) do update set why = excluded.why;
+alter table public.blocked_link_hosts enable row level security;
+
+-- ---------- the validator ----------
+-- Takes whatever the client sent and returns what may be stored, or raises.
+-- Stable: it reads two lookup tables and writes nothing.
+create or replace function public.clean_worker_links(p_links jsonb)
+returns jsonb
+language plpgsql stable set search_path = public, extensions as $$
+declare
+  item   jsonb;
+  url    text;
+  host   text;
+  rest   text;
+  lbl    text;
+  bad    text;
+  out    jsonb := '[]'::jsonb;
+  seen   text[] := '{}';
+begin
+  if p_links is null then return '[]'::jsonb; end if;
+  if jsonb_typeof(p_links) <> 'array' then
+    raise exception 'Links must be a list';
+  end if;
+  if jsonb_array_length(p_links) > 5 then
+    raise exception 'Five links is the most a profile can show';
+  end if;
+
+  for item in select * from jsonb_array_elements(p_links) loop
+    -- a bare string is accepted as well as {"url":...}, because the edit
+    -- screen has no reason to know about the wrapper
+    url := btrim(coalesce(
+      case when jsonb_typeof(item) = 'string' then item #>> '{}' else item->>'url' end, ''));
+    continue when url = '';
+
+    if url !~* '^https://' then
+      raise exception 'Links have to start with https:// — % does not', left(url, 60);
+    end if;
+    if length(url) > 200 then
+      raise exception 'That link is too long to store';
+    end if;
+
+    rest := substring(url from 9);
+    -- credentials in front of the host are how a link is made to read as one
+    -- site and go to another
+    if split_part(rest, '/', 1) like '%@%' then
+      raise exception 'That link does not look right';
+    end if;
+    host := lower(split_part(split_part(rest, '/', 1), ':', 1));
+    if host = '' or host !~ '^[a-z0-9.-]+\.[a-z]{2,}$' then
+      raise exception 'That link does not look right';
+    end if;
+
+    select b.why into bad from blocked_link_hosts b where host like b.pattern limit 1;
+    if bad is not null then
+      raise exception
+        '% links cannot go on a profile. Customers reach you through MySheher, '
+        'which is what keeps a record of who contacted you and protects you '
+        'both if anything goes wrong. Link your website or your work photos '
+        'instead.', bad;
+    end if;
+
+    if url = any(seen) then continue; end if;
+    seen := seen || url;
+
+    select l.label into lbl from link_hosts l where host like l.pattern
+     order by length(l.pattern) desc limit 1;
+
+    out := out || jsonb_build_object('kind', coalesce(lbl, 'Website'), 'url', url);
+  end loop;
+
+  return out;
+end;
+$$;
+
+-- ---------- saving them ----------
+-- Same contract as the email field above: only touched when the key is
+-- actually sent, and an empty list clears them. Links are not part of what
+-- the review team looked at when they approved a face and a trade, so
+-- changing them does not put a profile back into the queue — the takedown
+-- path below is what answers a bad one.
+create or replace function public.set_worker_links(p_phone text default null,
+                                                   p_pin text default null,
+                                                   p_links jsonb default null,
+                                                   p_token uuid default null)
+returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; clean jsonb;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return null; end if;
+  clean := public.clean_worker_links(p_links);
+  update workers set links = clean where id = wid;
+  return clean;
+end;
+$$;
+
+-- ---------- taking one down ----------
+-- s.79 safe harbour is conditional on acting when told, and "told" in
+-- practice is somebody reporting a profile. Clearing every link is the blunt
+-- version on purpose: this is used in a hurry, by somebody who has just been
+-- shown something they do not want on the site.
+create or replace function public.admin_clear_links(p_pin text, p_worker uuid)
+returns void
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  update workers set links = '[]'::jsonb where id = p_worker;
+end;
+$$;
+
+-- ---------- and showing them ----------
+-- A column added to a `returns table` is a changed return type, and
+-- `create or replace` cannot do that however many times it is asked. The
+-- drop has to come first, every time, because this file is re-applied whole.
+drop function if exists public.worker_card(uuid);
+create function public.worker_card(p_id uuid)
+returns table (
+  id uuid, name text, selfie text, thumb text, city text, area text, about text,
+  skills jsonb, rating_sum int, rating_count int,
+  worker_code text, serves_remote boolean, online_until timestamptz,
+  reg_number text, reg_verified boolean,
+  jobs_done int, on_time_yes int, on_time_total int, member_since timestamptz,
+  score int, tier text, links jsonb)
+language sql stable security definer set search_path = public, extensions as $$
+  select w.id, w.name, w.selfie, w.thumb, w.city, w.area, w.about, w.skills,
+         w.rating_sum, w.rating_count, w.worker_code, w.serves_remote,
+         w.online_until, w.reg_number, w.reg_verified,
+         (select count(*)::int from threads t
+           where t.worker_id = w.id and t.status = 'closed'),
+         w.on_time_yes, w.on_time_total, w.created_at, w.score, w.tier,
+         coalesce(w.links, '[]'::jsonb)
+    from workers w
+   where w.id = p_id
+     and w.status = 'approved'
+     and w.available;
+$$;
+
+-- ---------- does it hold ----------
+do $$
+declare
+  wid uuid;
+  got jsonb;
+  msg text;
+begin
+  delete from workers where phone = '+919999000056';
+  insert into workers (name, phone, city, area, status, available, skills)
+  values ('Links Test Worker', '+919999000056', 'Guwahati', 'Beltola', 'approved', true,
+          '[{"skill":"Interior Designer","price":5000,"unit":"per room"}]'::jsonb)
+  returning id into wid;
+
+  -- a portfolio and a social account, labelled from the host not the client
+  got := public.clean_worker_links(
+    '[{"kind":"Nonsense","url":"https://studioborsha.in/work"},
+      "https://www.instagram.com/studioborsha"]'::jsonb);
+  if jsonb_array_length(got) <> 2 then
+    raise exception 'MIGRATION 56: two good links did not survive (got %)', got;
+  end if;
+  if got->0->>'kind' <> 'Website' then
+    raise exception 'MIGRATION 56: a portfolio was labelled % ', got->0->>'kind';
+  end if;
+  if got->1->>'kind' <> 'Instagram' then
+    raise exception 'MIGRATION 56: instagram.com was labelled %, and the client '
+                    'was allowed to name it', got->1->>'kind';
+  end if;
+
+  -- the contact gate must not be walkable
+  begin
+    got := public.clean_worker_links('["https://wa.me/919999000056"]'::jsonb);
+    raise exception 'MIGRATION 56: a wa.me link was accepted';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 56:%' then raise; end if;
+    if msg not like 'WhatsApp links cannot%' then
+      raise exception 'MIGRATION 56: wa.me was refused for the wrong reason (%)', msg;
+    end if;
+  end;
+  begin
+    got := public.clean_worker_links('["https://t.me/somebody"]'::jsonb);
+    raise exception 'MIGRATION 56: a Telegram link was accepted';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 56:%' then raise; end if;
+  end;
+
+  -- http, credentials in front of the host, and sheer volume
+  begin
+    got := public.clean_worker_links('["http://studioborsha.in"]'::jsonb);
+    raise exception 'MIGRATION 56: a plain http link was accepted';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 56:%' then raise; end if;
+  end;
+  begin
+    got := public.clean_worker_links('["https://instagram.com@evil.example/x"]'::jsonb);
+    raise exception 'MIGRATION 56: a link disguised with credentials was accepted';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 56:%' then raise; end if;
+  end;
+  begin
+    got := public.clean_worker_links(
+      '["https://a.in","https://b.in","https://c.in","https://d.in","https://e.in","https://f.in"]'::jsonb);
+    raise exception 'MIGRATION 56: six links were accepted';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 56:%' then raise; end if;
+  end;
+
+  -- javascript: and data: are not https, so they are already gone; check
+  begin
+    got := public.clean_worker_links('["javascript:alert(1)"]'::jsonb);
+    raise exception 'MIGRATION 56: a javascript: URL was accepted';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 56:%' then raise; end if;
+  end;
+
+  -- the round trip, and the takedown
+  update workers set links = public.clean_worker_links(
+    '["https://studioborsha.in/work","https://www.instagram.com/studioborsha"]'::jsonb)
+   where id = wid;
+  select links into got from public.worker_card(wid);
+  if got is null or jsonb_array_length(got) <> 2 then
+    raise exception 'MIGRATION 56: the profile card does not carry the links (%)', got;
+  end if;
+
+  update workers set links = '[]'::jsonb where id = wid;   -- what admin_clear_links does
+  select links into got from public.worker_card(wid);
+  if jsonb_array_length(got) <> 0 then
+    raise exception 'MIGRATION 56: links survived a takedown';
+  end if;
+
+  delete from workers where id = wid;
+  raise notice 'PASS  workers can link their own work, but not around the contact gate';
+end $$;
+
 -- ---------- the lock, still last ----------
 select public.lock_public_functions();
 
@@ -11232,7 +11572,7 @@ begin
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
        'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email',
-       'set_photo_promo');
+       'set_photo_promo','set_worker_links','admin_clear_links');
 
   if leaked is not null then
     raise exception

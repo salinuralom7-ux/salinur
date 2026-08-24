@@ -1620,6 +1620,32 @@ body.in-chat .undo-bar{bottom:calc(14px + env(safe-area-inset-bottom))}
 }
 .report-link:hover{color:var(--danger)}
 
+/* ---------- a worker's own links ----------
+   Chips rather than a list of URLs: the label is the useful part and a raw
+   https:// string in the middle of a profile reads as machinery. Wraps, and
+   each chip stays a 44px-tall target with the caption sitting above rather
+   than inline, so five links never squeeze the row into something unhittable. */
+.worklinks{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2);
+  margin:0 0 var(--sp-3);
+}
+.wl-cap{
+  flex:0 0 100%;
+  font:var(--t-overline);letter-spacing:var(--tr-wide);
+  text-transform:uppercase;color:var(--ink-3);
+}
+.worklink{
+  display:inline-flex;align-items:center;gap:6px;
+  min-height:34px;padding:0 var(--sp-3);
+  border:1px solid var(--line);border-radius:var(--r-pill);
+  background:var(--surface-2);color:var(--ink-2);
+  font:var(--t-caption);letter-spacing:var(--tr-flat);font-weight:600;
+  text-decoration:none;
+}
+.worklink svg{color:var(--ink-3);flex:0 0 auto}
+.worklink:hover{border-color:var(--brand);color:var(--ink-1)}
+.worklink:hover svg{color:var(--brand)}
+
 /* ---------- the worker ID card ----------
    Landscape, gold frame, chamfered top-right corner, gold footer with a
    diagonal break — drawn to match the reference card exactly.
@@ -3570,6 +3596,26 @@ footer a{color:var(--ink-2)}
         back into a forgotten account is to message us.</p>
     </div>
 
+    <!-- Somebody hiring an interior designer, a photographer or a cook is
+         deciding on work they have already seen. Three photographs on a
+         profile cannot carry a portfolio, so the profile links to one.
+
+         wa.me is refused here and in the database, and the message says why
+         rather than just saying no. A one-tap WhatsApp link is not a
+         portfolio: it is a way around the contact gate, which is the thing
+         that rate-limits who can ask for a number and keeps the record of
+         who was put in touch with whom. -->
+    <div class="field">
+      <label for="regLinks">Your work online
+        <span class="sublabel">— optional, up to five</span></label>
+      <textarea id="regLinks" rows="3"
+        placeholder="https://studioborsha.in&#10;https://instagram.com/studioborsha"></textarea>
+      <p class="hint" style="margin-top:6px">One per line. Website, Instagram, Facebook,
+        YouTube, Behance — anywhere customers can see what you have done.
+        WhatsApp and Telegram links are not allowed: customers reach you through
+        MySheher, which is what protects you both if anything goes wrong.</p>
+    </div>
+
     <div class="field">
       <label>Location <span class="sublabel">— so nearby customers find you first</span></label>
       <button class="loc-btn" id="regLocBtn" onclick="captureLocation()">
@@ -5259,6 +5305,22 @@ const api = {
     demoSave(all);
     return all[i].photo_promo_at;
   },
+  /* Also its own call, for the same reason and one more: the database
+     refuses some of these with a message the worker needs to read, and a
+     rejected link must not take a whole profile save down with it. */
+  async setWorkerLinks(links){
+    if(LIVE){
+      return await sb("rpc/set_worker_links",
+        {method:"POST", body:JSON.stringify(workerAuth({p_links: links}))});
+    }
+    const all = demoAll();
+    const i = all.findIndex(x => x.phone === session.phone);
+    if(i < 0) throw new Error("Session expired — please sign in again");
+    const clean = cleanLinksLocally(links);
+    all[i].links = clean;
+    demoSave(all);
+    return clean;
+  },
 
   async update(phone, pin, data){
     if(LIVE){
@@ -6850,6 +6912,14 @@ function initRegister(){
     eb.value = session.email || "";
     if(editing) api.myEmail().then(v => { if(v && !eb.value) eb.value = v; }).catch(() => {});
   }
+  /* Already on the profile and public, so unlike the email there is nothing
+     to fetch behind a PIN — it came back with the profile. */
+  const lb = $("regLinks");
+  if(lb){
+    let cur = (w && w.links) || [];
+    if(typeof cur === "string"){ try{ cur = JSON.parse(cur); }catch(e){ cur = []; } }
+    lb.value = (Array.isArray(cur) ? cur : []).map(l => l && l.url).filter(Boolean).join("\n");
+  }
   const turnedDown = editing && statusOf(w) === "rejected";
   $("regWhyRejected").hidden = !turnedDown;
   if(turnedDown){
@@ -7579,6 +7649,20 @@ async function saveProfile(){
   data.email = emailBox ? emailBox.value.trim() : (session.email || "");
   if(session.waCode) data.wa_code = session.waCode;
   if(firstTime){ data.age_confirmed = true; data.terms_version = TERMS_VERSION; }
+  /* Checked before the profile is written, not after. The database refuses
+     the same links with the same reasons, but finding out here costs a
+     sentence and finding out there costs the save. */
+  const linkBox = $("regLinks");
+  const wantLinks = linkBox ? linkBox.value.split("\n") : null;
+  if(linkBox){
+    const checked = checkLinks(wantLinks);
+    if(checked.error){
+      toast(checked.error);
+      linkBox.focus();
+      btn.disabled = false; btn.textContent = label;
+      return;
+    }
+  }
   btn.textContent = "Saving…";
   try{
     const w = session.registered
@@ -7599,6 +7683,16 @@ async function saveProfile(){
       session.worker.photo_promo_at = at || null;
       saveSession();
     }catch(e){ /* the profile is saved; this can be answered again from the form */ }
+    /* Same shape, one difference: if the database refuses a link the worker
+       is told. Swallowing it would leave somebody staring at a profile with
+       no link on it and no idea why. */
+    if(linkBox){
+      try{
+        const saved = await api.setWorkerLinks(wantLinks);
+        session.worker.links = saved || [];
+        saveSession();
+      }catch(e){ toast(e.message || "Your links could not be saved"); }
+    }
     if(firstTime && statusOf(w || {}) !== "approved"){
       $("donePhone").textContent = "We will message you on +91 " + session.phone + " when it is done.";
       go("done");
@@ -8303,6 +8397,12 @@ function openWorker(id){
   currentWorker = w;
   const d = distanceTo(w);
   setTimeout(() => paintScorecard(w.id), 0);
+  /* Fetched rather than read off `w`. This sheet renders from whatever the
+     last search returned, and search_workers deliberately does not carry
+     links — a hundred cards do not each need five URLs nobody has asked to
+     see. worker_card does, so the links arrive the same way the scorecard
+     does: a moment later, into a slot already in the layout. */
+  setTimeout(() => paintWorkLinks(w.id), 0);
   $("wDetail").innerHTML = `
     <!-- The head is identity: who, verified, what rung, where. The facts
          belong to the scorecard directly below it, and putting punctuality
@@ -8330,6 +8430,7 @@ function openWorker(id){
     <div id="wScore"></div>
     ${w.reg_number ? `<p class="reg-line">${w.reg_verified ? "✓ Registration checked by MySheher" : "Registration"}: ${esc(w.reg_number)}</p>` : ""}
     ${w.about ? `<p class="hint" style="margin-bottom:6px">${esc(w.about)}</p>` : ""}
+    <div id="wLinks"></div>
     <div class="price-list">
       ${(w.skills||[]).map((s,i)=>`<button class="price-line pick${i===0?" on":""}" data-i="${i}" onclick="pickService(${i})">
         <div><b>${esc(s.skill)}</b>${s.exp?`<span>${esc(s.exp)} experience</span>`:""}</div>
@@ -8347,6 +8448,87 @@ function openWorker(id){
   openModal("wOverlay");
   loadWorkerReviews(w.id);
 }
+/* The same rules the database enforces, run here first so somebody typing a
+   wa.me link is told before they lose a save rather than after. The database
+   is still the authority — this only exists to make the message immediate. */
+const LINK_BLOCKED = /^(wa\.me|api\.whatsapp\.com|chat\.whatsapp\.com|whatsapp\.com|[a-z0-9-]+\.whatsapp\.com|t\.me|telegram\.me|telegram\.dog|m\.me|messenger\.com|signal\.me|join\.skype\.com)$/i;
+const LINK_LABELS = [
+  [/(^|\.)instagram\.com$/i, "Instagram"], [/(^|\.)facebook\.com$/i, "Facebook"],
+  [/^fb\.com$/i, "Facebook"], [/(^|\.)youtube\.com$/i, "YouTube"], [/^youtu\.be$/i, "YouTube"],
+  [/(^|\.)linkedin\.com$/i, "LinkedIn"], [/(^|\.)behance\.net$/i, "Behance"],
+  [/^dribbble\.com$/i, "Dribbble"], [/(^|\.)pinterest\.com$/i, "Pinterest"],
+  [/^(x|twitter)\.com$/i, "X"], [/(^|\.)threads\.net$/i, "Threads"],
+  [/(^|\.)houzz\.(com|in)$/i, "Houzz"]
+];
+function linkHost(url){
+  const m = /^https:\/\/([^/?#]+)/i.exec(String(url).trim());
+  if(!m || m[1].includes("@")) return null;
+  const h = m[1].split(":")[0].toLowerCase();
+  return /^[a-z0-9.-]+\.[a-z]{2,}$/.test(h) ? h : null;
+}
+/* Returns {links} or {error}. One message at a time: a list of six problems
+   is not more helpful than the first one. */
+function checkLinks(lines){
+  const list = (lines || []).map(x => String(x).trim()).filter(Boolean);
+  if(list.length > 5) return {error:"Five links is the most a profile can show."};
+  const out = [], seen = new Set();
+  for(const url of list){
+    if(!/^https:\/\//i.test(url))
+      return {error:"Links have to start with https:// — check " + url.slice(0, 40)};
+    if(url.length > 200) return {error:"That link is too long."};
+    const h = linkHost(url);
+    if(!h) return {error:"That link does not look right: " + url.slice(0, 40)};
+    if(LINK_BLOCKED.test(h))
+      return {error:"WhatsApp and Telegram links are not allowed. Customers reach you "
+                  + "through MySheher, which is what keeps the record of who contacted "
+                  + "you. Link your website or your work photos instead."};
+    if(seen.has(url)) continue;
+    seen.add(url);
+    const hit = LINK_LABELS.find(([re]) => re.test(h));
+    out.push({kind: hit ? hit[1] : "Website", url});
+  }
+  return {links: out};
+}
+function cleanLinksLocally(lines){ return checkLinks(lines).links || []; }
+
+/* An interior designer is hired on the strength of rooms already finished,
+   and three photographs cannot carry that. These are the worker's own links,
+   validated in the database — https only, never a messaging host.
+
+   rel matters more than it looks. `ugc nofollow` is what stops MySheher
+   becoming a place people register fake profiles to farm backlinks from;
+   `noopener noreferrer` is what stops the opened page reaching back through
+   window.opener into the app. Neither is optional on somebody else's URL. */
+async function paintWorkLinks(id){
+  const host = $("wLinks");
+  if(!host) return;
+  let card = null;
+  try{ card = await api.workerCard(id); }catch(e){ return; }
+  /* The sheet can have moved on to somebody else while this was in flight. */
+  if(!card || !currentWorker || currentWorker.id !== id) return;
+  host.innerHTML = workLinks(card);
+}
+
+function workLinks(w){
+  let list = w.links || [];
+  if(typeof list === "string"){ try{ list = JSON.parse(list); }catch(e){ list = []; } }
+  if(!Array.isArray(list) || !list.length) return "";
+  const rows = list
+    .filter(l => l && typeof l.url === "string" && /^https:\/\//i.test(l.url))
+    .slice(0, 5)
+    .map(l => `<a class="worklink" href="${esc(l.url)}" target="_blank"
+                  rel="ugc nofollow noopener noreferrer">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/>
+          <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>
+        </svg>${esc(l.kind || "Website")}</a>`).join("");
+  if(!rows) return "";
+  /* Labelled, because a row of unexplained chips beside a stranger's face
+     reads as advertising rather than as evidence. */
+  return `<div class="worklinks"><span class="wl-cap">Their own work</span>${rows}</div>`;
+}
+
 /* Stars alone tell a customer almost nothing. The words are the reason
    somebody picks one carpenter over another. */
 async function loadWorkerReviews(id){
