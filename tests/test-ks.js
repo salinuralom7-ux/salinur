@@ -215,7 +215,11 @@ const srv = http.createServer((req, res) => {
   await page.waitForTimeout(900);
   console.log('Congratulations screen shown:', await page.locator('#scr-done.on').count() === 1);
   console.log('  message:', (await page.locator('#scr-done .sub').innerText()).trim());
-  console.log('  mentions the free trial:', (await page.locator('#scr-done').innerText()).includes('30 days free'));
+  /* Matched by shape, not by the number. How long the trial runs is a
+     business decision that has changed once already; a test that pins it
+     starts reporting a failure the day somebody changes their mind. */
+  console.log('  mentions the free trial:',
+    /\d+ days free/.test(await page.locator('#scr-done').innerText()));
   console.log('  names the number to expect a reply on:', (await page.locator('#donePhone').innerText()).includes('9435012345'));
   await page.locator('#doneMine').click();
   await page.waitForTimeout(500);
