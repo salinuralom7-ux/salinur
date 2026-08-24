@@ -8014,7 +8014,9 @@ declare
     -- MIGRATION 56: a worker's own website and social links, and the takedown
     'set_worker_links','admin_clear_links',
     -- MIGRATION 57: an influencer's audience, declared and then checked
-    'set_worker_reach','admin_check_reach'
+    'set_worker_reach','admin_check_reach',
+    -- MIGRATION 58: a builder's GST number, published so it can be checked
+    'set_worker_gstin','admin_check_gstin'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -8080,7 +8082,7 @@ begin
        'home_banners','admin_set_banners','admin_banners',
        'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email',
        'set_photo_promo','set_worker_links','admin_clear_links',
-       'set_worker_reach','admin_check_reach');
+       'set_worker_reach','admin_check_gstin','set_worker_gstin','admin_check_reach');
 
   if leaked is not null then
     raise exception
@@ -11939,6 +11941,325 @@ begin
   raise notice 'PASS  the audience columns are not readable off the table';
 end $$;
 
+
+-- ============================================================
+-- MIGRATION 58 — builders
+--
+-- The catalogue has masons, carpenters, tile fitters and a "Civil
+-- Contractor", which between them describe people who do a piece of a
+-- building. It has nobody who builds one. That is the search a person makes
+-- when they have a plot in Sixmile and no idea who to call, and it is the
+-- largest single amount of money anybody will spend through this app.
+--
+-- Construction in India is quoted per square foot, not per project, which is
+-- lucky: it keeps the numbers small enough to compare, and 'per sq ft'
+-- already exists as a unit. A turnkey house in Guwahati runs somewhere
+-- between twelve hundred and three thousand a square foot depending on
+-- finish; labour-only contracts are a fifth of that. Both are listed,
+-- because both are what people actually sign.
+--
+-- The part that needed thinking about is not the trades, it is the money.
+--
+-- A bad plumber costs somebody three hundred rupees. A bad builder costs
+-- them fifteen lakh and a half-built house, and if MySheher introduced them
+-- the app owns a share of that. Every other trade here is checked by a
+-- photograph and a phone call, which is proportionate at three hundred
+-- rupees and absurd at fifteen lakh.
+--
+-- So the builder trades ask for a GSTIN. It is the one identifier that is
+-- free to check, mandatory for anyone doing this volume of work legitimately,
+-- and publicly verifiable on the government's own portal — which is the real
+-- point: MySheher does not ask the customer to trust MySheher, it publishes
+-- a number the customer can check themselves. The format is validated here
+-- (the state code, the PAN inside it, the Z, the checksum), a person here
+-- confirms it against the portal, and it is not shown until they have.
+--
+-- The state code must be 18. A builder registered in Assam is not a
+-- guarantee of anything, but a "Guwahati builder" whose registration is in
+-- another state is a question worth making somebody answer.
+-- ============================================================
+
+insert into public.service_rates (skill, min_price, max_price) values
+  ($q$House Construction (Turnkey)$q$,1000,4000),
+  ($q$Building Contractor (Labour Only)$q$,150,700),
+  ($q$RCC & Structural Work$q$,150,900),
+  ($q$Renovation & Remodelling$q$,300,3000),
+  ($q$Boundary Wall & Gate Construction$q$,150,1200),
+  ($q$Roofing & Shed Contractor$q$,100,900),
+  ($q$Demolition Contractor$q$,20,400),
+  ($q$Borewell & Tubewell Drilling$q$,100,800),
+  ($q$Septic Tank & Drainage Work$q$,5000,150000),
+  ($q$Plot Levelling & Earthwork$q$,20,300),
+  ($q$Building Plan & Approval Consultant$q$,5000,200000),
+  ($q$Site Supervisor$q$,12000,60000)
+on conflict (skill) do update
+  set min_price = excluded.min_price, max_price = excluded.max_price;
+
+-- ---------- which trades are trusted with lakhs ----------
+create table if not exists public.gst_trades (skill text primary key);
+insert into public.gst_trades (skill) values
+  ('House Construction (Turnkey)'),
+  ('Building Contractor (Labour Only)'),
+  ('RCC & Structural Work'),
+  ('Renovation & Remodelling'),
+  ('Boundary Wall & Gate Construction'),
+  ('Roofing & Shed Contractor'),
+  ('Borewell & Tubewell Drilling'),
+  ('Civil Contractor')
+on conflict (skill) do nothing;
+alter table public.gst_trades enable row level security;
+drop policy if exists "gst trades are public" on public.gst_trades;
+-- public: the sign-up form has to know which trades ask for the number
+create policy "gst trades are public" on public.gst_trades for select using (true);
+
+alter table public.workers add column if not exists gstin text;
+alter table public.workers add column if not exists gstin_checked_at timestamptz;
+
+comment on column public.workers.gstin is
+  'GST registration number, for the trades where a customer is handing over '
+  'lakhs. Published so it can be checked on the government portal — that is '
+  'the whole point of asking for it.';
+comment on column public.workers.gstin_checked_at is
+  'When somebody here looked this up on the GST portal and it matched. NULL '
+  'means nobody has, and worker_card returns nothing.';
+
+-- ---------- the format ----------
+-- 15 characters: two-digit state, then the ten-character PAN, then an entity
+-- digit, then Z, then a checksum. The checksum is a weighted sum over
+-- base-36 in alternating 1,2 weights — worth computing, because a mistyped
+-- digit is far more common than an invented number and this catches it
+-- before a person is sent to look one up that was never going to match.
+create or replace function public.clean_gstin(p_gstin text)
+returns text
+language plpgsql immutable set search_path = public, extensions as $$
+declare
+  g     text;
+  chars text := '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  total int := 0;
+  v     int;
+  p     int;
+  i     int;
+begin
+  g := upper(regexp_replace(coalesce(p_gstin, ''), '[[:space:]-]', '', 'g'));
+  if g = '' then return null; end if;
+
+  if g !~ '^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{1}Z[0-9A-Z]{1}$' then
+    raise exception 'That is not a GST number. It is 15 characters, like 18ABCDE1234F1Z5.';
+  end if;
+  if left(g, 2) <> '18' then
+    raise exception 'That GST number is registered in state %, not Assam (18). '
+                    'If you are registered elsewhere, tell us when you sign up '
+                    'and we will look at it by hand.', left(g, 2);
+  end if;
+
+  for i in 1..14 loop
+    v := position(substring(g from i for 1) in chars) - 1;
+    p := v * (case when i % 2 = 0 then 2 else 1 end);
+    total := total + (p / 36) + (p % 36);
+  end loop;
+  if substring(chars from ((36 - (total % 36)) % 36) + 1 for 1) <> substring(g from 15 for 1) then
+    raise exception 'That GST number fails its own check digit — please read it off '
+                    'the certificate again.';
+  end if;
+
+  return g;
+end;
+$$;
+
+-- ---------- the gate ----------
+create or replace function public.check_gst_bar(p_skills jsonb, p_gstin text)
+returns void
+language plpgsql stable set search_path = public, extensions as $$
+declare trade text;
+begin
+  select s->>'skill' into trade
+    from jsonb_array_elements(coalesce(p_skills, '[]'::jsonb)) s
+    join gst_trades g on g.skill = s->>'skill'
+   limit 1;
+  if trade is null then return; end if;
+  if coalesce(btrim(coalesce(p_gstin, '')), '') = '' then
+    raise exception
+      '% needs your GST number. Customers are handing over lakhs on this kind '
+      'of work, so we publish the number and they can check it on the '
+      'government''s own portal — that is what makes it worth anything.', trade;
+  end if;
+end;
+$$;
+
+create or replace function public.set_worker_gstin(p_phone text default null,
+                                                   p_pin text default null,
+                                                   p_gstin text default null,
+                                                   p_token uuid default null)
+returns text
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; clean text; sk jsonb;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return null; end if;
+  clean := public.clean_gstin(p_gstin);
+  select skills into sk from workers where id = wid;
+  perform public.check_gst_bar(sk, clean);
+
+  -- A new number is a number nobody has looked up.
+  update workers
+     set gstin = clean,
+         gstin_checked_at = case when gstin is distinct from clean
+                                 then null else gstin_checked_at end
+   where id = wid;
+  return clean;
+end;
+$$;
+
+create or replace function public.admin_check_gstin(p_pin text, p_worker uuid,
+                                                    p_ok boolean default true)
+returns timestamptz
+language plpgsql security definer set search_path = public, extensions as $$
+declare t timestamptz;
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  update workers
+     set gstin_checked_at = case when p_ok then now() else null end
+   where id = p_worker
+  returning gstin_checked_at into t;
+  return t;
+end;
+$$;
+
+-- ---------- and what a customer sees ----------
+drop function if exists public.worker_card(uuid);
+create function public.worker_card(p_id uuid)
+returns table (
+  id uuid, name text, selfie text, thumb text, city text, area text, about text,
+  skills jsonb, rating_sum int, rating_count int,
+  worker_code text, serves_remote boolean, online_until timestamptz,
+  reg_number text, reg_verified boolean,
+  jobs_done int, on_time_yes int, on_time_total int, member_since timestamptz,
+  score int, tier text, links jsonb, reach jsonb, gstin text)
+language sql stable security definer set search_path = public, extensions as $$
+  select w.id, w.name, w.selfie, w.thumb, w.city, w.area, w.about, w.skills,
+         w.rating_sum, w.rating_count, w.worker_code, w.serves_remote,
+         w.online_until, w.reg_number, w.reg_verified,
+         (select count(*)::int from threads t
+           where t.worker_id = w.id and t.status = 'closed'),
+         w.on_time_yes, w.on_time_total, w.created_at, w.score, w.tier,
+         coalesce(w.links, '[]'::jsonb),
+         case when w.reach_checked_at is null then '[]'::jsonb
+              else coalesce(w.reach, '[]'::jsonb) end,
+         case when w.gstin_checked_at is null then null else w.gstin end
+    from workers w
+   where w.id = p_id
+     and w.status = 'approved'
+     and w.available;
+$$;
+
+-- ---------- does it hold ----------
+do $$
+declare
+  wid uuid;
+  g   text;
+  msg text;
+begin
+  -- a real-shaped Assam GSTIN, checksum computed by the same rule the portal uses
+  g := public.clean_gstin('18AABCU9603R1ZM');
+  if g <> '18AABCU9603R1ZM' then
+    raise exception 'MIGRATION 58: a valid GSTIN was rejected or mangled (%)', g;
+  end if;
+  -- spaces and lower case are what somebody actually types off a certificate
+  if public.clean_gstin(' 18aabcu9603r1zm ') <> '18AABCU9603R1ZM' then
+    raise exception 'MIGRATION 58: a GSTIN typed with spaces and lower case was not cleaned up';
+  end if;
+
+  begin
+    g := public.clean_gstin('18AABCU9603R1ZX');
+    raise exception 'MIGRATION 58: a GSTIN with a wrong check digit was accepted';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 58:%' then raise; end if;
+    if msg not like '%check digit%' then
+      raise exception 'MIGRATION 58: a bad checksum was refused for the wrong reason (%)', msg;
+    end if;
+  end;
+
+  begin
+    g := public.clean_gstin('07AABCU9603R1ZV');
+    raise exception 'MIGRATION 58: a Delhi registration passed as an Assam one';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 58:%' then raise; end if;
+    if msg not like '%not Assam%' then
+      raise exception 'MIGRATION 58: an out-of-state GSTIN was refused for the wrong reason (%)', msg;
+    end if;
+  end;
+
+  begin
+    g := public.clean_gstin('NOTAGSTNUMBER');
+    raise exception 'MIGRATION 58: nonsense was accepted as a GSTIN';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 58:%' then raise; end if;
+  end;
+
+  -- an empty box is not an error; it is somebody who has not typed it yet
+  if public.clean_gstin('') is not null or public.clean_gstin(null) is not null then
+    raise exception 'MIGRATION 58: an empty GST box raised instead of returning nothing';
+  end if;
+
+  -- the gate: builders are asked, plumbers are not
+  begin
+    perform public.check_gst_bar('[{"skill":"House Construction (Turnkey)"}]'::jsonb, null);
+    raise exception 'MIGRATION 58: a turnkey builder was published without a GST number';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 58:%' then raise; end if;
+  end;
+  perform public.check_gst_bar('[{"skill":"Plumber"}]'::jsonb, null);
+  perform public.check_gst_bar('[{"skill":"House Construction (Turnkey)"}]'::jsonb,
+                               '18AABCU9603R1ZM');
+
+  -- and nothing is public until somebody has looked it up
+  delete from workers where phone = '+919999000059';
+  insert into workers (name, phone, city, area, status, available, skills, gstin)
+  values ('Builder Test', '+919999000059', 'Guwahati', 'Beltola', 'approved', true,
+          '[{"skill":"House Construction (Turnkey)","price":1800,"unit":"per sq ft"}]'::jsonb,
+          '18AABCU9603R1ZM')
+  returning id into wid;
+
+  select gstin into g from public.worker_card(wid);
+  if g is not null then
+    raise exception 'MIGRATION 58: an unchecked GST number was handed to a customer (%)', g;
+  end if;
+
+  update workers set gstin_checked_at = now() where id = wid;
+  select gstin into g from public.worker_card(wid);
+  if g <> '18AABCU9603R1ZM' then
+    raise exception 'MIGRATION 58: a checked GST number is still hidden (%)', g;
+  end if;
+
+  -- changing it takes the check away
+  update workers
+     set gstin_checked_at = case when gstin is distinct from '18AAACR5055K1Z7'
+                                 then null else gstin_checked_at end,
+         gstin = '18AAACR5055K1Z7'
+   where id = wid;
+  if (select gstin_checked_at from workers where id = wid) is not null then
+    raise exception 'MIGRATION 58: a new GST number kept the tick given to the old one';
+  end if;
+
+  delete from workers where id = wid;
+  raise notice 'PASS  builders are listed, and the number that vouches for them is checkable';
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then return; end if;
+  if has_column_privilege('anon', 'public.workers', 'gstin_checked_at', 'select') then
+    raise exception 'MIGRATION 58: anon can read gstin_checked_at directly';
+  end if;
+  raise notice 'PASS  the GST columns are not readable off the table';
+end $$;
+
 -- ---------- the lock, still last ----------
 select public.lock_public_functions();
 
@@ -11975,7 +12296,7 @@ begin
        'home_banners','admin_set_banners','admin_banners',
        'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email',
        'set_photo_promo','set_worker_links','admin_clear_links',
-       'set_worker_reach','admin_check_reach');
+       'set_worker_reach','admin_check_gstin','set_worker_gstin','admin_check_reach');
 
   if leaked is not null then
     raise exception

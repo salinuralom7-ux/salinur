@@ -1667,6 +1667,26 @@ body.in-chat .undo-bar{bottom:calc(14px + env(safe-area-inset-bottom))}
   display:inline-flex;align-items:center;gap:5px;
   font:var(--t-caption);letter-spacing:var(--tr-flat);color:var(--ok)}
 
+/* ---------- a builder's registration ----------
+   Quieter than the audience pill: this is not what is being sold, it is what
+   makes the sale safe to make. The caution below it is the one piece of
+   advice the app gives, so it is set apart rather than folded into the line
+   above — a warning that reads as a footnote is a warning nobody took. */
+.gst-block{margin:0 0 var(--sp-3)}
+.gst-line{
+  display:flex;align-items:flex-start;gap:7px;
+  font:var(--t-caption);letter-spacing:var(--tr-flat);color:var(--ink-2);
+}
+.gst-line svg{color:var(--ok);flex:0 0 auto;margin-top:1px}
+.gst-line b{color:var(--ink-1);font-variant-numeric:tabular-nums;letter-spacing:var(--tr-wide)}
+.gst-warn{
+  margin:var(--sp-2) 0 0;padding:var(--sp-3);
+  border-radius:var(--r-sm);border:1px solid var(--line);
+  background:var(--surface-2);
+  font:var(--t-caption);letter-spacing:var(--tr-flat);color:var(--ink-2);
+}
+.gst-warn b{color:var(--ink-1)}
+
 /* ---------- the worker ID card ----------
    Landscape, gold frame, chamfered top-right corner, gold footer with a
    diagonal break — drawn to match the reference card exactly.
@@ -3548,6 +3568,24 @@ footer a{color:var(--ink-2)}
       </div>
     </div>
 
+    <!-- Only for the trades where somebody hands over lakhs. The number is
+         published rather than kept on file, and that is the entire point:
+         MySheher is not asking a customer to trust MySheher, it is giving
+         them something they can check on the government's own portal. -->
+    <div id="regGstBlock" hidden>
+      <div class="divider"></div>
+      <div class="field">
+        <label for="regGstin">Your GST number
+          <span class="sublabel">— required for construction work</span></label>
+        <p class="hint" style="margin:0 0 10px">A customer building a house is handing
+          over lakhs. We publish this so they can look you up on the government's GST
+          portal themselves, and <b>we check it against the portal before your profile
+          goes live</b>.</p>
+        <input type="text" id="regGstin" maxlength="20" autocapitalize="characters"
+               spellcheck="false" placeholder="18ABCDE1234F1Z5">
+      </div>
+    </div>
+
     <!-- Appears when a picked service is dispatched instantly. -->
     <div id="regNowBlock" hidden>
       <div class="divider"></div>
@@ -4698,6 +4736,22 @@ const RATE_BAND = {
   "Modular Kitchen Fitter":[200,25000],
   "Furniture Assembly":[200,25000],
   "Civil Contractor":[3000,300000],
+  /* Construction is quoted per square foot here, not per project, which is
+     what keeps these numbers small enough for somebody to compare two
+     builders. Turnkey in Guwahati runs 1,200–3,000 depending on finish;
+     labour-only is roughly a fifth of that. */
+  "House Construction (Turnkey)":[1000,4000],
+  "Building Contractor (Labour Only)":[150,700],
+  "RCC & Structural Work":[150,900],
+  "Renovation & Remodelling":[300,3000],
+  "Boundary Wall & Gate Construction":[150,1200],
+  "Roofing & Shed Contractor":[100,900],
+  "Demolition Contractor":[20,400],
+  "Borewell & Tubewell Drilling":[100,800],
+  "Septic Tank & Drainage Work":[5000,150000],
+  "Plot Levelling & Earthwork":[20,300],
+  "Building Plan & Approval Consultant":[5000,200000],
+  "Site Supervisor":[12000,60000],
   "Interior Designer":[3000,300000],
   "Daily Wage Helper":[400,2500],
   "Personal Driver (Monthly)":[6000,30000],
@@ -4872,7 +4926,17 @@ const CATALOGUE = [
     ["Tile & Marble Fitter","per sq ft"],["Waterproofing Specialist","per sq ft"],["POP & False Ceiling Worker","per sq ft"],
     ["Welder & Fabricator","per day"],["Grill & Gate Fitting","per job"],["Aluminium & Glass Fitter","per job"],
     ["Modular Kitchen Fitter","per job"],["Furniture Assembly","per job"],
-    ["Civil Contractor","per project"],["Interior Designer","per project"],["Daily Wage Helper","per day"]
+    ["Civil Contractor","per project"],["Interior Designer","per project"],["Daily Wage Helper","per day"],
+    /* The catalogue had people who build part of a house and nobody who
+       builds one. This is the search somebody makes when they have a plot in
+       Sixmile and no idea who to call, and it is the largest amount of money
+       anybody will spend through this app. */
+    ["House Construction (Turnkey)","per sq ft"],["Building Contractor (Labour Only)","per sq ft"],
+    ["RCC & Structural Work","per sq ft"],["Renovation & Remodelling","per sq ft"],
+    ["Boundary Wall & Gate Construction","per sq ft"],["Roofing & Shed Contractor","per sq ft"],
+    ["Demolition Contractor","per sq ft"],["Borewell & Tubewell Drilling","per unit"],
+    ["Septic Tank & Drainage Work","per job"],["Plot Levelling & Earthwork","per sq ft"],
+    ["Building Plan & Approval Consultant","per project"],["Site Supervisor","per month"]
   ]],
   ["vehicle","Vehicle Services",[
     ["Personal Driver (Monthly)","per month"],["Driver (Per Day)","per day"],["Outstation Driver","per day"],
@@ -5408,6 +5472,19 @@ const api = {
     demoSave(all);
     return clean;
   },
+  async setWorkerGstin(gstin){
+    if(LIVE){
+      return await sb("rpc/set_worker_gstin",
+        {method:"POST", body:JSON.stringify(workerAuth({p_gstin: gstin}))});
+    }
+    const all = demoAll();
+    const i = all.findIndex(x => x.phone === session.phone);
+    if(i < 0) throw new Error("Session expired — please sign in again");
+    if((all[i].gstin || null) !== gstin) all[i].gstin_checked_at = null;
+    all[i].gstin = gstin;
+    demoSave(all);
+    return gstin;
+  },
 
   async update(phone, pin, data){
     if(LIVE){
@@ -5530,7 +5607,9 @@ const api = {
        rule has to be applied on this side of the branch — otherwise the one
        screen where an unchecked number could appear is the one used to
        decide whether the feature looks right. */
-    return {...w, reach: w.reach_checked_at ? (w.reach || []) : []};
+    return {...w,
+            reach: w.reach_checked_at ? (w.reach || []) : [],
+            gstin: w.gstin_checked_at ? (w.gstin || null) : null};
   },
   /* The five lines behind the badge. Public on purpose: a score whose
      reasons nobody can see is not trust, it is a rating agency. */
@@ -7022,6 +7101,8 @@ function initRegister(){
     ru.value = first ? (first.url || "") : "";
     rn.value = first ? (first.followers ?? "") : "";
   }
+  const gb = $("regGstin");
+  if(gb) gb.value = (w && w.gstin) || "";
   const turnedDown = editing && statusOf(w) === "rejected";
   $("regWhyRejected").hidden = !turnedDown;
   if(turnedDown){
@@ -7083,6 +7164,17 @@ function initRegister(){
 /* Kept beside the catalogue rather than derived from the group name: the
    database has the same list in audience_trades, and a trade moving groups
    must not silently stop asking for the number. */
+/* Mirrors gst_trades. A customer handing over lakhs is in a different risk
+   class from one paying three hundred rupees for a tap, and a photograph and
+   a phone call is proportionate to the second and absurd for the first. */
+const GST_TRADES = new Set([
+  "House Construction (Turnkey)", "Building Contractor (Labour Only)",
+  "RCC & Structural Work", "Renovation & Remodelling",
+  "Boundary Wall & Gate Construction", "Roofing & Shed Contractor",
+  "Borewell & Tubewell Drilling", "Civil Contractor"
+]);
+const needsGst = sk => GST_TRADES.has(sk);
+
 const AUDIENCE_TRADES = {
   "Instagram Influencer": 10000, "YouTube Creator": 10000,
   "Reels & Short Video Creator": 10000, "Facebook Page Promotion": 10000,
@@ -7100,6 +7192,7 @@ function renderModeBlocks(){
   const needsAud = picked.filter(needsAudience);
   $("regCredBlock").hidden = !needsReg.length;
   $("regReachBlock").hidden = !needsAud.length;
+  $("regGstBlock").hidden = !picked.filter(needsGst).length;
   $("regNowBlock").hidden  = !modes.has("now");
   $("regSlotBlock").hidden = !modes.has("slot");
   if(needsReg.length){
@@ -7742,6 +7835,28 @@ async function saveProfile(){
     reach = [{platform: known[1], url, followers: n}];
   }
 
+  /* Construction cannot be published on a name alone. */
+  const builders = picked.filter(needsGst);
+  let gstin = null;
+  if(builders.length){
+    const res = checkGstin($("regGstin").value);
+    /* No btn juggling here: this runs before the Save button is disabled,
+       the same as every other check in this stretch. Resetting a button that
+       was never touched is how `btn` came to be read before it existed. */
+    if(res.error){
+      toast(res.error);
+      $("regGstin").focus();
+      return;
+    }
+    if(!res.gstin){
+      toast(`${builders[0]} needs your GST number — we publish it so customers can `
+          + "check you on the government portal.");
+      $("regGstin").focus();
+      return;
+    }
+    gstin = res.gstin;
+  }
+
   /* an appointment trade needs a working day that actually contains slots */
   let availability = null;
   if(modes.has("slot")){
@@ -7838,6 +7953,12 @@ async function saveProfile(){
         session.worker.reach = await api.setWorkerReach(reach) || [];
         saveSession();
       }catch(e){ toast(e.message || "Your account details could not be saved"); }
+    }
+    if(gstin){
+      try{
+        session.worker.gstin = await api.setWorkerGstin(gstin);
+        saveSession();
+      }catch(e){ toast(e.message || "Your GST number could not be saved"); }
     }
     if(firstTime && statusOf(w || {}) !== "approved"){
       $("donePhone").textContent = "We will message you on +91 " + session.phone + " when it is done.";
@@ -8578,6 +8699,7 @@ function openWorker(id){
     ${w.reg_number ? `<p class="reg-line">${w.reg_verified ? "✓ Registration checked by MySheher" : "Registration"}: ${esc(w.reg_number)}</p>` : ""}
     ${w.about ? `<p class="hint" style="margin-bottom:6px">${esc(w.about)}</p>` : ""}
     <div id="wReach"></div>
+    <div id="wGst"></div>
     <div id="wLinks"></div>
     <div class="price-list">
       ${(w.skills||[]).map((s,i)=>`<button class="price-line pick${i===0?" on":""}" data-i="${i}" onclick="pickService(${i})">
@@ -8639,6 +8761,36 @@ function checkLinks(lines){
 }
 function cleanLinksLocally(lines){ return checkLinks(lines).links || []; }
 
+/* The same rule the database applies: two-digit state, the PAN, an entity
+   digit, Z, and a check character over base-36 with alternating 1,2 weights.
+   Worth computing here as well — a mistyped digit is far more common than an
+   invented number, and catching it now saves somebody a save and saves us
+   looking up a registration that was never going to match. */
+const GST_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+function gstCheckChar(first14){
+  let total = 0;
+  for(let i = 0; i < 14; i++){
+    const p = GST_CHARS.indexOf(first14[i]) * (i % 2 ? 2 : 1);
+    total += Math.floor(p / 36) + (p % 36);
+  }
+  return GST_CHARS[(36 - (total % 36)) % 36];
+}
+/* Returns {gstin} or {error}. An empty box is neither — it is somebody who
+   has not typed it yet, and whether that is allowed is the caller's question. */
+function checkGstin(raw){
+  const g = String(raw || "").toUpperCase().replace(/[\s-]/g, "");
+  if(!g) return {gstin: null};
+  if(!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]Z[0-9A-Z]$/.test(g))
+    return {error:"That is not a GST number. It is 15 characters, like 18ABCDE1234F1Z5."};
+  if(g.slice(0, 2) !== "18")
+    return {error:`That GST number is registered in state ${g.slice(0,2)}, not Assam (18). `
+                + "If you are registered elsewhere, tell us and we will look at it by hand."};
+  if(gstCheckChar(g.slice(0, 14)) !== g[14])
+    return {error:"That GST number fails its own check digit — please read it off the "
+                + "certificate again."};
+  return {gstin: g};
+}
+
 /* An interior designer is hired on the strength of rooms already finished,
    and three photographs cannot carry that. These are the worker's own links,
    validated in the database — https only, never a messaging host.
@@ -8660,6 +8812,35 @@ async function paintWorkLinks(id){
      account and confirmed the number, so there is nothing to decide at this
      end: whatever arrives has been checked. */
   if(rHost) rHost.innerHTML = workReach(card);
+  const gHost = $("wGst");
+  if(gHost) gHost.innerHTML = workGst(card);
+}
+
+/* Published, not just held on file. The number is worth something precisely
+   because the customer can go and check it themselves rather than taking
+   MySheher's word for it — so it is shown in full, with where to check.
+
+   The line underneath is the only piece of advice this app gives anybody,
+   and it earns its place: the way people lose money on construction is an
+   advance handed over before anything is written down. Shown on these trades
+   only. On a three-hundred-rupee tap it would be noise, and an app that
+   warns about everything warns about nothing. */
+function workGst(w){
+  if(!w.gstin) return "";
+  const big = (w.skills || []).some(s => needsGst(s.skill));
+  return `<div class="gst-block">
+    <div class="gst-line">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3l8 3v6c0 4.5-3.2 8.5-8 9.5C7.2 20.5 4 16.5 4 12V6z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+      <span>GST <b>${esc(w.gstin)}</b> — checked by MySheher on the government portal</span>
+    </div>
+    ${big ? `<p class="gst-warn">Building work: agree the scope and the payment stages
+      <b>in writing</b> before any money changes hands. MySheher does not hold your
+      payment and cannot get an advance back for you.</p>` : ""}
+  </div>`;
 }
 
 function workReach(w){
