@@ -1646,6 +1646,27 @@ body.in-chat .undo-bar{bottom:calc(14px + env(safe-area-inset-bottom))}
 .worklink:hover{border-color:var(--brand);color:var(--ink-1)}
 .worklink:hover svg{color:var(--brand)}
 
+/* ---------- an influencer's audience ----------
+   The number is the product here, so it gets the weight a price gets rather
+   than sitting in the body text. The checked mark is a separate chip and not
+   a tick beside each figure: what a person here confirmed is the whole set,
+   at one moment, and a mark on each line would read as a per-account badge. */
+.reach-row{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2);
+  margin:0 0 var(--sp-3);
+}
+.reach-pill{
+  display:inline-flex;align-items:baseline;gap:5px;
+  min-height:34px;padding:0 var(--sp-3);align-content:center;
+  border:1px solid rgba(var(--brand-rgb),.28);border-radius:var(--r-pill);
+  background:var(--brand-soft);text-decoration:none;
+}
+.reach-pill b{font:var(--t-body-strong);color:var(--ink-1);letter-spacing:var(--tr-tight)}
+.reach-pill span{font:var(--t-caption);color:var(--ink-2);letter-spacing:var(--tr-flat)}
+.reach-checked{
+  display:inline-flex;align-items:center;gap:5px;
+  font:var(--t-caption);letter-spacing:var(--tr-flat);color:var(--ok)}
+
 /* ---------- the worker ID card ----------
    Landscape, gold frame, chamfered top-right corner, gold footer with a
    diagonal break — drawn to match the reference card exactly.
@@ -3502,6 +3523,31 @@ footer a{color:var(--ink-2)}
       </div>
     </div>
 
+    <!-- Only for the trades that are sold on an audience. A carpenter's claim
+         about themselves is checked by the work; an influencer's central
+         claim IS a number, and a self-reported one is worth nothing. So it is
+         asked for here, and it is not published until somebody here has
+         opened the account and looked. -->
+    <div id="regReachBlock" hidden>
+      <div class="divider"></div>
+      <div class="field">
+        <label for="regReachUrl">The account you post from
+          <span class="sublabel">— required for this kind of work</span></label>
+        <p class="hint" style="margin:0 0 10px">Businesses are paying for the people who
+          see your posts, so we ask for the account and the number. <b>We open it and check
+          before your profile goes live</b>, and the figure customers see is the one we
+          checked — not the one typed here.</p>
+        <input type="url" id="regReachUrl" maxlength="200" inputmode="url"
+               placeholder="https://instagram.com/yourname">
+        <input type="number" id="regReachN" min="0" max="500000000" inputmode="numeric"
+               style="margin-top:9px" placeholder="Followers or subscribers, e.g. 24000">
+        <p class="hint" id="regReachNote" style="margin-top:6px">Instagram, YouTube,
+          Facebook, X or Threads. <b>10,000 on one account</b> is the minimum — five
+          small accounts added together do not count, because that is not ten thousand
+          people who will see the post.</p>
+      </div>
+    </div>
+
     <!-- Appears when a picked service is dispatched instantly. -->
     <div id="regNowBlock" hidden>
       <div class="divider"></div>
@@ -4763,6 +4809,13 @@ const RATE_BAND = {
   "3D Artist & Animator":[3000,300000],
   "Voice-over Artist":[300,25000],
   "UI/UX Designer":[3000,300000],
+  "Instagram Influencer":[500,200000],
+  "YouTube Creator":[1000,300000],
+  "Reels & Short Video Creator":[500,150000],
+  "Facebook Page Promotion":[300,100000],
+  "Product Review (Video)":[500,150000],
+  "Event Coverage (Social Media)":[2000,100000],
+  "Brand Ambassador":[5000,500000],
   "WordPress Developer":[2000,150000],
   "SEO Specialist":[2000,60000],
   "Presentation Designer":[300,20000],
@@ -4872,6 +4925,18 @@ const CATALOGUE = [
     ["Content Writer","per job"],["Translator (Assamese / Hindi / English)","per job"],
     ["Data Entry Operator","per month"]
   ]],
+  /* A shop owner wanting a new tiffin service known does not need a plumber,
+     they need somebody twenty thousand people in Guwahati already follow.
+     That is bought and sold here constantly over DM at prices nobody can
+     compare, which is exactly the thing this app exists to put a rate next
+     to. Every trade in this group asks for the account and the number, and
+     the number is not shown until a person here has opened it and looked. */
+  ["reach","Influencers & Promotion",[
+    ["Instagram Influencer","per post"],["YouTube Creator","per video"],
+    ["Reels & Short Video Creator","per video"],["Facebook Page Promotion","per post"],
+    ["Product Review (Video)","per video"],["Event Coverage (Social Media)","per day"],
+    ["Brand Ambassador","per month"]
+  ]],
   ["garden","Gardening & Outdoor",[
     ["Gardener (Regular)","per month"],["Garden Setup & Landscaping","per project"],["Lawn Mowing","per visit"],
     ["Tree Cutting & Pruning","per job"]
@@ -4918,7 +4983,11 @@ const CATALOGUE = [
 const CAT_MODE = {
   home:"now", cook:"sched", care:"hire", repair:"now", build:"sched", vehicle:"now",
   beauty:"slot", tutor:"hire", event:"sched", prof:"slot", tech:"sched", garden:"now",
-  pet:"slot", tailor:"sched", move:"now", facility:"hire", health:"slot"
+  pet:"slot", tailor:"sched", move:"now", facility:"hire", health:"slot",
+  /* Nobody hires an influencer for the next hour: a post is agreed, then
+     made. Same as the default modeOf falls back to, said out loud so a
+     future reader does not have to go and check. */
+  reach:"sched"
 };
 /* Where a service does not behave like the rest of its category. */
 const MODE_OVERRIDE = {
@@ -5321,6 +5390,24 @@ const api = {
     demoSave(all);
     return clean;
   },
+  /* Its own call for the same reason as the links, plus one: saving a new
+     number takes the human check off it, and that must happen in the same
+     write as the number itself. */
+  async setWorkerReach(reach){
+    if(LIVE){
+      return await sb("rpc/set_worker_reach",
+        {method:"POST", body:JSON.stringify(workerAuth({p_reach: reach || []}))});
+    }
+    const all = demoAll();
+    const i = all.findIndex(x => x.phone === session.phone);
+    if(i < 0) throw new Error("Session expired — please sign in again");
+    const clean = (reach || []).slice(0, 5);
+    const changed = JSON.stringify(all[i].reach || []) !== JSON.stringify(clean);
+    all[i].reach = clean;
+    if(changed) all[i].reach_checked_at = null;
+    demoSave(all);
+    return clean;
+  },
 
   async update(phone, pin, data){
     if(LIVE){
@@ -5436,7 +5523,14 @@ const api = {
               skills: typeof r.skills === "string" ? JSON.parse(r.skills) : (r.skills || [])};
     }
     const w = demoAll().find(x => x.id === id);
-    return (w && statusOf(w) === "approved" && w.available !== false) ? w : null;
+    if(!(w && statusOf(w) === "approved" && w.available !== false)) return null;
+    /* worker_card() withholds the follower counts until a person here has
+       opened the accounts and confirmed them. Preview mode exists so that
+       what somebody sees before going live is what goes live, so the same
+       rule has to be applied on this side of the branch — otherwise the one
+       screen where an unchecked number could appear is the one used to
+       decide whether the feature looks right. */
+    return {...w, reach: w.reach_checked_at ? (w.reach || []) : []};
   },
   /* The five lines behind the badge. Public on purpose: a score whose
      reasons nobody can see is not trust, it is a rating agency. */
@@ -6920,6 +7014,14 @@ function initRegister(){
     if(typeof cur === "string"){ try{ cur = JSON.parse(cur); }catch(e){ cur = []; } }
     lb.value = (Array.isArray(cur) ? cur : []).map(l => l && l.url).filter(Boolean).join("\n");
   }
+  const ru = $("regReachUrl"), rn = $("regReachN");
+  if(ru && rn){
+    let r = (w && w.reach) || [];
+    if(typeof r === "string"){ try{ r = JSON.parse(r); }catch(e){ r = []; } }
+    const first = (Array.isArray(r) ? r : [])[0];
+    ru.value = first ? (first.url || "") : "";
+    rn.value = first ? (first.followers ?? "") : "";
+  }
   const turnedDown = editing && statusOf(w) === "rejected";
   $("regWhyRejected").hidden = !turnedDown;
   if(turnedDown){
@@ -6978,13 +7080,26 @@ function initRegister(){
 /* ---------- which extra questions this worker has to answer ----------
    Driven entirely by the services they picked, so nobody is asked for a
    medical registration number to fit a grill. */
+/* Kept beside the catalogue rather than derived from the group name: the
+   database has the same list in audience_trades, and a trade moving groups
+   must not silently stop asking for the number. */
+const AUDIENCE_TRADES = {
+  "Instagram Influencer": 10000, "YouTube Creator": 10000,
+  "Reels & Short Video Creator": 10000, "Facebook Page Promotion": 10000,
+  "Product Review (Video)": 10000, "Event Coverage (Social Media)": 10000,
+  "Brand Ambassador": 10000
+};
+const needsAudience = sk => AUDIENCE_TRADES[sk] != null;
+
 const DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 let slotDays = [1,2,3,4,5,6];
 function pickedModes(){ return new Set(picked.map(modeOf)); }
 function renderModeBlocks(){
   const modes = pickedModes();
   const needsReg = picked.filter(needsRegistration);
+  const needsAud = picked.filter(needsAudience);
   $("regCredBlock").hidden = !needsReg.length;
+  $("regReachBlock").hidden = !needsAud.length;
   $("regNowBlock").hidden  = !modes.has("now");
   $("regSlotBlock").hidden = !modes.has("slot");
   if(needsReg.length){
@@ -7602,6 +7717,31 @@ async function saveProfile(){
     }
   }
 
+  /* A trade sold on an audience cannot be published on a claim of one. The
+     same bar is enforced in the database against the same list; this is here
+     so somebody is told before they lose the save. */
+  const audience = picked.filter(needsAudience);
+  let reach = null;
+  if(audience.length){
+    const url = ($("regReachUrl").value || "").trim();
+    const n   = Math.floor(Number($("regReachN").value || 0));
+    const need = AUDIENCE_TRADES[audience[0]];
+    const host = linkHost(url);
+    const known = host && LINK_LABELS.find(([re]) => re.test(host));
+    if(!host || !known){
+      toast("Give the link to your Instagram, YouTube, Facebook, X or Threads account");
+      $("regReachUrl").focus();
+      return;
+    }
+    if(!(n >= need)){
+      toast(`${audience[0]} needs at least ${need.toLocaleString("en-IN")} followers `
+          + `on one account. We check it before publishing.`);
+      $("regReachN").focus();
+      return;
+    }
+    reach = [{platform: known[1], url, followers: n}];
+  }
+
   /* an appointment trade needs a working day that actually contains slots */
   let availability = null;
   if(modes.has("slot")){
@@ -7692,6 +7832,12 @@ async function saveProfile(){
         session.worker.links = saved || [];
         saveSession();
       }catch(e){ toast(e.message || "Your links could not be saved"); }
+    }
+    if(reach){
+      try{
+        session.worker.reach = await api.setWorkerReach(reach) || [];
+        saveSession();
+      }catch(e){ toast(e.message || "Your account details could not be saved"); }
     }
     if(firstTime && statusOf(w || {}) !== "approved"){
       $("donePhone").textContent = "We will message you on +91 " + session.phone + " when it is done.";
@@ -8112,7 +8258,8 @@ const CAT_ICON = {
   tailor:'<circle cx="7" cy="17" r="2.5"/><circle cx="17" cy="17" r="2.5"/><path d="M8.5 15 17 4"/><path d="M15.5 15 7 4"/>',
   move:'<path d="M3 8h11v8H3z"/><path d="M14 11h4l3 3v2h-7z"/><circle cx="7" cy="18" r="1.7"/><circle cx="17" cy="18" r="1.7"/>',
   facility:'<path d="M12 3l8 3v6c0 4.5-3.2 8.5-8 9.5C7.2 20.5 4 16.5 4 12V6z"/>',
-  health:'<path d="M4.5 12.5h3l2-4 3 8 2-4h5"/><path d="M20.5 9.5a4.6 4.6 0 0 0-8.5-2.4A4.6 4.6 0 0 0 3.5 9.5c0 4.2 5.9 8 8.5 10.3 2.6-2.3 8.5-6.1 8.5-10.3z"/>'
+  health:'<path d="M4.5 12.5h3l2-4 3 8 2-4h5"/><path d="M20.5 9.5a4.6 4.6 0 0 0-8.5-2.4A4.6 4.6 0 0 0 3.5 9.5c0 4.2 5.9 8 8.5 10.3 2.6-2.3 8.5-6.1 8.5-10.3z"/>',
+  reach:'<path d="M4 20a9 9 0 0 1 9-9"/><path d="M4 14a15 15 0 0 1 15 15" transform="translate(0 -9)"/><circle cx="5" cy="19" r="1.6"/>'
 };
 /* The eight people actually open first; the rest are one tap away. Ordered by
    what gets booked, not alphabetically. */
@@ -8122,7 +8269,7 @@ const TILE_LABEL = {
   home:"Cleaning", cook:"Cooking", repair:"Repairs", build:"Building", care:"Care",
   beauty:"Beauty", tutor:"Tutors", vehicle:"Vehicle", event:"Events", tailor:"Tailoring",
   move:"Moving", tech:"Tech", garden:"Gardening", pet:"Pet Care", prof:"Professional",
-  facility:"Security", health:"Doctors"
+  facility:"Security", health:"Doctors", reach:"Influencers", edit:"Video"
 };
 const SLOTS = [["morning","Morning","8 am – 12 pm"],["afternoon","Afternoon","12 – 4 pm"],["evening","Evening","4 – 8 pm"],["any","Anytime",""]];
 const WHENS = [["today","Today",""],["tomorrow","Tomorrow",""],["pick","Pick a date",""]];
@@ -8430,6 +8577,7 @@ function openWorker(id){
     <div id="wScore"></div>
     ${w.reg_number ? `<p class="reg-line">${w.reg_verified ? "✓ Registration checked by MySheher" : "Registration"}: ${esc(w.reg_number)}</p>` : ""}
     ${w.about ? `<p class="hint" style="margin-bottom:6px">${esc(w.about)}</p>` : ""}
+    <div id="wReach"></div>
     <div id="wLinks"></div>
     <div class="price-list">
       ${(w.skills||[]).map((s,i)=>`<button class="price-line pick${i===0?" on":""}" data-i="${i}" onclick="pickService(${i})">
@@ -8507,6 +8655,42 @@ async function paintWorkLinks(id){
   /* The sheet can have moved on to somebody else while this was in flight. */
   if(!card || !currentWorker || currentWorker.id !== id) return;
   host.innerHTML = workLinks(card);
+  const rHost = $("wReach");
+  /* worker_card returns an empty list until a person here has opened the
+     account and confirmed the number, so there is nothing to decide at this
+     end: whatever arrives has been checked. */
+  if(rHost) rHost.innerHTML = workReach(card);
+}
+
+function workReach(w){
+  let list = w.reach || [];
+  if(typeof list === "string"){ try{ list = JSON.parse(list); }catch(e){ list = []; } }
+  if(!Array.isArray(list) || !list.length) return "";
+  const rows = list
+    .filter(a => a && Number(a.followers) > 0 && /^https:\/\//i.test(String(a.url || "")))
+    .slice(0, 5)
+    .map(a => `<a class="reach-pill" href="${esc(a.url)}" target="_blank"
+                  rel="ugc nofollow noopener noreferrer">
+        <b>${esc(compactCount(a.followers))}</b>
+        <span>on ${esc(a.platform || "social")}</span></a>`).join("");
+  if(!rows) return "";
+  return `<div class="reach-row">${rows}
+    <span class="reach-checked">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m4 12.5 5 5L20 6.5"/>
+      </svg>Counted by MySheher</span></div>`;
+}
+
+/* 24,000 reads as a bank balance; 24K reads as an audience, which is what a
+   business is buying. Indian grouping above a lakh, because that is how the
+   number would be said out loud here. */
+function compactCount(n){
+  n = Math.max(0, Math.floor(Number(n) || 0));
+  if(n >= 10000000) return (n / 10000000).toFixed(n % 10000000 ? 1 : 0).replace(/\.0$/, "") + " Cr";
+  if(n >= 100000)   return (n / 100000).toFixed(n % 100000 ? 1 : 0).replace(/\.0$/, "") + " L";
+  if(n >= 1000)     return (n / 1000).toFixed(n % 1000 && n < 10000 ? 1 : 0).replace(/\.0$/, "") + "K";
+  return String(n);
 }
 
 function workLinks(w){

@@ -8012,7 +8012,9 @@ declare
     -- MIGRATION 54: whether their photograph may be used to advertise us
     'set_photo_promo',
     -- MIGRATION 56: a worker's own website and social links, and the takedown
-    'set_worker_links','admin_clear_links'
+    'set_worker_links','admin_clear_links',
+    -- MIGRATION 57: an influencer's audience, declared and then checked
+    'set_worker_reach','admin_check_reach'
   ];
 begin
   foreach r in array array['anon','authenticated'] loop
@@ -8077,7 +8079,8 @@ begin
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
        'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email',
-       'set_photo_promo','set_worker_links','admin_clear_links');
+       'set_photo_promo','set_worker_links','admin_clear_links',
+       'set_worker_reach','admin_check_reach');
 
   if leaked is not null then
     raise exception
@@ -11537,6 +11540,405 @@ begin
   raise notice 'PASS  workers can link their own work, but not around the contact gate';
 end $$;
 
+
+-- ============================================================
+-- MIGRATION 57 — people whose work is an audience
+--
+-- A shop owner in Guwahati wanting a new tiffin service known does not need
+-- a plumber, they need somebody twenty thousand people in Guwahati already
+-- follow. That is a service, it is bought and sold here constantly over DM
+-- at prices nobody can compare, and there is no reason it should not be on
+-- MySheher with a rate next to it like everything else.
+--
+-- It brings one problem the other trades do not have. A carpenter's claim
+-- about themselves is checked by the work; an influencer's central claim IS
+-- a number, and a self-reported follower count is worth nothing. Putting an
+-- unverified "50K followers" on a profile is precisely the credibility
+-- problem this app is trying not to have.
+--
+-- So the number is handled in two halves. Declared at registration, which is
+-- what puts somebody in the queue and what the 10,000 minimum is measured
+-- against. Shown publicly only after a human has opened the account and
+-- looked — reach_checked_at is the stamp, and worker_card hands out nothing
+-- until it is set.
+--
+-- The minimum is the largest single account, not the total across accounts.
+-- Summing five two-thousand-follower profiles to clear the bar describes
+-- somebody who cannot reach ten thousand people; the largest account is the
+-- honest measure of what a business is actually buying.
+--
+-- Platform is derived from the URL host, through the same link_hosts table
+-- migration 56 uses, so it cannot be claimed. An account said to be on
+-- Instagram whose URL is not Instagram is refused rather than relabelled.
+-- ============================================================
+
+insert into public.pricing_units (unit) values ('per post'), ('per video')
+on conflict (unit) do nothing;
+
+insert into public.service_rates (skill, min_price, max_price) values
+  ($q$Instagram Influencer$q$,500,200000),
+  ($q$YouTube Creator$q$,1000,300000),
+  ($q$Reels & Short Video Creator$q$,500,150000),
+  ($q$Facebook Page Promotion$q$,300,100000),
+  ($q$Product Review (Video)$q$,500,150000),
+  ($q$Event Coverage (Social Media)$q$,2000,100000),
+  ($q$Brand Ambassador$q$,5000,500000)
+on conflict (skill) do update
+  set min_price = excluded.min_price, max_price = excluded.max_price;
+
+-- ---------- which trades are sold on an audience ----------
+-- A table rather than a list in a function, for the same reason as every
+-- other list in this file: it changes, and the rule should not.
+create table if not exists public.audience_trades (
+  skill    text primary key,
+  min_reach int not null default 10000
+);
+insert into public.audience_trades (skill, min_reach) values
+  ('Instagram Influencer',           10000),
+  ('YouTube Creator',                10000),
+  ('Reels & Short Video Creator',    10000),
+  ('Facebook Page Promotion',        10000),
+  ('Product Review (Video)',         10000),
+  ('Event Coverage (Social Media)',  10000),
+  ('Brand Ambassador',               10000)
+on conflict (skill) do update set min_reach = excluded.min_reach;
+alter table public.audience_trades enable row level security;
+drop policy if exists "audience trades are public" on public.audience_trades;
+-- public: the sign-up form has to know which trades ask the extra question
+create policy "audience trades are public" on public.audience_trades for select using (true);
+
+alter table public.workers add column if not exists reach jsonb not null default '[]'::jsonb;
+alter table public.workers add column if not exists reach_checked_at timestamptz;
+
+comment on column public.workers.reach is
+  'Accounts an influencer sells access to: [{"platform":"Instagram",'
+  '"url":"https://...","followers":24000}]. platform is derived from the host, '
+  'never taken from the client. Self-declared until reach_checked_at is set.';
+comment on column public.workers.reach_checked_at is
+  'When a human opened these accounts and confirmed the numbers. NULL means '
+  'nobody has looked, and worker_card returns no numbers at all — an '
+  'unverified follower count on a public profile is worse than none.';
+
+-- ---------- the validator ----------
+create or replace function public.clean_worker_reach(p_reach jsonb)
+returns jsonb
+language plpgsql stable set search_path = public, extensions as $$
+declare
+  item jsonb;
+  url  text;
+  host text;
+  lbl  text;
+  n    bigint;
+  out  jsonb := '[]'::jsonb;
+  seen text[] := '{}';
+begin
+  if p_reach is null then return '[]'::jsonb; end if;
+  if jsonb_typeof(p_reach) <> 'array' then
+    raise exception 'Accounts must be a list';
+  end if;
+  if jsonb_array_length(p_reach) > 5 then
+    raise exception 'Five accounts is the most a profile can show';
+  end if;
+
+  for item in select * from jsonb_array_elements(p_reach) loop
+    url := btrim(coalesce(item->>'url', ''));
+    continue when url = '';
+
+    if url !~* '^https://' then
+      raise exception 'An account link has to start with https://';
+    end if;
+    if length(url) > 200 then
+      raise exception 'That account link is too long';
+    end if;
+    if split_part(substring(url from 9), '/', 1) like '%@%' then
+      raise exception 'That account link does not look right';
+    end if;
+    host := lower(split_part(split_part(substring(url from 9), '/', 1), ':', 1));
+    if host = '' or host !~ '^[a-z0-9.-]+\.[a-z]{2,}$' then
+      raise exception 'That account link does not look right';
+    end if;
+
+    -- The platform is whatever the host says it is. A profile claiming
+    -- Instagram with a link to somewhere else is the whole reason this is
+    -- derived rather than accepted.
+    select l.label into lbl from link_hosts l where host like l.pattern
+     order by length(l.pattern) desc limit 1;
+    if lbl is null then
+      raise exception 'MySheher can only count followers on Instagram, YouTube, '
+                      'Facebook, X or Threads. % is not one of them', host;
+    end if;
+
+    begin
+      n := floor((item->>'followers')::numeric)::bigint;
+    exception when others then
+      raise exception 'Follower count has to be a number';
+    end;
+    if n is null or n < 0 then
+      raise exception 'Follower count has to be a number';
+    end if;
+    if n > 500000000 then
+      raise exception 'That follower count is not believable';
+    end if;
+
+    if url = any(seen) then continue; end if;
+    seen := seen || url;
+    out := out || jsonb_build_object('platform', lbl, 'url', url, 'followers', n);
+  end loop;
+
+  return out;
+end;
+$$;
+
+-- The bar, measured the way the comment at the top explains: the largest
+-- single account, not the sum of several small ones.
+create or replace function public.biggest_account(p_reach jsonb)
+returns bigint
+language sql immutable set search_path = public, extensions as $$
+  select coalesce(max((a->>'followers')::bigint), 0)
+    from jsonb_array_elements(coalesce(p_reach, '[]'::jsonb)) a;
+$$;
+
+-- ---------- the gate ----------
+-- Called wherever skills are saved. Raises with the number it wanted and the
+-- number it got, because "you do not qualify" with no figures in it is the
+-- kind of message that generates a support message.
+create or replace function public.check_audience_bar(p_skills jsonb, p_reach jsonb)
+returns void
+language plpgsql stable set search_path = public, extensions as $$
+declare need int; have bigint; trade text;
+begin
+  select a.skill, a.min_reach into trade, need
+    from jsonb_array_elements(coalesce(p_skills, '[]'::jsonb)) s
+    join audience_trades a on a.skill = s->>'skill'
+   order by a.min_reach desc
+   limit 1;
+  if trade is null then return; end if;
+
+  have := public.biggest_account(p_reach);
+  if have < need then
+    raise exception
+      '% is only listed for accounts with at least % followers. The largest '
+      'account on this profile has %. Add the account you post from, with its '
+      'real follower count — we check it before the profile goes live.',
+      trade, need, have;
+  end if;
+end;
+$$;
+
+create or replace function public.set_worker_reach(p_phone text default null,
+                                                   p_pin text default null,
+                                                   p_reach jsonb default null,
+                                                   p_token uuid default null)
+returns jsonb
+language plpgsql security definer set search_path = public, extensions as $$
+declare wid uuid; clean jsonb; sk jsonb;
+begin
+  wid := public.worker_auth_required(p_phone, p_pin, p_token);
+  if wid is null then return null; end if;
+  clean := public.clean_worker_reach(p_reach);
+  select skills into sk from workers where id = wid;
+  perform public.check_audience_bar(sk, clean);
+
+  -- Changing the numbers un-checks them. Whatever a human confirmed last
+  -- month was confirmed about different accounts, and carrying the tick
+  -- across an edit is how a verified badge stops meaning anything.
+  update workers
+     set reach = clean,
+         reach_checked_at = case when reach is distinct from clean
+                                 then null else reach_checked_at end
+   where id = wid;
+  return clean;
+end;
+$$;
+
+-- ---------- the human half ----------
+create or replace function public.admin_check_reach(p_pin text, p_worker uuid,
+                                                    p_ok boolean default true)
+returns timestamptz
+language plpgsql security definer set search_path = public, extensions as $$
+declare t timestamptz;
+begin
+  if not public.admin_check(p_pin) then
+    raise exception 'Wrong admin PIN';
+  end if;
+  update workers
+     set reach_checked_at = case when p_ok then now() else null end
+   where id = p_worker
+  returning reach_checked_at into t;
+  return t;
+end;
+$$;
+
+-- ---------- and what a customer sees ----------
+-- Nothing, until somebody has looked. A number on a public profile that no
+-- human has confirmed is not information, it is a claim wearing the app's
+-- typeface.
+drop function if exists public.worker_card(uuid);
+create function public.worker_card(p_id uuid)
+returns table (
+  id uuid, name text, selfie text, thumb text, city text, area text, about text,
+  skills jsonb, rating_sum int, rating_count int,
+  worker_code text, serves_remote boolean, online_until timestamptz,
+  reg_number text, reg_verified boolean,
+  jobs_done int, on_time_yes int, on_time_total int, member_since timestamptz,
+  score int, tier text, links jsonb, reach jsonb)
+language sql stable security definer set search_path = public, extensions as $$
+  select w.id, w.name, w.selfie, w.thumb, w.city, w.area, w.about, w.skills,
+         w.rating_sum, w.rating_count, w.worker_code, w.serves_remote,
+         w.online_until, w.reg_number, w.reg_verified,
+         (select count(*)::int from threads t
+           where t.worker_id = w.id and t.status = 'closed'),
+         w.on_time_yes, w.on_time_total, w.created_at, w.score, w.tier,
+         coalesce(w.links, '[]'::jsonb),
+         case when w.reach_checked_at is null then '[]'::jsonb
+              else coalesce(w.reach, '[]'::jsonb) end
+    from workers w
+   where w.id = p_id
+     and w.status = 'approved'
+     and w.available;
+$$;
+
+-- ---------- does it hold ----------
+do $$
+declare
+  wid uuid;
+  got jsonb;
+  msg text;
+  n   bigint;
+begin
+  delete from workers where phone = '+919999000057';
+  insert into workers (name, phone, city, area, status, available, skills)
+  values ('Reach Test Creator', '+919999000057', 'Guwahati', 'Beltola', 'approved', true,
+          '[{"skill":"Instagram Influencer","price":4000,"unit":"per post"}]'::jsonb)
+  returning id into wid;
+
+  -- the platform comes from the host, not from the claim
+  got := public.clean_worker_reach(
+    '[{"platform":"YouTube","url":"https://www.instagram.com/borsha","followers":24000}]'::jsonb);
+  if got->0->>'platform' <> 'Instagram' then
+    raise exception 'MIGRATION 57: a client claiming YouTube for an Instagram URL was believed (%)',
+                    got->0->>'platform';
+  end if;
+  if (got->0->>'followers')::bigint <> 24000 then
+    raise exception 'MIGRATION 57: the follower count did not survive (%)', got;
+  end if;
+
+  -- a host nobody can count followers on
+  begin
+    got := public.clean_worker_reach('[{"url":"https://example.com/me","followers":50000}]'::jsonb);
+    raise exception 'MIGRATION 57: an uncountable host was accepted';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 57:%' then raise; end if;
+  end;
+
+  -- nonsense numbers
+  begin
+    got := public.clean_worker_reach('[{"url":"https://instagram.com/a","followers":-5}]'::jsonb);
+    raise exception 'MIGRATION 57: a negative follower count was accepted';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 57:%' then raise; end if;
+  end;
+  begin
+    got := public.clean_worker_reach('[{"url":"https://instagram.com/a","followers":900000000}]'::jsonb);
+    raise exception 'MIGRATION 57: nine hundred million followers was accepted';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 57:%' then raise; end if;
+  end;
+
+  -- the bar is the largest account, not the sum
+  n := public.biggest_account(
+    '[{"followers":4000},{"followers":3500},{"followers":3000}]'::jsonb);
+  if n <> 4000 then
+    raise exception 'MIGRATION 57: the bar summed small accounts instead of taking the largest (%)', n;
+  end if;
+  begin
+    perform public.check_audience_bar(
+      '[{"skill":"Instagram Influencer"}]'::jsonb,
+      '[{"platform":"Instagram","url":"https://instagram.com/a","followers":4000},
+        {"platform":"YouTube","url":"https://youtube.com/@a","followers":7000}]'::jsonb);
+    raise exception 'MIGRATION 57: four thousand plus seven thousand cleared a ten thousand bar';
+  exception when others then
+    get stacked diagnostics msg = message_text;
+    if msg like 'MIGRATION 57:%' then raise; end if;
+    if msg not like '%at least 10000 followers%' then
+      raise exception 'MIGRATION 57: the refusal did not say what the bar was (%)', msg;
+    end if;
+  end;
+
+  -- and it lets a real account through
+  perform public.check_audience_bar(
+    '[{"skill":"Instagram Influencer"}]'::jsonb,
+    '[{"platform":"Instagram","url":"https://instagram.com/a","followers":24000}]'::jsonb);
+
+  -- a trade that is not sold on an audience is not asked for one
+  perform public.check_audience_bar('[{"skill":"Plumber"}]'::jsonb, '[]'::jsonb);
+
+  -- nothing is public until a human has looked
+  update workers set reach = public.clean_worker_reach(
+    '[{"url":"https://www.instagram.com/borsha","followers":24000}]'::jsonb)
+   where id = wid;
+  select reach into got from public.worker_card(wid);
+  if jsonb_array_length(got) <> 0 then
+    raise exception 'MIGRATION 57: an unchecked follower count was handed to a customer (%)', got;
+  end if;
+
+  update workers set reach_checked_at = now() where id = wid;
+  select reach into got from public.worker_card(wid);
+  if jsonb_array_length(got) <> 1 then
+    raise exception 'MIGRATION 57: a checked follower count is still hidden';
+  end if;
+
+  -- set_worker_reach() needs a signed-in worker, which this block has no way
+  -- to build. What it wraps — the validator, the bar, and the un-ticking — is
+  -- each proven directly, here and below. A catch-all `exception when others`
+  -- around the whole block would have swallowed a real failure to make room
+  -- for that one call, which is the opposite of what a self-check is for.
+  raise notice 'PASS  an audience is declared, checked by a person, and only then shown';
+end $$;
+
+-- The un-ticking rule, proven directly rather than through a session.
+do $$
+declare wid uuid; t timestamptz;
+begin
+  delete from workers where phone = '+919999000058';
+  insert into workers (name, phone, city, area, status, available, skills,
+                       reach, reach_checked_at)
+  values ('Reach Recheck', '+919999000058', 'Guwahati', 'Beltola', 'approved', true,
+          '[{"skill":"Instagram Influencer","price":4000,"unit":"per post"}]'::jsonb,
+          public.clean_worker_reach(
+            '[{"url":"https://instagram.com/a","followers":24000}]'::jsonb),
+          now())
+  returning id into wid;
+
+  update workers
+     set reach = public.clean_worker_reach(
+           '[{"url":"https://instagram.com/a","followers":90000}]'::jsonb),
+         reach_checked_at = case when reach is distinct from public.clean_worker_reach(
+           '[{"url":"https://instagram.com/a","followers":90000}]'::jsonb)
+           then null else reach_checked_at end
+   where id = wid;
+  select reach_checked_at into t from workers where id = wid;
+  if t is not null then
+    raise exception 'MIGRATION 57: changing the numbers kept the tick a human gave the old ones';
+  end if;
+
+  delete from workers where id = wid;
+  delete from workers where phone = '+919999000057';
+  raise notice 'PASS  changing the numbers takes the check away with them';
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'anon') then return; end if;
+  if has_column_privilege('anon', 'public.workers', 'reach_checked_at', 'select') then
+    raise exception 'MIGRATION 57: anon can read reach_checked_at directly';
+  end if;
+  raise notice 'PASS  the audience columns are not readable off the table';
+end $$;
+
 -- ---------- the lock, still last ----------
 select public.lock_public_functions();
 
@@ -11572,7 +11974,8 @@ begin
        'skill_price_stats','push_endpoint',
        'home_banners','admin_set_banners','admin_banners',
        'admin_set_photo','worker_card','worker_scorecard','worker_months','worker_standing','my_email',
-       'set_photo_promo','set_worker_links','admin_clear_links');
+       'set_photo_promo','set_worker_links','admin_clear_links',
+       'set_worker_reach','admin_check_reach');
 
   if leaked is not null then
     raise exception
