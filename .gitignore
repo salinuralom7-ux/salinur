@@ -33,3 +33,8 @@ footer.png
 full-landing.png
 tests/node_modules/
 tests/shots/
+
+# The recruiting workbook is a business tool, not part of the app, and this
+# repository is public. It carries the pitch script and the sourcing plan,
+# which are Salinur's to share or not.
+MySheher-worker-recruiting.xlsx
