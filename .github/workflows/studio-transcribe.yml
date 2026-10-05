@@ -17,7 +17,9 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - run: pip install -q faster-whisper
+      - run: |
+          command -v ffmpeg || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
+          pip install -q faster-whisper
       - name: Transcribe every input without a transcript
         run: |
           for f in studio/projects/*/transcribe/input.flac; do
