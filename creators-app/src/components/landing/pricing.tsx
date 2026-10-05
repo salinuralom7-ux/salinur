@@ -8,7 +8,7 @@ import { SectionHeading } from "@/components/landing/section-heading";
 const creatorPerks = [
   "Public profile with your own link",
   "Unlimited contacts from businesses",
-  "WhatsApp + Instagram buttons on your profile",
+  "WhatsApp, Instagram & Facebook buttons on your profile",
   "Booking requests inbox",
   "See who's viewing you",
   "Cancel anytime",

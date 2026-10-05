@@ -37,6 +37,7 @@ Other commands:
 ```bash
 npm run build && npm start   # production build, closest to what Vercel runs
 npm run lint                 # ESLint
+npm test                     # unit tests (cities, Instagram/Facebook link parsing)
 ```
 
 Useful pages while building:
@@ -59,9 +60,10 @@ src/
     creator-card.tsx    tilt + glow creator card
   config/
     site.ts             brand name, price, niches, featured cities
-    cities.ts           searchable Indian city list
+    cities.ts           526 Indian cities, Tier 1–3, with old-name aliases (Gurgaon, Bangalore…)
   lib/
     format.ts           12.4K / ₹1,500 / ₹1,500/reel formatting
+    social.ts           cleans pasted Instagram handles and Facebook links into one stored form
     data/public.ts      public read-only data (returns empty until Supabase is connected)
   types/
 ```
@@ -78,6 +80,14 @@ src/
   OS "reduce motion" setting.
 - **Honest numbers:** counters and featured creators only ever show real database data. With no data,
   designed empty states appear instead.
+
+## Product decisions so far
+
+- **Cities:** every state and UT, Tier 1 (metros + satellites), Tier 2 (≈ Y-class) and Tier 3 (towns and
+  district HQs). To add a city, add one line in `src/config/cities.ts`. Never change an existing slug — it's a URL.
+- **Instagram & Facebook:** creators add their Instagram handle and, optionally, a Facebook page/profile link.
+  These are plain profile links shown as buttons; we don't use Meta's API. Follower counts stay
+  "self-reported" until an admin verifies them.
 
 ## Deploy to Vercel
 

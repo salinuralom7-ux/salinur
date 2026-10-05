@@ -20,6 +20,7 @@ export const metadata: Metadata = { title: "Styleguide", robots: { index: false,
 
 const sample: CreatorCardData = {
   handle: "sample.creator",
+  facebook: null,
   name: "Sample Creator",
   photoUrl: null,
   citySlug: "guwahati",
