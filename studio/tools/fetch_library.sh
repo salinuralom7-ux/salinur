@@ -7,24 +7,31 @@ mkdir -p library/music library/sfx
 idx=library/INDEX.tsv; printf 'file\tsource_url\tlicense\n' > "$idx"
 UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 
-# FreePD: start at the home page, follow its internal links one level, take every .mp3.
 mkdir -p library/pages
-curl -sL -A "$UA" "https://freepd.com/" -o library/pages/home.html
-{ echo "https://freepd.com/"
-  grep -oiE 'href="[^"#]+"' library/pages/home.html | sed 's/href="//;s/"$//' | grep -viE '\.(mp3|css|js|png|jpg|ico)$' \
-    | sed -E 's#^/#https://freepd.com/#; s#^([^h])#https://freepd.com/\1#' | grep '^https://freepd.com' ; } | sort -u > /tmp/pages.txt
-echo "FreePD pages: $(wc -l < /tmp/pages.txt)"
-while read -r pg; do
-  cat=$(basename "${pg%/}" | sed 's/\.[a-z]*$//'); [ "$cat" = "freepd.com" ] && cat=home
-  curl -sL -A "$UA" "$pg" -o "/tmp/pg.html" || continue
-  grep -oiE "[^\"'<>()=]+\.mp3" /tmp/pg.html | sort -u | while read -r u; do
-    case "$u" in http*) url="$u";; /*) url="https://freepd.com$u";; *) url="https://freepd.com/$u";; esac
-    url="${url// /%20}"; f="library/music/$cat/$(basename "$url" | sed 's/%20/_/g')"
-    [ -f "$f" ] && continue; mkdir -p "$(dirname "$f")"
-    curl -sfL -A "$UA" "$url" -o "$f" && printf '%s\t%s\t%s\n' "$f" "$url" "FreePD public domain (CC0)" >> "$idx"
+# 1) OpenGameArt music filtered to CC0 (type 12 = Music, license 4 = CC0), a few mood searches.
+for q in inspirational motivational uplifting corporate piano ambient cinematic hopeful; do
+  pg="https://opengameart.org/art-search-advanced?keys=$q&field_art_type_tid%5B%5D=12&field_art_licenses_tid%5B%5D=4&sort_by=count&sort_order=DESC"
+  curl -sL -A "$UA" "$pg" -o "library/pages/oga_$q.html"
+  grep -oE 'href="/content/[a-z0-9-]+"' "library/pages/oga_$q.html" | sed 's/href="//;s/"$//' | sort -u | head -8 | while read -r c; do
+    curl -sL -A "$UA" "https://opengameart.org$c" -o /tmp/c.html
+    grep -q 'CC0' /tmp/c.html || continue
+    grep -oE 'https://opengameart\.org/sites/default/files/[^"]+\.(mp3|ogg)' /tmp/c.html | sort -u | head -2 | while read -r url; do
+      f="library/music/oga_$q/$(basename "$url" | sed 's/%20/_/g')"; [ -f "$f" ] && continue
+      mkdir -p "$(dirname "$f")"
+      curl -sfL -A "$UA" "$url" -o "$f" && printf '%s\t%s\t%s\n' "$f" "https://opengameart.org$c" "CC0 (OpenGameArt)" >> "$idx"
+    done
   done
-done < /tmp/pages.txt
-cp /tmp/pages.txt library/pages/
+done
+# 2) Kevin MacLeod / incompetech, CC-BY 4.0: credit "Music: <Title> by Kevin MacLeod (incompetech.com), CC BY 4.0".
+for t in "Inspired" "Carefree" "Wallpaper" "Dreamer" "Healing" "Clear Air" "Easy Lemon" "Bright Wish" "Light Awash" \
+         "Heartwarming" "Ascending the Vale" "Brightly Fancy" "Hidden Agenda" "Investigations" "Life of Riley" \
+         "Wholesome" "Aspire" "Motivator" "Fresh Air" "Inner Light" "Feather Waltz" "Sincerely" "Hopeful Freedom" \
+         "Achievement" "Positive Thinking" "Rising Game" "Thinking Music" "Fearless First" "Reaching the Sky" "Pride"; do
+  u="https://incompetech.com/music/royalty-free/mp3-royaltyfree/${t// /%20}.mp3"
+  f="library/music/incompetech/${t// /_}.mp3"; mkdir -p library/music/incompetech
+  curl -sfL -A "$UA" "$u" -o "$f" && [ "$(stat -c%s "$f")" -gt 100000 ] \
+    && printf '%s\t%s\t%s\n' "$f" "$u" "CC BY 4.0 Kevin MacLeod (credit required)" >> "$idx" || rm -f "$f"
+done
 
 for pack in interface-sounds impact-sounds ui-audio digital-audio; do
   page="https://kenney.nl/assets/$pack"
