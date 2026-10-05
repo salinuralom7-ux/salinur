@@ -37,12 +37,14 @@ Other commands:
 ```bash
 npm run build && npm start   # production build, closest to what Vercel runs
 npm run lint                 # ESLint
-npm test                     # unit tests (cities, Instagram/Facebook link parsing)
+npm test                     # unit tests (cities, pricing, link parsing, redirects)
+npm run test:db              # 45 database security checks against a throwaway local Postgres
 ```
 
 Useful pages while building:
 
 - `/` — landing page
+- `/login` — Google or email-code login (needs Supabase keys)
 - `/styleguide` — every design-system component (not linked from the site, not indexed)
 
 ## Project structure
@@ -64,7 +66,11 @@ src/
   lib/
     format.ts           12.4K / ₹1,500 / ₹1,500/reel formatting
     social.ts           cleans pasted Instagram handles and Facebook links into one stored form
-    data/public.ts      public read-only data (returns empty until Supabase is connected)
+    data/public.ts      landing counters + featured creators (empty states until Supabase is connected)
+    supabase/           clients: server (as the logged-in user), browser, public (cookie-free)
+  proxy.ts              keeps login sessions fresh on every request
+supabase/migrations/    the database: tables, security rules, admin functions, photo storage
+tests/db/               database security checks (npm run test:db)
   types/
 ```
 
@@ -92,6 +98,11 @@ src/
 - **Yearly plan:** ₹594/year alongside ₹99/month, exactly half of 12 × ₹99. Prices live in `src/lib/pricing.ts`; the "Save ₹594 · 50% off"
   badge is calculated from them, so change a price there and every page updates.
 
+- **Login:** Google + 6-digit email code at launch. Phone OTP is built but off (`NEXT_PUBLIC_PHONE_LOGIN`)
+  until DLT-registered SMS is set up. Businesses browse without logging in.
+- **Who sees what:** creators appear publicly only when approved by an admin **and** paid up; a lapsed
+  subscription hides them automatically. Creators can't edit their own status, badge or subscription.
+
 ## Deploy to Vercel
 
 1. Push this repo to GitHub.
@@ -103,7 +114,7 @@ src/
 ## Build progress
 
 - [x] 1. Project setup, design system, landing page
-- [ ] 2. Supabase schema + auth
+- [x] 2. Supabase schema + auth (see **SUPABASE-SETUP.md** to connect your project)
 - [ ] 3. Creator onboarding + profile pages
 - [ ] 4. Search and filters
 - [ ] 5. Razorpay subscription + webhooks
