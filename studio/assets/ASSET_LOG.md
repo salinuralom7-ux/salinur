@@ -13,3 +13,5 @@ Every asset in the library: where it came from and its license. Nothing goes int
 | (release `studio-library`) ~45 more tracks | OpenGameArt (CC0 filter) + incompetech | per row in library/INDEX.tsv | 2026-10-05 | not yet auditioned; skip any OGA track that looks like a Pixabay re-upload |
 | brand/ff_logo.png | supplied by Salinur | own brand (Frame & Fame) | 2026-10-05 | navy #061436, blue #2878FE |
 | brand/LUCIDE_LICENSE.txt — icons in projects/*/gfx | https://www.npmjs.com/package/lucide-static | ISC | 2026-10-05 | |
+| sfx/synth/{coin,shimmer,rec_beep,shutter,boom}.wav | made in-house with ffmpeg | own work | 2026-10-05 | |
+| sfx/synth/k_scratch_001.wav, sfx/click/k_tick_001.wav | https://kenney.nl/assets/interface-sounds | CC0 | 2026-10-05 | |
