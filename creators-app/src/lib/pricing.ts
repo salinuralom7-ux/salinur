@@ -7,7 +7,7 @@
  */
 export const PLANS = {
   monthly: { id: "monthly", priceInr: 99, interval: "month" },
-  yearly: { id: "yearly", priceInr: 499, interval: "year" },
+  yearly: { id: "yearly", priceInr: 594, interval: "year" },
 } as const;
 
 export type PlanId = keyof typeof PLANS;
@@ -18,7 +18,7 @@ export const MONTHLY_FOR_A_YEAR = PLANS.monthly.priceInr * 12;
 /** Rupees saved per year by choosing yearly. */
 export const YEARLY_SAVING_INR = MONTHLY_FOR_A_YEAR - PLANS.yearly.priceInr;
 
-/** Discount vs. paying monthly, as a whole percent (57.99… → 58). */
+/** Discount vs. paying monthly, as a whole percent. */
 export const YEARLY_SAVING_PCT = Math.round((YEARLY_SAVING_INR / MONTHLY_FOR_A_YEAR) * 100);
 
 /** Effective monthly cost of the yearly plan, rounded up so we never understate it. */

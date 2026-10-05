@@ -13,7 +13,7 @@ export const site = {
   shortTagline: "Your city's creators, one scroll away.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   contactEmail: "hello@example.com", // TODO: replace with your support email
-  /** Monthly creator price in rupees. Plans (monthly ₹99 / yearly ₹499) live in src/lib/pricing.ts. */
+  /** Monthly creator price in rupees. Plans (monthly ₹99 / yearly ₹594) live in src/lib/pricing.ts. */
   creatorPriceInr: PLANS.monthly.priceInr,
 } as const;
 

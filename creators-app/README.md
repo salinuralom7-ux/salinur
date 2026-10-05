@@ -2,7 +2,7 @@
 
 India's marketplace where local businesses discover and book Instagram creators near them.
 
-- **Creators** pay ₹99/month or ₹499/year (58% off) to be listed.
+- **Creators** pay ₹99/month or ₹594/year (50% off) to be listed.
 - **Businesses** search, view and contact creators for free.
 - No commission, no booking fees, no other paid plans.
 
@@ -89,7 +89,7 @@ src/
   These are plain profile links shown as buttons; we don't use Meta's API. Follower counts stay
   "self-reported" until an admin verifies them.
 
-- **Yearly plan:** ₹499/year alongside ₹99/month. Prices live in `src/lib/pricing.ts`; the "Save ₹689 · 58% off"
+- **Yearly plan:** ₹594/year alongside ₹99/month, exactly half of 12 × ₹99. Prices live in `src/lib/pricing.ts`; the "Save ₹594 · 50% off"
   badge is calculated from them, so change a price there and every page updates.
 
 ## Deploy to Vercel
