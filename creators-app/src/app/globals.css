@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+/* `dark:` variant follows the class next-themes puts on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------
+   Design tokens. Dark is the default; `.light` on <html> swaps them.
+   Components use the semantic names (bg, surface, fg, muted…), never
+   raw hex, so both themes stay in sync.
+------------------------------------------------------------------- */
+:root,
+.dark {
+  --bg: #0b0b10;
+  --surface: rgb(255 255 255 / 0.05);
+  --surface-strong: rgb(255 255 255 / 0.09);
+  --border: rgb(255 255 255 / 0.1);
+  --fg: #f5f5f7;
+  --muted: #a1a1aa;
+  --grain-opacity: 0.05;
+  --brand-text-start: #a78bfa;
+  --brand-text-end: #f472b6;
+  color-scheme: dark;
+}
+
+.light {
+  --bg: #fafaf9;
+  --surface: rgb(255 255 255 / 0.75);
+  --surface-strong: #ffffff;
+  --border: rgb(11 11 16 / 0.1);
+  --fg: #0b0b10;
+  --muted: #52525b;
+  --grain-opacity: 0.035;
+  /* Darker gradient so headline text keeps contrast on a light background. */
+  --brand-text-start: #6d28d9;
+  --brand-text-end: #db2777;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border: var(--border);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+
+  /* Brand accents — identical in both themes. */
+  --color-violet: #7c3aed;
+  --color-pink: #ec4899;
+  --color-lime: #a3e635;
+  --color-ink: #0b0b10;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, sans-serif;
+
+  --radius-card: 24px;
+  --radius-xl2: 20px;
+  --radius-xl3: 28px;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* Subtle film grain over everything (pointer-events off so it never blocks taps). */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+::selection {
+  background: #ec4899;
+  color: #fff;
+}
+
+/* ---------- Reusable utilities ---------- */
+
+/* Big, tight display headings. */
+@utility font-display-tight {
+  font-family: var(--font-display);
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
+
+/* Violet → pink gradient, as a fill or as text. */
+@utility bg-brand {
+  background-image: linear-gradient(120deg, #7c3aed 0%, #ec4899 100%);
+}
+@utility text-brand {
+  background-image: linear-gradient(120deg, var(--brand-text-start) 0%, #ec4899 60%, var(--brand-text-end) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Frosted glass card. */
+@utility glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+/* Soft brand glow, used on hover/focus. */
+@utility glow {
+  box-shadow:
+    0 0 0 1px rgb(236 72 153 / 0.25),
+    0 10px 40px -10px rgb(124 58 237 / 0.55),
+    0 0 60px -20px rgb(236 72 153 / 0.6);
+}
+
+@utility glow-lime {
+  box-shadow: 0 10px 40px -12px rgb(163 230 53 / 0.6);
+}
+
+/* Hide scrollbars on horizontal carousels while keeping them scrollable. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Shimmer for skeleton loaders. */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
