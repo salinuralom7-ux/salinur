@@ -32,4 +32,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add studio/projects/*/transcribe/transcript.*
-          git diff --cached --quiet || { git commit -qm "Transcripts from GitHub runner"; git push; }
+          git diff --cached --quiet || { git commit -qm "Transcripts from GitHub runner"; for i in 1 2 3 4; do git pull -q --rebase && git push && break; sleep 5; done; }
