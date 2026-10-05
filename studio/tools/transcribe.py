@@ -6,7 +6,8 @@ from faster_whisper import WhisperModel
 
 src, out = sys.argv[1], pathlib.Path(sys.argv[2])
 model = WhisperModel(sys.argv[3] if len(sys.argv) > 3 else "small", device="auto", compute_type="int8")
-segments, info = model.transcribe(src, word_timestamps=True, vad_filter=True)
+segments, info = model.transcribe(src, word_timestamps=True, vad_filter=False, beam_size=5,
+                                  initial_prompt="Salinur, Bongaigaon, Assam, business, personal growth.")
 data = {"language": info.language, "duration": info.duration, "segments": []}
 lines = []
 for s in segments:
