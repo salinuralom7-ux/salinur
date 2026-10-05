@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { getCity } from "@/config/cities";
+import { CITIES, getCity } from "@/config/cities";
 import { FEATURED_CITY_SLUGS, NICHES } from "@/config/site";
 import { Reveal } from "@/components/ui/reveal";
 import { SectionHeading } from "@/components/landing/section-heading";
@@ -34,6 +34,9 @@ export function BrowseByCity() {
             </Reveal>
           ))}
         </div>
+        <p className="mt-5 text-center text-sm text-muted">
+          + {CITIES.length - cities.length} more cities, from Tier 1 metros to Tier 3 towns. Search yours at the top.
+        </p>
       </div>
     </section>
   );

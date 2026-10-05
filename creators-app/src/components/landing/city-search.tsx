@@ -5,7 +5,7 @@ import { ArrowRight, MapPin, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CITIES, type City } from "@/config/cities";
+import { CITIES, cityNames, type City } from "@/config/cities";
 import { NICHES } from "@/config/site";
 import { cn } from "@/lib/utils";
 
@@ -18,19 +18,28 @@ const PLACEHOLDERS = [
   "Tech creators in Hyderabad…",
 ];
 
+// Every (spelling → city) pair, longest first, so "Navi Mumbai" wins over "Mumbai".
+const CITY_PATTERNS = CITIES.flatMap((c) => cityNames(c).map((n) => ({ city: c, re: new RegExp(`\\b${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`) })))
+  .sort((a, b) => b.re.source.length - a.re.source.length);
+
+// Words that describe the search rather than the place.
+const STOP_WORDS = new Set(["in", "near", "at", "from", "creators", "creator", "influencers", "influencer", "and", "the", "for", "me", ...NICHES.flatMap((n) => [n.slug, n.label.toLowerCase()])]);
+
 /** Pulls a niche and city out of free text like "food creators in guwahati". */
 function parseQuery(q: string) {
   const text = q.toLowerCase();
   const niche = NICHES.find((n) => text.includes(n.label.toLowerCase()) || text.includes(n.slug));
-  const city = CITIES.find((c) => new RegExp(`\\b${c.name.toLowerCase()}\\b`).test(text));
+  const city = CITY_PATTERNS.find((p) => p.re.test(text))?.city;
   return { niche, city };
 }
 
-/** Cities whose name starts with any word the user typed (2+ letters). */
+/** Cities (or their old names) starting with what the user typed. Big cities come first. */
 function suggest(q: string): City[] {
-  const words = q.toLowerCase().split(/[\s,]+/).filter((w) => w.length >= 2);
+  const words = q.toLowerCase().split(/[\s,]+/).filter((w) => w.length >= 2 && !STOP_WORDS.has(w));
   if (!words.length) return [];
-  return CITIES.filter((c) => words.some((w) => c.name.toLowerCase().startsWith(w))).slice(0, 6);
+  // Also try the trailing phrase, so "north lak" finds "North Lakhimpur".
+  const phrases = [...words, words.slice(-2).join(" "), words.join(" ")];
+  return CITIES.filter((c) => cityNames(c).some((n) => phrases.some((w) => n.startsWith(w)))).slice(0, 6);
 }
 
 export function CitySearch({ className }: { className?: string }) {
@@ -48,8 +57,12 @@ export function CitySearch({ className }: { className?: string }) {
     return () => clearInterval(t);
   }, [query]);
 
-  const { niche } = useMemo(() => parseQuery(query), [query]);
-  const suggestions = useMemo(() => suggest(query), [query]);
+  const { niche, city: exact } = useMemo(() => parseQuery(query), [query]);
+  // A city the user has fully typed goes to the top of the list.
+  const suggestions = useMemo(() => {
+    const list = suggest(query);
+    return exact ? [exact, ...list.filter((c) => c.slug !== exact.slug)].slice(0, 6) : list;
+  }, [query, exact]);
   const open = focused && suggestions.length > 0;
 
   function go(city: City) {
