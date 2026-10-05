@@ -41,21 +41,21 @@ export function Faq() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="scroll-mt-24 px-4 py-20 sm:px-6">
+    <section id="faq" className="scroll-mt-24 px-4 py-8 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-3xl">
-        <SectionHeading eyebrow="🤔 FAQ" title={<>Questions? <span className="text-brand">Answered.</span></>} />
-        <div className="space-y-3">
+        <SectionHeading eyebrow="FAQ" title={<>Questions? <span className="text-brand">Answered.</span></>} />
+        <div className="glass divide-y divide-border overflow-hidden rounded-[var(--radius-card)]">
           {FAQS.map((f, i) => {
             const isOpen = open === i;
             return (
-              <div key={f.q} className="glass overflow-hidden rounded-3xl">
+              <div key={f.q}>
                 <button
                   onClick={() => setOpen(isOpen ? null : i)}
-                  className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left font-semibold"
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-[15px] font-semibold sm:px-6 sm:py-5"
                   aria-expanded={isOpen}
                 >
                   {f.q}
-                  <motion.span animate={{ rotate: isOpen ? 45 : 0 }} className="grid size-8 shrink-0 place-items-center rounded-full bg-surface-strong">
+                  <motion.span animate={{ rotate: isOpen ? 45 : 0 }} className="grid size-7 shrink-0 place-items-center rounded-full bg-surface-strong">
                     <Plus className="size-4" />
                   </motion.span>
                 </button>
@@ -67,7 +67,7 @@ export function Faq() {
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.25 }}
                     >
-                      <p className="px-6 pb-5 text-sm text-muted">{f.a}</p>
+                      <p className="px-5 pb-4 text-sm leading-relaxed text-muted sm:px-6 sm:pb-5">{f.a}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>

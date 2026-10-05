@@ -25,12 +25,12 @@ export function HowItWorks() {
   const [side, setSide] = useState<Side>("creator");
 
   return (
-    <section id="how-it-works" className="scroll-mt-24 px-4 py-20 sm:px-6">
+    <section id="how-it-works" className="scroll-mt-24 px-4 py-8 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-6xl">
         <SectionHeading eyebrow="How it works" title={<>Three steps. <span className="text-brand">That&apos;s it.</span></>} />
 
         {/* Segmented toggle with a sliding pill. */}
-        <div className="glass mx-auto mb-10 flex w-fit rounded-full p-1">
+        <div className="glass mx-auto mb-6 flex w-fit rounded-full p-1">
           {(["creator", "business"] as const).map((s) => (
             <button
               key={s}
@@ -52,18 +52,20 @@ export function HowItWorks() {
             animate="show"
             exit="hidden"
             variants={{ show: { transition: { staggerChildren: 0.08 } } }}
-            className="grid gap-4 md:grid-cols-3"
+            className="grid gap-2.5 md:grid-cols-3 md:gap-4"
           >
             {STEPS[side].map((step, i) => (
               <motion.li
                 key={step.title}
                 variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
-                className="glass relative overflow-hidden rounded-[var(--radius-card)] p-6"
+                className="glass relative flex gap-4 overflow-hidden rounded-[var(--radius-xl2)] p-4 md:block md:rounded-[var(--radius-card)] md:p-6"
               >
-                <span className="absolute -right-2 -top-6 font-display-tight text-[120px] font-bold text-fg/5">{i + 1}</span>
-                <div className="grid size-14 place-items-center rounded-2xl bg-surface-strong text-2xl">{step.emoji}</div>
-                <h3 className="mt-5 font-display-tight text-2xl font-bold">{step.title}</h3>
-                <p className="mt-2 text-sm text-muted">{step.body}</p>
+                <span className="absolute -top-5 right-1 font-display-tight text-[88px] font-bold text-fg/[0.04] md:-right-2 md:-top-6 md:text-[120px]">{i + 1}</span>
+                <div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-surface-strong text-xl md:size-14 md:text-2xl">{step.emoji}</div>
+                <div className="min-w-0">
+                  <h3 className="font-display-tight text-xl font-bold md:mt-5 md:text-2xl">{step.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-muted md:mt-2">{step.body}</p>
+                </div>
               </motion.li>
             ))}
           </motion.ol>

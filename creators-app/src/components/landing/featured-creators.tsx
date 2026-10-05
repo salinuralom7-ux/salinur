@@ -17,9 +17,9 @@ export function FeaturedCreators({ creators }: { creators: CreatorCardData[] }) 
   const scrollBy = (dir: 1 | -1) => track.current?.scrollBy({ left: dir * track.current.clientWidth * 0.8, behavior: "smooth" });
 
   return (
-    <section className="px-4 py-20 sm:px-6">
+    <section className="px-4 py-8 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-6xl">
-        <SectionHeading eyebrow="✅ Verified only" title={<>Featured <span className="text-brand">creators</span></>} />
+        <SectionHeading eyebrow="Verified only" title={<>Featured <span className="text-brand">creators</span></>} />
 
         {creators.length === 0 ? (
           <EmptyState

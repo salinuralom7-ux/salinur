@@ -12,7 +12,7 @@ export function LiveStats({ stats }: { stats: LandingStats | null }) {
   const hasNumbers = stats && stats.creatorsLive > 0;
 
   return (
-    <section className="px-4 py-6 sm:px-6">
+    <section className="px-4 sm:px-6">
       <Reveal className="mx-auto max-w-6xl">
         {hasNumbers ? (
           <div className="glass grid grid-cols-2 divide-x divide-border rounded-[var(--radius-card)] py-8 text-center">
@@ -26,16 +26,16 @@ export function LiveStats({ stats }: { stats: LandingStats | null }) {
             </div>
           </div>
         ) : (
-          <div className="relative overflow-hidden rounded-[var(--radius-card)] bg-brand p-8 text-white sm:p-10">
+          <div className="relative overflow-hidden rounded-[var(--radius-card)] bg-brand p-6 text-white sm:p-10">
             <div aria-hidden className="absolute -right-10 -top-10 size-48 rounded-full bg-lime/30 blur-3xl" />
             <p className="text-sm font-semibold uppercase tracking-widest text-white/80">🚀 Just launched</p>
-            <h3 className="mt-2 max-w-xl font-display-tight text-3xl font-bold sm:text-5xl">
+            <h3 className="mt-2 max-w-xl font-display-tight text-[28px] [text-wrap:balance] font-bold sm:text-5xl">
               Be one of the first creators in your city.
             </h3>
-            <p className="mt-3 max-w-md text-white/80">
+            <p className="mt-2 max-w-md text-[15px] text-white/80">
               Early profiles get seen first. ₹{site.creatorPriceInr}/month, cancel anytime.
             </p>
-            <ButtonLink href="/join" variant="lime" size="lg" className="mt-6">
+            <ButtonLink href="/join" variant="lime" size="md" className="mt-5">
               Claim your spot
             </ButtonLink>
           </div>

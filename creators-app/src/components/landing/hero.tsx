@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { site } from "@/config/site";
 import { ButtonLink } from "@/components/ui/button";
 import { Sticker } from "@/components/ui/sticker";
@@ -15,7 +15,7 @@ const item = {
 export function Hero() {
   return (
     // -mt pulls the hero up under the sticky header (68px tall) so the glow runs behind it.
-    <section className="relative -mt-[68px] overflow-hidden px-4 pb-16 pt-[108px] sm:px-6 sm:pt-[132px]">
+    <section className="relative -mt-[68px] overflow-hidden px-4 pb-10 pt-[96px] sm:px-6 sm:pb-16 sm:pt-[132px]">
       {/* Drifting gradient blobs behind the hero. */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <motion.div
@@ -45,22 +45,22 @@ export function Hero() {
 
         <motion.h1
           variants={item}
-          className="mt-6 font-display-tight text-[44px] font-bold sm:text-7xl md:text-8xl"
+          className="mt-5 font-display-tight text-[44px] [text-wrap:balance] font-bold sm:text-7xl md:text-8xl"
         >
           Your city&apos;s creators,{" "}
           <span className="text-brand">one scroll away.</span>
         </motion.h1>
 
-        <motion.p variants={item} className="mt-5 max-w-xl text-base text-muted sm:text-lg">
+        <motion.p variants={item} className="mt-4 max-w-md text-[15px] leading-relaxed text-muted sm:max-w-xl sm:text-lg">
           Local businesses find and book Instagram creators near them, <b className="text-fg">free</b>. Creators get
           listed for <b className="text-fg">₹{site.creatorPriceInr}/month</b>. No commission. No middlemen.
         </motion.p>
 
-        <motion.div variants={item} className="mt-8 w-full max-w-xl">
+        <motion.div variants={item} className="mt-7 w-full max-w-xl">
           <CitySearch />
         </motion.div>
 
-        <motion.div variants={item} className="mt-6 flex w-full max-w-xl flex-col gap-3 sm:flex-row">
+        <motion.div variants={item} className="mt-3 flex w-full max-w-xl flex-col gap-2.5 sm:flex-row">
           <ButtonLink href="/join" variant="lime" size="lg" className="w-full sm:flex-1">
             I&apos;m a Creator → Get listed for ₹{site.creatorPriceInr}/mo
           </ButtonLink>
@@ -69,9 +69,13 @@ export function Hero() {
           </ButtonLink>
         </motion.div>
 
-        <motion.p variants={item} className="mt-5 text-sm text-muted">
-          Get booked, not ghosted. 👻🚫
-        </motion.p>
+        <motion.ul variants={item} className="mt-5 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs text-muted">
+          {["No commission", "UPI & cards", "Cancel anytime"].map((t) => (
+            <li key={t} className="flex items-center gap-1.5">
+              <Check className="size-3.5 text-lime" /> {t}
+            </li>
+          ))}
+        </motion.ul>
       </motion.div>
     </section>
   );

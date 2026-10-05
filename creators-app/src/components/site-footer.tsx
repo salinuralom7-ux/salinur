@@ -32,8 +32,8 @@ const columns = [
 
 export function SiteFooter() {
   return (
-    <footer className="mt-24 border-t border-border px-4 pb-10 pt-14 sm:px-6">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <footer className="mt-8 border-t border-border px-4 pb-8 pt-10 sm:mt-16 sm:px-6">
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div className="col-span-2 md:col-span-1">
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-muted">{site.shortTagline}</p>
@@ -57,7 +57,7 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="mx-auto mt-12 flex max-w-6xl flex-col justify-between gap-2 text-xs text-muted sm:flex-row">
+      <div className="mx-auto mt-10 flex max-w-6xl border-t border-border pt-6 flex-col justify-between gap-2 text-xs text-muted sm:flex-row">
         <p>
           © {new Date().getFullYear()} {site.name}. Made in India 🇮🇳
         </p>
