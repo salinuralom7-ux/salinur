@@ -3,13 +3,14 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { site } from "@/config/site";
+import { PLANS, YEARLY_SAVING_PCT } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { SectionHeading } from "@/components/landing/section-heading";
 
 const STEPS = {
   creator: [
     { emoji: "✍️", title: "Build your profile", body: "One question per screen. Niches, rates, sample reels. Done in about 3 minutes." },
-    { emoji: "⚡", title: `Go live for ₹${site.creatorPriceInr}/mo`, body: "Pay with UPI or card. Your profile goes live for every business in your city." },
+    { emoji: "⚡", title: `Go live for ₹${site.creatorPriceInr}/mo`, body: `Or ₹${PLANS.yearly.priceInr}/year and save ${YEARLY_SAVING_PCT}%. Pay with UPI or card, and your profile goes live for every business in your city.` },
     { emoji: "📩", title: "Get booked, not ghosted", body: "Businesses WhatsApp you or send a booking request. You keep 100% of the deal." },
   ],
   business: [

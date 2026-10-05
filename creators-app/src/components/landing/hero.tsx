@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { site } from "@/config/site";
+import { PLANS } from "@/lib/pricing";
 import { ButtonLink } from "@/components/ui/button";
 import { Sticker } from "@/components/ui/sticker";
 import { CitySearch } from "@/components/landing/city-search";
@@ -53,7 +54,7 @@ export function Hero() {
 
         <motion.p variants={item} className="mt-4 max-w-md text-[15px] leading-relaxed text-muted sm:max-w-xl sm:text-lg">
           Local businesses find and book Instagram creators near them, <b className="text-fg">free</b>. Creators get
-          listed for <b className="text-fg">₹{site.creatorPriceInr}/month</b>. No commission. No middlemen.
+          listed for <b className="text-fg">₹{site.creatorPriceInr}/month</b> or <b className="text-fg">₹{PLANS.yearly.priceInr}/year</b>. No commission.
         </motion.p>
 
         <motion.div variants={item} className="mt-7 w-full max-w-xl">

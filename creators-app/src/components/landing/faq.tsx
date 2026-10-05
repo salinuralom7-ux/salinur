@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { site } from "@/config/site";
+import { formatINR } from "@/lib/format";
+import { PLANS, YEARLY_SAVING_INR, YEARLY_SAVING_PCT } from "@/lib/pricing";
 import { SectionHeading } from "@/components/landing/section-heading";
 
 export const FAQS = [
@@ -14,6 +16,10 @@ export const FAQS = [
   {
     q: `What do creators get for ₹${site.creatorPriceInr}/month?`,
     a: "A public profile businesses in your city can find, WhatsApp and Instagram buttons, a booking-request inbox and simple analytics. No commission on any deal you land.",
+  },
+  {
+    q: "Is there a yearly plan?",
+    a: `Yes. ₹${PLANS.yearly.priceInr}/year instead of ₹${PLANS.monthly.priceInr}/month, which saves you ${formatINR(YEARLY_SAVING_INR)} (${YEARLY_SAVING_PCT}%) compared with paying monthly for 12 months. Same profile, same features.`,
   },
   {
     q: `Does ${site.name} take a commission?`,
@@ -33,7 +39,7 @@ export const FAQS = [
   },
   {
     q: "Can I cancel my subscription?",
-    a: "Anytime, from your dashboard. Your profile stays live until the end of the month you've paid for, then it's hidden until you reactivate.",
+    a: "Anytime, from your dashboard. Your profile stays live until the end of the month or year you've paid for, then it's hidden until you reactivate.",
   },
 ];
 

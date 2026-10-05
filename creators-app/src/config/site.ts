@@ -1,3 +1,5 @@
+import { PLANS } from "@/lib/pricing";
+
 /**
  * Single source of truth for brand + product constants.
  *
@@ -11,8 +13,8 @@ export const site = {
   shortTagline: "Your city's creators, one scroll away.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   contactEmail: "hello@example.com", // TODO: replace with your support email
-  /** Creator subscription price in rupees. The business model is fixed: this is the only paid plan. */
-  creatorPriceInr: 99,
+  /** Monthly creator price in rupees. Plans (monthly ₹99 / yearly ₹499) live in src/lib/pricing.ts. */
+  creatorPriceInr: PLANS.monthly.priceInr,
 } as const;
 
 /** Niches a creator can pick (max 3). `slug` is used in SEO URLs like /creators/guwahati/food. */

@@ -1,4 +1,5 @@
 import { site } from "@/config/site";
+import { PLANS, YEARLY_SAVING_PCT } from "@/lib/pricing";
 import type { LandingStats } from "@/lib/data/public";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
 import { ButtonLink } from "@/components/ui/button";
@@ -33,7 +34,7 @@ export function LiveStats({ stats }: { stats: LandingStats | null }) {
               Be one of the first creators in your city.
             </h3>
             <p className="mt-2 max-w-md text-[15px] text-white/80">
-              Early profiles get seen first. ₹{site.creatorPriceInr}/month, cancel anytime.
+              Early profiles get seen first. ₹{site.creatorPriceInr}/month, or ₹{PLANS.yearly.priceInr}/year to save {YEARLY_SAVING_PCT}%.
             </p>
             <ButtonLink href="/join" variant="lime" size="md" className="mt-5">
               Claim your spot
