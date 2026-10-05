@@ -7,11 +7,17 @@ url="$1"; name="$2"
 cd "$(dirname "$0")/.."
 d="references/$name"; mkdir -p "$d/frames" "$d/scenes"
 
-yt-dlp -q -f "bv*[height<=1920]+ba/b" --merge-output-format mp4 -o "$d/video.%(ext)s" \
-       --write-info-json --write-thumbnail "$url"
+# YouTube sometimes refuses server downloads; try a few player clients before giving up.
+for client in default tv_simply web_safari mweb android; do
+  yt-dlp -q -f "bv*[height<=1920]+ba/b" --merge-output-format mp4 -o "$d/video.%(ext)s" \
+         --extractor-args "youtube:player_client=$client" \
+         --write-info-json --write-thumbnail "$url" && break || echo "yt-dlp ($client) failed, trying next"
+done
+[ -f "$d/video.mp4" ] || { echo "Could not download $url"; exit 1; }
 v="$d/video.mp4"
 
 ffmpeg -loglevel error -y -i "$v" -vn -ac 1 -ar 16000 "$d/audio.wav"
+ffmpeg -loglevel error -y -i "$v" -vn -ac 2 -b:a 96k "$d/audio.mp3"   # small copy kept for mix analysis
 ffmpeg -loglevel error -y -i "$v" -vf fps=2,scale=540:-2 "$d/frames/f_%04d.jpg"
 # Scene-change frames + their timestamps = the cut list
 ffmpeg -hide_banner -i "$v" -vf "select='gt(scene,0.25)',showinfo,scale=540:-2" -vsync vfr \
