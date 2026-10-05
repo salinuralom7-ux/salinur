@@ -13,5 +13,5 @@ Status: `pending` (not yet decoded) · `decoded` (in REFERENCE_BREAKDOWN.md) · 
 | 5 | 2026-10-05 | ref05 | https://youtube.com/shorts/OyqBzKARHCE | pending | — |
 | 6 | 2026-10-05 | ref06 | https://youtube.com/shorts/HjCRd-jNQdg | pending | — |
 
-> 2026-10-05: all six are `pending` because this cloud environment's network policy blocks youtube.com.
-> Once YouTube is allowed, run: `tools/decode_all_pending.sh`
+> 2026-10-05: all six are `pending`. This cloud environment blocks youtube.com, and YouTube blocks GitHub's servers ("confirm you're not a bot").
+> Working route: Salinur screen-records each short and shares the files; run `tools/decode_reference.sh <file> <name>`.

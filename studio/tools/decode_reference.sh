@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pulls apart one reference video for study: decode_reference.sh <url> <name>
+# Pulls apart one reference video for study: decode_reference.sh <url-or-local-file> <name>
 # Output in references/<name>/ (git-ignored): video, audio, frames, scene cuts, loudness, transcript, stats.txt
 # The written breakdown is done by looking at the frames — this script only gathers the evidence.
 set -euo pipefail
@@ -7,8 +7,13 @@ url="$1"; name="$2"
 cd "$(dirname "$0")/.."
 d="references/$name"; mkdir -p "$d/frames" "$d/scenes"
 
+if [ -f "$url" ]; then
+  # A video Salinur sent directly (e.g. a screen recording in assets/inbox/)
+  ffmpeg -loglevel error -y -i "$url" -c:v libx264 -crf 18 -c:a aac "$d/video.mp4"
+  printf '{"title": "%s"}' "$(basename "$url")" > "$d/video.info.json"
+fi
 # YouTube sometimes refuses server downloads; try a few player clients before giving up.
-for client in default tv_simply web_safari mweb android; do
+[ -f "$d/video.mp4" ] || for client in default tv_simply web_safari mweb android; do
   yt-dlp -q -f "bv*[height<=1920]+ba/b" --merge-output-format mp4 -o "$d/video.%(ext)s" \
          --extractor-args "youtube:player_client=$client" \
          --write-info-json --write-thumbnail "$url" && break || echo "yt-dlp ($client) failed, trying next"
