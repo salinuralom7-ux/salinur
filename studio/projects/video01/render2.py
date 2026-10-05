@@ -240,7 +240,7 @@ class Cut3D:
     def __init__(self, scene, raw_in, raw_out, f0, title=None, sub=None):
         self.scene, self.t0, self.t1, self.f0 = scene, to_out(raw_in), to_out(raw_out), f0
         self.title = text_rgba(title, 104, glow=(0, 0, 0)) if title else None
-        self.sub = text_rgba(sub, 58, BLUE_RGB, path=FB) if sub else None
+        self.sub = text_rgba(sub, 60, GOLD_RGB, path=FB) if sub else None
 
     def frame(self, t):
         n = self.f0 + int(round((t - self.t0) * FPS))
