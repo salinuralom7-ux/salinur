@@ -1,0 +1,16 @@
+# Big media stays out of git. Plans, transcripts, credits, presets and scripts are committed.
+.env
+projects/*/raw/
+projects/*/work/
+projects/*/final/*.mp4
+projects/*/3d/renders/
+references/*/
+!references/*.md
+assets/music/**/*.*
+assets/sfx/**/*.*
+assets/broll/**/*.*
+assets/3d/**/*.*
+assets/fonts/**/*.*
+assets/inbox/**/*.*
+!**/.gitkeep
+__pycache__/

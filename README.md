@@ -17,6 +17,7 @@ Live at **[mysheher.com](https://mysheher.com)**.
 | `tests/` | Playwright harnesses and SQL checks. See [`tests/README.md`](tests/README.md). |
 | `store/` | Play Store and App Store submission package. See [`store/README.md`](store/README.md). |
 | `brand/` | Advertising copy and prompts. |
+| `studio/` | Salinur's short-video editing studio (separate from the app). See [`studio/CLAUDE.md`](studio/CLAUDE.md). |
 | `DEPLOY.md` | Setup steps in plain language. **Start with Job 0.** |
 
 ## How it is built
