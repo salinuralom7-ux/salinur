@@ -10,9 +10,9 @@ UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrom
 for cat in upbeat epic electronic misc scoring romantic; do
   curl -sL -A "$UA" "https://freepd.com/$cat.php" -o "/tmp/$cat.html" || continue
   mkdir -p library/pages && cp "/tmp/$cat.html" library/pages/
-  grep -oiE "[^\"' <>()=]+\.mp3" "/tmp/$cat.html" | sort -u | while read -r u; do
+  grep -oiE "[^\"'<>()=]+\.mp3" "/tmp/$cat.html" | sort -u | while read -r u; do
     case "$u" in http*) url="$u";; /*) url="https://freepd.com$u";; *) url="https://freepd.com/$u";; esac
-    f="library/music/$cat/$(basename "$url" | sed 's/%20/_/g')"
+    url="${url// /%20}"; f="library/music/$cat/$(basename "$url" | sed 's/%20/_/g')"
     mkdir -p "$(dirname "$f")"
     curl -sfL -A "$UA" "$url" -o "$f" && printf '%s\t%s\t%s\n' "$f" "$url" "FreePD public domain (CC0)" >> "$idx"
   done
