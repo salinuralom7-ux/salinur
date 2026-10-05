@@ -10,7 +10,6 @@ assets/music/**/*.*
 assets/sfx/**/*.*
 assets/broll/**/*.*
 assets/3d/**/*.*
-assets/fonts/**/*.*
 assets/inbox/**/*.*
 !**/.gitkeep
 __pycache__/

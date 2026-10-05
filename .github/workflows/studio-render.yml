@@ -1,0 +1,73 @@
+name: Studio render farm
+# Blender renders are too slow for one CPU, so each line of
+# studio/projects/<video>/3d/RENDER_QUEUE.txt ("<script> <first> <last> <chunk>")
+# is split into chunks rendered in parallel. Frames go to the release
+# renders-<video> as <scene>_<first>.zip, which the editing session downloads.
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["studio/projects/*/3d/RENDER_QUEUE.txt"]
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import glob, json, os
+          jobs = []
+          for q in glob.glob("studio/projects/*/3d/RENDER_QUEUE.txt"):
+              proj = q.split("/")[2]
+              for line in open(q):
+                  p = line.split("#")[0].split()
+                  if len(p) != 4:
+                      continue
+                  script, a, b, chunk = p[0], int(p[1]), int(p[2]), int(p[3])
+                  for f in range(a, b + 1, chunk):
+                      jobs.append({"proj": proj, "script": script, "first": f, "last": min(b, f + chunk - 1)})
+          print("matrix=" + json.dumps({"include": jobs}))
+          PY
+          for p in $(ls studio/projects); do
+            [ -f studio/projects/$p/3d/RENDER_QUEUE.txt ] || continue
+            gh release view renders-$p >/dev/null 2>&1 || gh release create renders-$p --prerelease --title "3D renders $p" --notes "Frame chunks from the render farm."
+          done
+
+  render:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q bpy==5.0.1
+      - name: Render
+        working-directory: studio/projects/${{ matrix.proj }}/3d
+        run: |
+          scene=$(basename ${{ matrix.script }} .py)
+          mkdir -p out
+          python ${{ matrix.script }} out ${{ matrix.first }} ${{ matrix.last }} 2>&1 | grep -vE "^Fra:|Sample|Remaining|Updating" | tail -20
+          ls out | wc -l
+          cd out && zip -q ../${scene}_${{ matrix.first }}.zip *.png
+      - name: Upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: studio/projects/${{ matrix.proj }}/3d
+        run: |
+          scene=$(basename ${{ matrix.script }} .py)
+          for i in 1 2 3; do gh release upload renders-${{ matrix.proj }} ${scene}_${{ matrix.first }}.zip --clobber && break; sleep 10; done
