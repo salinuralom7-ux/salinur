@@ -31,6 +31,10 @@ def reset(frames, fps=60):
     sc.cycles.glossy_bounces = 2
     sc.cycles.transmission_bounces = 2
     sc.render.resolution_x, sc.render.resolution_y = 1080, 1920
+    import os
+    if os.environ.get("FAST"):  # 75% res, fewer samples; the compositor upscales to 1080x1920
+        sc.render.resolution_percentage = 75
+        sc.cycles.samples = 8
     sc.render.fps = fps
     sc.frame_start, sc.frame_end = 1, frames
     sc.render.use_motion_blur = True

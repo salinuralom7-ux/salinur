@@ -247,7 +247,10 @@ class Cut3D:
         p = f"3d/renders/{self.scene}/f_{n:04d}.png"
         if not os.path.exists(p):
             return None
-        return cv2.imread(p, cv2.IMREAD_COLOR).astype(np.float32)
+        im = cv2.imread(p, cv2.IMREAD_COLOR)
+        if im.shape[1] != W:
+            im = cv2.resize(im, (W, H), interpolation=cv2.INTER_CUBIC)
+        return im.astype(np.float32)
 
     def overlay_text(self, img, t):
         u = t - self.t0
