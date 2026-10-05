@@ -1,0 +1,28 @@
+name: Studio asset library
+# The editing session can't reach music/SFX sites, so the runner fetches
+# public-domain music (FreePD) and CC0 sound packs (Kenney) and attaches them
+# as one zip to the studio-library release, which the session downloads.
+
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["studio/tools/fetch_library.sh", ".github/workflows/studio-library.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  library:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: studio/tools/fetch_library.sh
+      - name: Publish as release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zip -qr studio-library.zip library
+          ls -lh studio-library.zip
+          gh release view studio-library >/dev/null 2>&1 || gh release create studio-library --prerelease --title "Studio asset library" --notes "Public-domain music (FreePD) and CC0 sound packs (Kenney). Licenses in library/INDEX.tsv."
+          gh release upload studio-library studio-library.zip --clobber
