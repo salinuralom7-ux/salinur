@@ -6,7 +6,7 @@ name: Studio transcribe
 on:
   push:
     branches: ["claude/**"]
-    paths: ["studio/projects/*/transcribe/input.flac"]
+    paths: ["studio/projects/*/transcribe/input.flac", "studio/tools/transcribe.py", ".github/workflows/studio-transcribe.yml"]
 
 permissions:
   contents: write

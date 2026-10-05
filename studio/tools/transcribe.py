@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Word-level transcript: transcribe.py <media> <out_dir> [model]
 Writes transcript.json (segments with words + timestamps) and transcript.txt."""
-import json, sys, pathlib
+import json, sys, pathlib, subprocess
+import numpy as np
 from faster_whisper import WhisperModel
 
 src, out = sys.argv[1], pathlib.Path(sys.argv[2])
 model = WhisperModel(sys.argv[3] if len(sys.argv) > 3 else "small", device="auto", compute_type="int8")
-segments, info = model.transcribe(src, word_timestamps=True, vad_filter=False, beam_size=5,
+# Decode with ffmpeg ourselves: faster-whisper's PyAV path breaks when the installed av version differs.
+pcm = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", src, "-f", "s16le", "-ac", "1", "-ar", "16000", "-"],
+                     check=True, capture_output=True).stdout
+audio = np.frombuffer(pcm, np.int16).astype(np.float32) / 32768.0
+segments, info = model.transcribe(audio, word_timestamps=True, vad_filter=False, beam_size=5,
                                   initial_prompt="Salinur, Bongaigaon, Assam, business, personal growth.")
 data = {"language": info.language, "duration": info.duration, "segments": []}
 lines = []
