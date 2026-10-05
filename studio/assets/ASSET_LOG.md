@@ -8,3 +8,8 @@ Every asset in the library: where it came from and its license. Nothing goes int
 | fonts/Poppins-700.ttf, Poppins-800.ttf | https://www.npmjs.com/package/@fontsource/poppins (Indian Type Foundry) | SIL OFL 1.1 — free for commercial video | 2026-10-05 | latin subset, converted from woff2 |
 | sfx/{click,pop,ding,impact}/k_*.wav | https://kenney.nl/assets/interface-sounds , /impact-sounds , /ui-audio | CC0 (Kenney) | 2026-10-05 | converted from ogg to 48 kHz wav; full packs in release `studio-library` |
 | sfx/{whoosh,swoosh-out,riser}/synth_*.wav | made in-house with ffmpeg (filtered noise / sine sweep) | own work, no restrictions | 2026-10-05 | |
+| music/suspense/Investigations.mp3, Hidden_Agenda.mp3 | https://incompetech.com/music/royalty-free/mp3-royaltyfree/ | CC BY 4.0 Kevin MacLeod — credit in description | 2026-10-05 | Investigations used in video01 |
+| music/motivational/Inspired.mp3, Motivator.mp3, Wholesome.mp3 | https://incompetech.com/music/royalty-free/mp3-royaltyfree/ | CC BY 4.0 Kevin MacLeod — credit in description | 2026-10-05 | Inspired used in video01 |
+| (release `studio-library`) ~45 more tracks | OpenGameArt (CC0 filter) + incompetech | per row in library/INDEX.tsv | 2026-10-05 | not yet auditioned; skip any OGA track that looks like a Pixabay re-upload |
+| brand/ff_logo.png | supplied by Salinur | own brand (Frame & Fame) | 2026-10-05 | navy #061436, blue #2878FE |
+| brand/LUCIDE_LICENSE.txt — icons in projects/*/gfx | https://www.npmjs.com/package/lucide-static | ISC | 2026-10-05 | |
