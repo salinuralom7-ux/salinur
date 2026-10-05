@@ -6,7 +6,7 @@ name: Studio asset library
 on:
   push:
     branches: ["claude/**"]
-    paths: ["studio/tools/fetch_library.sh", ".github/workflows/studio-library.yml"]
+    paths: ["studio/tools/fetch_library.sh", "studio/tools/fetch_3d.sh", ".github/workflows/studio-library.yml"]
 
 permissions:
   contents: write
@@ -17,12 +17,12 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - run: studio/tools/fetch_library.sh
+      - run: studio/tools/fetch_3d.sh
       - name: Publish as release asset
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          zip -qr studio-library.zip library
-          ls -lh studio-library.zip
+          zip -qr studio-3d.zip lib3d
+          ls -lh studio-3d.zip
           gh release view studio-library >/dev/null 2>&1 || gh release create studio-library --prerelease --title "Studio asset library" --notes "Public-domain music (FreePD) and CC0 sound packs (Kenney). Licenses in library/INDEX.tsv."
-          gh release upload studio-library studio-library.zip --clobber
+          gh release upload studio-library studio-3d.zip --clobber
