@@ -7,16 +7,24 @@ mkdir -p library/music library/sfx
 idx=library/INDEX.tsv; printf 'file\tsource_url\tlicense\n' > "$idx"
 UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 
-for cat in upbeat epic electronic misc scoring romantic; do
-  curl -sL -A "$UA" "https://freepd.com/$cat.php" -o "/tmp/$cat.html" || continue
-  mkdir -p library/pages && cp "/tmp/$cat.html" library/pages/
-  grep -oiE "[^\"'<>()=]+\.mp3" "/tmp/$cat.html" | sort -u | while read -r u; do
+# FreePD: start at the home page, follow its internal links one level, take every .mp3.
+mkdir -p library/pages
+curl -sL -A "$UA" "https://freepd.com/" -o library/pages/home.html
+{ echo "https://freepd.com/"
+  grep -oiE 'href="[^"#]+"' library/pages/home.html | sed 's/href="//;s/"$//' | grep -viE '\.(mp3|css|js|png|jpg|ico)$' \
+    | sed -E 's#^/#https://freepd.com/#; s#^([^h])#https://freepd.com/\1#' | grep '^https://freepd.com' ; } | sort -u > /tmp/pages.txt
+echo "FreePD pages: $(wc -l < /tmp/pages.txt)"
+while read -r pg; do
+  cat=$(basename "${pg%/}" | sed 's/\.[a-z]*$//'); [ "$cat" = "freepd.com" ] && cat=home
+  curl -sL -A "$UA" "$pg" -o "/tmp/pg.html" || continue
+  grep -oiE "[^\"'<>()=]+\.mp3" /tmp/pg.html | sort -u | while read -r u; do
     case "$u" in http*) url="$u";; /*) url="https://freepd.com$u";; *) url="https://freepd.com/$u";; esac
     url="${url// /%20}"; f="library/music/$cat/$(basename "$url" | sed 's/%20/_/g')"
-    mkdir -p "$(dirname "$f")"
+    [ -f "$f" ] && continue; mkdir -p "$(dirname "$f")"
     curl -sfL -A "$UA" "$url" -o "$f" && printf '%s\t%s\t%s\n' "$f" "$url" "FreePD public domain (CC0)" >> "$idx"
   done
-done
+done < /tmp/pages.txt
+cp /tmp/pages.txt library/pages/
 
 for pack in interface-sounds impact-sounds ui-audio digital-audio; do
   page="https://kenney.nl/assets/$pack"
