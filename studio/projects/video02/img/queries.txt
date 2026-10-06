@@ -1,27 +1,19 @@
-shop|sweet shop india
-shop|mithai shop
-shop|shop counter display
-shop|market stall
-scale|balance scale
-laddoo|laddu sweet
-laddoo|ladoo
-queue|people standing in line
-queue|queue of people
-waiting|man sitting waiting
-waiting|shopkeeper sitting
-clock|alarm clock
-fly|housefly
-magnifier|magnifying glass
-brain|human brain model
-brain|brain anatomical model
-phone|hand holding smartphone
-phone|smartphone in hand
-spotlight|stage spotlight
-spotlight|theatre spotlight lamp
-coins|gold coins
-coins|pile of coins
-camera|vintage movie camera
-camera|film camera
-filmstrip|film strip
-telephone|rotary telephone
-megaphone|megaphone
+person|man standing full body
+person|woman standing full body
+person|person standing isolated
+person|people walking street
+person|businessman standing
+person|indian man standing
+person|indian woman saree
+shop|kiosk
+shop|food stall
+shop|bakery display case
+shop|candy shop
+shop|storefront
+shop|street vendor cart
+shop|sweets display
+laddoo|indian sweets
+laddoo|sweet ball dessert
+spotlight|stage light
+spotlight|spotlight lamp
+coins|stack of coins
