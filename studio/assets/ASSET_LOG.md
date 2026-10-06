@@ -15,3 +15,6 @@ Every asset in the library: where it came from and its license. Nothing goes int
 | brand/LUCIDE_LICENSE.txt — icons in projects/*/gfx | https://www.npmjs.com/package/lucide-static | ISC | 2026-10-05 | |
 | sfx/synth/{coin,shimmer,rec_beep,shutter,boom}.wav | made in-house with ffmpeg | own work | 2026-10-05 | |
 | sfx/synth/k_scratch_001.wav, sfx/click/k_tick_001.wav | https://kenney.nl/assets/interface-sounds | CC0 | 2026-10-05 | |
+| fonts/Tinos-Regular.ttf, Tinos-Bold.ttf | https://www.npmjs.com/package/@fontsource/tinos | Apache 2.0 | 2026-10-06 | Times-style serif captions (style A) |
+| fonts/PlayfairDisplay-Black.ttf, -Bold.ttf | https://www.npmjs.com/package/@fontsource/playfair-display | SIL OFL 1.1 | 2026-10-06 | display titles |
+| fonts/DMSerifDisplay-Regular.ttf | https://www.npmjs.com/package/@fontsource/dm-serif-display | SIL OFL 1.1 | 2026-10-06 | |
