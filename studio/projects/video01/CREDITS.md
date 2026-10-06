@@ -1,19 +1,12 @@
-# CREDITS — video01 (F&F ad)
+# CREDITS — video01 v3 (F&F ad)
 
 | Asset | Used at | Source | License | Credit needed? |
 |---|---|---|---|---|
-| Music A: "Investigations" — Kevin MacLeod | 0:00–0:39 | https://incompetech.com | CC BY 4.0 | **Yes** |
-| Music B: "Inspired" — Kevin MacLeod | 0:40–end | https://incompetech.com | CC BY 4.0 | **Yes** |
-| Pop, click, ding, impact sounds | throughout | Kenney.nl (Interface Sounds, Impact Sounds) | CC0 | No |
-| Whoosh and riser sounds | card entries, 0:38 | made in-house (ffmpeg) | own work | No |
-| Icons (hospital, stethoscope, video, users, check, phone, globe, trending-up, sparkles, target) | cards and pills | Lucide (lucide.dev) | ISC | No |
-| Fonts: Poppins Bold/ExtraBold | captions, cards | Indian Type Foundry via Fontsource | SIL OFL 1.1 | No |
-| F&F logo | cards, end card | supplied by Salinur | own brand | No |
+| Background music (dark 808 beat, F minor) | whole video | produced in-house in code (`music_v3.py`, `tools/synth.py`) | own work | No |
+| Impact, sting, riser, pop, sub-boom, glitch, ka-ching, tick, shimmer SFX | throughout | designed in-house (`tools/synth.py`) | own work | No |
+| 3D hospital, clinic, growth arrows | 0:06, 0:14, 0:47 | made in Blender (`3d/*.py`) | own work | No |
+| Card icons | cards | Lucide (lucide.dev) | ISC | No |
+| Fonts: Tinos, Playfair Display, Poppins | captions, titles, cards | Fontsource (Google Fonts) | Apache 2.0 / SIL OFL 1.1 | No |
+| F&F logo | brand panel | supplied by Salinur | own brand | No |
 
-## Paste this in the YouTube / Instagram description
-
-```
-Music: "Investigations" and "Inspired" by Kevin MacLeod (incompetech.com)
-Licensed under Creative Commons: By Attribution 4.0
-https://creativecommons.org/licenses/by/4.0/
-```
+**No credit line needed in the description** — every asset in v3 is our own work or a no-attribution licence.
