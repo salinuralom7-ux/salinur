@@ -181,6 +181,8 @@ _fitc = {}
 
 
 def word(fr, t, text, x, yb, t0, t1, style="B", size=180, colour=INK, anchor="l", italic=False, tend=None, pop=True, maxw=860):
+    if yb < 700:
+        maxw = min(maxw, 740)          # keep clear of the IG tag top-right
     full = mg.text_width(text, style, size, italic)
     if full > maxw:
         size = int(size * maxw / full)
@@ -195,7 +197,7 @@ def word(fr, t, text, x, yb, t0, t1, style="B", size=180, colour=INK, anchor="l"
 
 def conn(fr, t, text, x, yb, t0, t1=None, size=54, anchor="l", tend=None, colour=INK):
     """light italic connective words (whole phrase fades/types quickly)"""
-    word(fr, t, text, x, yb, t0, t1 if t1 else t0 + 0.25 + 0.04 * len(text), "c", size, colour, anchor, True, tend)
+    word(fr, t, text, x, yb, t0, t1 if t1 else t0 + 0.25 + 0.04 * len(text), "c", size, colour, anchor, False, tend)
 
 
 # ------------------------------------------------------------------ scenes (each: draw(fr, t))
@@ -220,10 +222,10 @@ def s1(fr, t):
     push = 1 + 0.012 * t
     hero(fr, "shop", t, 0.05, 300, 1150, w=470, seed=1, t1=e, drift=0.01)
     hero(fr, "shop2", t, T(4), 780, 1150, w=470, seed=2, t1=e, drift=0.01)
-    conn(fr, t, "एक ही गली में…", X0, TOPC, 0.0, 0.9, tend=e)
-    word(fr, t, "दो", X0, TOPB, T(4), T(4) + 0.18, size=240, tend=e)
-    conn(fr, t, "मिठाई की", X0 + mg.text_width("दो", "B", 240) + 26, TOPB, T(5), TE(6), size=62, tend=e)
-    word(fr, t, "दुकानें", 984, BOTB, T(7), TE(7) + 0.1, size=240, anchor="r", tend=e)
+    conn(fr, t, "ek hi gali mein…", X0, TOPC, 0.0, 0.9, tend=e)
+    word(fr, t, "DO", X0, TOPB, T(4), T(4) + 0.18, size=240, tend=e)
+    conn(fr, t, "mithai ki", X0 + mg.text_width("DO", "B", 240) + 26, TOPB, T(5), TE(6), size=62, tend=e)
+    word(fr, t, "DUKAANEIN", 984, BOTB, T(7), TE(7) + 0.1, size=240, anchor="r", tend=e)
     mg.dotted_ellipse(fr, 540, 1160, 430, 60, phase=t * 0.6, a=0.75 * cl((t - 0.3) / 0.4) * exit_k(t, e))
 
 
@@ -237,10 +239,10 @@ def s2(fr, t):
     else:
         hero(fr, "laddoo", t, 3.35, 330, 1150, w=360, seed=3, t1=e)
         hero(fr, "laddoo", t, 3.6, 750, 1150, w=360, seed=4, t1=e)
-    conn(fr, t, "एक जैसा", X0, TOPC, T(9), TE(10), tend=e)
-    word(fr, t, "स्वाद", X0, TOPB + 10, T(11), TE(11), size=230, tend=e)
-    conn(fr, t, "एक जैसा", 984, BOTB - 205, T(12), TE(13), anchor="r", tend=e)
-    word(fr, t, "दाम", 984, BOTB, T(14), TE(14), size=230, anchor="r", tend=e)
+    conn(fr, t, "ek jaisa", X0, TOPC, T(9), TE(10), tend=e)
+    word(fr, t, "SWAAD", X0, TOPB + 10, T(11), TE(11), size=230, tend=e)
+    conn(fr, t, "ek jaisa", 984, BOTB - 255, T(12), TE(13), anchor="r", tend=e)
+    word(fr, t, "DAAM", 984, BOTB, T(14), TE(14), size=230, anchor="r", tend=e)
     if t > T(14):
         k = (t - T(14)) / 0.6
         mg.ring(fr, 540, 1000, 120 + 520 * eo(k), 5, a=0.8 * (1 - cl(k)))
@@ -261,10 +263,10 @@ def s3(fr, t):
             hero(fr, ppl[j % len(ppl)], t, tj, x, 1190 - j * 6, h=int(430 * s_), seed=10 + j, t1=e, sha=0.3)
     elif A.get("queue") is not None:
         hero(fr, "queue", t, T(17), 690, 1190, w=640, seed=6, t1=e, sha=0.3)
-    conn(fr, t, "पर एक दुकान के बाहर,", X0, TOPC, T(15), TE(19), tend=e)
-    word(fr, t, "रोज़", X0, TOPB, T(20), TE(20), style="M", size=170, colour=BLUE, tend=e)
-    word(fr, t, "लंबी लाइन", X0, BOTB, T(21), TE(22), size=230, tend=e)
-    conn(fr, t, "लगती थी…", 984, BOTB + 90, T(23), TE(24), anchor="r", tend=e)
+    conn(fr, t, "par ek dukaan ke baahar,", X0, TOPC, T(15), TE(19), tend=e)
+    word(fr, t, "ROZ", X0, TOPB, T(20), TE(20), style="M", size=170, colour=BLUE, tend=e)
+    word(fr, t, "LAMBI LINE", X0, BOTB, T(21), TE(22), size=230, tend=e)
+    conn(fr, t, "lagti thi…", 984, BOTB + 90, T(23), TE(24), anchor="r", tend=e)
     # dotted queue line on the floor
     if t > T(17):
         k = eo((t - T(17)) / (T(22) - T(17)))
@@ -296,10 +298,10 @@ def s4(fr, t):
             mg.place(fr, _fitc["fly_s"], fx, fy, 1, -ang, exit_k(t, e) * cl((t - 10.6) / 0.2))
         else:
             fly(fr, fx, fy, t, a=exit_k(t, e))
-    conn(fr, t, "और दूसरी…", X0, TOPC, T(25), TE(26), tend=e)
-    conn(fr, t, "बस", X0, BOTB - 205, T(27), TE(27), tend=e)
-    word(fr, t, "इंतज़ार", X0, BOTB, T(28), TE(28), size=240, tend=e)
-    conn(fr, t, "करती रही।", 984, BOTB + 90, T(29), TE(30), anchor="r", tend=e)
+    conn(fr, t, "aur doosri…", X0, TOPC, T(25), TE(26), tend=e)
+    conn(fr, t, "bas", X0, BOTB - 255, T(27), TE(27), tend=e)
+    word(fr, t, "INTEZAAR", X0, BOTB, T(28), TE(28), size=240, tend=e)
+    conn(fr, t, "karti rahi.", 984, BOTB + 90, T(29), TE(30), anchor="r", tend=e)
 
 
 @scene(13.35, 15.25)
@@ -311,16 +313,16 @@ def s5(fr, t):
         mx = 340 + 380 * eio(k)
         my = 900 - 120 * math.sin(math.pi * cl(k))
         hero(fr, "magnifier", t, 13.5, mx, my, w=440, seed=12, sh=False, rot=-15 + 25 * eio(k), t1=e, anchor="c")
-    word(fr, t, "फ़र्क?", X0, TOPB, T(31), TE(31), size=250, tend=e)
-    conn(fr, t, "मिठाई में", X0, BOTB, T(32), TE(33), size=62, tend=e)
-    word(fr, t, "नहीं था", X0 + mg.text_width("मिठाई में", "c", 62, True) + 24, BOTB, T(34), TE(35), style="M", size=180, colour=BLUE, tend=e)
+    word(fr, t, "FARK?", X0, TOPB, T(31), TE(31), size=250, tend=e)
+    conn(fr, t, "mithai mein", X0, BOTB, T(32), TE(33), size=62, tend=e)
+    word(fr, t, "NAHI THA", X0 + mg.text_width("mithai mein", "c", 62) + 24, BOTB, T(34), TE(35), style="M", size=180, colour=BLUE, tend=e)
 
 
 @scene(15.25, 18.45)
 def s6(fr, t):
     e = 18.45
     hero(fr, "brain", t, 15.25, 560, 1250, w=640, seed=13, t1=e, drift=0.012)
-    # the queue shop flies into the brain and lights up on "याद"
+    # the queue shop flies into the brain and lights up on "YAAD"
     if A.get("shop") is not None and t > T(38):
         k = eo((t - T(38)) / (T(40) - T(38) + 0.15))
         x = 1000 - (1000 - 560) * k
@@ -336,10 +338,10 @@ def s6(fr, t):
             k = (t - T(40) - j * 0.18) / 0.7
             if 0 < k < 1:
                 mg.ring(fr, 560, 930, 90 + 420 * eo(k), 4, a=0.85 * (1 - k))
-    conn(fr, t, "फ़र्क था…", X0, TOPC, T(36), TE(37), tend=e)
-    conn(fr, t, "लोगों को", X0, BOTB - 215, T(38), TE(39), tend=e)
-    word(fr, t, "याद", X0, BOTB, T(40), TE(40), size=260, colour=BLUE, tend=e)
-    conn(fr, t, "कौन रहा।", X0 + mg.text_width("याद", "B", 260) + 24, BOTB, T(41), TE(42), size=62, tend=e)
+    conn(fr, t, "fark tha…", X0, TOPC, T(36), TE(37), tend=e)
+    conn(fr, t, "logon ko", X0, BOTB - 255, T(38), TE(39), tend=e)
+    word(fr, t, "YAAD", X0, BOTB, T(40), TE(40), size=260, colour=BLUE, tend=e)
+    conn(fr, t, "kaun raha.", X0 + mg.text_width("YAAD", "B", 260) + 24, BOTB, T(41), TE(42), size=62, tend=e)
 
 
 PHONE = {}
@@ -406,14 +408,14 @@ def s7(fr, t):
                 y = 880 - 260 * eo(k)
                 mg.ring(fr, x, y, 16 + 6 * k, 5, (255, 255, 255), 0.85 * (1 - k))
                 mg.glow(fr, x, y, 18, (255, 255, 255), 0.5 * (1 - k))
-    conn(fr, t, "आज ये लड़ाई", X0, TOPC, T(43), TE(45), tend=e)
-    word(fr, t, "गली में नहीं", X0, TOPB, T(46), TE(48), style="M", size=150, tend=e)
+    conn(fr, t, "aaj ye ladaai", X0, TOPC, T(43), TE(45), tend=e)
+    word(fr, t, "GALI MEIN NAHI", X0, TOPB, T(46), TE(48), style="M", size=150, tend=e)
     if t > TE(48) - 0.1:
         k2 = eo((t - TE(48) + 0.1) / 0.25)
-        wdt = mg.text_width("गली में नहीं", "M", 150)
-        mg.line(fr, (X0 - 10, TOPB - 80), (X0 - 10 + (wdt + 20) * k2, TOPB - 80), 7, BLUE, exit_k(t, e))
-    word(fr, t, "आपके फ़ोन पर", X0, BOTB + 40, T(49), TE(51), size=200, tend=e)
-    conn(fr, t, "होती है।", 984, BOTB + 120, T(52), TE(53), anchor="r", tend=e)
+        wdt = mg.text_width("GALI MEIN NAHI", "M", 150)
+        mg.line(fr, (X0 - 10, TOPB - 98), (X0 - 10 + (wdt + 20) * k2, TOPB - 98), 7, BLUE, exit_k(t, e))
+    word(fr, t, "AAPKE PHONE PAR", X0, BOTB + 40, T(49), TE(51), size=200, tend=e)
+    conn(fr, t, "hoti hai.", 984, BOTB + 120, T(52), TE(53), anchor="r", tend=e)
 
 
 REELS = ["shop", "laddoo", "brain", "coins", "camera", "shop2", "clock", "scale"]
@@ -453,8 +455,8 @@ def s8(fr, t):
             y = 1150 - 300 * eio(k)
             mg.glow(fr, 600, y, 70, (255, 255, 255), 0.7 * (1 - k))
             mg.ring(fr, 600, y, 34, 4, (255, 255, 255), 0.9 * (1 - k))
-    word(fr, t, "हर दिन।", X0, TOPB, T(54), TE(55), size=200, tend=e)
-    word(fr, t, "हर स्क्रॉल पर।", X0, BOTB + 40, T(56), TE(58), size=200, colour=BLUE, tend=e)
+    word(fr, t, "HAR DIN.", X0, TOPB, T(54), TE(55), size=200, tend=e)
+    word(fr, t, "HAR SCROLL PAR.", X0, BOTB + 40, T(56), TE(58), size=200, colour=BLUE, tend=e)
 
 
 @scene(24.3, 27.4)
@@ -494,9 +496,9 @@ def s9(fr, t):
                 y = land
             coin(fr, x, y, r, (t + j) * 7 if y < land else 0.3, exit_k(t, e))
     lt = (255, 255, 255) if t > T(60) else INK
-    conn(fr, t, "क्योंकि…", X0, TOPC, T(59), TE(59), tend=e, colour=lt)
-    word(fr, t, "जो दिखता है,", X0, TOPB, T(60), TE(62), size=200, tend=e, colour=lt)
-    word(fr, t, "वही बिकता है।", X0, BOTB + 40, T(63), TE(65), size=210, colour=GOLD, tend=e)
+    conn(fr, t, "kyunki…", X0, TOPC, T(59), TE(59), tend=e, colour=lt)
+    word(fr, t, "JO DIKHTA HAI,", X0, TOPB, T(60), TE(62), size=200, tend=e, colour=lt)
+    word(fr, t, "WAHI BIKTA HAI.", X0, BOTB + 40, T(63), TE(65), size=210, colour=GOLD, tend=e)
 
 
 @scene(27.4, 30.4)
@@ -519,7 +521,7 @@ def s10(fr, t):
             mg.ring(fr, cx, cy, 200 + 500 * eo(k), 5, a=0.8 * (1 - k))
         mg.dotted_ellipse(fr, cx, cy + 10, lw * 0.62, 120, phase=t * 0.8, a=0.8 * cl(k) * exit_k(t, e))
     word(fr, t, "Frame & Fame", cx, cy + 330, T(68), TE(70), style="M", size=140, anchor="c", tend=e)
-    conn(fr, t, "आपकी पहचान, हमारी कहानी", cx, cy + 420, TE(70) + 0.1, TE(70) + 0.4, size=50, anchor="c", tend=e)
+    conn(fr, t, "aapki pehchaan, humari kahaani", cx, cy + 420, TE(70) + 0.1, TE(70) + 0.4, size=50, anchor="c", tend=e)
 
 
 FILM = ["shop", "laddoo", "coins", "brain", "shop2", "scale", "clock", "shop"]
@@ -548,11 +550,11 @@ def s11(fr, t):
         for depth, x, y, th, i in sorted(cells):
             s = 0.75 + 0.25 * (depth + 1) / 2
             mg.place(fr, _fitc["film"][i], x, y, s * k_in, -math.degrees(math.cos(th)) * 0.2, (0.55 + 0.45 * (depth + 1) / 2) * exit_k(t, e))
-    conn(fr, t, "हम आपके बिज़नेस को", X0, TOPC, T(71), TE(74), tend=e)
-    conn(fr, t, "वो", X0, TOPB - 20, T(75), TE(75), size=60, tend=e)
-    word(fr, t, "कहानी", X0 + 70, TOPB + 10, T(76), TE(76), size=240, tend=e)
-    conn(fr, t, "देते हैं, जिसे लोग", X0, TOPB + 95, T(77), TE(80), tend=e)
-    word(fr, t, "भूल नहीं पाते।", X0, BOTB + 30, T(81), TE(83), size=210, colour=BLUE, tend=e)
+    conn(fr, t, "hum aapke business ko", X0, TOPC, T(71), TE(74), tend=e)
+    conn(fr, t, "wo", X0, TOPB - 20, T(75), TE(75), size=60, tend=e)
+    word(fr, t, "KAHAANI", X0 + mg.text_width("wo", "c", 60) + 22, TOPB + 10, T(76), TE(76), size=240, tend=e)
+    conn(fr, t, "dete hain, jise log", X0, TOPB + 95, T(77), TE(80), tend=e)
+    word(fr, t, "BHOOL NAHI PAATE.", X0, BOTB + 30, T(81), TE(83), size=210, colour=BLUE, tend=e)
 
 
 @scene(35.05, END)
@@ -573,7 +575,7 @@ def s12(fr, t):
         for q in range(3):
             k = ((ring_t % 1.2) / 0.55 + q / 3) % 1
             mg.ring(fr, 540, 900, 230 + 160 * k, 4, (255, 255, 255), 0.7 * (1 - k) * (1 - dark))
-    word(fr, t, "आज ही बात कीजिए।", X0, TOPB, T(84), TE(87), size=190, tend=37.9)
+    word(fr, t, "AAJ HI BAAT KIJIYE.", X0, TOPB, T(84), TE(87), size=190, tend=37.9)
     word(fr, t, "70862 69537", 540, BOTB - 60, 36.15, 36.9, style="B", size=200, anchor="c", colour=BLUE, tend=37.9)
     conn(fr, t, "frameandfame.in", 540, BOTB + 20, 36.9, 37.3, size=58, anchor="c", tend=37.9)
     if dark > 0:

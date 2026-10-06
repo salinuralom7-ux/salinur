@@ -218,9 +218,11 @@ def line(fr, p0, p1, th, colour=INK, a=1.0):
 
 # ---------------------------------------------------------------- type
 FONT_FILES = {
-    "B": ("teko-devanagari-700-normal.ttf", "teko-latin-700-normal.ttf"),
-    "M": ("teko-devanagari-600-normal.ttf", "teko-latin-600-normal.ttf"),
-    "c": ("mukta-devanagari-300-normal.ttf", "mukta-latin-300-normal.ttf"),
+    # Hinglish on screen (Salinur 2026-10-06): ref16 type — Anton caps, Bebas, Inter light italic.
+    "B": ("teko-devanagari-700-normal.ttf", "Anton-Regular.ttf"),
+    "M": ("teko-devanagari-600-normal.ttf", "BebasNeue-Regular.ttf"),
+    "c": ("mukta-devanagari-300-normal.ttf", "Inter-LightItalic.ttf"),
+    "C": ("mukta-devanagari-600-normal.ttf", "Inter-MediumItalic.ttf"),
 }
 
 
