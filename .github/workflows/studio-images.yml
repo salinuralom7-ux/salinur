@@ -1,0 +1,27 @@
+name: Studio images
+# Finds CC0 / public-domain photos (Openverse + Wikimedia Commons) for a project's queries.txt,
+# cuts them out with rembg and posts a zip to the release img-<video>.
+on:
+  push:
+    branches: ["claude/**"]
+    paths: ["studio/projects/*/img/queries.txt"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q "rembg[cpu]" pillow
+      - name: Fetch + cut out
+        run: |
+          for q in studio/projects/*/img/queries.txt; do
+            v=$(basename $(dirname $(dirname "$q")))
+            python3 studio/tools/fetch_images.py "$q" "/tmp/img_$v" 6
+            (cd /tmp && zip -qr "img_$v.zip" "img_$v")
+            gh release view "img-$v" >/dev/null 2>&1 || gh release create "img-$v" -t "img-$v" -n "CC0/PD cut-outs for $v" --prerelease
+            gh release upload "img-$v" "/tmp/img_$v.zip" --clobber
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
