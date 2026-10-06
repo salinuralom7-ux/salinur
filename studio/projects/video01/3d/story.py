@@ -103,7 +103,9 @@ def ground_road(y=-6.0, length=21):
 def walk(arm, p0, p1, f0, f1, speed_anim="walk"):
     """Walk from p0 to p1 between frames f0..f1, facing the direction of travel."""
     dx, dy = p1[0] - p0[0], p1[1] - p0[1]
-    arm.rotation_euler = (0, 0, math.atan2(dx, -dy))
+    # measured: rotz 0 faces -Y (camera), 90 faces -X  ->  heading (dx, dy) = atan2(-dx, -dy)
+    arm.rotation_euler = (0, 0, math.atan2(-dx, -dy))
+    arm.keyframe_insert("rotation_euler", frame=f0)      # turn happens at the start of this leg only
     K.key(arm, f0, location=(p0[0], p0[1], 0.12)); K.key(arm, f1, location=(p1[0], p1[1], 0.12))
     K.play(arm, speed_anim, f0, f1)
 
@@ -142,7 +144,7 @@ if SCENE == "doc_walk":          # "Dr. Pandey comes to your town, opens a small
 elif SCENE == "doc_film":        # "he starts making video every day"
     base(9); K.rbox("pave", (12, 4.0, 0.12), (0, -2.8, 0.1), M["pave"], bevel=0.04)
     clinic(0.0, 1.8)
-    doc = CH("character-male-e", (-1.0, -3.0, 0.12), rotz=math.radians(195), scale=2.3); K.dress_doctor(doc)
+    doc = CH("character-male-e", (-1.0, -3.0, 0.12), rotz=math.radians(-41), scale=2.3); K.dress_doctor(doc)   # faces the tripod camera
     K.play(doc, "idle", 1, 50); K.play(doc, "emote-yes", 50, 110)
     gear = K.empty("gear", (1.8, -6.2, 0))
     for a in range(3):
@@ -173,7 +175,6 @@ elif SCENE == "owner_out":       # "someday you step out of your hospital"
         o.hide_render = True; o.keyframe_insert("hide_render", frame=1)
         o.hide_render = False; o.keyframe_insert("hide_render", frame=12)
     walk(own, (door[0], door[1] + 0.3), (0.6, -4.8), 12, 105)
-    own.rotation_euler = (0, 0, math.radians(180))
     K.play(own, "idle", 106, FRAMES)
     LINEAR_LOC.append(own)
     cam_rig((0.4, -3.2, 1.5), (2.5, -16, 5.2), (1.2, -12.5, 4.0), lens=45)
@@ -185,9 +186,9 @@ elif SCENE == "queue":           # "a large queue of patients outside his clinic
              "character-male-c", "character-female-f", "character-male-f"]
     for k, kind in enumerate(kinds):
         x = door[0] + 1.0 + k * 1.55
-        a = CH(kind, (x, -3.4, 0.12), rotz=math.radians(-62 + random.uniform(-12, 12)), scale=2.2)
+        a = CH(kind, (x, -3.4, 0.12), rotz=math.radians(60 + random.uniform(-12, 12)), scale=2.2)   # facing the clinic door, 3/4 to camera
         K.play(a, "idle", 1 + k * 4, FRAMES)
-    wc = CH("character-female-d", (door[0] + 1.0 + 8 * 1.55 + 0.4, -3.4, 0.12), rotz=math.radians(-62), scale=2.2)
+    wc = CH("character-female-d", (door[0] + 1.0 + 8 * 1.55 + 0.4, -3.4, 0.12), rotz=math.radians(60), scale=2.2)
     K.play(wc, "wheelchair-sit", 1, FRAMES)
     bpy.ops.import_scene.gltf(filepath=f"{K.CHARS}/wheelchair.glb")
     for o in bpy.context.selected_objects:
@@ -220,7 +221,8 @@ for a in bpy.data.actions:
                     if fc.data_path in ("location",) and any(o.animation_data and o.animation_data.action == a for o in LINEAR_LOC):
                         for kp in fc.keyframe_points:
                             kp.interpolation = "LINEAR"
-                    if fc.data_path in ("hide_render",) or "Emission" in fc.data_path or "default_value" in fc.data_path:
+                    if fc.data_path in ("hide_render", "rotation_euler") and any(o.animation_data and o.animation_data.action == a for o in LINEAR_LOC) \
+                            or fc.data_path == "hide_render" or "Emission" in fc.data_path or "default_value" in fc.data_path:
                         for kp in fc.keyframe_points:
                             kp.interpolation = "CONSTANT"
 

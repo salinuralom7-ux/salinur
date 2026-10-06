@@ -3,3 +3,4 @@ st_doc_film.py 1 110 20
 st_owner_out.py 1 140 20
 st_queue.py 1 170 20
 st_steal.py 1 120 20
+# v2: characters face their walking direction (04:07)
