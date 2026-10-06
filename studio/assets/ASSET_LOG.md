@@ -18,3 +18,4 @@ Every asset in the library: where it came from and its license. Nothing goes int
 | fonts/Tinos-Regular.ttf, Tinos-Bold.ttf | https://www.npmjs.com/package/@fontsource/tinos | Apache 2.0 | 2026-10-06 | Times-style serif captions (style A) |
 | fonts/PlayfairDisplay-Black.ttf, -Bold.ttf | https://www.npmjs.com/package/@fontsource/playfair-display | SIL OFL 1.1 | 2026-10-06 | display titles |
 | fonts/DMSerifDisplay-Regular.ttf | https://www.npmjs.com/package/@fontsource/dm-serif-display | SIL OFL 1.1 | 2026-10-06 | |
+| sfx/pack01/*.wav (35 sounds) | Salinur-supplied SFX pack video "That Will Make Your Videos More Engaging" | licence unverified — RISKY ones (brand/game sounds) excluded from publishing | 2026-10-06 | see pack01/README.md |

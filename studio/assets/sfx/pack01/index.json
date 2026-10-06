@@ -1,0 +1,212 @@
+[
+ {
+  "file": "01_whoosh.wav",
+  "name": "whoosh",
+  "dur": 0.48,
+  "risky": false
+ },
+ {
+  "file": "02_gear.wav",
+  "name": "gear",
+  "dur": 1.09,
+  "risky": false
+ },
+ {
+  "file": "03_click.wav",
+  "name": "click",
+  "dur": 0.2,
+  "risky": false
+ },
+ {
+  "file": "04_pop.wav",
+  "name": "pop",
+  "dur": 0.22,
+  "risky": false
+ },
+ {
+  "file": "05_cash_register.wav",
+  "name": "cash_register",
+  "dur": 1.14,
+  "risky": false
+ },
+ {
+  "file": "06_aww.wav",
+  "name": "aww",
+  "dur": 1.5,
+  "risky": false
+ },
+ {
+  "file": "07_wrong_answer.wav",
+  "name": "wrong_answer",
+  "dur": 0.94,
+  "risky": false
+ },
+ {
+  "file": "08_whoosh_fire_transition.wav",
+  "name": "whoosh_fire_transition",
+  "dur": 1.62,
+  "risky": false
+ },
+ {
+  "file": "09_game_point.wav",
+  "name": "game_point",
+  "dur": 0.42,
+  "risky": true
+ },
+ {
+  "file": "10_discord_join.wav",
+  "name": "discord_join",
+  "dur": 0.71,
+  "risky": true
+ },
+ {
+  "file": "11_discord_leave.wav",
+  "name": "discord_leave",
+  "dur": 0.59,
+  "risky": true
+ },
+ {
+  "file": "12_iphone_send.wav",
+  "name": "iphone_send",
+  "dur": 0.36,
+  "risky": true
+ },
+ {
+  "file": "13_iphone_receive.wav",
+  "name": "iphone_receive",
+  "dur": 0.49,
+  "risky": true
+ },
+ {
+  "file": "14_apple_notification.wav",
+  "name": "apple_notification",
+  "dur": 0.73,
+  "risky": true
+ },
+ {
+  "file": "15_anime_wow.wav",
+  "name": "anime_wow",
+  "dur": 3.27,
+  "risky": true
+ },
+ {
+  "file": "16_bone_crack.wav",
+  "name": "bone_crack",
+  "dur": 0.52,
+  "risky": false
+ },
+ {
+  "file": "17_slap.wav",
+  "name": "slap",
+  "dur": 0.48,
+  "risky": false
+ },
+ {
+  "file": "18_camera_shutter.wav",
+  "name": "camera_shutter",
+  "dur": 0.49,
+  "risky": false
+ },
+ {
+  "file": "19_whoosh_2.wav",
+  "name": "whoosh_2",
+  "dur": 0.24,
+  "risky": false
+ },
+ {
+  "file": "20_paper.wav",
+  "name": "paper",
+  "dur": 1.05,
+  "risky": false
+ },
+ {
+  "file": "21_kids_yay.wav",
+  "name": "kids_yay",
+  "dur": 3.63,
+  "risky": false
+ },
+ {
+  "file": "22_display_digits.wav",
+  "name": "display_digits",
+  "dur": 2.02,
+  "risky": false
+ },
+ {
+  "file": "23_party_horn.wav",
+  "name": "party_horn",
+  "dur": 0.81,
+  "risky": false
+ },
+ {
+  "file": "24_glitch.wav",
+  "name": "glitch",
+  "dur": 1.2,
+  "risky": false
+ },
+ {
+  "file": "25_anvil.wav",
+  "name": "anvil",
+  "dur": 1.17,
+  "risky": false
+ },
+ {
+  "file": "26_cinematic_hit.wav",
+  "name": "cinematic_hit",
+  "dur": 3.05,
+  "risky": false
+ },
+ {
+  "file": "27_in_and_out.wav",
+  "name": "in_and_out",
+  "dur": 1.03,
+  "risky": false
+ },
+ {
+  "file": "28_sudden_suspense.wav",
+  "name": "sudden_suspense",
+  "dur": 1.09,
+  "risky": false
+ },
+ {
+  "file": "29_boom.wav",
+  "name": "boom",
+  "dur": 1.19,
+  "risky": false
+ },
+ {
+  "file": "30_glass_shatter.wav",
+  "name": "glass_shatter",
+  "dur": 0.8,
+  "risky": false
+ },
+ {
+  "file": "31_clock_ticking.wav",
+  "name": "clock_ticking",
+  "dur": 1.91,
+  "risky": false
+ },
+ {
+  "file": "32_mario_coin.wav",
+  "name": "mario_coin",
+  "dur": 0.94,
+  "risky": true
+ },
+ {
+  "file": "33_crumpled_paper.wav",
+  "name": "crumpled_paper",
+  "dur": 1.84,
+  "risky": false
+ },
+ {
+  "file": "34_ding.wav",
+  "name": "ding",
+  "dur": 1.18,
+  "risky": false
+ },
+ {
+  "file": "35_glitch_2.wav",
+  "name": "glitch_2",
+  "dur": 0.61,
+  "risky": false
+ }
+]
