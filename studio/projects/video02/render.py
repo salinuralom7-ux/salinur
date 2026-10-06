@@ -51,6 +51,16 @@ def assets():
     for n in ["shop", "shop2", "scale", "laddoo", "queue", "person1", "person2", "person3", "waiting", "clock", "magnifier",
               "brain", "spotlight", "coins", "camera", "telephone", "phone", "flyimg"]:
         A[n] = cut(n)
+    for n in ("person1", "person2"):       # queue = navy silhouettes (no faces, clones don't read as clones)
+        p = os.path.join(IMG, n + ".png")
+        if os.path.exists(p):
+            sp = mg.load_cut(p, 900, tone=False)
+            h_ = sp.shape[0]
+            grad = np.linspace(0, 1, h_, dtype=np.float32)[:, None, None]
+            col = np.array((40, 62, 140), np.float32) * (1 - grad) + np.array((16, 28, 78), np.float32) * grad
+            sp[..., :3] = col * sp[..., 3:4]
+            A[n] = sp
+            A[n + "m"] = A[n][:, ::-1].copy()
     if A["shop2"] is None and A["shop"] is not None:
         A["shop2"] = A["shop"][:, ::-1].copy()        # mirrored twin shop
     # F&F logo pieces (navy F, blue &, navy F) keyed out of the navy square
@@ -181,8 +191,8 @@ _fitc = {}
 
 
 def word(fr, t, text, x, yb, t0, t1, style="B", size=180, colour=INK, anchor="l", italic=False, tend=None, pop=True, maxw=860):
-    if yb < 700:
-        maxw = min(maxw, 740)          # keep clear of the IG tag top-right
+    if yb < 700 and anchor == "l":
+        maxw = min(maxw, 790 - x)          # keep clear of the IG tag top-right
     full = mg.text_width(text, style, size, italic)
     if full > maxw:
         size = int(size * maxw / full)
@@ -251,16 +261,16 @@ def s2(fr, t):
 @scene(6.15, 10.05)
 def s3(fr, t):
     e = 10.05
-    hero(fr, "shop", t, 6.15, 250, 1180, w=380, seed=5, t1=e, drift=0.006)
+    hero(fr, "shop", t, 6.15, 200, 1195, w=360, seed=5, t1=e, drift=0.006)
     # queue: people pop in one by one from the shop door outwards
-    ppl = [n for n in ("person1", "person2", "person3") if A.get(n) is not None]
+    ppl = [n for n in ("person1", "person2", "person1m", "person2m") if A.get(n) is not None]
     if ppl:
-        n_people = 6
+        n_people = 8
         for j in range(n_people):
             tj = T(17) + j * (T(22) - T(17)) / n_people
-            x = 470 + j * 95
-            s_ = 1 - j * 0.05
-            hero(fr, ppl[j % len(ppl)], t, tj, x, 1190 - j * 6, h=int(430 * s_), seed=10 + j, t1=e, sha=0.3)
+            x = 390 + j * 90 + (11, -6, 4, -9, 7, -3, 10, 0)[j]
+            s_ = (1.0, 0.93, 1.05, 0.9, 0.98, 1.03, 0.92, 1.0)[j] * (1 - j * 0.03)
+            hero(fr, ppl[j % len(ppl)], t, tj, x, 1192 - j * 5, h=int(330 * s_), seed=10 + j, t1=e, sha=0.3)
     elif A.get("queue") is not None:
         hero(fr, "queue", t, T(17), 690, 1190, w=640, seed=6, t1=e, sha=0.3)
     conn(fr, t, "par ek dukaan ke baahar,", X0, TOPC, T(15), TE(19), tend=e)
@@ -413,7 +423,7 @@ def s7(fr, t):
     if t > TE(48) - 0.1:
         k2 = eo((t - TE(48) + 0.1) / 0.25)
         wdt = mg.text_width("GALI MEIN NAHI", "M", 150)
-        mg.line(fr, (X0 - 10, TOPB - 98), (X0 - 10 + (wdt + 20) * k2, TOPB - 98), 7, BLUE, exit_k(t, e))
+        mg.line(fr, (X0 - 10, TOPB - 74), (X0 - 10 + (wdt + 20) * k2, TOPB - 74), 7, BLUE, exit_k(t, e))
     word(fr, t, "AAPKE PHONE PAR", X0, BOTB + 40, T(49), TE(51), size=200, tend=e)
     conn(fr, t, "hoti hai.", 984, BOTB + 120, T(52), TE(53), anchor="r", tend=e)
 

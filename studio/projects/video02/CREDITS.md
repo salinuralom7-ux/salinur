@@ -5,7 +5,7 @@
 | Voice-over | ElevenLabs (Salinur's account, "Roger" voice) | ElevenLabs output owned by Salinur per his plan |
 | Music | Own synthesis (`music.py`, studio/tools/synth.py) | Own work |
 | SFX | `assets/sfx/pack01` (Salinur's SFX pack, licence unverified — no brand/game sounds used) + own synth (`assets/sfx/pro`) | see pack01/README.md |
-| Fonts | Teko, Mukta (Google Fonts via @fontsource) | SIL OFL 1.1 |
+| Fonts | Anton, Bebas Neue, Inter (on screen); Teko, Mukta kept for Devanagari | SIL OFL 1.1 |
 | F&F logo | Salinur / Frame & Fame | Owner's brand |
 | Sweet-shop counter | Canva AI image (Salinur's Canva account) | Canva AI output, Canva content licence |
 | Photo cut-outs (background removed + duotone in code) | see table below | CC0 / Public domain |
@@ -21,3 +21,6 @@
 | telephone | https://www.rawpixel.com/image/6034335/analog-phone-free-public-domain-cc0-photo | CC0 |
 | waiting man | https://stocksnap.io/photo/man-waiting-8YM7T7AERK (Bruce Mars) | CC0 |
 | movie camera | https://stocksnap.io/photo/camera-vintage-EKLKJP8RVN (Ethan Robertson) | CC0 |
+| queue people (shown as flat silhouettes) | https://www.flickr.com/photos/204415310@N04/55188029562 (Anthony Adoré) | Public domain mark |
+| queue people (shown as flat silhouettes) | https://commons.wikimedia.org/wiki/File:Indian_Woman_in_Saree.jpg | CC0 |
+| bowl of sweets | https://www.flickr.com/photos/156700692@N02/55214790303 (GeorgeTan#1) | CC0 |
