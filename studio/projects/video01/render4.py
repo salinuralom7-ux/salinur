@@ -306,7 +306,7 @@ CARDS = [
 FRONT = [
     O.MoneyRain(9.20, 10.15),
     O.YearsOfEffort(10.24, 11.62),          # ONE point: "years of effort"
-    O.CameraRec(33.66, 35.20),
+    O.CameraRec(33.28, 34.48),
     O.PhoneRing(52.65, 55.30),
 ]
 
@@ -353,10 +353,47 @@ class Behind:
 
 BEHIND = [
     Behind("s1", 7.05, 9.20, 1, 129),
-    Behind("s2", 15.02, 17.62, 1, 156),
-    Behind("s2", 18.45, 21.35, 161, 235),
     Behind("s3", 48.55, 50.60, 1, 120, shift=-0.05, scale=1.0, full=True),
 ]
+
+# ------------------------------------------------------------------ 3D story scenes IN FRONT (above captions, face clear)
+class FrontScene:
+    """Transparent 3D diorama (Kenney mini characters) shown over his chest. Times are OUT-time."""
+    def __init__(self, scene, t0, t1, nframes, cy=0.625 * H, width=1000):
+        self.scene, self.t0, self.t1, self.n, self.cy, self.w = scene, t0, t1, nframes, cy, width
+
+    def draw(self, img, t):
+        if not (self.t0 <= t <= self.t1):
+            return
+        u = (t - self.t0) / (self.t1 - self.t0)
+        f = 1 + int(round(u * (self.n - 1)))
+        p = f"3d/renders/{self.scene}/f_{f:04d}.png"
+        if not os.path.exists(p):
+            return
+        im = cv2.imread(p, cv2.IMREAD_UNCHANGED)
+        h = int(self.w * im.shape[0] / im.shape[1])
+        im = cv2.resize(im, (self.w, h), interpolation=cv2.INTER_CUBIC).astype(np.float32)
+        k = min(ease_out((t - self.t0) / 0.22), ease_out((self.t1 - t) / 0.2))
+        sc = 0.88 + 0.12 * ease_back((t - self.t0) / 0.3)
+        R.place(img, im[..., :3], im[..., 3:4] / 255.0, W / 2, self.cy + 30 * (1 - k), sc, k)
+
+
+STORY = [
+    FrontScene("doc_walk", 14.42, 17.18, 160),
+    FrontScene("doc_film", 17.64, 19.55, 110),
+    FrontScene("owner_out", 19.58, 22.04, 140),
+    FrontScene("queue", 22.10, 24.95, 170),
+    FrontScene("steal", 33.69, 35.30, 120),
+]
+LIFT_Z, LIFT_DY = 1.06, -80           # during a story scene: lift his face a little so the scene sits below it
+
+
+def lift(t):
+    k = 0.0
+    for sc_ in STORY:
+        k = max(k, min(ease_io((t - sc_.t0 + 0.25) / 0.3), ease_io((sc_.t1 + 0.25 - t) / 0.3)))
+    return k
+
 
 # F&F brand panel behind the speaker (ref07 "META AD EXPERT")
 LOGO = Image.open("../../assets/brand/ff_logo.png").convert("RGBA")
@@ -405,6 +442,9 @@ def compose(i, fr, mk):
     t = i / FPS
     z, dy, sx, sy, speed = R.camera(t)
     # follow the face: glide it back toward the centre, zooming in a little when he drifts far
+    kl = lift(t)
+    z = z * (1 - kl) + max(z, LIFT_Z) * kl
+    dy = dy * (1 - kl) + LIFT_DY * kl
     fx = FACE_X[min(i, len(FACE_X) - 1)]
     d = (0.48 - fx) * W
     z = max(1.0, z, min(1.28, 1 + abs(d) * 2 / W * 0.8))    # zoom in just enough to re-centre him
@@ -434,6 +474,8 @@ def compose(i, fr, mk):
         c.draw(out, t)
     for f in FRONT:
         f.draw(out, t)
+    for sc_ in STORY:
+        sc_.draw(out, t)
     titled = any(tt.draw(out, t) for tt in TITLES)
     if not titled:
         for t0, t1, text in CAPS:
