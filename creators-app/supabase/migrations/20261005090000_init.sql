@@ -1,5 +1,5 @@
 -- =====================================================================
--- CreatorCity — initial schema
+-- InfluJi — initial schema
 --
 -- Paste this whole file into Supabase → SQL Editor → Run (or use
 -- `supabase db push`). It is safe to run more than once.

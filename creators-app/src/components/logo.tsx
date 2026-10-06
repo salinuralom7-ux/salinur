@@ -9,7 +9,10 @@ export function Logo({ className }: { className?: string }) {
       <span className="relative grid size-8 place-items-center rounded-xl bg-brand shadow-lg shadow-pink/30 transition-transform group-hover:rotate-[-8deg]">
         <span className="size-2.5 rounded-full bg-lime" />
       </span>
-      <span className="font-display-tight text-xl font-bold">{site.name}</span>
+      <span className="font-display-tight text-xl font-bold">
+        {site.nameParts[0]}
+        <span className="text-brand">{site.nameParts[1]}</span>
+      </span>
     </Link>
   );
 }

@@ -1,4 +1,4 @@
-# CreatorCity
+# InfluJi
 
 India's marketplace where local businesses discover and book Instagram creators near them.
 
@@ -6,7 +6,7 @@ India's marketplace where local businesses discover and book Instagram creators 
 - **Businesses** search, view and contact creators for free.
 - No commission, no booking fees, no other paid plans.
 
-> "CreatorCity" is a placeholder brand. Rename it in one place: `src/config/site.ts`.
+Live at **[influji.in](https://influji.in)** (once deployed). The brand name lives in one place: `src/config/site.ts`.
 
 ## Tech stack
 
@@ -109,7 +109,8 @@ tests/db/               database security checks (npm run test:db)
 2. In Vercel: **Add New → Project**, import the repo.
 3. Set **Root Directory** to `creators-app` (this repo also contains another app).
 4. Add the environment variables from `.env.example` under **Settings → Environment Variables**.
-5. Deploy. Set `NEXT_PUBLIC_SITE_URL` to your real domain once you have one.
+5. Deploy, then **Settings → Domains** → add `influji.in` and `www.influji.in`, and follow Vercel's DNS
+   instructions at your domain registrar. Set `NEXT_PUBLIC_SITE_URL=https://influji.in`.
 
 ## Build progress
 

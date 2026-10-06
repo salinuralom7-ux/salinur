@@ -10,7 +10,7 @@ computer and into Vercel.
 
 1. Go to **supabase.com** → **Start your project** → sign in with GitHub.
 2. **New project**
-   - Name: `creatorcity` (anything works)
+   - Name: `influji` (anything works)
    - Database password: click **Generate**, then save it in your password manager.
    - Region: **South Asia (Mumbai)**, closest to your users, so the site is faster.
 3. Wait about 1 minute while it sets up.
@@ -43,10 +43,10 @@ computer and into Vercel.
 
 Left menu → **Authentication** → **URL Configuration**:
 
-- **Site URL:** `http://localhost:3000` for now. Change it to your real domain at launch.
+- **Site URL:** `http://localhost:3000` for now. Change it to `https://influji.in` at launch.
 - **Redirect URLs**, add:
   - `http://localhost:3000/auth/callback`
-  - `https://YOUR-DOMAIN/auth/callback` (once you have it)
+  - `https://influji.in/auth/callback` and `https://www.influji.in/auth/callback`
   - `https://*.vercel.app/auth/callback` (Vercel preview links)
 
 ## 5. Email login codes (2 min)
@@ -56,22 +56,22 @@ We log people in with a 6-digit code instead of a link (links often break inside
 Left menu → **Authentication** → **Emails** → **Templates**. In **both** "Confirm signup" and "Magic Link", replace the body with:
 
 ```html
-<h2>Your CreatorCity login code</h2>
+<h2>Your InfluJi login code</h2>
 <p>Enter this code to log in:</p>
 <p style="font-size:32px;font-weight:bold;letter-spacing:6px">{{ .Token }}</p>
 <p>It expires in 1 hour. If you didn't ask for it, ignore this email.</p>
 ```
 
-Set the subject to `Your CreatorCity login code`.
+Set the subject to `Your InfluJi login code`.
 
 > ⚠️ **Before launch:** Supabase's built-in email only sends a few emails per hour, which is fine for testing but not for real users.
-> Set up free custom email: sign up at **resend.com** (3,000 emails/month free), verify your domain, then in
+> Set up free custom email: sign up at **resend.com** (3,000 emails/month free), verify `influji.in`, then in
 > **Authentication → Emails → SMTP Settings** enter Resend's SMTP details (host `smtp.resend.com`, port `465`,
-> user `resend`, password = your Resend API key, sender e.g. `hello@your-domain`).
+> user `resend`, password = your Resend API key, sender e.g. `hello@influji.in`).
 
 ## 6. Google login (8 min)
 
-1. Go to **console.cloud.google.com** → create a project called `CreatorCity`.
+1. Go to **console.cloud.google.com** → create a project called `InfluJi`.
 2. **APIs & Services → OAuth consent screen** → External → fill in the app name, support email and developer email → Save. Add your domain later.
 3. **APIs & Services → Credentials → Create credentials → OAuth client ID**
    - Application type: **Web application**

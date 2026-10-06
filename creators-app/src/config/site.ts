@@ -2,16 +2,16 @@ import { PLANS } from "@/lib/pricing";
 
 /**
  * Single source of truth for brand + product constants.
- *
- * The brand name is a placeholder. To rename the product, change `name`
- * (and `url` once you have a domain) — every page, title and legal text
- * reads from here.
+ * Every page, title and legal text reads the brand name from here.
  */
 export const site = {
-  name: "CreatorCity",
+  name: "InfluJi",
+  /** The logo shows the second part in the brand gradient: Influ + Ji. */
+  nameParts: ["Influ", "Ji"] as const,
+  domain: "influji.in",
   tagline: "India's marketplace where local businesses discover and book Instagram creators near them.",
   shortTagline: "Your city's creators, one scroll away.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? (process.env.NODE_ENV === "production" ? "https://influji.in" : "http://localhost:3000"),
   contactEmail: "hello@example.com", // TODO: replace with your support email
   /** Monthly creator price in rupees. Plans (monthly ₹99 / yearly ₹594) live in src/lib/pricing.ts. */
   creatorPriceInr: PLANS.monthly.priceInr,
