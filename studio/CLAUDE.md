@@ -228,7 +228,10 @@ All reference links live in `references/REFERENCE_LINKS.md` (one row per video, 
 2. Decode it right away (steps below) and mark it `decoded`.
 3. Tell me in 3–5 lines what's new in it compared to the current combined style, and what you'll change in my next video because of it.
 
-Decoding each link:
+**Training mode (Salinur, 2026-10-06):** he sends many references; no editing that day, only study. From the next day he sends one video per day to edit.
+For EVERY reference: run `tools/study_reference.py <file> <name>`, push `references/<name>/analyze_in.opus` for the Demucs voice/music split, then look at every contact sheet and every shot frame and fill in `references/<name>/STUDY.md` (typography, captions, colour grade, lighting, camera & motion, transitions, graphics/B-roll/3D placement, music, SFX, why it retains, steal this). Then fold it into `references/PATTERN_LIBRARY.md` (with "seen in" counts). Before every edit, re-read PATTERN_LIBRARY.md and follow its Defaults and Moment → treatment table.
+
+Decoding each link (older quick method):
 1. Run `tools/decode_reference.sh <url> <name>` — downloads with `yt-dlp` into `references/<name>/` (for study only — never reuse their footage, music or graphics), extracts frames (2 fps + scene-change frames), audio, loudness stats, cut timestamps and a word-level transcript.
 2. Look at the frames yourself and break down into `references/REFERENCE_BREAKDOWN.md`:
    - **Editing style & cuts:** average shot length, cuts per minute, jump-cut and zoom patterns
