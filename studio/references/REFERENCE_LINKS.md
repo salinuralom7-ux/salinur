@@ -12,6 +12,12 @@ Status: `pending` (not yet decoded) · `decoded` (in REFERENCE_BREAKDOWN.md) · 
 | 4 | 2026-10-05 | ref04 | https://youtube.com/shorts/mNq_5QWu7uo | pending | — |
 | 5 | 2026-10-05 | ref05 | https://youtube.com/shorts/OyqBzKARHCE | pending | — |
 | 6 | 2026-10-05 | ref06 | https://youtube.com/shorts/HjCRd-jNQdg | pending | — |
+| 7 | 2026-10-06 | ref07 | video file (BuildX Media agency ad) | decoded | "learn captions, transitions, music" |
+| 8 | 2026-10-06 | ref08 | video file (editing tips, Hinglish) | decoded | same |
+| 9 | 2026-10-06 | ref09 | video file (SFX guide) | decoded | same |
+| 10 | 2026-10-06 | ref10 | video file (Captions app ad) | decoded | same |
+| 11 | 2026-10-06 | ref11 | video file (doctor content strategist) | decoded | same |
+
 
 > 2026-10-05: all six are `pending`. This cloud environment blocks youtube.com, and YouTube blocks GitHub's servers ("confirm you're not a bot").
 > Working route: Salinur screen-records each short and shares the files; run `tools/decode_reference.sh <file> <name>`.
