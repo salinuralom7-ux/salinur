@@ -13,7 +13,7 @@ import mg, mgx
 from mg import W, H, cl, eo, eio, eb, spring
 
 FPS = 30
-END = 43.4
+END = 42.6
 WHITE, CREAM = (255, 255, 255), (246, 236, 214)
 GOLD, GOLD_HI = (245, 197, 66), (255, 226, 140)
 GREEN, RED = (46, 214, 123), (255, 82, 82)
@@ -25,12 +25,14 @@ A, _c = {}, {}
 
 
 def load():
-    for n, w in [("wallet", 760), ("moth", 400), ("bike", 700), ("car", 760), ("chai", 440), ("coffee", 600), ("piggy", 420), ("coins", 340)]:
+    for n, w in [("wallet", 760), ("moth", 400), ("bike", 700), ("car", 760), ("chai", 580), ("coffee", 600), ("piggy", 420), ("coins", 340)]:
         p = os.path.join(IMG, n + ".png")
         if os.path.exists(p):
             sp = mg.load_cut(p, 1200, tone=False)
             al = np.clip((sp[..., 3:4] - 0.45) / 0.4, 0, 1)          # drop rembg's half-transparent leftovers
             sp = np.concatenate([sp[..., :3] / np.maximum(sp[..., 3:4], 1e-3) * al, al], axis=2).astype(np.float32)
+            ys, xs = np.where(al[..., 0] > 0.05)
+            sp = sp[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
             A[n] = mg.fit(sp, w, w)
     A["mark"] = mg.fit(mg.to_sprite(np.array(Image.open(os.path.join(BRAND, "mark_transparent.png")).convert("RGBA"))), 460, 460)
     A["mark_s"] = mg.fit(A["mark"], 170, 170)
@@ -148,6 +150,8 @@ def scene(t0, t1):
 
 
 def counter_val(t):
+    if t < 0.7:
+        return 20000 * eo(t / 0.7)
     return 20000 + 40000 * eo((t - 3.95) / 0.85) if t > 3.95 else 20000
 
 
@@ -172,13 +176,15 @@ def s_hook(fr, t):
     e = 7.62
     small(fr, t, "salary", 540, 330, -1, 72, CREAM, t1=e)
     v = counter_val(t)
-    rolling = 3.95 < t < 4.85
+    rolling = 3.95 < t < 4.85 or t < 0.7
     col = GREEN if rolling else GOLD
     # rolling digits get a small vertical jitter = slot-machine feel
     jit = 6 * math.sin(t * 90) if rolling else 0
     txt(fr, t, "₹" + mgx.inr(v), 540, 590 + jit, -1, 250, col, t1=e)
     if 4.85 < t < 5.4:
         ring_burst(fr, t, 4.85, 540, 500, 120, 460, GOLD, 1)
+    if 0.7 < t < 1.3:
+        ring_burst(fr, t, 0.7, 540, 500, 120, 460, GOLD, 1)
     # wallet: there from frame 1, shakes on "paise khatam"
     rot = 0
     for ts in (3.02, 6.76):
@@ -205,9 +211,9 @@ def s_why(fr, t):
 @scene(8.5, 10.6)
 def s_name(fr, t):
     e = 10.6
-    small(fr, t, "ise kehte hain", 540, 760, 8.52, 72, CREAM, t1=e)
-    txt(fr, t, "LIFESTYLE", 540, 1000, 9.45, 220, WHITE, t1=e)
-    txt(fr, t, "CREEP", 540, 1290, 9.75, 300, GOLD, t1=e)
+    small(fr, t, "ise kehte hain", 540, 760, 8.52, 90, CREAM, t1=e)
+    txt(fr, t, "LIFESTYLE", 540, 1000, 9.3, 220, WHITE, t1=e)
+    txt(fr, t, "CREEP", 540, 1290, 9.6, 300, GOLD, t1=e)
     if t > 9.9:
         k = eo((t - 9.9) / 0.4)
         wd = mg.text_width("CREEP", "B", 300)
@@ -467,26 +473,26 @@ def s_share(fr, t):
     if a > 0:
         cy = 930
         floor(fr, 540, cy + 300, 420, a)
-        mg.place(fr, phone_spr(300, 560, GOLD, (18, 26, 60)), 540, cy, s, 0, a)
-        mg.place(fr, A["mark_s"], 540, cy - 80, s * 0.9, 0, a)
+        mg.place(fr, phone_spr(300, 560, GOLD, (18, 26, 60)), 540, cy, s * 1.3, 0, a)
+        mg.place(fr, A["mark_s"], 540, cy - 100, s * 1.2, 0, a)
         # share button on the phone
-        pulse = 1 + 0.08 * math.sin(t * 10) if t < 33.7 else 1
-        mgx.dot(fr, 540, cy + 150, 52 * s * pulse, (40, 120, 254), a)
-        mg.place(fr, mgx.paper_plane(56), 540, cy + 150, s, 0, a)
+        pulse = 1 + 0.1 * math.sin(t * 10) if t < 33.7 else 1
+        mgx.dot(fr, 540, cy + 200, 64 * s * pulse, (40, 120, 254), a)
+        mg.place(fr, mgx.paper_plane(70), 540, cy + 200, s, 0, a)
     # paper plane flies out on "bhejiye"
     if t > 33.7:
         k = (t - 33.7) / 1.1
         if k < 1:
             x = 540 + 520 * eio(k)
-            y = 1080 - 620 * eio(k) - 120 * math.sin(math.pi * k)
+            y = 1130 - 620 * eio(k) - 120 * math.sin(math.pi * k)
             for j in range(10):
                 kk = k - j * 0.035
                 if kk > 0:
-                    xx = 540 + 520 * eio(kk); yy = 1080 - 620 * eio(kk) - 120 * math.sin(math.pi * kk)
+                    xx = 540 + 520 * eio(kk); yy = 1130 - 620 * eio(kk) - 120 * math.sin(math.pi * kk)
                     mgx.dot(fr, xx, yy, 6, WHITE, 0.7 * (1 - j / 10))
             mg.place(fr, A["plane"], x, y, 1, -25, 1)
-    txt(fr, t, "SALARY: BADHTI", 540, 1400, 34.43, 120, GREEN, t1=e)
-    txt(fr, t, "SAVINGS: ZERO", 540, 1530, 36.65, 120, RED, t1=e)
+    txt(fr, t, "SALARY: BADHTI", 540, 1430, 34.43, 120, GREEN, t1=e)
+    txt(fr, t, "SAVINGS: ZERO", 540, 1550, 36.65, 120, RED, t1=e)
 
 
 @scene(37.7, END + 1)
@@ -503,6 +509,8 @@ def s_follow(fr, t):
         tapped = t >= ttap
         press = 0.92 if ttap <= t < ttap + 0.1 else 1.0
         col = GREEN if tapped else (40, 120, 254)
+        if tapped and t > 39.6:
+            press *= 1 + 0.035 * math.sin((t - 39.6) * 6)
         mg.place(fr, mgx.pill(560, 140, col + (255,)), 540, 1380, bs * press, 0, ba)
         if tapped:
             mg.put_text(fr, "FOLLOWING", 510, 1412, "B", 88, WHITE, ba, "c", False, bs * press)

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """me001 mix: tightened ElevenLabs VO + own beat + SFX on every element. Loudnorm -14 LUFS."""
 import json, re, subprocess
-DUR = 43.4
+DUR = 42.6
 P1, PP = "../../assets/sfx/pack01", "../../assets/sfx/pro"
 MUSIC_UNDER = [(0.0, 12), (9.45, 9), (24.7, 10), (26.0, 9), (37.7, 7), (41.8, 4)]
 pop, wh, wh2, clk = f"{P1}/04_pop.wav", f"{P1}/01_whoosh.wav", f"{P1}/19_whoosh_2.wav", f"{P1}/03_click.wav"
 SFX = [
-    (0.02, f"{PP}/subboom.wav", -12), (0.05, pop, -18),
+    (0.02, f"{PP}/subboom.wav", -12), (0.05, pop, -18), (0.0, f"{P1}/22_display_digits.wav", -17), (0.7, f"{P1}/05_cash_register.wav", -13),
     (3.05, f"{P1}/27_in_and_out.wav", -18), (3.25, f"{P1}/29_boom.wav", -14),
     (3.95, f"{P1}/22_display_digits.wav", -15), (4.85, f"{P1}/05_cash_register.wav", -12),
     (6.80, f"{P1}/27_in_and_out.wav", -18), (7.0, f"{P1}/29_boom.wav", -12),

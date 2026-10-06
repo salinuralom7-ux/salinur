@@ -8,7 +8,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "tools"))
 import synth as S
 
-DUR = 43.4
+DUR = 42.6
 B = 60 / 92
 BAR = 4 * B
 buf = np.zeros((int((DUR + 4) * S.SR), 2))
