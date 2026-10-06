@@ -1,0 +1,948 @@
+{
+ "language": "en",
+ "duration": 46.717125,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 3.54,
+   "text": "If I were the content strategist for a doctor, here are three things I'll make you post.",
+   "words": [
+    {
+     "w": "If",
+     "start": 0.0,
+     "end": 0.06
+    },
+    {
+     "w": "I",
+     "start": 0.06,
+     "end": 0.06
+    },
+    {
+     "w": "were",
+     "start": 0.06,
+     "end": 0.2
+    },
+    {
+     "w": "the",
+     "start": 0.2,
+     "end": 0.36
+    },
+    {
+     "w": "content",
+     "start": 0.36,
+     "end": 0.6
+    },
+    {
+     "w": "strategist",
+     "start": 0.6,
+     "end": 1.2
+    },
+    {
+     "w": "for",
+     "start": 1.2,
+     "end": 1.36
+    },
+    {
+     "w": "a",
+     "start": 1.36,
+     "end": 1.46
+    },
+    {
+     "w": "doctor,",
+     "start": 1.46,
+     "end": 1.74
+    },
+    {
+     "w": "here",
+     "start": 1.92,
+     "end": 2.02
+    },
+    {
+     "w": "are",
+     "start": 2.02,
+     "end": 2.14
+    },
+    {
+     "w": "three",
+     "start": 2.14,
+     "end": 2.32
+    },
+    {
+     "w": "things",
+     "start": 2.32,
+     "end": 2.64
+    },
+    {
+     "w": "I'll",
+     "start": 2.64,
+     "end": 3.02
+    },
+    {
+     "w": "make",
+     "start": 3.02,
+     "end": 3.18
+    },
+    {
+     "w": "you",
+     "start": 3.18,
+     "end": 3.32
+    },
+    {
+     "w": "post.",
+     "start": 3.32,
+     "end": 3.54
+    }
+   ]
+  },
+  {
+   "start": 3.8,
+   "end": 5.52,
+   "text": "Number one, answer the real question.",
+   "words": [
+    {
+     "w": "Number",
+     "start": 3.8,
+     "end": 4.14
+    },
+    {
+     "w": "one,",
+     "start": 4.14,
+     "end": 4.42
+    },
+    {
+     "w": "answer",
+     "start": 4.52,
+     "end": 4.86
+    },
+    {
+     "w": "the",
+     "start": 4.86,
+     "end": 5.06
+    },
+    {
+     "w": "real",
+     "start": 5.06,
+     "end": 5.2
+    },
+    {
+     "w": "question.",
+     "start": 5.2,
+     "end": 5.52
+    }
+   ]
+  },
+  {
+   "start": 5.74,
+   "end": 8.02,
+   "text": "The same question come to you every single time.",
+   "words": [
+    {
+     "w": "The",
+     "start": 5.74,
+     "end": 5.96
+    },
+    {
+     "w": "same",
+     "start": 5.96,
+     "end": 6.16
+    },
+    {
+     "w": "question",
+     "start": 6.16,
+     "end": 6.6
+    },
+    {
+     "w": "come",
+     "start": 6.6,
+     "end": 6.8
+    },
+    {
+     "w": "to",
+     "start": 6.8,
+     "end": 7.0
+    },
+    {
+     "w": "you",
+     "start": 7.0,
+     "end": 7.06
+    },
+    {
+     "w": "every",
+     "start": 7.06,
+     "end": 7.38
+    },
+    {
+     "w": "single",
+     "start": 7.38,
+     "end": 7.66
+    },
+    {
+     "w": "time.",
+     "start": 7.66,
+     "end": 8.02
+    }
+   ]
+  },
+  {
+   "start": 8.14,
+   "end": 9.74,
+   "text": "Take those and answer it on camera.",
+   "words": [
+    {
+     "w": "Take",
+     "start": 8.14,
+     "end": 8.38
+    },
+    {
+     "w": "those",
+     "start": 8.38,
+     "end": 8.64
+    },
+    {
+     "w": "and",
+     "start": 8.64,
+     "end": 8.9
+    },
+    {
+     "w": "answer",
+     "start": 8.9,
+     "end": 9.24
+    },
+    {
+     "w": "it",
+     "start": 9.24,
+     "end": 9.34
+    },
+    {
+     "w": "on",
+     "start": 9.34,
+     "end": 9.48
+    },
+    {
+     "w": "camera.",
+     "start": 9.48,
+     "end": 9.74
+    }
+   ]
+  },
+  {
+   "start": 9.98,
+   "end": 12.82,
+   "text": "One question, one reel, 40 seconds, that's it.",
+   "words": [
+    {
+     "w": "One",
+     "start": 9.98,
+     "end": 10.22
+    },
+    {
+     "w": "question,",
+     "start": 10.22,
+     "end": 10.78
+    },
+    {
+     "w": "one",
+     "start": 10.94,
+     "end": 11.12
+    },
+    {
+     "w": "reel,",
+     "start": 11.12,
+     "end": 11.48
+    },
+    {
+     "w": "40",
+     "start": 11.6,
+     "end": 11.82
+    },
+    {
+     "w": "seconds,",
+     "start": 11.82,
+     "end": 12.18
+    },
+    {
+     "w": "that's",
+     "start": 12.26,
+     "end": 12.74
+    },
+    {
+     "w": "it.",
+     "start": 12.74,
+     "end": 12.82
+    }
+   ]
+  },
+  {
+   "start": 12.88,
+   "end": 14.82,
+   "text": "And that's the easiest content that you can make.",
+   "words": [
+    {
+     "w": "And",
+     "start": 12.88,
+     "end": 13.04
+    },
+    {
+     "w": "that's",
+     "start": 13.04,
+     "end": 13.38
+    },
+    {
+     "w": "the",
+     "start": 13.38,
+     "end": 13.44
+    },
+    {
+     "w": "easiest",
+     "start": 13.44,
+     "end": 13.76
+    },
+    {
+     "w": "content",
+     "start": 13.76,
+     "end": 14.12
+    },
+    {
+     "w": "that",
+     "start": 14.12,
+     "end": 14.3
+    },
+    {
+     "w": "you",
+     "start": 14.3,
+     "end": 14.42
+    },
+    {
+     "w": "can",
+     "start": 14.42,
+     "end": 14.6
+    },
+    {
+     "w": "make.",
+     "start": 14.6,
+     "end": 14.82
+    }
+   ]
+  },
+  {
+   "start": 14.94,
+   "end": 16.8,
+   "text": "And that's actually what people are looking for.",
+   "words": [
+    {
+     "w": "And",
+     "start": 14.94,
+     "end": 15.28
+    },
+    {
+     "w": "that's",
+     "start": 15.28,
+     "end": 15.58
+    },
+    {
+     "w": "actually",
+     "start": 15.58,
+     "end": 15.94
+    },
+    {
+     "w": "what",
+     "start": 15.94,
+     "end": 16.06
+    },
+    {
+     "w": "people",
+     "start": 16.06,
+     "end": 16.22
+    },
+    {
+     "w": "are",
+     "start": 16.22,
+     "end": 16.38
+    },
+    {
+     "w": "looking",
+     "start": 16.38,
+     "end": 16.56
+    },
+    {
+     "w": "for.",
+     "start": 16.56,
+     "end": 16.8
+    }
+   ]
+  },
+  {
+   "start": 17.0,
+   "end": 18.42,
+   "text": "Number two, tell patient stories.",
+   "words": [
+    {
+     "w": "Number",
+     "start": 17.0,
+     "end": 17.18
+    },
+    {
+     "w": "two,",
+     "start": 17.18,
+     "end": 17.44
+    },
+    {
+     "w": "tell",
+     "start": 17.58,
+     "end": 17.78
+    },
+    {
+     "w": "patient",
+     "start": 17.78,
+     "end": 18.1
+    },
+    {
+     "w": "stories.",
+     "start": 18.1,
+     "end": 18.42
+    }
+   ]
+  },
+  {
+   "start": 18.78,
+   "end": 23.98,
+   "text": "Talk about real cases, a patient came to you, what was their problem, what they ignored and how you solved it.",
+   "words": [
+    {
+     "w": "Talk",
+     "start": 18.78,
+     "end": 19.0
+    },
+    {
+     "w": "about",
+     "start": 19.0,
+     "end": 19.18
+    },
+    {
+     "w": "real",
+     "start": 19.18,
+     "end": 19.4
+    },
+    {
+     "w": "cases,",
+     "start": 19.4,
+     "end": 19.86
+    },
+    {
+     "w": "a",
+     "start": 20.0,
+     "end": 20.14
+    },
+    {
+     "w": "patient",
+     "start": 20.14,
+     "end": 20.44
+    },
+    {
+     "w": "came",
+     "start": 20.44,
+     "end": 20.6
+    },
+    {
+     "w": "to",
+     "start": 20.6,
+     "end": 20.8
+    },
+    {
+     "w": "you,",
+     "start": 20.8,
+     "end": 21.02
+    },
+    {
+     "w": "what",
+     "start": 21.1,
+     "end": 21.32
+    },
+    {
+     "w": "was",
+     "start": 21.32,
+     "end": 21.48
+    },
+    {
+     "w": "their",
+     "start": 21.48,
+     "end": 21.62
+    },
+    {
+     "w": "problem,",
+     "start": 21.62,
+     "end": 22.04
+    },
+    {
+     "w": "what",
+     "start": 22.28,
+     "end": 22.42
+    },
+    {
+     "w": "they",
+     "start": 22.42,
+     "end": 22.62
+    },
+    {
+     "w": "ignored",
+     "start": 22.62,
+     "end": 22.9
+    },
+    {
+     "w": "and",
+     "start": 22.9,
+     "end": 23.16
+    },
+    {
+     "w": "how",
+     "start": 23.16,
+     "end": 23.38
+    },
+    {
+     "w": "you",
+     "start": 23.38,
+     "end": 23.54
+    },
+    {
+     "w": "solved",
+     "start": 23.54,
+     "end": 23.82
+    },
+    {
+     "w": "it.",
+     "start": 23.82,
+     "end": 23.98
+    }
+   ]
+  },
+  {
+   "start": 24.08,
+   "end": 26.22,
+   "text": "No names, no faces, just the story.",
+   "words": [
+    {
+     "w": "No",
+     "start": 24.08,
+     "end": 24.16
+    },
+    {
+     "w": "names,",
+     "start": 24.16,
+     "end": 24.58
+    },
+    {
+     "w": "no",
+     "start": 24.64,
+     "end": 24.8
+    },
+    {
+     "w": "faces,",
+     "start": 24.8,
+     "end": 25.26
+    },
+    {
+     "w": "just",
+     "start": 25.42,
+     "end": 25.7
+    },
+    {
+     "w": "the",
+     "start": 25.7,
+     "end": 25.9
+    },
+    {
+     "w": "story.",
+     "start": 25.9,
+     "end": 26.22
+    }
+   ]
+  },
+  {
+   "start": 26.36,
+   "end": 29.12,
+   "text": "And this is the type of content that makes people trust you.",
+   "words": [
+    {
+     "w": "And",
+     "start": 26.36,
+     "end": 26.62
+    },
+    {
+     "w": "this",
+     "start": 26.62,
+     "end": 26.82
+    },
+    {
+     "w": "is",
+     "start": 26.82,
+     "end": 26.92
+    },
+    {
+     "w": "the",
+     "start": 26.92,
+     "end": 27.02
+    },
+    {
+     "w": "type",
+     "start": 27.02,
+     "end": 27.3
+    },
+    {
+     "w": "of",
+     "start": 27.3,
+     "end": 27.44
+    },
+    {
+     "w": "content",
+     "start": 27.44,
+     "end": 27.84
+    },
+    {
+     "w": "that",
+     "start": 27.84,
+     "end": 28.08
+    },
+    {
+     "w": "makes",
+     "start": 28.08,
+     "end": 28.28
+    },
+    {
+     "w": "people",
+     "start": 28.28,
+     "end": 28.56
+    },
+    {
+     "w": "trust",
+     "start": 28.56,
+     "end": 28.9
+    },
+    {
+     "w": "you.",
+     "start": 28.9,
+     "end": 29.12
+    }
+   ]
+  },
+  {
+   "start": 29.12,
+   "end": 30.4,
+   "text": "Number three, burst the myth.",
+   "words": [
+    {
+     "w": "Number",
+     "start": 29.12,
+     "end": 29.54
+    },
+    {
+     "w": "three,",
+     "start": 29.54,
+     "end": 29.8
+    },
+    {
+     "w": "burst",
+     "start": 29.86,
+     "end": 30.08
+    },
+    {
+     "w": "the",
+     "start": 30.08,
+     "end": 30.22
+    },
+    {
+     "w": "myth.",
+     "start": 30.22,
+     "end": 30.4
+    }
+   ]
+  },
+  {
+   "start": 30.54,
+   "end": 32.9,
+   "text": "People believe a lot of wrong things about him.",
+   "words": [
+    {
+     "w": "People",
+     "start": 30.54,
+     "end": 30.98
+    },
+    {
+     "w": "believe",
+     "start": 30.98,
+     "end": 31.28
+    },
+    {
+     "w": "a",
+     "start": 31.28,
+     "end": 31.48
+    },
+    {
+     "w": "lot",
+     "start": 31.48,
+     "end": 31.7
+    },
+    {
+     "w": "of",
+     "start": 31.7,
+     "end": 31.88
+    },
+    {
+     "w": "wrong",
+     "start": 31.88,
+     "end": 32.08
+    },
+    {
+     "w": "things",
+     "start": 32.08,
+     "end": 32.34
+    },
+    {
+     "w": "about",
+     "start": 32.34,
+     "end": 32.62
+    },
+    {
+     "w": "him.",
+     "start": 32.62,
+     "end": 32.9
+    }
+   ]
+  },
+  {
+   "start": 32.96,
+   "end": 35.18,
+   "text": "Pick one belief and say what actually is the truth.",
+   "words": [
+    {
+     "w": "Pick",
+     "start": 32.96,
+     "end": 33.18
+    },
+    {
+     "w": "one",
+     "start": 33.18,
+     "end": 33.34
+    },
+    {
+     "w": "belief",
+     "start": 33.34,
+     "end": 33.64
+    },
+    {
+     "w": "and",
+     "start": 33.64,
+     "end": 33.96
+    },
+    {
+     "w": "say",
+     "start": 33.96,
+     "end": 34.16
+    },
+    {
+     "w": "what",
+     "start": 34.16,
+     "end": 34.34
+    },
+    {
+     "w": "actually",
+     "start": 34.34,
+     "end": 34.76
+    },
+    {
+     "w": "is",
+     "start": 34.76,
+     "end": 34.94
+    },
+    {
+     "w": "the",
+     "start": 34.94,
+     "end": 35.02
+    },
+    {
+     "w": "truth.",
+     "start": 35.02,
+     "end": 35.18
+    }
+   ]
+  },
+  {
+   "start": 35.32,
+   "end": 38.24,
+   "text": "And this is the type of content that gets a lot of shares.",
+   "words": [
+    {
+     "w": "And",
+     "start": 35.32,
+     "end": 35.72
+    },
+    {
+     "w": "this",
+     "start": 35.72,
+     "end": 35.94
+    },
+    {
+     "w": "is",
+     "start": 35.94,
+     "end": 36.06
+    },
+    {
+     "w": "the",
+     "start": 36.06,
+     "end": 36.14
+    },
+    {
+     "w": "type",
+     "start": 36.14,
+     "end": 36.4
+    },
+    {
+     "w": "of",
+     "start": 36.4,
+     "end": 36.52
+    },
+    {
+     "w": "content",
+     "start": 36.52,
+     "end": 36.88
+    },
+    {
+     "w": "that",
+     "start": 36.88,
+     "end": 37.16
+    },
+    {
+     "w": "gets",
+     "start": 37.16,
+     "end": 37.46
+    },
+    {
+     "w": "a",
+     "start": 37.46,
+     "end": 37.6
+    },
+    {
+     "w": "lot",
+     "start": 37.6,
+     "end": 37.9
+    },
+    {
+     "w": "of",
+     "start": 37.9,
+     "end": 38.04
+    },
+    {
+     "w": "shares.",
+     "start": 38.04,
+     "end": 38.24
+    }
+   ]
+  },
+  {
+   "start": 38.52,
+   "end": 43.94,
+   "text": "That was for doctor, comment your profession and I'll give you the framework that you should follow for your content.",
+   "words": [
+    {
+     "w": "That",
+     "start": 38.52,
+     "end": 38.8
+    },
+    {
+     "w": "was",
+     "start": 38.8,
+     "end": 39.0
+    },
+    {
+     "w": "for",
+     "start": 39.0,
+     "end": 39.14
+    },
+    {
+     "w": "doctor,",
+     "start": 39.14,
+     "end": 39.48
+    },
+    {
+     "w": "comment",
+     "start": 39.68,
+     "end": 40.02
+    },
+    {
+     "w": "your",
+     "start": 40.02,
+     "end": 40.24
+    },
+    {
+     "w": "profession",
+     "start": 40.24,
+     "end": 40.64
+    },
+    {
+     "w": "and",
+     "start": 40.64,
+     "end": 41.2
+    },
+    {
+     "w": "I'll",
+     "start": 41.2,
+     "end": 41.54
+    },
+    {
+     "w": "give",
+     "start": 41.54,
+     "end": 41.68
+    },
+    {
+     "w": "you",
+     "start": 41.68,
+     "end": 41.78
+    },
+    {
+     "w": "the",
+     "start": 41.78,
+     "end": 41.9
+    },
+    {
+     "w": "framework",
+     "start": 41.9,
+     "end": 42.26
+    },
+    {
+     "w": "that",
+     "start": 42.26,
+     "end": 42.56
+    },
+    {
+     "w": "you",
+     "start": 42.56,
+     "end": 42.78
+    },
+    {
+     "w": "should",
+     "start": 42.78,
+     "end": 42.98
+    },
+    {
+     "w": "follow",
+     "start": 42.98,
+     "end": 43.26
+    },
+    {
+     "w": "for",
+     "start": 43.26,
+     "end": 43.44
+    },
+    {
+     "w": "your",
+     "start": 43.44,
+     "end": 43.6
+    },
+    {
+     "w": "content.",
+     "start": 43.6,
+     "end": 43.94
+    }
+   ]
+  }
+ ]
+}

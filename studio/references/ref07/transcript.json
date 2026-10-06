@@ -1,0 +1,574 @@
+{
+ "language": "en",
+ "duration": 31.4679375,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 4.36,
+   "text": "In last six months, we have helped 16 plus brands scale over 50 lakhs of monthly revenue.",
+   "words": [
+    {
+     "w": "In",
+     "start": 0.0,
+     "end": 0.06
+    },
+    {
+     "w": "last",
+     "start": 0.06,
+     "end": 0.22
+    },
+    {
+     "w": "six",
+     "start": 0.22,
+     "end": 0.5
+    },
+    {
+     "w": "months,",
+     "start": 0.5,
+     "end": 0.72
+    },
+    {
+     "w": "we",
+     "start": 0.82,
+     "end": 0.94
+    },
+    {
+     "w": "have",
+     "start": 0.94,
+     "end": 1.08
+    },
+    {
+     "w": "helped",
+     "start": 1.08,
+     "end": 1.28
+    },
+    {
+     "w": "16",
+     "start": 1.28,
+     "end": 1.62
+    },
+    {
+     "w": "plus",
+     "start": 1.62,
+     "end": 2.0
+    },
+    {
+     "w": "brands",
+     "start": 2.0,
+     "end": 2.34
+    },
+    {
+     "w": "scale",
+     "start": 2.34,
+     "end": 2.74
+    },
+    {
+     "w": "over",
+     "start": 2.74,
+     "end": 2.94
+    },
+    {
+     "w": "50",
+     "start": 2.94,
+     "end": 3.24
+    },
+    {
+     "w": "lakhs",
+     "start": 3.24,
+     "end": 3.7
+    },
+    {
+     "w": "of",
+     "start": 3.7,
+     "end": 3.72
+    },
+    {
+     "w": "monthly",
+     "start": 3.72,
+     "end": 3.96
+    },
+    {
+     "w": "revenue.",
+     "start": 3.96,
+     "end": 4.36
+    }
+   ]
+  },
+  {
+   "start": 4.5,
+   "end": 9.96,
+   "text": "Being Meta Ads expert, we have positioned these brands, achieved their targets by proven creative",
+   "words": [
+    {
+     "w": "Being",
+     "start": 4.5,
+     "end": 4.8
+    },
+    {
+     "w": "Meta",
+     "start": 4.8,
+     "end": 5.18
+    },
+    {
+     "w": "Ads",
+     "start": 5.18,
+     "end": 5.34
+    },
+    {
+     "w": "expert,",
+     "start": 5.34,
+     "end": 5.66
+    },
+    {
+     "w": "we",
+     "start": 5.88,
+     "end": 6.16
+    },
+    {
+     "w": "have",
+     "start": 6.16,
+     "end": 6.28
+    },
+    {
+     "w": "positioned",
+     "start": 6.28,
+     "end": 6.78
+    },
+    {
+     "w": "these",
+     "start": 6.78,
+     "end": 7.06
+    },
+    {
+     "w": "brands,",
+     "start": 7.06,
+     "end": 7.4
+    },
+    {
+     "w": "achieved",
+     "start": 7.62,
+     "end": 8.1
+    },
+    {
+     "w": "their",
+     "start": 8.1,
+     "end": 8.3
+    },
+    {
+     "w": "targets",
+     "start": 8.3,
+     "end": 8.72
+    },
+    {
+     "w": "by",
+     "start": 8.72,
+     "end": 9.14
+    },
+    {
+     "w": "proven",
+     "start": 9.14,
+     "end": 9.58
+    },
+    {
+     "w": "creative",
+     "start": 9.58,
+     "end": 9.96
+    }
+   ]
+  },
+  {
+   "start": 9.96,
+   "end": 15.66,
+   "text": "testing funnels, compound scaling with stable ROAS, along with filling gaps between landing",
+   "words": [
+    {
+     "w": "testing",
+     "start": 9.96,
+     "end": 10.44
+    },
+    {
+     "w": "funnels,",
+     "start": 10.44,
+     "end": 10.9
+    },
+    {
+     "w": "compound",
+     "start": 11.02,
+     "end": 11.48
+    },
+    {
+     "w": "scaling",
+     "start": 11.48,
+     "end": 11.88
+    },
+    {
+     "w": "with",
+     "start": 11.88,
+     "end": 12.58
+    },
+    {
+     "w": "stable",
+     "start": 12.58,
+     "end": 12.9
+    },
+    {
+     "w": "ROAS,",
+     "start": 12.9,
+     "end": 13.34
+    },
+    {
+     "w": "along",
+     "start": 13.44,
+     "end": 13.94
+    },
+    {
+     "w": "with",
+     "start": 13.94,
+     "end": 14.2
+    },
+    {
+     "w": "filling",
+     "start": 14.2,
+     "end": 14.44
+    },
+    {
+     "w": "gaps",
+     "start": 14.44,
+     "end": 14.66
+    },
+    {
+     "w": "between",
+     "start": 14.66,
+     "end": 15.04
+    },
+    {
+     "w": "landing",
+     "start": 15.04,
+     "end": 15.66
+    }
+   ]
+  },
+  {
+   "start": 15.66,
+   "end": 17.22,
+   "text": "pages and add to cart to conversions.",
+   "words": [
+    {
+     "w": "pages",
+     "start": 15.66,
+     "end": 15.98
+    },
+    {
+     "w": "and",
+     "start": 15.98,
+     "end": 16.24
+    },
+    {
+     "w": "add",
+     "start": 16.24,
+     "end": 16.38
+    },
+    {
+     "w": "to",
+     "start": 16.38,
+     "end": 16.52
+    },
+    {
+     "w": "cart",
+     "start": 16.52,
+     "end": 16.72
+    },
+    {
+     "w": "to",
+     "start": 16.72,
+     "end": 16.9
+    },
+    {
+     "w": "conversions.",
+     "start": 16.9,
+     "end": 17.22
+    }
+   ]
+  },
+  {
+   "start": 17.64,
+   "end": 20.06,
+   "text": "We believe every product sells in the market.",
+   "words": [
+    {
+     "w": "We",
+     "start": 17.64,
+     "end": 17.88
+    },
+    {
+     "w": "believe",
+     "start": 17.88,
+     "end": 18.2
+    },
+    {
+     "w": "every",
+     "start": 18.2,
+     "end": 18.74
+    },
+    {
+     "w": "product",
+     "start": 18.74,
+     "end": 19.14
+    },
+    {
+     "w": "sells",
+     "start": 19.14,
+     "end": 19.44
+    },
+    {
+     "w": "in",
+     "start": 19.44,
+     "end": 19.64
+    },
+    {
+     "w": "the",
+     "start": 19.64,
+     "end": 19.74
+    },
+    {
+     "w": "market.",
+     "start": 19.74,
+     "end": 20.06
+    }
+   ]
+  },
+  {
+   "start": 20.2,
+   "end": 24.14,
+   "text": "You just need perfect strategy and structure to convert visitors into customers.",
+   "words": [
+    {
+     "w": "You",
+     "start": 20.2,
+     "end": 20.32
+    },
+    {
+     "w": "just",
+     "start": 20.32,
+     "end": 20.54
+    },
+    {
+     "w": "need",
+     "start": 20.54,
+     "end": 20.76
+    },
+    {
+     "w": "perfect",
+     "start": 20.76,
+     "end": 21.12
+    },
+    {
+     "w": "strategy",
+     "start": 21.12,
+     "end": 21.66
+    },
+    {
+     "w": "and",
+     "start": 21.66,
+     "end": 21.86
+    },
+    {
+     "w": "structure",
+     "start": 21.86,
+     "end": 22.14
+    },
+    {
+     "w": "to",
+     "start": 22.14,
+     "end": 22.7
+    },
+    {
+     "w": "convert",
+     "start": 22.7,
+     "end": 23.0
+    },
+    {
+     "w": "visitors",
+     "start": 23.0,
+     "end": 23.42
+    },
+    {
+     "w": "into",
+     "start": 23.42,
+     "end": 23.72
+    },
+    {
+     "w": "customers.",
+     "start": 23.72,
+     "end": 24.14
+    }
+   ]
+  },
+  {
+   "start": 24.38,
+   "end": 28.48,
+   "text": "We will help you scale your brand without any barriers so you can do what you do the",
+   "words": [
+    {
+     "w": "We",
+     "start": 24.38,
+     "end": 24.5
+    },
+    {
+     "w": "will",
+     "start": 24.5,
+     "end": 24.64
+    },
+    {
+     "w": "help",
+     "start": 24.64,
+     "end": 24.92
+    },
+    {
+     "w": "you",
+     "start": 24.92,
+     "end": 25.12
+    },
+    {
+     "w": "scale",
+     "start": 25.12,
+     "end": 25.4
+    },
+    {
+     "w": "your",
+     "start": 25.4,
+     "end": 25.6
+    },
+    {
+     "w": "brand",
+     "start": 25.6,
+     "end": 25.84
+    },
+    {
+     "w": "without",
+     "start": 25.84,
+     "end": 26.2
+    },
+    {
+     "w": "any",
+     "start": 26.2,
+     "end": 26.52
+    },
+    {
+     "w": "barriers",
+     "start": 26.52,
+     "end": 26.96
+    },
+    {
+     "w": "so",
+     "start": 26.96,
+     "end": 27.24
+    },
+    {
+     "w": "you",
+     "start": 27.24,
+     "end": 27.42
+    },
+    {
+     "w": "can",
+     "start": 27.42,
+     "end": 27.62
+    },
+    {
+     "w": "do",
+     "start": 27.62,
+     "end": 27.84
+    },
+    {
+     "w": "what",
+     "start": 27.84,
+     "end": 28.04
+    },
+    {
+     "w": "you",
+     "start": 28.04,
+     "end": 28.16
+    },
+    {
+     "w": "do",
+     "start": 28.16,
+     "end": 28.32
+    },
+    {
+     "w": "the",
+     "start": 28.32,
+     "end": 28.48
+    }
+   ]
+  },
+  {
+   "start": 28.48,
+   "end": 28.66,
+   "text": "best.",
+   "words": [
+    {
+     "w": "best.",
+     "start": 28.48,
+     "end": 28.66
+    }
+   ]
+  },
+  {
+   "start": 28.66,
+   "end": 31.2,
+   "text": "Book a call with us and let's make this happen.",
+   "words": [
+    {
+     "w": "Book",
+     "start": 28.66,
+     "end": 29.3
+    },
+    {
+     "w": "a",
+     "start": 29.3,
+     "end": 29.5
+    },
+    {
+     "w": "call",
+     "start": 29.5,
+     "end": 29.68
+    },
+    {
+     "w": "with",
+     "start": 29.68,
+     "end": 29.86
+    },
+    {
+     "w": "us",
+     "start": 29.86,
+     "end": 30.08
+    },
+    {
+     "w": "and",
+     "start": 30.08,
+     "end": 30.28
+    },
+    {
+     "w": "let's",
+     "start": 30.28,
+     "end": 30.56
+    },
+    {
+     "w": "make",
+     "start": 30.56,
+     "end": 30.74
+    },
+    {
+     "w": "this",
+     "start": 30.74,
+     "end": 30.94
+    },
+    {
+     "w": "happen.",
+     "start": 30.94,
+     "end": 31.2
+    }
+   ]
+  }
+ ]
+}

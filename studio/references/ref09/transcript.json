@@ -1,0 +1,255 @@
+{
+ "language": "en",
+ "duration": 19.62225,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 2.44,
+   "text": "Use to make your statement more important.",
+   "words": [
+    {
+     "w": "Use",
+     "start": 0.0,
+     "end": 0.34
+    },
+    {
+     "w": "to",
+     "start": 0.34,
+     "end": 1.08
+    },
+    {
+     "w": "make",
+     "start": 1.08,
+     "end": 1.38
+    },
+    {
+     "w": "your",
+     "start": 1.38,
+     "end": 1.52
+    },
+    {
+     "w": "statement",
+     "start": 1.52,
+     "end": 1.82
+    },
+    {
+     "w": "more",
+     "start": 1.82,
+     "end": 2.04
+    },
+    {
+     "w": "important.",
+     "start": 2.04,
+     "end": 2.44
+    }
+   ]
+  },
+  {
+   "start": 2.54,
+   "end": 5.9,
+   "text": "Use to reveal something unexpected.",
+   "words": [
+    {
+     "w": "Use",
+     "start": 2.54,
+     "end": 2.86
+    },
+    {
+     "w": "to",
+     "start": 2.86,
+     "end": 4.52
+    },
+    {
+     "w": "reveal",
+     "start": 4.52,
+     "end": 5.02
+    },
+    {
+     "w": "something",
+     "start": 5.02,
+     "end": 5.38
+    },
+    {
+     "w": "unexpected.",
+     "start": 5.38,
+     "end": 5.9
+    }
+   ]
+  },
+  {
+   "start": 6.2,
+   "end": 9.66,
+   "text": "Use to build suspense.",
+   "words": [
+    {
+     "w": "Use",
+     "start": 6.2,
+     "end": 6.82
+    },
+    {
+     "w": "to",
+     "start": 6.82,
+     "end": 8.96
+    },
+    {
+     "w": "build",
+     "start": 8.96,
+     "end": 9.34
+    },
+    {
+     "w": "suspense.",
+     "start": 9.34,
+     "end": 9.66
+    }
+   ]
+  },
+  {
+   "start": 10.02,
+   "end": 12.44,
+   "text": "Use and for pop-ups.",
+   "words": [
+    {
+     "w": "Use",
+     "start": 10.02,
+     "end": 10.56
+    },
+    {
+     "w": "and",
+     "start": 10.56,
+     "end": 11.1
+    },
+    {
+     "w": "for",
+     "start": 11.1,
+     "end": 11.84
+    },
+    {
+     "w": "pop",
+     "start": 11.84,
+     "end": 12.16
+    },
+    {
+     "w": "-ups.",
+     "start": 12.16,
+     "end": 12.44
+    }
+   ]
+  },
+  {
+   "start": 12.48,
+   "end": 14.98,
+   "text": "Use to transition between clips.",
+   "words": [
+    {
+     "w": "Use",
+     "start": 12.48,
+     "end": 12.94
+    },
+    {
+     "w": "to",
+     "start": 12.94,
+     "end": 13.68
+    },
+    {
+     "w": "transition",
+     "start": 13.68,
+     "end": 14.1
+    },
+    {
+     "w": "between",
+     "start": 14.1,
+     "end": 14.5
+    },
+    {
+     "w": "clips.",
+     "start": 14.5,
+     "end": 14.98
+    }
+   ]
+  },
+  {
+   "start": 15.14,
+   "end": 17.36,
+   "text": "And use to talk about money.",
+   "words": [
+    {
+     "w": "And",
+     "start": 15.14,
+     "end": 15.46
+    },
+    {
+     "w": "use",
+     "start": 15.46,
+     "end": 15.76
+    },
+    {
+     "w": "to",
+     "start": 15.76,
+     "end": 16.6
+    },
+    {
+     "w": "talk",
+     "start": 16.6,
+     "end": 16.86
+    },
+    {
+     "w": "about",
+     "start": 16.86,
+     "end": 17.08
+    },
+    {
+     "w": "money.",
+     "start": 17.08,
+     "end": 17.36
+    }
+   ]
+  },
+  {
+   "start": 17.46,
+   "end": 19.1,
+   "text": "And if you want them all, comment sounds.",
+   "words": [
+    {
+     "w": "And",
+     "start": 17.46,
+     "end": 17.66
+    },
+    {
+     "w": "if",
+     "start": 17.66,
+     "end": 17.82
+    },
+    {
+     "w": "you",
+     "start": 17.82,
+     "end": 17.92
+    },
+    {
+     "w": "want",
+     "start": 17.92,
+     "end": 18.08
+    },
+    {
+     "w": "them",
+     "start": 18.08,
+     "end": 18.2
+    },
+    {
+     "w": "all,",
+     "start": 18.2,
+     "end": 18.44
+    },
+    {
+     "w": "comment",
+     "start": 18.54,
+     "end": 18.8
+    },
+    {
+     "w": "sounds.",
+     "start": 18.8,
+     "end": 19.1
+    }
+   ]
+  }
+ ]
+}
