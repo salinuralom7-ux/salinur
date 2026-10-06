@@ -3,9 +3,17 @@
 Salinur's learned preferences. Latest feedback overrides older notes and the defaults in `CLAUDE.md`. Repeated corrections go to the top.
 
 ## Confirmed preferences (I explicitly approved)
+- (2026-10-06) v3 background music (own dark 808 beat, ~11 dB under voice) — "now ok".
+- (2026-10-06) Wants **literal 3D character animation** of what he says: "Dr. Pandey opens a clinic" → animated doctor walking into a clinic; "you step out of your hospital" → someone walking out of a hospital.
+- (2026-10-06) **Important lines/keywords in a highlight colour (yellow)** in captions.
+- (2026-10-06) On-screen animation that acts out what he is saying while his voice continues (overlay storytelling).
+- (2026-10-06) His own pro-edited videos (references/own01, own02): heavy animation in the first ~6 s, then 1–2 s inserts on key ideas; 3D character on a glowing base in front of the chest; money falling in front; stacked B-roll cards top half; full-screen B-roll 1 s; circle-wipe into flat illustrations; small white captions + big yellow keyword.
 - Keep the editing style evolving with each new reference video; newer references show the styles to try next. (2026-10-05)
 
 ## Dislikes / never do again
+- **(2026-10-06, v3) Never shrink the video or show blurry side/top fill.** The frame must always be filled by the footage (zoom ≥ 1, pans clamped).
+- **(2026-10-06, v3) Listen to the exact phrase.** "years of effort" is ONE point, not "Years" + "Effort". Build graphics from phrases, not single words.
+- (2026-10-06, v3) Not everything behind the speaker. Mix: some graphics behind, some IN FRONT just above the captions (face never covered).
 - (2026-10-06, v2 feedback) **Noise-sweep "whoosh" SFX** — sounded bad. Use impacts, stings, tonal risers, pop+click, glitch, sub-booms (see REFERENCE_BREAKDOWN).
 - (2026-10-06) **Quirky/comedy background music** ("Investigations", "Inspired"). Use modern bass-led beats, 8–12 dB under voice.
 - (2026-10-06) **Captions with thick outline + blue word box** — "low quality". Use clean white sans, no outline/box, phrase-level, plus two-tier keyword moments.

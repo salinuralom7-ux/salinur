@@ -214,3 +214,66 @@ def render(out_dir, frames=None):
     if frames:
         sc.frame_start, sc.frame_end = frames
     bpy.ops.render.render(animation=True)
+
+
+# ---------------------------------------------------------------- characters (Kenney Mini Characters, CC0)
+CHARS = "../../../assets/3d/models/kenney-mini"
+
+
+def character(kind, loc=(0, 0, 0), rotz=0.0, scale=2.2):
+    """Import a mini character (e.g. 'character-male-d'); returns its armature. Helper meshes removed."""
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=f"{CHARS}/{kind}.glb")
+    new = [o for o in bpy.data.objects if o not in before]
+    arm = next(o for o in new if o.type == "ARMATURE")
+    for o in new:
+        if o.type == "MESH" and o.parent is None:      # stray icosphere in the files
+            bpy.data.objects.remove(o, do_unlink=True)
+    arm.rotation_mode = "XYZ"          # glTF import uses quaternions; our turns are Euler
+    arm.location = loc; arm.rotation_euler = (0, 0, rotz); arm.scale = (scale, scale, scale)
+    if arm.animation_data:
+        arm.animation_data.action = None
+    return arm
+
+
+def play(arm, action_name, start=1, end=None, fps_src=24):
+    """Loop `action_name` on the armature from frame `start` to `end` (scene runs at 60 fps)."""
+    act = bpy.data.actions[action_name]
+    ad = arm.animation_data or arm.animation_data_create()
+    tr = ad.nla_tracks.new()
+    st = tr.strips.new(action_name + str(start), int(start), act)
+    if hasattr(st, "action_slot") and getattr(act, "slots", None):
+        st.action_slot = act.slots[0]
+    st.scale = bpy.context.scene.render.fps / fps_src
+    length = (act.frame_range[1] - act.frame_range[0]) * st.scale
+    if end:
+        st.repeat = max(1.0, (end - start) / max(length, 1))
+    st.extrapolation = "HOLD"
+    return st
+
+
+def dress_doctor(arm):
+    """White coat + stethoscope on a mini character (parented to the torso bone)."""
+    from mathutils import Matrix
+    from mathutils import Vector
+    bpy.context.view_layer.update()
+    body = next(o for o in arm.children if "body" in o.name)
+    # torso box of the body mesh in world space (arms excluded by using the central 40 % of the width)
+    bb = [body.matrix_world @ Vector(c) for c in body.bound_box]
+    zs = sorted(v.z for v in bb); xs = sorted(v.x for v in bb); ys = sorted(v.y for v in bb)
+    zmin, zmax = zs[0], zs[-1]; cx = (xs[0] + xs[-1]) / 2; cy = (ys[0] + ys[-1]) / 2
+    h = zmax - zmin; wdt = (xs[-1] - xs[0]) * 0.42; dep = (ys[-1] - ys[0]) * 1.12
+    s = arm.scale[0]
+    coatm = mat("coat", (0.95, 0.96, 0.98), 0.5)
+    coat = rbox("coat", (wdt, dep, h * 0.62), (cx, cy, zmin + h * 0.62), coatm, bevel=0.03 * s)
+    front = cy - dep / 2
+    bpy.ops.mesh.primitive_torus_add(location=(cx, front - 0.005 * s, zmin + h * 0.70), major_radius=wdt * 0.22, minor_radius=0.010 * s,
+                                     rotation=(math.radians(90), 0, 0))
+    steth = bpy.context.object; steth.data.materials.append(mat("steth", (0.05, 0.05, 0.06), 0.3))
+    badge = rbox("badge", (wdt * 0.16, 0.012 * s, wdt * 0.16), (cx + wdt * 0.28, front - 0.006 * s, zmin + h * 0.80),
+                 mat("badge", (0.85, 0.05, 0.05), 0.4, emit=0.4), bevel=0.004 * s)
+    for o in (coat, steth, badge):
+        mw = o.matrix_world.copy()
+        o.parent = arm; o.parent_type = "BONE"; o.parent_bone = "torso"
+        o.matrix_world = mw
+    return coat

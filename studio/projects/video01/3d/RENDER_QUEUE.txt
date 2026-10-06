@@ -1,2 +1,5 @@
-s1_hospital.py 1 150 10
-s2_clinic.py 1 300 15
+st_doc_walk.py 1 160 20
+st_doc_film.py 1 110 20
+st_owner_out.py 1 140 20
+st_queue.py 1 170 20
+st_steal.py 1 120 20

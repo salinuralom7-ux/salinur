@@ -61,7 +61,7 @@ jobs:
         run: |
           scene=$(basename ${{ matrix.script }} .py)
           mkdir -p out
-          python ${{ matrix.script }} out ${{ matrix.first }} ${{ matrix.last }} 2>&1 | grep -vE "^Fra:|Sample|Remaining|Updating" | tail -20
+          FAST=1 python ${{ matrix.script }} out ${{ matrix.first }} ${{ matrix.last }} 2>&1 | grep -vE "^Fra:|Sample|Remaining|Updating" | tail -20
           ls out | wc -l
           cd out && zip -q ../${scene}_${{ matrix.first }}.zip *.png
       - name: Upload
