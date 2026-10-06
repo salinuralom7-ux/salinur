@@ -21,3 +21,7 @@ Status: `pending` (not yet decoded) · `decoded` (in REFERENCE_BREAKDOWN.md) · 
 
 > 2026-10-05: all six are `pending`. This cloud environment blocks youtube.com, and YouTube blocks GitHub's servers ("confirm you're not a bot").
 > Working route: Salinur screen-records each short and shares the files; run `tools/decode_reference.sh <file> <name>`.
+| 12 | 2026-10-06 | ref12 | video file (content strategist for teachers, orbit diagram) | decoded | "presentation is so good — animations, motion graphics, premium" |
+| 13 | 2026-10-06 | ref13 | video file (storytelling formula, pure kinetic type) | decoded | "understand motions and how to play with typography" |
+| 14 | 2026-10-06 | ref14 | video file (real-estate videographer walking) | decoded | "text in the background and half of it in front" |
+| 15 | 2026-10-06 | ref15 | video file (event-marketing agency, fast cinematic) | decoded | — |

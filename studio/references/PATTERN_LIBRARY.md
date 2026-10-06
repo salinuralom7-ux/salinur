@@ -4,7 +4,7 @@ Built from every reference he sends. **own01 / own02 (his own videos, edited by 
 weight** — that is the house style he paid for. Refs 07–11 add techniques. Evidence per video:
 `references/<name>/STUDY.md`, `study.json`, `spec_music.png`, shot frames, 4 fps sheets.
 
-Training set so far (2026-10-06): own01, own02, ref07, ref08, ref09, ref10, ref11 (7 videos).
+Training set so far (2026-10-06): own01, own02, ref07–ref15 (11 videos). Salinur's explicit praise: ref12 (premium presentation/motion graphics), ref13 (motion + typography), ref14 (text half behind / half in front).
 
 ## How to use this before every edit
 1. Read **Defaults** — the house style.
@@ -43,9 +43,10 @@ Training set so far (2026-10-06): own01, own02, ref07, ref08, ref09, ref10, ref1
 - Small Instagram glyph + @SALINUR_PRAMANIK, top corner, whole video.
 - Outro: black → circular profile photo with red ring + red name pill "Salinur Pramanik" scales in (big boom) → fades → Instagram glyph white→gradient + handle. ~7 s. *(own01, own02)*
 
-**Music** (house = own01/own02)
+**Music** (house = own01/own02; energetic premium refs differ — see below)
 - **Soft cinematic/emotional ambient pad + long bass notes, no drums**, chord change every 3–6 s.
 - **Dynamics:** very low under the hook (~18–20 dB under voice) → **swell around the story turn (~18 s)** to ~10 dB under voice → full level in the outro.
+- Energetic premium style (ref12, ref14, ref15): beat 120–170 BPM with dense synced SFX, music+SFX only 0–5 dB under voice after the hook.
 - Alternative for ad/energy pieces: dark minimal 808 beat 100–125 BPM, 7–11 dB under voice, dropouts before punch lines (ref08, ref10, ref11).
 
 **Sound effects**
@@ -55,6 +56,25 @@ Training set so far (2026-10-06): own01, own02, ref07, ref08, ref09, ref10, ref1
 - Big boom on the outro logo pop.
 
 ---
+
+## Premium presentation principles (ref12, ref13, ref15 — Salinur's favourites)
+1. **One visual system per video.** Pick one metaphor/diagram (orbit, path, acronym letters, timeline) and return to it for every point; the camera flies into it. *(ref12 orbit, ref13 HRST letters, ref08 timeline)*
+2. **One brand colour + white (+ near-black).** All titles, icons, lines in that colour. For F&F: blue #2878FE; for Salinur personal: red #E8202A + yellow keyword. *(ref11, ref12, ref15, own01)*
+3. **Recurring transition family.** Same kind of move every time (circle mask, ring sweep, whip) so it feels designed. *(ref12, ref08)*
+4. **Speaker becomes a graphic element:** shrink into a circle / floating card / framed rectangle; cut out onto white or black. *(ref12, ref15, ref11)*
+5. **B-roll as floating cards** (rounded, shadow) on white, or PiP above the speaker — not always full screen. *(ref12, ref15)*
+6. **Sound on every motion** — a whoosh/pop/tick for each move; music+SFX loud (0–5 dB under voice) in these energetic styles. *(ref12, ref14, ref15)*
+
+## Typography play (ref13, ref14, ref15)
+- **Three-family hierarchy:** condensed heavy caps for keywords + clean geometric sans for connective words + italic serif/script for one accent word.
+- **Size contrast:** tiny connective words tucked around a huge keyword; words placed off-centre, tight overlapping leading; each phrase re-composes.
+- **Giant word behind the speaker** filling the frame (torn/distressed, extruded, or glowing). *(ref10, ref15)*
+- **Split depth:** big keyword partly behind his head/body (person matte), small words in front of his chest — at head/upper-chest height. *(ref14)*
+- **Keyword colour by meaning:** money/growth = green-teal gradient, problem/stop = red, brand = brand colour. *(ref14)*
+- **Giant letter + rest of word** for acronyms/frameworks; assemble the acronym letter by letter. *(ref13)*
+- **Text on a curved path** around the head. *(ref15)*
+- **Scramble-decode** text and **typed** text for "reveal" moments. *(ref12, own02, ref11)*
+- **Word ladders**: a sentence stacked down the side, each word a different size/style. *(ref15)*
 
 ## Moment → treatment
 
@@ -66,12 +86,15 @@ Training set so far (2026-10-06): own01, own02, ref07, ref08, ref09, ref10, ref1
 | **Person / character mentioned** | 3D character (stylised, glowing rim) on a glowing disc in front of chest, 1–2 s; or flat 2D character. | own01, own02 |
 | **Freedom / lifestyle / emotion** | Full-screen stock B-roll ~1 s, captions continue. | own01, own02 |
 | **Money** | Banknotes flying across the frame in front of him + deep swoosh-boom; ka-ching. | own01, ref09 |
+| **List of pillars / steps** | One recurring diagram (orbit/path/letters) — fly into each item; icon + 2-line label (small top, big bottom). | ref12, ref13, ref08, ref11 |
 | **Brands / proof / numbers** | Logo marquee strip across the top; real screenshots/dashboards behind him; counters. | ref07 |
 | **Process / steps** | Flow cards popping in one per spoken word; numbered list via recurring icon + typed input bar; wavy timeline with whip moves. | ref07, ref11, ref08 |
 | **Growth / online / scale** | Line/brush path drawing with icons travelling along it; 3D growth arrows behind him. | own02, ref07 |
 | **Long explanation (10–20 s)** | Talking head + captions only; variety from jump-cut punch-ins + yellow keywords. Don't fill it with graphics. | own01, own02 |
+| **Single big idea word** | Giant word behind the speaker (textured) or split-depth keyword. | ref10, ref14, ref15 |
 | **Punch line** | Punch-in, music swell or dropout, impact; yellow keyword. | own01, ref08, ref09 |
 | **Callback before the end** | Bring back the hook graphic as an overlay in front of his chest. | own02 |
+| **Comment CTA** | Instagram-comment pill (avatar + text) sliding up over the chest. | ref12 |
 | **CTA** | CTA text rising from below (ref07) or comment prompt (ref08); colour flash before CTA (ref10). | ref07, ref08, ref10 |
 | **End** | Branded outro (profile circle → Instagram). | own01, own02 |
 
@@ -94,6 +117,11 @@ Training set so far (2026-10-06): own01, own02, ref07, ref08, ref09, ref10, ref1
 | Whip pan with motion blur | between list items | ref08 |
 | Triangle wipe / panel slide-up | reveal a title / new point | ref11 |
 | Fade to black | into outro | own01, own02 |
+| Circle mask (speaker shrinks into a circle that becomes a diagram) | into a structure graphic | ref12 |
+| Fly-into-icon (camera zooms through a ring/icon) | between list items | ref12 |
+| Speaker scales into a floating card | to add text/B-roll below | ref12 |
+| White-silhouette glow flash | section change | ref15 |
+| Whip blur between locations/angles | fast intercutting | ref14, ref15 |
 
 ## Typography summary
 | Role | Style | Colour | Animation | Seen in |
