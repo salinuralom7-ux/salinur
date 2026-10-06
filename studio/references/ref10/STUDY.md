@@ -34,16 +34,15 @@
 
 Zoom/punch moves at: 6.4, 7.2, 8.4, 8.7, 9.3, 9.5, 9.6, 14.6, 15.2
 
-## Breakdown (filled in after looking at the frames)
+## Breakdown (from 4 fps frames + full-res shot frames + Demucs stems)
 
-- **Typography:**
-- **Captions:**
-- **Colour grade:**
-- **Lighting:**
-- **Camera & motion:**
-- **Transitions:**
-- **Graphics / B-roll / 3D placement:**
-- **Music:**
-- **Sound effects:**
-- **Why it retains:**
-- **Steal this:**
+Captions-app ad (English, 19 s).
+- **Typography:** hook = **one giant yellow (#F2C21B) heavy sans word every ~0.25 s** ("THIS / TINY / EDITING / TRICK / MADE / MY / VIDEOS / GO / VIRAL"), centred at chest height **behind the speaker** (hands pass in front); some words blur/fade in. Captions: white bold sans (SF-Pro-like), sentence case, **no outline, no box**, soft shadow, 2–3 words, at chest height (~62 %).
+- **Colour grade:** warm cinematic dark room (luma 25), saturated warm skin, face +18 over frame, deep blacks; vignette.
+- **Lighting:** warm key from camera-right (key−fill +14), practical lamps in background.
+- **Camera & motion:** locked-off; punch-in/out on cuts; the speaker is **composited in front of app UI screens** (segmentation) — before/after phone panels behind him in the hook.
+- **Transitions:** hard cuts; **red colour flash** at 14.25 s before the CTA.
+- **Graphics / B-roll:** before/after phone panels (top) in hook; full-screen app UI screens (template grid, settings) with captions; hand-held phone B-roll; app editor UI with his clip inside.
+- **Music:** dark minimal **808 trap beat ~118 BPM**, ~7–8 dB under the voice, constant.
+- **SFX:** light — pops on UI changes.
+- **Steal this:** rapid giant-word hook behind the speaker; clean outline-free captions; speaker layered in front of UI; colour flash before CTA.

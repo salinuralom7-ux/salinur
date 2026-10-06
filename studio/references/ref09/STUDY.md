@@ -27,16 +27,19 @@
 
 Zoom/punch moves at: 
 
-## Breakdown (filled in after looking at the frames)
+## Breakdown (from 4 fps frames + full-res shot frames + Demucs stems)
 
-- **Typography:**
-- **Captions:**
-- **Colour grade:**
-- **Lighting:**
-- **Camera & motion:**
-- **Transitions:**
-- **Graphics / B-roll / 3D placement:**
-- **Music:**
-- **Sound effects:**
-- **Why it retains:**
-- **Steal this:**
+"Which SFX for what" (English, 19.7 s). A lesson in sound design.
+- **Typography:** two-tier captions, left-aligned lower-left: small white light sans line ("to make a") + **heavy rounded display caps in yellow #F6C90E** with dark shadow ("STATEMENT", "UNEXPECTED", "SUSPENSE", "POP-UPS", "TRANSITION", "MONEY"). Frosted-glass rounded cards tinted yellow showing "Core.mp3" etc. with a live waveform.
+- **Colour grade:** dark moody (luma 14 — darkest ref), letterbox bars top/bottom, warm practicals, teal shadows; face +13 over frame.
+- **Lighting:** strong key from camera-right (key−fill +16), background in shadow.
+- **Camera:** **split screen of two angles** (wide desk shot top, closer angle bottom), no cuts.
+- **SFX catalogue (from the Demucs stem):**
+  - Make a statement → **"Core"**: deep cinematic impact (low harmonic chord + sub, ~0.7 s).
+  - Reveal something unexpected → **"Among Us"-style sting**: dramatic stab with sustained low bass (~2 s).
+  - Build suspense → **tonal riser**: stacked tones gliding up, cut dead at the drop (~2 s).
+  - Pop-ups → **pop + click** pair (short mid blip + tick).
+  - Transition → **glitch** burst (broadband stutter).
+  - Money → **cash register "ka-ching"** (bright bell partials 2 kHz+).
+- **Music:** none. SFX peaks reach the voice level for impacts.
+- **Steal this:** the SFX-to-meaning mapping; two-tier yellow display captions; frosted accent cards.

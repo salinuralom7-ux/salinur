@@ -36,16 +36,23 @@
 
 Zoom/punch moves at: 4.6, 4.7, 9.9, 10.0, 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 13.8, 17.8
 
-## Breakdown (filled in after looking at the frames)
+## Breakdown (from 4 fps frames + full-res shot frames + Demucs stems)
 
-- **Typography:**
-- **Captions:**
-- **Colour grade:**
-- **Lighting:**
-- **Camera & motion:**
-- **Transitions:**
+BuildX Media agency ad (English, 31.5 s). Closest format to Salinur's F&F ad.
+- **Typography:** captions Times-style serif (regular), white, soft shadow, sentence case, 1–2 lines, centred at ~84 % height over a black bottom gradient. Hook/CTA: heavy slab-serif caps with green→lime gradient + drop shadow ("In Last" / "6 MONTHS", "BOOK" / "A CALL WITH US"); hook word **scales down from ~150 % to 100 % in 0.25 s**; CTA rises from below with a fade.
+- **Captions:** phrase-level (2–5 words), hold for the whole phrase; no keyword colour.
+- **Colour grade:** warm cinematic, shallow depth of field (real bokeh), luma 29, face +7 over frame, warm b +7, crushed blacks (0), whites 90. Bottom 30 % graded to black.
+- **Lighting:** outdoor soft daylight, even (key−fill +2).
+- **Camera & motion:** single locked-off wide shot (face 16 % of frame height, eye line at ~40 %), **no punch-ins** — all motion comes from graphics.
+- **Transitions:** warm orange/peach light leak (4.25 s, 24.25 s); a single white flash frame (4.5 s, 17.5 s); graphics slide in/out.
 - **Graphics / B-roll / 3D placement:**
-- **Music:**
-- **Sound effects:**
-- **Why it retains:**
-- **Steal this:**
+  - 1.5–4.3 s: **client-logo marquee** strip scrolling right→left across the top while he says "16+ brands, 50 lakhs revenue".
+  - 4.75–5.75 s: **white brand panel** in the top half ("META AD EXPERT" + logo) fading into the shot, warm tint on the lower half.
+  - 9.25–11 s: **proof screenshots** (ad creative reports) fill the top ~55 % **behind** him, drifting slowly.
+  - 11.25–13.5 s: Ads-Manager **data table** slides down in the top 25 %, then blurs out.
+  - 15.5–17.25 s: **flow cards** (landing page → add to cart → purchase) pop in one per spoken word, top-left row.
+  - 24.5–29 s: **green 3D growth arrows stream up behind him** over a blue grid; background tinted cooler.
+- **Music:** none (only a faint ambient pad under the CTA).
+- **Sound effects:** soft swish under the logo marquee (1.5–3.5 s), **rapid ticks** while dashboards appear (9.3–11.3 s), airy shimmer under the arrows/CTA. Very low density.
+- **Why it retains:** proof on screen for every claim (logos, dashboards, funnel), calm premium look, clear CTA.
+- **Steal this:** logo marquee for "brands we worked with"; proof screenshots behind the speaker; flow cards timed to words; white flash + warm leak; scale-down hook word; rising CTA.

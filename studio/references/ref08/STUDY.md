@@ -47,16 +47,21 @@
 
 Zoom/punch moves at: 0.08, 0.16, 0.24, 0.32, 0.4, 0.48, 1.2, 1.28, 1.36, 1.44, 1.52, 1.6, 1.68, 3.44, 3.52, 3.6, 3.68, 3.76, 3.84, 3.92, 4.0, 4.08, 4.16, 4.72, 7.28, 7.36, 7.6, 8.4, 8.48, 8.56, 8.64, 8.72, 8.8, 8.88, 8.96, 9.04, 9.2, 9.28, 9.36, 9.44
 
-## Breakdown (filled in after looking at the frames)
+## Breakdown (from 4 fps frames + full-res shot frames + Demucs stems)
 
-- **Typography:**
-- **Captions:**
-- **Colour grade:**
-- **Lighting:**
-- **Camera & motion:**
-- **Transitions:**
-- **Graphics / B-roll / 3D placement:**
-- **Music:**
-- **Sound effects:**
-- **Why it retains:**
-- **Steal this:**
+Editing-tips reel (Hinglish, 35.6 s). Fast, design-led.
+- **Typography:** one-word captions (bold geometric sans, white, lowercase) at mid-chest (~52 % height). Keyword titles in **condensed italic serif** (Instrument/Editorial-like) large, with a small sans subtitle ("effects. / Stop adding", "7 steps / pehle ye", "Sequence / follow krte hai"); some keywords **reveal letter-by-letter in random order** ("e t ng" → "editing"). CTA: bold sans "Comment" + red italic serif "\"pro editor\"".
+- **Colour grade:** colourful practical-lit room (teal/red/yellow), luma 28 on the talking shots, saturated; white/light-grey graphics screens.
+- **Camera & motion:** close webcam-style framing; jump cuts; one sudden push-in with blur (23.5 s). 34 cuts/min — highest of all refs.
+- **Transitions:** hard cuts between talking head, screen recordings, B-roll and white screens; **vertical whip-pans with heavy motion blur** along the timeline graphic; invert/negative frame flash; fades on CTA.
+- **Graphics / B-roll:**
+  - Screen recordings of the editing timeline (purple/green clips) as full-screen B-roll under keyword titles.
+  - Keyboard close-up B-roll under "editing / sequence".
+  - **Paper/desk mock-up** (phone on green cutting mat) with title that scales down into place ("Stop Random Downloading apps").
+  - **Grey screens with one spoken word each** (word-by-word typographic interludes).
+  - **Wavy red-dot timeline** (01 Ratio 9:16 → 07 Music + Export), white background, whip between nodes.
+  - Outro: profile card + Instagram icon (light → dark mode).
+- **Music:** dark 808/trap beat ~123 BPM, **only ~4 dB under the voice** (very loud), **drops to silence for 0.3–1 s** to punch lines; loud sting on the end card.
+- **Sound effects:** whips/swishes synced to the timeline moves, clicks/pops on titles; dense.
+- **Why it retains:** constant visual change (a new image every ~1.8 s), musical energy, list structure with progress.
+- **Steal this:** random-letter keyword reveal; italic-serif keyword + sans subtitle; one-word grey interludes; numbered timeline with whip moves; music dropouts.
