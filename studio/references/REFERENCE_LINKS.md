@@ -25,3 +25,4 @@ Status: `pending` (not yet decoded) · `decoded` (in REFERENCE_BREAKDOWN.md) · 
 | 13 | 2026-10-06 | ref13 | video file (storytelling formula, pure kinetic type) | decoded | "understand motions and how to play with typography" |
 | 14 | 2026-10-06 | ref14 | video file (real-estate videographer walking) | decoded | "text in the background and half of it in front" |
 | 15 | 2026-10-06 | ref15 | video file (event-marketing agency, fast cinematic) | decoded | — |
+| 16 | 2026-10-06 | ref16 | video file (Einstein flow-state, duotone collage motion graphics) | decoded | "exactly what I mean by graphic motion — I want this level" |

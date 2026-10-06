@@ -4,7 +4,7 @@ Built from every reference he sends. **own01 / own02 (his own videos, edited by 
 weight** — that is the house style he paid for. Refs 07–11 add techniques. Evidence per video:
 `references/<name>/STUDY.md`, `study.json`, `spec_music.png`, shot frames, 4 fps sheets.
 
-Training set so far (2026-10-06): own01, own02, ref07–ref15 (11 videos). Salinur's explicit praise: ref12 (premium presentation/motion graphics), ref13 (motion + typography), ref14 (text half behind / half in front).
+Training set so far (2026-10-06): own01, own02, ref07–ref16 (12 videos). Salinur's explicit praise: ref12 (premium presentation/motion graphics), ref13 (motion + typography), ref14 (text half behind / half in front).
 
 ## How to use this before every edit
 1. Read **Defaults** — the house style.
@@ -56,6 +56,14 @@ Training set so far (2026-10-06): own01, own02, ref07–ref15 (11 videos). Salin
 - Big boom on the outro logo pop.
 
 ---
+
+## ★ Motion-graphics target (ref16 — Salinur: "exactly what I mean, this level")
+- **Art direction:** one duotone world — cut-out B&W photos tinted one colour (indigo), soft contact shadows, radial-gradient studio background (light centre → saturated edges), grain. One accent colour used once (fire orange).
+- **One literal visual metaphor per sentence**, surreal scale collage (giant hand + tiny person, brain on crutches, brain on parachute).
+- **Typography is the layout:** condensed heavy caps for key words + small light italic connective words, word ladder re-composed around the image per sentence; letters type in synced to speech.
+- **Motion:** pixel/mosaic dissolve in, piece-by-piece assembly, slow continuous drift, props orbiting/bobbing, ripple ring on hit words; scene = sentence (3–5 s); constant background, no hard cuts.
+- **Sound:** an SFX for every element (~1 per second) on a loud lo-fi/cinematic bed.
+- See `ref16/STUDY.md` → "How we produce this".
 
 ## Premium presentation principles (ref12, ref13, ref15 — Salinur's favourites)
 1. **One visual system per video.** Pick one metaphor/diagram (orbit, path, acronym letters, timeline) and return to it for every point; the camera flies into it. *(ref12 orbit, ref13 HRST letters, ref08 timeline)*
