@@ -232,7 +232,7 @@ def _font(file, size):
 
 
 def _is_deva(ch):
-    return "ऀ" <= ch <= "ॿ" or ch in "‌‍"
+    return "ऀ" <= ch <= "ॿ" or ch in "‌‍₹"   # ₹ comes from the Devanagari face (Anton has none)
 
 
 def _runs(text):
