@@ -1,0 +1,875 @@
+{
+ "language": "en",
+ "duration": 53.7295625,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 4.04,
+   "text": "In 1915, Albert Einstein was losing a war against gravity.",
+   "words": [
+    {
+     "w": "In",
+     "start": 0.0,
+     "end": 0.0
+    },
+    {
+     "w": "1915,",
+     "start": 0.0,
+     "end": 0.66
+    },
+    {
+     "w": "Albert",
+     "start": 0.82,
+     "end": 1.18
+    },
+    {
+     "w": "Einstein",
+     "start": 1.18,
+     "end": 1.56
+    },
+    {
+     "w": "was",
+     "start": 1.56,
+     "end": 2.02
+    },
+    {
+     "w": "losing",
+     "start": 2.02,
+     "end": 2.5
+    },
+    {
+     "w": "a",
+     "start": 2.5,
+     "end": 2.78
+    },
+    {
+     "w": "war",
+     "start": 2.78,
+     "end": 3.06
+    },
+    {
+     "w": "against",
+     "start": 3.06,
+     "end": 3.56
+    },
+    {
+     "w": "gravity.",
+     "start": 3.56,
+     "end": 4.04
+    }
+   ]
+  },
+  {
+   "start": 4.36,
+   "end": 5.74,
+   "text": "His equations were collapsing.",
+   "words": [
+    {
+     "w": "His",
+     "start": 4.36,
+     "end": 4.5
+    },
+    {
+     "w": "equations",
+     "start": 4.5,
+     "end": 5.0
+    },
+    {
+     "w": "were",
+     "start": 5.0,
+     "end": 5.32
+    },
+    {
+     "w": "collapsing.",
+     "start": 5.32,
+     "end": 5.74
+    }
+   ]
+  },
+  {
+   "start": 5.98,
+   "end": 11.3,
+   "text": "So at 2am, he put down his chalk, picked up a violin and played Mozart by candlelight",
+   "words": [
+    {
+     "w": "So",
+     "start": 5.98,
+     "end": 6.2
+    },
+    {
+     "w": "at",
+     "start": 6.2,
+     "end": 6.34
+    },
+    {
+     "w": "2am,",
+     "start": 6.34,
+     "end": 6.74
+    },
+    {
+     "w": "he",
+     "start": 6.92,
+     "end": 7.06
+    },
+    {
+     "w": "put",
+     "start": 7.06,
+     "end": 7.22
+    },
+    {
+     "w": "down",
+     "start": 7.22,
+     "end": 7.52
+    },
+    {
+     "w": "his",
+     "start": 7.52,
+     "end": 7.76
+    },
+    {
+     "w": "chalk,",
+     "start": 7.76,
+     "end": 7.98
+    },
+    {
+     "w": "picked",
+     "start": 8.22,
+     "end": 8.4
+    },
+    {
+     "w": "up",
+     "start": 8.4,
+     "end": 8.6
+    },
+    {
+     "w": "a",
+     "start": 8.6,
+     "end": 8.72
+    },
+    {
+     "w": "violin",
+     "start": 8.72,
+     "end": 9.02
+    },
+    {
+     "w": "and",
+     "start": 9.02,
+     "end": 9.28
+    },
+    {
+     "w": "played",
+     "start": 9.28,
+     "end": 9.74
+    },
+    {
+     "w": "Mozart",
+     "start": 9.74,
+     "end": 10.18
+    },
+    {
+     "w": "by",
+     "start": 10.18,
+     "end": 10.64
+    },
+    {
+     "w": "candlelight",
+     "start": 10.64,
+     "end": 11.3
+    }
+   ]
+  },
+  {
+   "start": 11.3,
+   "end": 13.22,
+   "text": "while his neighbours pounded on the walls.",
+   "words": [
+    {
+     "w": "while",
+     "start": 11.3,
+     "end": 11.62
+    },
+    {
+     "w": "his",
+     "start": 11.62,
+     "end": 11.78
+    },
+    {
+     "w": "neighbours",
+     "start": 11.78,
+     "end": 12.14
+    },
+    {
+     "w": "pounded",
+     "start": 12.14,
+     "end": 12.78
+    },
+    {
+     "w": "on",
+     "start": 12.78,
+     "end": 12.88
+    },
+    {
+     "w": "the",
+     "start": 12.88,
+     "end": 13.02
+    },
+    {
+     "w": "walls.",
+     "start": 13.02,
+     "end": 13.22
+    }
+   ]
+  },
+  {
+   "start": 13.5,
+   "end": 16.88,
+   "text": "He wasn't escaping the math, he was entering a flow state.",
+   "words": [
+    {
+     "w": "He",
+     "start": 13.5,
+     "end": 13.66
+    },
+    {
+     "w": "wasn't",
+     "start": 13.66,
+     "end": 13.96
+    },
+    {
+     "w": "escaping",
+     "start": 13.96,
+     "end": 14.24
+    },
+    {
+     "w": "the",
+     "start": 14.24,
+     "end": 14.54
+    },
+    {
+     "w": "math,",
+     "start": 14.54,
+     "end": 14.76
+    },
+    {
+     "w": "he",
+     "start": 14.94,
+     "end": 15.12
+    },
+    {
+     "w": "was",
+     "start": 15.12,
+     "end": 15.32
+    },
+    {
+     "w": "entering",
+     "start": 15.32,
+     "end": 15.68
+    },
+    {
+     "w": "a",
+     "start": 15.68,
+     "end": 16.14
+    },
+    {
+     "w": "flow",
+     "start": 16.14,
+     "end": 16.48
+    },
+    {
+     "w": "state.",
+     "start": 16.48,
+     "end": 16.88
+    }
+   ]
+  },
+  {
+   "start": 17.12,
+   "end": 20.44,
+   "text": "A state we are actively killing today with AI shortcuts.",
+   "words": [
+    {
+     "w": "A",
+     "start": 17.12,
+     "end": 17.28
+    },
+    {
+     "w": "state",
+     "start": 17.28,
+     "end": 17.62
+    },
+    {
+     "w": "we",
+     "start": 17.62,
+     "end": 17.92
+    },
+    {
+     "w": "are",
+     "start": 17.92,
+     "end": 18.02
+    },
+    {
+     "w": "actively",
+     "start": 18.02,
+     "end": 18.46
+    },
+    {
+     "w": "killing",
+     "start": 18.46,
+     "end": 18.9
+    },
+    {
+     "w": "today",
+     "start": 18.9,
+     "end": 19.22
+    },
+    {
+     "w": "with",
+     "start": 19.22,
+     "end": 19.58
+    },
+    {
+     "w": "AI",
+     "start": 19.58,
+     "end": 19.94
+    },
+    {
+     "w": "shortcuts.",
+     "start": 19.94,
+     "end": 20.44
+    }
+   ]
+  },
+  {
+   "start": 20.88,
+   "end": 23.36,
+   "text": "Think about it, we own cars to travel fast,",
+   "words": [
+    {
+     "w": "Think",
+     "start": 20.88,
+     "end": 21.08
+    },
+    {
+     "w": "about",
+     "start": 21.08,
+     "end": 21.24
+    },
+    {
+     "w": "it,",
+     "start": 21.24,
+     "end": 21.48
+    },
+    {
+     "w": "we",
+     "start": 21.54,
+     "end": 21.72
+    },
+    {
+     "w": "own",
+     "start": 21.72,
+     "end": 22.02
+    },
+    {
+     "w": "cars",
+     "start": 22.02,
+     "end": 22.42
+    },
+    {
+     "w": "to",
+     "start": 22.42,
+     "end": 22.7
+    },
+    {
+     "w": "travel",
+     "start": 22.7,
+     "end": 22.96
+    },
+    {
+     "w": "fast,",
+     "start": 22.96,
+     "end": 23.36
+    }
+   ]
+  },
+  {
+   "start": 23.5,
+   "end": 26.36,
+   "text": "but we still lace up running shoes to sprint in the morning.",
+   "words": [
+    {
+     "w": "but",
+     "start": 23.5,
+     "end": 23.66
+    },
+    {
+     "w": "we",
+     "start": 23.66,
+     "end": 23.82
+    },
+    {
+     "w": "still",
+     "start": 23.82,
+     "end": 24.04
+    },
+    {
+     "w": "lace",
+     "start": 24.04,
+     "end": 24.34
+    },
+    {
+     "w": "up",
+     "start": 24.34,
+     "end": 24.54
+    },
+    {
+     "w": "running",
+     "start": 24.54,
+     "end": 24.78
+    },
+    {
+     "w": "shoes",
+     "start": 24.78,
+     "end": 25.16
+    },
+    {
+     "w": "to",
+     "start": 25.16,
+     "end": 25.52
+    },
+    {
+     "w": "sprint",
+     "start": 25.52,
+     "end": 25.76
+    },
+    {
+     "w": "in",
+     "start": 25.76,
+     "end": 26.0
+    },
+    {
+     "w": "the",
+     "start": 26.0,
+     "end": 26.08
+    },
+    {
+     "w": "morning.",
+     "start": 26.08,
+     "end": 26.36
+    }
+   ]
+  },
+  {
+   "start": 26.5,
+   "end": 28.98,
+   "text": "Why? Because if the engine does all the work,",
+   "words": [
+    {
+     "w": "Why?",
+     "start": 26.5,
+     "end": 26.72
+    },
+    {
+     "w": "Because",
+     "start": 26.86,
+     "end": 27.1
+    },
+    {
+     "w": "if",
+     "start": 27.1,
+     "end": 27.34
+    },
+    {
+     "w": "the",
+     "start": 27.34,
+     "end": 27.5
+    },
+    {
+     "w": "engine",
+     "start": 27.5,
+     "end": 27.8
+    },
+    {
+     "w": "does",
+     "start": 27.8,
+     "end": 28.16
+    },
+    {
+     "w": "all",
+     "start": 28.16,
+     "end": 28.44
+    },
+    {
+     "w": "the",
+     "start": 28.44,
+     "end": 28.64
+    },
+    {
+     "w": "work,",
+     "start": 28.64,
+     "end": 28.98
+    }
+   ]
+  },
+  {
+   "start": 28.98,
+   "end": 30.16,
+   "text": "our muscles rot.",
+   "words": [
+    {
+     "w": "our",
+     "start": 28.98,
+     "end": 29.2
+    },
+    {
+     "w": "muscles",
+     "start": 29.2,
+     "end": 29.68
+    },
+    {
+     "w": "rot.",
+     "start": 29.68,
+     "end": 30.16
+    }
+   ]
+  },
+  {
+   "start": 30.32,
+   "end": 31.8,
+   "text": "The same thing happens to the mind.",
+   "words": [
+    {
+     "w": "The",
+     "start": 30.32,
+     "end": 30.5
+    },
+    {
+     "w": "same",
+     "start": 30.5,
+     "end": 30.74
+    },
+    {
+     "w": "thing",
+     "start": 30.74,
+     "end": 30.94
+    },
+    {
+     "w": "happens",
+     "start": 30.94,
+     "end": 31.24
+    },
+    {
+     "w": "to",
+     "start": 31.24,
+     "end": 31.4
+    },
+    {
+     "w": "the",
+     "start": 31.4,
+     "end": 31.52
+    },
+    {
+     "w": "mind.",
+     "start": 31.52,
+     "end": 31.8
+    }
+   ]
+  },
+  {
+   "start": 31.94,
+   "end": 35.96,
+   "text": "When the shortcut replaces the climb, you get creative inflation.",
+   "words": [
+    {
+     "w": "When",
+     "start": 31.94,
+     "end": 32.1
+    },
+    {
+     "w": "the",
+     "start": 32.1,
+     "end": 32.22
+    },
+    {
+     "w": "shortcut",
+     "start": 32.22,
+     "end": 32.6
+    },
+    {
+     "w": "replaces",
+     "start": 32.6,
+     "end": 33.24
+    },
+    {
+     "w": "the",
+     "start": 33.24,
+     "end": 33.68
+    },
+    {
+     "w": "climb,",
+     "start": 33.68,
+     "end": 33.96
+    },
+    {
+     "w": "you",
+     "start": 34.18,
+     "end": 34.44
+    },
+    {
+     "w": "get",
+     "start": 34.44,
+     "end": 34.76
+    },
+    {
+     "w": "creative",
+     "start": 34.76,
+     "end": 35.36
+    },
+    {
+     "w": "inflation.",
+     "start": 35.36,
+     "end": 35.96
+    }
+   ]
+  },
+  {
+   "start": 36.3,
+   "end": 38.96,
+   "text": "Efficiency goes up, human talent goes down.",
+   "words": [
+    {
+     "w": "Efficiency",
+     "start": 36.3,
+     "end": 36.74
+    },
+    {
+     "w": "goes",
+     "start": 36.74,
+     "end": 37.1
+    },
+    {
+     "w": "up,",
+     "start": 37.1,
+     "end": 37.42
+    },
+    {
+     "w": "human",
+     "start": 37.42,
+     "end": 37.74
+    },
+    {
+     "w": "talent",
+     "start": 37.74,
+     "end": 38.1
+    },
+    {
+     "w": "goes",
+     "start": 38.1,
+     "end": 38.54
+    },
+    {
+     "w": "down.",
+     "start": 38.54,
+     "end": 38.96
+    }
+   ]
+  },
+  {
+   "start": 39.2,
+   "end": 42.26,
+   "text": "Right now, thousands of people are paying premium money",
+   "words": [
+    {
+     "w": "Right",
+     "start": 39.2,
+     "end": 39.52
+    },
+    {
+     "w": "now,",
+     "start": 39.52,
+     "end": 39.8
+    },
+    {
+     "w": "thousands",
+     "start": 39.9,
+     "end": 40.28
+    },
+    {
+     "w": "of",
+     "start": 40.28,
+     "end": 40.52
+    },
+    {
+     "w": "people",
+     "start": 40.52,
+     "end": 40.8
+    },
+    {
+     "w": "are",
+     "start": 40.8,
+     "end": 41.0
+    },
+    {
+     "w": "paying",
+     "start": 41.0,
+     "end": 41.3
+    },
+    {
+     "w": "premium",
+     "start": 41.3,
+     "end": 41.88
+    },
+    {
+     "w": "money",
+     "start": 41.88,
+     "end": 42.26
+    }
+   ]
+  },
+  {
+   "start": 42.26,
+   "end": 46.34,
+   "text": "just to lift heavy sandbags in empty sports stadiums.",
+   "words": [
+    {
+     "w": "just",
+     "start": 42.26,
+     "end": 42.72
+    },
+    {
+     "w": "to",
+     "start": 42.72,
+     "end": 42.98
+    },
+    {
+     "w": "lift",
+     "start": 42.98,
+     "end": 43.28
+    },
+    {
+     "w": "heavy",
+     "start": 43.28,
+     "end": 43.62
+    },
+    {
+     "w": "sandbags",
+     "start": 43.62,
+     "end": 44.28
+    },
+    {
+     "w": "in",
+     "start": 44.28,
+     "end": 44.58
+    },
+    {
+     "w": "empty",
+     "start": 44.58,
+     "end": 45.04
+    },
+    {
+     "w": "sports",
+     "start": 45.04,
+     "end": 45.52
+    },
+    {
+     "w": "stadiums.",
+     "start": 45.52,
+     "end": 46.34
+    }
+   ]
+  },
+  {
+   "start": 46.34,
+   "end": 49.16,
+   "text": "What that reveals about the terrifying future of art",
+   "words": [
+    {
+     "w": "What",
+     "start": 46.34,
+     "end": 46.56
+    },
+    {
+     "w": "that",
+     "start": 46.56,
+     "end": 46.7
+    },
+    {
+     "w": "reveals",
+     "start": 46.7,
+     "end": 47.0
+    },
+    {
+     "w": "about",
+     "start": 47.0,
+     "end": 47.38
+    },
+    {
+     "w": "the",
+     "start": 47.38,
+     "end": 47.56
+    },
+    {
+     "w": "terrifying",
+     "start": 47.56,
+     "end": 47.94
+    },
+    {
+     "w": "future",
+     "start": 47.94,
+     "end": 48.46
+    },
+    {
+     "w": "of",
+     "start": 48.46,
+     "end": 48.84
+    },
+    {
+     "w": "art",
+     "start": 48.84,
+     "end": 49.16
+    }
+   ]
+  },
+  {
+   "start": 49.16,
+   "end": 51.18,
+   "text": "is something you aren't ready to hear.",
+   "words": [
+    {
+     "w": "is",
+     "start": 49.16,
+     "end": 49.46
+    },
+    {
+     "w": "something",
+     "start": 49.46,
+     "end": 49.78
+    },
+    {
+     "w": "you",
+     "start": 49.78,
+     "end": 50.14
+    },
+    {
+     "w": "aren't",
+     "start": 50.14,
+     "end": 50.54
+    },
+    {
+     "w": "ready",
+     "start": 50.54,
+     "end": 50.74
+    },
+    {
+     "w": "to",
+     "start": 50.74,
+     "end": 50.96
+    },
+    {
+     "w": "hear.",
+     "start": 50.96,
+     "end": 51.18
+    }
+   ]
+  }
+ ]
+}
