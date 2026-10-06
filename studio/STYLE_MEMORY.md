@@ -11,6 +11,7 @@ Salinur's learned preferences. Latest feedback overrides older notes and the def
 - Keep the editing style evolving with each new reference video; newer references show the styles to try next. (2026-10-05)
 
 ## Dislikes / never do again
+- **(2026-10-06) Characters: NO blocky/toy 3D characters (Kenney minis).** Use **premium flat 2D vector illustration**: faceless characters, smooth shapes, soft flat colours, subtle shading, circle-badge or clean background (see references/style_doctor_flat.png, own02 blue-suit businessman).
 - **(2026-10-06, v3) Never shrink the video or show blurry side/top fill.** The frame must always be filled by the footage (zoom ≥ 1, pans clamped).
 - **(2026-10-06, v3) Listen to the exact phrase.** "years of effort" is ONE point, not "Years" + "Effort". Build graphics from phrases, not single words.
 - (2026-10-06, v3) Not everything behind the speaker. Mix: some graphics behind, some IN FRONT just above the captions (face never covered).
