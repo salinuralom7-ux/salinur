@@ -343,11 +343,17 @@ GRID = grid_lines(0.45)
 # ------------------------------------------------------------------ frame
 CAPS = phrases()
 ONES = np.ones((H, W), np.float32)
+FACE_X = np.load("work/face_x.npy")
 
 
 def compose(i, fr, mk):
     t = i / FPS
     z, dy, sx, sy, speed = R.camera(t)
+    # follow the face: glide it back toward the centre, zooming in a little when he drifts far
+    fx = FACE_X[min(i, len(FACE_X) - 1)]
+    d = (0.48 - fx) * W * 0.75
+    z = max(z, min(1.22, 1 + abs(d) * 2 / W * 0.55))
+    sx += d
     img = R.warp(fr, z, dy, sx, sy)
     m = R.warp(mk, z, dy, sx, sy, border=cv2.BORDER_CONSTANT)
     # fill the headroom we opened at the top with a soft extension of the background
