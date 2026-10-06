@@ -1,0 +1,467 @@
+{
+ "language": "en",
+ "duration": 34.526625,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 2.02,
+   "text": "You thought the win was filling the room.",
+   "words": [
+    {
+     "w": "You",
+     "start": 0.0,
+     "end": 0.08
+    },
+    {
+     "w": "thought",
+     "start": 0.08,
+     "end": 0.28
+    },
+    {
+     "w": "the",
+     "start": 0.28,
+     "end": 0.52
+    },
+    {
+     "w": "win",
+     "start": 0.52,
+     "end": 0.76
+    },
+    {
+     "w": "was",
+     "start": 0.76,
+     "end": 1.16
+    },
+    {
+     "w": "filling",
+     "start": 1.16,
+     "end": 1.44
+    },
+    {
+     "w": "the",
+     "start": 1.44,
+     "end": 1.7
+    },
+    {
+     "w": "room.",
+     "start": 1.7,
+     "end": 2.02
+    }
+   ]
+  },
+  {
+   "start": 5.14,
+   "end": 5.7,
+   "text": "Wrong.",
+   "words": [
+    {
+     "w": "Wrong.",
+     "start": 5.14,
+     "end": 5.7
+    }
+   ]
+  },
+  {
+   "start": 5.9,
+   "end": 8.96,
+   "text": "The win is what the room does for you after.",
+   "words": [
+    {
+     "w": "The",
+     "start": 5.9,
+     "end": 6.42
+    },
+    {
+     "w": "win",
+     "start": 6.42,
+     "end": 6.7
+    },
+    {
+     "w": "is",
+     "start": 6.7,
+     "end": 7.22
+    },
+    {
+     "w": "what",
+     "start": 7.22,
+     "end": 7.46
+    },
+    {
+     "w": "the",
+     "start": 7.46,
+     "end": 7.6
+    },
+    {
+     "w": "room",
+     "start": 7.6,
+     "end": 7.86
+    },
+    {
+     "w": "does",
+     "start": 7.86,
+     "end": 8.12
+    },
+    {
+     "w": "for",
+     "start": 8.12,
+     "end": 8.38
+    },
+    {
+     "w": "you",
+     "start": 8.38,
+     "end": 8.56
+    },
+    {
+     "w": "after.",
+     "start": 8.56,
+     "end": 8.96
+    }
+   ]
+  },
+  {
+   "start": 9.22,
+   "end": 11.62,
+   "text": "The recap is what sells the next event.",
+   "words": [
+    {
+     "w": "The",
+     "start": 9.22,
+     "end": 9.48
+    },
+    {
+     "w": "recap",
+     "start": 9.48,
+     "end": 9.92
+    },
+    {
+     "w": "is",
+     "start": 9.92,
+     "end": 10.36
+    },
+    {
+     "w": "what",
+     "start": 10.36,
+     "end": 10.58
+    },
+    {
+     "w": "sells",
+     "start": 10.58,
+     "end": 10.8
+    },
+    {
+     "w": "the",
+     "start": 10.8,
+     "end": 11.12
+    },
+    {
+     "w": "next",
+     "start": 11.12,
+     "end": 11.32
+    },
+    {
+     "w": "event.",
+     "start": 11.32,
+     "end": 11.62
+    }
+   ]
+  },
+  {
+   "start": 11.92,
+   "end": 13.2,
+   "text": "It recruits sponsors.",
+   "words": [
+    {
+     "w": "It",
+     "start": 11.92,
+     "end": 12.2
+    },
+    {
+     "w": "recruits",
+     "start": 12.2,
+     "end": 12.76
+    },
+    {
+     "w": "sponsors.",
+     "start": 12.76,
+     "end": 13.2
+    }
+   ]
+  },
+  {
+   "start": 13.5,
+   "end": 17.14,
+   "text": "It convinces venues to give you a better deal.",
+   "words": [
+    {
+     "w": "It",
+     "start": 13.5,
+     "end": 14.02
+    },
+    {
+     "w": "convinces",
+     "start": 14.02,
+     "end": 14.64
+    },
+    {
+     "w": "venues",
+     "start": 14.64,
+     "end": 15.04
+    },
+    {
+     "w": "to",
+     "start": 15.04,
+     "end": 15.6
+    },
+    {
+     "w": "give",
+     "start": 15.6,
+     "end": 15.88
+    },
+    {
+     "w": "you",
+     "start": 15.88,
+     "end": 16.2
+    },
+    {
+     "w": "a",
+     "start": 16.2,
+     "end": 16.5
+    },
+    {
+     "w": "better",
+     "start": 16.5,
+     "end": 16.8
+    },
+    {
+     "w": "deal.",
+     "start": 16.8,
+     "end": 17.14
+    }
+   ]
+  },
+  {
+   "start": 17.4,
+   "end": 19.22,
+   "text": "The recap is not a bonus.",
+   "words": [
+    {
+     "w": "The",
+     "start": 17.4,
+     "end": 17.54
+    },
+    {
+     "w": "recap",
+     "start": 17.54,
+     "end": 17.9
+    },
+    {
+     "w": "is",
+     "start": 17.9,
+     "end": 18.34
+    },
+    {
+     "w": "not",
+     "start": 18.34,
+     "end": 18.64
+    },
+    {
+     "w": "a",
+     "start": 18.64,
+     "end": 18.84
+    },
+    {
+     "w": "bonus.",
+     "start": 18.84,
+     "end": 19.22
+    }
+   ]
+  },
+  {
+   "start": 19.46,
+   "end": 21.14,
+   "text": "It's not if extra budget allows.",
+   "words": [
+    {
+     "w": "It's",
+     "start": 19.46,
+     "end": 19.84
+    },
+    {
+     "w": "not",
+     "start": 19.84,
+     "end": 20.04
+    },
+    {
+     "w": "if",
+     "start": 20.04,
+     "end": 20.26
+    },
+    {
+     "w": "extra",
+     "start": 20.26,
+     "end": 20.56
+    },
+    {
+     "w": "budget",
+     "start": 20.56,
+     "end": 20.86
+    },
+    {
+     "w": "allows.",
+     "start": 20.86,
+     "end": 21.14
+    }
+   ]
+  },
+  {
+   "start": 21.54,
+   "end": 23.04,
+   "text": "It is the marketing.",
+   "words": [
+    {
+     "w": "It",
+     "start": 21.54,
+     "end": 21.92
+    },
+    {
+     "w": "is",
+     "start": 21.92,
+     "end": 22.46
+    },
+    {
+     "w": "the",
+     "start": 22.46,
+     "end": 22.72
+    },
+    {
+     "w": "marketing.",
+     "start": 22.72,
+     "end": 23.04
+    }
+   ]
+  },
+  {
+   "start": 23.12,
+   "end": 25.0,
+   "text": "Everything else was just production.",
+   "words": [
+    {
+     "w": "Everything",
+     "start": 23.12,
+     "end": 23.66
+    },
+    {
+     "w": "else",
+     "start": 23.66,
+     "end": 24.08
+    },
+    {
+     "w": "was",
+     "start": 24.08,
+     "end": 24.36
+    },
+    {
+     "w": "just",
+     "start": 24.36,
+     "end": 24.56
+    },
+    {
+     "w": "production.",
+     "start": 24.56,
+     "end": 25.0
+    }
+   ]
+  },
+  {
+   "start": 25.22,
+   "end": 27.02,
+   "text": "Next event, we're in the room.",
+   "words": [
+    {
+     "w": "Next",
+     "start": 25.22,
+     "end": 25.52
+    },
+    {
+     "w": "event,",
+     "start": 25.52,
+     "end": 25.8
+    },
+    {
+     "w": "we're",
+     "start": 26.04,
+     "end": 26.54
+    },
+    {
+     "w": "in",
+     "start": 26.54,
+     "end": 26.68
+    },
+    {
+     "w": "the",
+     "start": 26.68,
+     "end": 26.8
+    },
+    {
+     "w": "room.",
+     "start": 26.8,
+     "end": 27.02
+    }
+   ]
+  },
+  {
+   "start": 27.24,
+   "end": 28.36,
+   "text": "DM us the date.",
+   "words": [
+    {
+     "w": "DM",
+     "start": 27.24,
+     "end": 27.68
+    },
+    {
+     "w": "us",
+     "start": 27.68,
+     "end": 27.94
+    },
+    {
+     "w": "the",
+     "start": 27.94,
+     "end": 28.14
+    },
+    {
+     "w": "date.",
+     "start": 28.14,
+     "end": 28.36
+    }
+   ]
+  },
+  {
+   "start": 30.0,
+   "end": 31.02,
+   "text": "We'll be right back.",
+   "words": [
+    {
+     "w": "We'll",
+     "start": 30.0,
+     "end": 30.9
+    },
+    {
+     "w": "be",
+     "start": 30.9,
+     "end": 30.9
+    },
+    {
+     "w": "right",
+     "start": 30.9,
+     "end": 30.9
+    },
+    {
+     "w": "back.",
+     "start": 30.9,
+     "end": 31.02
+    }
+   ]
+  }
+ ]
+}

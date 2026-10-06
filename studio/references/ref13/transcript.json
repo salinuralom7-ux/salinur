@@ -1,0 +1,369 @@
+{
+ "language": "en",
+ "duration": 20.1766875,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 0.92,
+   "text": "Storytelling isn't talent.",
+   "words": [
+    {
+     "w": "Storytelling",
+     "start": 0.0,
+     "end": 0.38
+    },
+    {
+     "w": "isn't",
+     "start": 0.38,
+     "end": 0.64
+    },
+    {
+     "w": "talent.",
+     "start": 0.64,
+     "end": 0.92
+    }
+   ]
+  },
+  {
+   "start": 1.06,
+   "end": 3.24,
+   "text": "It's a four-letter formula top creators use.",
+   "words": [
+    {
+     "w": "It's",
+     "start": 1.06,
+     "end": 1.24
+    },
+    {
+     "w": "a",
+     "start": 1.24,
+     "end": 1.3
+    },
+    {
+     "w": "four",
+     "start": 1.3,
+     "end": 1.58
+    },
+    {
+     "w": "-letter",
+     "start": 1.58,
+     "end": 1.84
+    },
+    {
+     "w": "formula",
+     "start": 1.84,
+     "end": 2.16
+    },
+    {
+     "w": "top",
+     "start": 2.16,
+     "end": 2.48
+    },
+    {
+     "w": "creators",
+     "start": 2.48,
+     "end": 2.9
+    },
+    {
+     "w": "use.",
+     "start": 2.9,
+     "end": 3.24
+    }
+   ]
+  },
+  {
+   "start": 3.4,
+   "end": 4.68,
+   "text": "It's called HRST.",
+   "words": [
+    {
+     "w": "It's",
+     "start": 3.4,
+     "end": 3.58
+    },
+    {
+     "w": "called",
+     "start": 3.58,
+     "end": 3.82
+    },
+    {
+     "w": "HRST.",
+     "start": 3.82,
+     "end": 4.68
+    }
+   ]
+  },
+  {
+   "start": 4.92,
+   "end": 6.06,
+   "text": "Hook, make them stop scrolling.",
+   "words": [
+    {
+     "w": "Hook,",
+     "start": 4.92,
+     "end": 5.12
+    },
+    {
+     "w": "make",
+     "start": 5.16,
+     "end": 5.36
+    },
+    {
+     "w": "them",
+     "start": 5.36,
+     "end": 5.54
+    },
+    {
+     "w": "stop",
+     "start": 5.54,
+     "end": 5.72
+    },
+    {
+     "w": "scrolling.",
+     "start": 5.72,
+     "end": 6.06
+    }
+   ]
+  },
+  {
+   "start": 6.26,
+   "end": 8.22,
+   "text": "Relatable, make them see themselves in the story.",
+   "words": [
+    {
+     "w": "Relatable,",
+     "start": 6.26,
+     "end": 6.64
+    },
+    {
+     "w": "make",
+     "start": 6.8,
+     "end": 6.98
+    },
+    {
+     "w": "them",
+     "start": 6.98,
+     "end": 7.14
+    },
+    {
+     "w": "see",
+     "start": 7.14,
+     "end": 7.34
+    },
+    {
+     "w": "themselves",
+     "start": 7.34,
+     "end": 7.58
+    },
+    {
+     "w": "in",
+     "start": 7.58,
+     "end": 7.88
+    },
+    {
+     "w": "the",
+     "start": 7.88,
+     "end": 7.94
+    },
+    {
+     "w": "story.",
+     "start": 7.94,
+     "end": 8.22
+    }
+   ]
+  },
+  {
+   "start": 8.38,
+   "end": 10.48,
+   "text": "Show details they can see, feel, or picture.",
+   "words": [
+    {
+     "w": "Show",
+     "start": 8.38,
+     "end": 8.6
+    },
+    {
+     "w": "details",
+     "start": 8.6,
+     "end": 8.82
+    },
+    {
+     "w": "they",
+     "start": 8.82,
+     "end": 9.1
+    },
+    {
+     "w": "can",
+     "start": 9.1,
+     "end": 9.24
+    },
+    {
+     "w": "see,",
+     "start": 9.24,
+     "end": 9.48
+    },
+    {
+     "w": "feel,",
+     "start": 9.62,
+     "end": 9.96
+    },
+    {
+     "w": "or",
+     "start": 10.06,
+     "end": 10.22
+    },
+    {
+     "w": "picture.",
+     "start": 10.22,
+     "end": 10.48
+    }
+   ]
+  },
+  {
+   "start": 10.62,
+   "end": 12.12,
+   "text": "Take away, and with one clear lesson.",
+   "words": [
+    {
+     "w": "Take",
+     "start": 10.62,
+     "end": 10.8
+    },
+    {
+     "w": "away,",
+     "start": 10.8,
+     "end": 11.0
+    },
+    {
+     "w": "and",
+     "start": 11.14,
+     "end": 11.28
+    },
+    {
+     "w": "with",
+     "start": 11.28,
+     "end": 11.4
+    },
+    {
+     "w": "one",
+     "start": 11.4,
+     "end": 11.56
+    },
+    {
+     "w": "clear",
+     "start": 11.56,
+     "end": 11.82
+    },
+    {
+     "w": "lesson.",
+     "start": 11.82,
+     "end": 12.12
+    }
+   ]
+  },
+  {
+   "start": 12.24,
+   "end": 13.08,
+   "text": "That's HRST.",
+   "words": [
+    {
+     "w": "That's",
+     "start": 12.24,
+     "end": 12.52
+    },
+    {
+     "w": "HRST.",
+     "start": 12.52,
+     "end": 13.08
+    }
+   ]
+  },
+  {
+   "start": 13.32,
+   "end": 17.52,
+   "text": "Comment database, and I'll send you 3,000 plus viral hooks with the original video links.",
+   "words": [
+    {
+     "w": "Comment",
+     "start": 13.32,
+     "end": 13.72
+    },
+    {
+     "w": "database,",
+     "start": 13.72,
+     "end": 14.02
+    },
+    {
+     "w": "and",
+     "start": 14.32,
+     "end": 14.48
+    },
+    {
+     "w": "I'll",
+     "start": 14.48,
+     "end": 14.62
+    },
+    {
+     "w": "send",
+     "start": 14.62,
+     "end": 14.8
+    },
+    {
+     "w": "you",
+     "start": 14.8,
+     "end": 14.94
+    },
+    {
+     "w": "3",
+     "start": 14.94,
+     "end": 15.1
+    },
+    {
+     "w": ",000",
+     "start": 15.1,
+     "end": 15.56
+    },
+    {
+     "w": "plus",
+     "start": 15.56,
+     "end": 15.74
+    },
+    {
+     "w": "viral",
+     "start": 15.74,
+     "end": 16.1
+    },
+    {
+     "w": "hooks",
+     "start": 16.1,
+     "end": 16.36
+    },
+    {
+     "w": "with",
+     "start": 16.36,
+     "end": 16.54
+    },
+    {
+     "w": "the",
+     "start": 16.54,
+     "end": 16.64
+    },
+    {
+     "w": "original",
+     "start": 16.64,
+     "end": 16.94
+    },
+    {
+     "w": "video",
+     "start": 16.94,
+     "end": 17.22
+    },
+    {
+     "w": "links.",
+     "start": 17.22,
+     "end": 17.52
+    }
+   ]
+  }
+ ]
+}

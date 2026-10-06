@@ -1,0 +1,835 @@
+{
+ "language": "en",
+ "duration": 44.9988125,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 3.54,
+   "text": "If I were the content strategist for a teacher, here are four things I'll make you post.",
+   "words": [
+    {
+     "w": "If",
+     "start": 0.0,
+     "end": 0.08
+    },
+    {
+     "w": "I",
+     "start": 0.08,
+     "end": 0.08
+    },
+    {
+     "w": "were",
+     "start": 0.08,
+     "end": 0.24
+    },
+    {
+     "w": "the",
+     "start": 0.24,
+     "end": 0.38
+    },
+    {
+     "w": "content",
+     "start": 0.38,
+     "end": 0.6
+    },
+    {
+     "w": "strategist",
+     "start": 0.6,
+     "end": 1.16
+    },
+    {
+     "w": "for",
+     "start": 1.16,
+     "end": 1.32
+    },
+    {
+     "w": "a",
+     "start": 1.32,
+     "end": 1.42
+    },
+    {
+     "w": "teacher,",
+     "start": 1.42,
+     "end": 1.76
+    },
+    {
+     "w": "here",
+     "start": 1.92,
+     "end": 2.04
+    },
+    {
+     "w": "are",
+     "start": 2.04,
+     "end": 2.16
+    },
+    {
+     "w": "four",
+     "start": 2.16,
+     "end": 2.36
+    },
+    {
+     "w": "things",
+     "start": 2.36,
+     "end": 2.64
+    },
+    {
+     "w": "I'll",
+     "start": 2.64,
+     "end": 2.98
+    },
+    {
+     "w": "make",
+     "start": 2.98,
+     "end": 3.16
+    },
+    {
+     "w": "you",
+     "start": 3.16,
+     "end": 3.28
+    },
+    {
+     "w": "post.",
+     "start": 3.28,
+     "end": 3.54
+    }
+   ]
+  },
+  {
+   "start": 3.78,
+   "end": 5.68,
+   "text": "Number one, education and value content.",
+   "words": [
+    {
+     "w": "Number",
+     "start": 3.78,
+     "end": 4.0
+    },
+    {
+     "w": "one,",
+     "start": 4.0,
+     "end": 4.28
+    },
+    {
+     "w": "education",
+     "start": 4.36,
+     "end": 4.68
+    },
+    {
+     "w": "and",
+     "start": 4.68,
+     "end": 5.08
+    },
+    {
+     "w": "value",
+     "start": 5.08,
+     "end": 5.26
+    },
+    {
+     "w": "content.",
+     "start": 5.26,
+     "end": 5.68
+    }
+   ]
+  },
+  {
+   "start": 5.86,
+   "end": 7.46,
+   "text": "This is going to be a number one pillar.",
+   "words": [
+    {
+     "w": "This",
+     "start": 5.86,
+     "end": 6.16
+    },
+    {
+     "w": "is",
+     "start": 6.16,
+     "end": 6.28
+    },
+    {
+     "w": "going",
+     "start": 6.28,
+     "end": 6.46
+    },
+    {
+     "w": "to",
+     "start": 6.46,
+     "end": 6.58
+    },
+    {
+     "w": "be",
+     "start": 6.58,
+     "end": 6.68
+    },
+    {
+     "w": "a",
+     "start": 6.68,
+     "end": 6.78
+    },
+    {
+     "w": "number",
+     "start": 6.78,
+     "end": 6.98
+    },
+    {
+     "w": "one",
+     "start": 6.98,
+     "end": 7.22
+    },
+    {
+     "w": "pillar.",
+     "start": 7.22,
+     "end": 7.46
+    }
+   ]
+  },
+  {
+   "start": 7.54,
+   "end": 10.42,
+   "text": "Take one difficult concept and explain it in simple language.",
+   "words": [
+    {
+     "w": "Take",
+     "start": 7.54,
+     "end": 7.72
+    },
+    {
+     "w": "one",
+     "start": 7.72,
+     "end": 7.96
+    },
+    {
+     "w": "difficult",
+     "start": 7.96,
+     "end": 8.28
+    },
+    {
+     "w": "concept",
+     "start": 8.28,
+     "end": 8.8
+    },
+    {
+     "w": "and",
+     "start": 8.8,
+     "end": 9.04
+    },
+    {
+     "w": "explain",
+     "start": 9.04,
+     "end": 9.32
+    },
+    {
+     "w": "it",
+     "start": 9.32,
+     "end": 9.56
+    },
+    {
+     "w": "in",
+     "start": 9.56,
+     "end": 9.7
+    },
+    {
+     "w": "simple",
+     "start": 9.7,
+     "end": 9.96
+    },
+    {
+     "w": "language.",
+     "start": 9.96,
+     "end": 10.42
+    }
+   ]
+  },
+  {
+   "start": 10.66,
+   "end": 12.88,
+   "text": "One reel for one concept, that's it.",
+   "words": [
+    {
+     "w": "One",
+     "start": 10.66,
+     "end": 11.14
+    },
+    {
+     "w": "reel",
+     "start": 11.14,
+     "end": 11.34
+    },
+    {
+     "w": "for",
+     "start": 11.34,
+     "end": 11.56
+    },
+    {
+     "w": "one",
+     "start": 11.56,
+     "end": 11.74
+    },
+    {
+     "w": "concept,",
+     "start": 11.74,
+     "end": 12.28
+    },
+    {
+     "w": "that's",
+     "start": 12.36,
+     "end": 12.72
+    },
+    {
+     "w": "it.",
+     "start": 12.72,
+     "end": 12.88
+    }
+   ]
+  },
+  {
+   "start": 13.06,
+   "end": 14.64,
+   "text": "Number two, problem solving content.",
+   "words": [
+    {
+     "w": "Number",
+     "start": 13.06,
+     "end": 13.42
+    },
+    {
+     "w": "two,",
+     "start": 13.42,
+     "end": 13.66
+    },
+    {
+     "w": "problem",
+     "start": 13.78,
+     "end": 14.0
+    },
+    {
+     "w": "solving",
+     "start": 14.0,
+     "end": 14.28
+    },
+    {
+     "w": "content.",
+     "start": 14.28,
+     "end": 14.64
+    }
+   ]
+  },
+  {
+   "start": 14.96,
+   "end": 18.12,
+   "text": "Take the problems your students actually face and solve it on camera.",
+   "words": [
+    {
+     "w": "Take",
+     "start": 14.96,
+     "end": 15.3
+    },
+    {
+     "w": "the",
+     "start": 15.3,
+     "end": 15.4
+    },
+    {
+     "w": "problems",
+     "start": 15.4,
+     "end": 15.84
+    },
+    {
+     "w": "your",
+     "start": 15.84,
+     "end": 16.02
+    },
+    {
+     "w": "students",
+     "start": 16.02,
+     "end": 16.38
+    },
+    {
+     "w": "actually",
+     "start": 16.38,
+     "end": 16.72
+    },
+    {
+     "w": "face",
+     "start": 16.72,
+     "end": 17.14
+    },
+    {
+     "w": "and",
+     "start": 17.14,
+     "end": 17.34
+    },
+    {
+     "w": "solve",
+     "start": 17.34,
+     "end": 17.56
+    },
+    {
+     "w": "it",
+     "start": 17.56,
+     "end": 17.7
+    },
+    {
+     "w": "on",
+     "start": 17.7,
+     "end": 17.84
+    },
+    {
+     "w": "camera.",
+     "start": 17.84,
+     "end": 18.12
+    }
+   ]
+  },
+  {
+   "start": 18.3,
+   "end": 19.98,
+   "text": "If you struggle with this, do this.",
+   "words": [
+    {
+     "w": "If",
+     "start": 18.3,
+     "end": 18.66
+    },
+    {
+     "w": "you",
+     "start": 18.66,
+     "end": 18.76
+    },
+    {
+     "w": "struggle",
+     "start": 18.76,
+     "end": 19.04
+    },
+    {
+     "w": "with",
+     "start": 19.04,
+     "end": 19.3
+    },
+    {
+     "w": "this,",
+     "start": 19.3,
+     "end": 19.56
+    },
+    {
+     "w": "do",
+     "start": 19.6,
+     "end": 19.68
+    },
+    {
+     "w": "this.",
+     "start": 19.68,
+     "end": 19.98
+    }
+   ]
+  },
+  {
+   "start": 20.08,
+   "end": 22.18,
+   "text": "Answer the questions your students actually ask.",
+   "words": [
+    {
+     "w": "Answer",
+     "start": 20.08,
+     "end": 20.4
+    },
+    {
+     "w": "the",
+     "start": 20.4,
+     "end": 20.54
+    },
+    {
+     "w": "questions",
+     "start": 20.54,
+     "end": 20.9
+    },
+    {
+     "w": "your",
+     "start": 20.9,
+     "end": 21.12
+    },
+    {
+     "w": "students",
+     "start": 21.12,
+     "end": 21.44
+    },
+    {
+     "w": "actually",
+     "start": 21.44,
+     "end": 21.8
+    },
+    {
+     "w": "ask.",
+     "start": 21.8,
+     "end": 22.18
+    }
+   ]
+  },
+  {
+   "start": 22.38,
+   "end": 24.3,
+   "text": "Number three, relatable student content.",
+   "words": [
+    {
+     "w": "Number",
+     "start": 22.38,
+     "end": 22.68
+    },
+    {
+     "w": "three,",
+     "start": 22.68,
+     "end": 23.0
+    },
+    {
+     "w": "relatable",
+     "start": 23.14,
+     "end": 23.4
+    },
+    {
+     "w": "student",
+     "start": 23.4,
+     "end": 23.88
+    },
+    {
+     "w": "content.",
+     "start": 23.88,
+     "end": 24.3
+    }
+   ]
+  },
+  {
+   "start": 24.56,
+   "end": 26.88,
+   "text": "POVs of student life, teacher-student conversation,",
+   "words": [
+    {
+     "w": "POVs",
+     "start": 24.56,
+     "end": 25.0
+    },
+    {
+     "w": "of",
+     "start": 25.0,
+     "end": 25.1
+    },
+    {
+     "w": "student",
+     "start": 25.1,
+     "end": 25.38
+    },
+    {
+     "w": "life,",
+     "start": 25.38,
+     "end": 25.68
+    },
+    {
+     "w": "teacher",
+     "start": 25.86,
+     "end": 26.16
+    },
+    {
+     "w": "-student",
+     "start": 26.16,
+     "end": 26.48
+    },
+    {
+     "w": "conversation,",
+     "start": 26.48,
+     "end": 26.88
+    }
+   ]
+  },
+  {
+   "start": 27.3,
+   "end": 29.54,
+   "text": "things student does and things teacher faces.",
+   "words": [
+    {
+     "w": "things",
+     "start": 27.3,
+     "end": 27.5
+    },
+    {
+     "w": "student",
+     "start": 27.5,
+     "end": 27.78
+    },
+    {
+     "w": "does",
+     "start": 27.78,
+     "end": 28.14
+    },
+    {
+     "w": "and",
+     "start": 28.14,
+     "end": 28.5
+    },
+    {
+     "w": "things",
+     "start": 28.5,
+     "end": 28.82
+    },
+    {
+     "w": "teacher",
+     "start": 28.82,
+     "end": 29.16
+    },
+    {
+     "w": "faces.",
+     "start": 29.16,
+     "end": 29.54
+    }
+   ]
+  },
+  {
+   "start": 30.0,
+   "end": 31.72,
+   "text": "Number four, authority building content.",
+   "words": [
+    {
+     "w": "Number",
+     "start": 30.0,
+     "end": 30.32
+    },
+    {
+     "w": "four,",
+     "start": 30.32,
+     "end": 30.54
+    },
+    {
+     "w": "authority",
+     "start": 30.62,
+     "end": 30.88
+    },
+    {
+     "w": "building",
+     "start": 30.88,
+     "end": 31.34
+    },
+    {
+     "w": "content.",
+     "start": 31.34,
+     "end": 31.72
+    }
+   ]
+  },
+  {
+   "start": 31.94,
+   "end": 35.56,
+   "text": "Show why you're good at this, your teaching methods and why you teach that way.",
+   "words": [
+    {
+     "w": "Show",
+     "start": 31.94,
+     "end": 32.14
+    },
+    {
+     "w": "why",
+     "start": 32.14,
+     "end": 32.4
+    },
+    {
+     "w": "you're",
+     "start": 32.4,
+     "end": 32.52
+    },
+    {
+     "w": "good",
+     "start": 32.52,
+     "end": 32.7
+    },
+    {
+     "w": "at",
+     "start": 32.7,
+     "end": 32.9
+    },
+    {
+     "w": "this,",
+     "start": 32.9,
+     "end": 33.16
+    },
+    {
+     "w": "your",
+     "start": 33.28,
+     "end": 33.44
+    },
+    {
+     "w": "teaching",
+     "start": 33.44,
+     "end": 33.74
+    },
+    {
+     "w": "methods",
+     "start": 33.74,
+     "end": 33.98
+    },
+    {
+     "w": "and",
+     "start": 33.98,
+     "end": 34.48
+    },
+    {
+     "w": "why",
+     "start": 34.48,
+     "end": 34.78
+    },
+    {
+     "w": "you",
+     "start": 34.78,
+     "end": 34.94
+    },
+    {
+     "w": "teach",
+     "start": 34.94,
+     "end": 35.14
+    },
+    {
+     "w": "that",
+     "start": 35.14,
+     "end": 35.36
+    },
+    {
+     "w": "way.",
+     "start": 35.36,
+     "end": 35.56
+    }
+   ]
+  },
+  {
+   "start": 35.68,
+   "end": 37.52,
+   "text": "Show student transformation and results.",
+   "words": [
+    {
+     "w": "Show",
+     "start": 35.68,
+     "end": 35.98
+    },
+    {
+     "w": "student",
+     "start": 35.98,
+     "end": 36.36
+    },
+    {
+     "w": "transformation",
+     "start": 36.36,
+     "end": 36.78
+    },
+    {
+     "w": "and",
+     "start": 36.78,
+     "end": 37.32
+    },
+    {
+     "w": "results.",
+     "start": 37.32,
+     "end": 37.52
+    }
+   ]
+  },
+  {
+   "start": 37.84,
+   "end": 38.94,
+   "text": "So that was for teacher.",
+   "words": [
+    {
+     "w": "So",
+     "start": 37.84,
+     "end": 38.04
+    },
+    {
+     "w": "that",
+     "start": 38.04,
+     "end": 38.22
+    },
+    {
+     "w": "was",
+     "start": 38.22,
+     "end": 38.42
+    },
+    {
+     "w": "for",
+     "start": 38.42,
+     "end": 38.58
+    },
+    {
+     "w": "teacher.",
+     "start": 38.58,
+     "end": 38.94
+    }
+   ]
+  },
+  {
+   "start": 39.04,
+   "end": 42.12,
+   "text": "Comment your profession and I'll send you exact framework that you should follow.",
+   "words": [
+    {
+     "w": "Comment",
+     "start": 39.04,
+     "end": 39.3
+    },
+    {
+     "w": "your",
+     "start": 39.3,
+     "end": 39.52
+    },
+    {
+     "w": "profession",
+     "start": 39.52,
+     "end": 39.9
+    },
+    {
+     "w": "and",
+     "start": 39.9,
+     "end": 40.16
+    },
+    {
+     "w": "I'll",
+     "start": 40.16,
+     "end": 40.28
+    },
+    {
+     "w": "send",
+     "start": 40.28,
+     "end": 40.44
+    },
+    {
+     "w": "you",
+     "start": 40.44,
+     "end": 40.58
+    },
+    {
+     "w": "exact",
+     "start": 40.58,
+     "end": 40.82
+    },
+    {
+     "w": "framework",
+     "start": 40.82,
+     "end": 41.32
+    },
+    {
+     "w": "that",
+     "start": 41.32,
+     "end": 41.54
+    },
+    {
+     "w": "you",
+     "start": 41.54,
+     "end": 41.68
+    },
+    {
+     "w": "should",
+     "start": 41.68,
+     "end": 41.88
+    },
+    {
+     "w": "follow.",
+     "start": 41.88,
+     "end": 42.12
+    }
+   ]
+  }
+ ]
+}
