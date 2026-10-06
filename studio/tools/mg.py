@@ -170,7 +170,7 @@ def shadow(fr, cx, cy, width, a=0.42, squash=1.0):
 
 
 def glow(fr, cx, cy, r, colour=(255, 255, 255), a=0.6):
-    size = int(r * 2.4)
+    size = int(r * 3.8)
     S = np.zeros((size, size), np.float32)
     cv2.circle(S, (size // 2, size // 2), int(r * 0.6), 1.0, -1)
     S = cv2.GaussianBlur(S, (0, 0), r * 0.35)
