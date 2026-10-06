@@ -1,0 +1,20 @@
+wallet|empty wallet
+wallet|leather wallet open
+moth|moth
+bike|motorcycle
+bike|scooter
+car|car
+car|sedan car
+chai|tea glass
+chai|cup of tea
+coffee|coffee cup
+coffee|latte
+phone|smartphone
+treadmill|treadmill
+runner|man running
+vault|bank vault door
+vault|safe box
+piggy|piggy bank
+plane|paper plane
+coins|gold coins stack
+notes|indian rupee notes
