@@ -12,7 +12,7 @@ import blender_kit as K
 
 FONT = "../../../assets/fonts/Poppins-800.ttf"
 SCENE = sys.argv[1]
-FRAMES = {"doc_walk": 160, "doc_film": 110, "owner_out": 140, "queue": 170, "steal": 120}[SCENE]
+FRAMES = {"hospital": 180, "doc_walk": 160, "doc_film": 110, "owner_out": 140, "queue": 170, "steal": 120}[SCENE]
 
 sc = K.reset(FRAMES)
 sc.render.resolution_x, sc.render.resolution_y = 1080, 600
@@ -129,7 +129,19 @@ random.seed(3)
 CH = K.character
 LINEAR_LOC = []
 
-if SCENE == "doc_walk":          # "Dr. Pandey comes to your town, opens a small clinic"
+if SCENE == "hospital":         # "you have a hospital in your town" — slow hero orbit, no people
+    base(12); ground_road(-6.6, 23)
+    K.rbox("plaza", (12, 4.0, 0.12), (0, -3.6, 0.1), K.mat("plaza", (0.72, 0.73, 0.78), 0.7), bevel=0.04)
+    hospital(0.0, 1.6, 0.85)
+    for t in ((-8.8, 1), (8.8, 1), (-7, 6), (7, 6), (-9.5, -1.5), (9.6, -2.0)):
+        tree(*t)
+    tg = K.empty("target", (0, -0.5, 3.3))
+    cam = K.camera(lens=45, fstop=8.0, focus=tg)
+    con = cam.constraints.new("TRACK_TO"); con.target = tg; con.track_axis = "TRACK_NEGATIVE_Z"; con.up_axis = "UP_Y"
+    rig = K.empty("rig", (0, 0, 0)); cam.parent = rig; cam.location = (0, -31, 10)
+    K.key(rig, 1, rotation_euler=(0, 0, math.radians(-22))); K.key(rig, FRAMES, rotation_euler=(0, 0, math.radians(12)))
+
+elif SCENE == "doc_walk":          # "Dr. Pandey comes to your town, opens a small clinic"
     base(); ground_road(); K.rbox("pave", (12, 3.0, 0.12), (0, -3.4, 0.1), M["pave"], bevel=0.04)
     door = clinic(1.0, 0.8, open_sign_frame=128)
     for t in ((-8, 2), (8.2, 1.5), (-6, 6), (6, 6.5)):
