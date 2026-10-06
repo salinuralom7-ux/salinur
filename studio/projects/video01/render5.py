@@ -549,7 +549,7 @@ def scene_at(t):
 def compose(i, fr, mk):
     t = i / FPS
     if t >= OUT0:
-        return outro(t)
+        return np.clip(outro(t) + cv2.resize(GRAIN[i % 8], (W, H), interpolation=cv2.INTER_NEAREST)[..., None] * 0.5, 0, 255).astype(np.uint8)
     img, m = frame_cam(fr, mk, i, t)
     HANDS[0] = hands(img, m)
     talk = grade(img, m) * VIGN
