@@ -1,0 +1,854 @@
+{
+ "language": "hi",
+ "duration": 40.4709375,
+ "segments": [
+  {
+   "start": 0.0,
+   "end": 1.9,
+   "text": "इस विश्वों का एक ही काम है। आपको freedom देना।",
+   "words": [
+    {
+     "w": "इस",
+     "start": 0.0,
+     "end": 0.04
+    },
+    {
+     "w": "विश्वों",
+     "start": 0.04,
+     "end": 0.14
+    },
+    {
+     "w": "का",
+     "start": 0.14,
+     "end": 0.26
+    },
+    {
+     "w": "एक",
+     "start": 0.26,
+     "end": 0.58
+    },
+    {
+     "w": "ही",
+     "start": 0.58,
+     "end": 0.7
+    },
+    {
+     "w": "काम",
+     "start": 0.7,
+     "end": 0.84
+    },
+    {
+     "w": "है।",
+     "start": 0.84,
+     "end": 1.08
+    },
+    {
+     "w": "आपको",
+     "start": 1.08,
+     "end": 1.3
+    },
+    {
+     "w": "freedom",
+     "start": 1.3,
+     "end": 1.5
+    },
+    {
+     "w": "देना।",
+     "start": 1.5,
+     "end": 1.9
+    }
+   ]
+  },
+  {
+   "start": 1.9,
+   "end": 6.62,
+   "text": "इस freedom आपको right to choose what you want to choose, to go where you want to go, to do what you want to do.",
+   "words": [
+    {
+     "w": "इस",
+     "start": 1.9,
+     "end": 2.14
+    },
+    {
+     "w": "freedom",
+     "start": 2.14,
+     "end": 2.4
+    },
+    {
+     "w": "आपको",
+     "start": 2.4,
+     "end": 2.74
+    },
+    {
+     "w": "right",
+     "start": 2.74,
+     "end": 3.12
+    },
+    {
+     "w": "to",
+     "start": 3.12,
+     "end": 3.38
+    },
+    {
+     "w": "choose",
+     "start": 3.38,
+     "end": 3.68
+    },
+    {
+     "w": "what",
+     "start": 3.68,
+     "end": 3.92
+    },
+    {
+     "w": "you",
+     "start": 3.92,
+     "end": 4.04
+    },
+    {
+     "w": "want",
+     "start": 4.04,
+     "end": 4.14
+    },
+    {
+     "w": "to",
+     "start": 4.14,
+     "end": 4.24
+    },
+    {
+     "w": "choose,",
+     "start": 4.24,
+     "end": 4.46
+    },
+    {
+     "w": "to",
+     "start": 4.52,
+     "end": 4.64
+    },
+    {
+     "w": "go",
+     "start": 4.64,
+     "end": 4.84
+    },
+    {
+     "w": "where",
+     "start": 4.84,
+     "end": 5.02
+    },
+    {
+     "w": "you",
+     "start": 5.02,
+     "end": 5.12
+    },
+    {
+     "w": "want",
+     "start": 5.12,
+     "end": 5.22
+    },
+    {
+     "w": "to",
+     "start": 5.22,
+     "end": 5.34
+    },
+    {
+     "w": "go,",
+     "start": 5.34,
+     "end": 5.5
+    },
+    {
+     "w": "to",
+     "start": 5.6,
+     "end": 5.7
+    },
+    {
+     "w": "do",
+     "start": 5.7,
+     "end": 5.9
+    },
+    {
+     "w": "what",
+     "start": 5.9,
+     "end": 6.06
+    },
+    {
+     "w": "you",
+     "start": 6.06,
+     "end": 6.22
+    },
+    {
+     "w": "want",
+     "start": 6.22,
+     "end": 6.32
+    },
+    {
+     "w": "to",
+     "start": 6.32,
+     "end": 6.44
+    },
+    {
+     "w": "do.",
+     "start": 6.44,
+     "end": 6.62
+    }
+   ]
+  },
+  {
+   "start": 6.68,
+   "end": 9.42,
+   "text": "इस विश्वों का main target of money, of earning money, that you get freedom.",
+   "words": [
+    {
+     "w": "इस",
+     "start": 6.68,
+     "end": 6.8
+    },
+    {
+     "w": "विश्वों",
+     "start": 6.8,
+     "end": 7.08
+    },
+    {
+     "w": "का",
+     "start": 7.08,
+     "end": 7.08
+    },
+    {
+     "w": "main",
+     "start": 7.08,
+     "end": 7.2
+    },
+    {
+     "w": "target",
+     "start": 7.2,
+     "end": 7.58
+    },
+    {
+     "w": "of",
+     "start": 7.58,
+     "end": 7.72
+    },
+    {
+     "w": "money,",
+     "start": 7.72,
+     "end": 7.96
+    },
+    {
+     "w": "of",
+     "start": 8.02,
+     "end": 8.1
+    },
+    {
+     "w": "earning",
+     "start": 8.1,
+     "end": 8.34
+    },
+    {
+     "w": "money,",
+     "start": 8.34,
+     "end": 8.58
+    },
+    {
+     "w": "that",
+     "start": 8.66,
+     "end": 8.76
+    },
+    {
+     "w": "you",
+     "start": 8.76,
+     "end": 8.96
+    },
+    {
+     "w": "get",
+     "start": 8.96,
+     "end": 9.16
+    },
+    {
+     "w": "freedom.",
+     "start": 9.16,
+     "end": 9.42
+    }
+   ]
+  },
+  {
+   "start": 9.62,
+   "end": 13.9,
+   "text": "But there will be lot of job holders, जिनके पास कोई government job या फिर कोई companies में job मिलता होगा।",
+   "words": [
+    {
+     "w": "But",
+     "start": 9.62,
+     "end": 9.74
+    },
+    {
+     "w": "there",
+     "start": 9.74,
+     "end": 10.0
+    },
+    {
+     "w": "will",
+     "start": 10.0,
+     "end": 10.14
+    },
+    {
+     "w": "be",
+     "start": 10.14,
+     "end": 10.22
+    },
+    {
+     "w": "lot",
+     "start": 10.22,
+     "end": 10.4
+    },
+    {
+     "w": "of",
+     "start": 10.4,
+     "end": 10.58
+    },
+    {
+     "w": "job",
+     "start": 10.58,
+     "end": 10.8
+    },
+    {
+     "w": "holders,",
+     "start": 10.8,
+     "end": 11.1
+    },
+    {
+     "w": "जिनके",
+     "start": 11.28,
+     "end": 11.52
+    },
+    {
+     "w": "पास",
+     "start": 11.52,
+     "end": 11.7
+    },
+    {
+     "w": "कोई",
+     "start": 11.7,
+     "end": 11.9
+    },
+    {
+     "w": "government",
+     "start": 11.9,
+     "end": 12.1
+    },
+    {
+     "w": "job",
+     "start": 12.1,
+     "end": 12.42
+    },
+    {
+     "w": "या",
+     "start": 12.42,
+     "end": 12.58
+    },
+    {
+     "w": "फिर",
+     "start": 12.58,
+     "end": 12.64
+    },
+    {
+     "w": "कोई",
+     "start": 12.64,
+     "end": 12.82
+    },
+    {
+     "w": "companies",
+     "start": 12.82,
+     "end": 13.04
+    },
+    {
+     "w": "में",
+     "start": 13.04,
+     "end": 13.22
+    },
+    {
+     "w": "job",
+     "start": 13.22,
+     "end": 13.34
+    },
+    {
+     "w": "मिलता",
+     "start": 13.34,
+     "end": 13.7
+    },
+    {
+     "w": "होगा।",
+     "start": 13.7,
+     "end": 13.9
+    }
+   ]
+  },
+  {
+   "start": 13.9,
+   "end": 17.68,
+   "text": "Ultimately if I ask you that do you have the freedom, the answer will be no, because you already know.",
+   "words": [
+    {
+     "w": "Ultimately",
+     "start": 13.9,
+     "end": 14.2
+    },
+    {
+     "w": "if",
+     "start": 14.2,
+     "end": 14.52
+    },
+    {
+     "w": "I",
+     "start": 14.52,
+     "end": 14.6
+    },
+    {
+     "w": "ask",
+     "start": 14.6,
+     "end": 14.86
+    },
+    {
+     "w": "you",
+     "start": 14.86,
+     "end": 15.0
+    },
+    {
+     "w": "that",
+     "start": 15.0,
+     "end": 15.14
+    },
+    {
+     "w": "do",
+     "start": 15.14,
+     "end": 15.28
+    },
+    {
+     "w": "you",
+     "start": 15.28,
+     "end": 15.44
+    },
+    {
+     "w": "have",
+     "start": 15.44,
+     "end": 15.58
+    },
+    {
+     "w": "the",
+     "start": 15.58,
+     "end": 15.68
+    },
+    {
+     "w": "freedom,",
+     "start": 15.68,
+     "end": 15.9
+    },
+    {
+     "w": "the",
+     "start": 16.06,
+     "end": 16.16
+    },
+    {
+     "w": "answer",
+     "start": 16.16,
+     "end": 16.4
+    },
+    {
+     "w": "will",
+     "start": 16.4,
+     "end": 16.54
+    },
+    {
+     "w": "be",
+     "start": 16.54,
+     "end": 16.68
+    },
+    {
+     "w": "no,",
+     "start": 16.68,
+     "end": 16.82
+    },
+    {
+     "w": "because",
+     "start": 16.88,
+     "end": 17.04
+    },
+    {
+     "w": "you",
+     "start": 17.04,
+     "end": 17.28
+    },
+    {
+     "w": "already",
+     "start": 17.28,
+     "end": 17.48
+    },
+    {
+     "w": "know.",
+     "start": 17.48,
+     "end": 17.68
+    }
+   ]
+  },
+  {
+   "start": 17.74,
+   "end": 22.08,
+   "text": "There is someone sitting on your head, your boss, maybe someone else, who is dictating you when you sleep,",
+   "words": [
+    {
+     "w": "There",
+     "start": 17.74,
+     "end": 17.84
+    },
+    {
+     "w": "is",
+     "start": 17.84,
+     "end": 18.0
+    },
+    {
+     "w": "someone",
+     "start": 18.0,
+     "end": 18.26
+    },
+    {
+     "w": "sitting",
+     "start": 18.26,
+     "end": 18.6
+    },
+    {
+     "w": "on",
+     "start": 18.6,
+     "end": 18.8
+    },
+    {
+     "w": "your",
+     "start": 18.8,
+     "end": 18.9
+    },
+    {
+     "w": "head,",
+     "start": 18.9,
+     "end": 19.14
+    },
+    {
+     "w": "your",
+     "start": 19.22,
+     "end": 19.34
+    },
+    {
+     "w": "boss,",
+     "start": 19.34,
+     "end": 19.7
+    },
+    {
+     "w": "maybe",
+     "start": 19.74,
+     "end": 19.88
+    },
+    {
+     "w": "someone",
+     "start": 19.88,
+     "end": 20.12
+    },
+    {
+     "w": "else,",
+     "start": 20.12,
+     "end": 20.46
+    },
+    {
+     "w": "who",
+     "start": 20.54,
+     "end": 20.6
+    },
+    {
+     "w": "is",
+     "start": 20.6,
+     "end": 20.74
+    },
+    {
+     "w": "dictating",
+     "start": 20.74,
+     "end": 21.22
+    },
+    {
+     "w": "you",
+     "start": 21.22,
+     "end": 21.42
+    },
+    {
+     "w": "when",
+     "start": 21.42,
+     "end": 21.66
+    },
+    {
+     "w": "you",
+     "start": 21.66,
+     "end": 21.82
+    },
+    {
+     "w": "sleep,",
+     "start": 21.82,
+     "end": 22.08
+    }
+   ]
+  },
+  {
+   "start": 22.08,
+   "end": 27.76,
+   "text": "when you come to the office, when you go back. So almost 90% of the things are being decided by someone else.",
+   "words": [
+    {
+     "w": "when",
+     "start": 22.08,
+     "end": 22.32
+    },
+    {
+     "w": "you",
+     "start": 22.32,
+     "end": 22.52
+    },
+    {
+     "w": "come",
+     "start": 22.52,
+     "end": 22.68
+    },
+    {
+     "w": "to",
+     "start": 22.68,
+     "end": 22.78
+    },
+    {
+     "w": "the",
+     "start": 22.78,
+     "end": 22.94
+    },
+    {
+     "w": "office,",
+     "start": 22.94,
+     "end": 23.14
+    },
+    {
+     "w": "when",
+     "start": 23.3,
+     "end": 23.44
+    },
+    {
+     "w": "you",
+     "start": 23.44,
+     "end": 23.56
+    },
+    {
+     "w": "go",
+     "start": 23.56,
+     "end": 23.7
+    },
+    {
+     "w": "back.",
+     "start": 23.7,
+     "end": 23.98
+    },
+    {
+     "w": "So",
+     "start": 24.08,
+     "end": 24.2
+    },
+    {
+     "w": "almost",
+     "start": 24.2,
+     "end": 24.66
+    },
+    {
+     "w": "90",
+     "start": 24.66,
+     "end": 25.3
+    },
+    {
+     "w": "%",
+     "start": 25.3,
+     "end": 25.62
+    },
+    {
+     "w": "of",
+     "start": 25.62,
+     "end": 25.84
+    },
+    {
+     "w": "the",
+     "start": 25.84,
+     "end": 25.9
+    },
+    {
+     "w": "things",
+     "start": 25.9,
+     "end": 26.16
+    },
+    {
+     "w": "are",
+     "start": 26.16,
+     "end": 26.38
+    },
+    {
+     "w": "being",
+     "start": 26.38,
+     "end": 26.54
+    },
+    {
+     "w": "decided",
+     "start": 26.54,
+     "end": 26.88
+    },
+    {
+     "w": "by",
+     "start": 26.88,
+     "end": 27.16
+    },
+    {
+     "w": "someone",
+     "start": 27.16,
+     "end": 27.4
+    },
+    {
+     "w": "else.",
+     "start": 27.4,
+     "end": 27.76
+    }
+   ]
+  },
+  {
+   "start": 27.88,
+   "end": 30.64,
+   "text": "You do not have the freedom. The ultimate target of the money fails here.",
+   "words": [
+    {
+     "w": "You",
+     "start": 27.88,
+     "end": 28.02
+    },
+    {
+     "w": "do",
+     "start": 28.02,
+     "end": 28.14
+    },
+    {
+     "w": "not",
+     "start": 28.14,
+     "end": 28.3
+    },
+    {
+     "w": "have",
+     "start": 28.3,
+     "end": 28.44
+    },
+    {
+     "w": "the",
+     "start": 28.44,
+     "end": 28.52
+    },
+    {
+     "w": "freedom.",
+     "start": 28.52,
+     "end": 28.74
+    },
+    {
+     "w": "The",
+     "start": 28.88,
+     "end": 28.96
+    },
+    {
+     "w": "ultimate",
+     "start": 28.96,
+     "end": 29.3
+    },
+    {
+     "w": "target",
+     "start": 29.3,
+     "end": 29.68
+    },
+    {
+     "w": "of",
+     "start": 29.68,
+     "end": 29.86
+    },
+    {
+     "w": "the",
+     "start": 29.86,
+     "end": 29.94
+    },
+    {
+     "w": "money",
+     "start": 29.94,
+     "end": 30.16
+    },
+    {
+     "w": "fails",
+     "start": 30.16,
+     "end": 30.42
+    },
+    {
+     "w": "here.",
+     "start": 30.42,
+     "end": 30.64
+    }
+   ]
+  },
+  {
+   "start": 30.74,
+   "end": 34.48,
+   "text": "Now this whole luxury without freedom is nothing but just decoration.",
+   "words": [
+    {
+     "w": "Now",
+     "start": 30.74,
+     "end": 30.92
+    },
+    {
+     "w": "this",
+     "start": 30.92,
+     "end": 31.28
+    },
+    {
+     "w": "whole",
+     "start": 31.28,
+     "end": 31.54
+    },
+    {
+     "w": "luxury",
+     "start": 31.54,
+     "end": 31.96
+    },
+    {
+     "w": "without",
+     "start": 31.96,
+     "end": 32.4
+    },
+    {
+     "w": "freedom",
+     "start": 32.4,
+     "end": 33.16
+    },
+    {
+     "w": "is",
+     "start": 33.16,
+     "end": 33.44
+    },
+    {
+     "w": "nothing",
+     "start": 33.44,
+     "end": 33.7
+    },
+    {
+     "w": "but",
+     "start": 33.7,
+     "end": 34.0
+    },
+    {
+     "w": "just",
+     "start": 34.0,
+     "end": 34.2
+    },
+    {
+     "w": "decoration.",
+     "start": 34.2,
+     "end": 34.48
+    }
+   ]
+  }
+ ]
+}
