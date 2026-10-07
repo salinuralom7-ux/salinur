@@ -29,9 +29,13 @@ jobs:
             [ -f "$d/out_ai.mp4" ] && continue
             python studio/tools/lipsync_runner.py "$d"
           done
-      - name: Commit
+      - name: Upload
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f studio/projects/*/lipsync/out_*.mp4
-          git diff --cached --quiet || { git commit -qm "Lip-sync test output from GitHub runner"; for i in 1 2 3 4; do git pull -q --rebase && git push && break; sleep 5; done; }
+          gh release view lipsync >/dev/null 2>&1 || gh release create lipsync -t lipsync -n "AI lip-sync outputs" --prerelease
+          for f in studio/projects/*/lipsync/out_*.mp4; do
+            p=$(basename $(dirname $(dirname "$f")))
+            cp "$f" "/tmp/${p}_$(basename "$f")"
+            gh release upload lipsync "/tmp/${p}_$(basename "$f")" --clobber
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}
