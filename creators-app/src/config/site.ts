@@ -12,7 +12,16 @@ export const site = {
   tagline: "India's marketplace where local businesses discover and book Instagram creators near them.",
   shortTagline: "Your city's creators, one scroll away.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? (process.env.NODE_ENV === "production" ? "https://influji.in" : "http://localhost:3000"),
-  contactEmail: "hello@example.com", // TODO: replace with your support email
+  /** Who runs InfluJi — shown on legal pages, receipts and the grievance contact. */
+  legal: {
+    operator: "Salinur Alom",
+    operatorType: "sole proprietor",
+    location: "Bongaigaon, Assam, India",
+    /** Set NEXT_PUBLIC_SUPPORT_EMAIL. Play Store and Razorpay both require a working address. */
+    supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "",
+    minAge: 18,
+    lastUpdated: "6 October 2026",
+  },
   /** Monthly creator price in rupees. Plans (monthly ₹99 / yearly ₹594) live in src/lib/pricing.ts. */
   creatorPriceInr: PLANS.monthly.priceInr,
 } as const;
