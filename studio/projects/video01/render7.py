@@ -293,7 +293,7 @@ PH = [  # (t0, small words, KEY, after/script, extra)
     (41.71, "we are a marketing", "AGENCY", None, None),
     (49.45, "so this evening I'm totally", "FREE", None, None),
     (51.29, "give us a", "CALL", None, "call"),
-    (52.27, "we are ready to take your call", None, None, "plain"),
+    (52.70, "are ready to take your call", None, None, "plain"),
     (53.71, "we have", "PLANNED", "for your business", None),
     (55.73, "if that works for you", None, None, "plain"),
     (56.85, "see you", "SOON", None, None),
@@ -417,7 +417,9 @@ def extras(fr, t, p, key_t, fade):
         bubble_row(fr, t, key_t - 0.1, ["1f4f9"], CY - 270, fade, 80)
     elif e == "logo":
         k = (t - key_t) / 0.35
-        put(fr, LOGO, 540, CY - 360, eb(min(k, 1)) * 0.6, fade)
+        s_ = eb(min(k, 1))
+        put(fr, rounded(330, 170, 40, (255, 255, 255)), 540, CY - 330, s_, fade)
+        put(fr, LOGO_N, 540, CY - 330, s_ * 0.5, fade)
     elif e == "call":
         bubble_row(fr, t, key_t - 0.1, ["1f4de"], CY - 290, fade, 80)
         k = (t - key_t - 0.3) / 0.3
@@ -662,8 +664,8 @@ def leak(fr, t, t0, colour, d=0.36):
     cx = 540 + 500 * (k - 0.5)
     g = np.exp(-(((xx - cx) / 520.0) ** 2 + ((yy - 1100) / 700.0) ** 2)).astype(np.float32)
     g = cv2.resize(g, (W, H))[..., None]
-    fr += g * np.array(colour, np.float32) * a * 0.95
-    fr *= (1 - 0.12 * a)
+    fr += g * np.array(colour, np.float32) * a * 0.6
+    fr *= (1 - 0.08 * a)
 
 
 def hook(fr, head, t):
@@ -718,6 +720,7 @@ def outro(fr, t):
 
 # ------------------------------------------------------------------ frame
 LOGO = None
+LOGO_N = None
 
 
 def init():
@@ -733,6 +736,11 @@ def init():
     navy = np.array((6, 20, 54), np.float32)
     a = np.clip((np.abs(lg - navy[::-1] * 0 - navy).max(2) - 40) / 60, 0, 1)
     LOGO = np.dstack([lg * a[..., None], a]).astype(np.float32)
+    # navy version for light badges: white letters -> navy, blue & stays
+    wht = (lg.min(2) > 150)[..., None]
+    lgn = np.where(wht, navy, lg)
+    global LOGO_N
+    LOGO_N = np.dstack([lgn * a[..., None], a]).astype(np.float32)
 
 
 def compose(t, base):
